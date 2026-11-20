@@ -9,6 +9,7 @@ import { save } from "../state/actions";
 import { select } from "../state/catalog";
 import { openConnection, type Store, useStore, useStudio } from "../state/store";
 import { selectable } from "./CatalogTree";
+import { Icon } from "../icons/Icon";
 
 /** No favourites: one list, so the store's readers see no change. */
 const NONE: readonly ObjectRef[] = [];
@@ -58,7 +59,8 @@ export function Favourites({ connection }: { readonly connection: number }) {
               disabled={target === null}
               onClick={() => target !== null && void select(store, connection, target)}
             >
-              ★ {f.schema}.{f.name}
+              <Icon name="favourite" emphasis />
+              {f.schema}.{f.name}
             </button>
           </li>
         );

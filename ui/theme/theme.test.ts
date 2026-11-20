@@ -56,6 +56,17 @@ describe("themes", () => {
     expect(contrast(p.onAlert, p.alert)).toBeGreaterThanOrEqual(TEXT);
   });
 
+  it.each(THEMES)("keeps the %s theme's coloured icons visible, each of its own colour [RULE] R-UI-2", (theme) => {
+    const p = PALETTES[theme];
+    const icons = [p.iconRun, p.iconStop, p.iconCommit, p.iconRollback, p.iconConnect, p.iconDisconnect];
+    for (const icon of icons) {
+      for (const ground of [p.background, p.surface, p.surfaceRaised]) {
+        expect(contrast(icon, ground)).toBeGreaterThanOrEqual(COMPONENT);
+      }
+    }
+    expect(new Set(icons).size).toBe(icons.length);
+  });
+
   it.each(THEMES)("keeps the %s theme's focus ring and borders visible [RULE] R-UI-2", (theme) => {
     const p = PALETTES[theme];
     expect(contrast(p.focus, p.background)).toBeGreaterThanOrEqual(COMPONENT);

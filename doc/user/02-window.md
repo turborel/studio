@@ -30,10 +30,20 @@ by **Help > Keyboard Shortcuts**.
 
 ## The toolbar
 
-The toolbar holds the commands used most: New Connection, Disconnect,
-Reconnect, Cancel Statement, Commit, Rollback and Command Palette. A
-button's tooltip names its key, where it has one. A button that cannot act now, as
-Disconnect with no connection open, is disabled.
+The toolbar holds the commands used most, each a button of its icon, in
+groups apart by a line: New Connection, Disconnect and Reconnect; Cancel
+Statement; Commit and Rollback; and Command Palette. A button's tooltip
+names it and its key, where it has one. A button that cannot act now, as
+Disconnect with no connection open, is disabled. The setting **Show the
+toolbar's labels beside its icons** adds each button's name.
+
+Studio's icons are of one set. The actions people look for have colours
+of their own, in both themes: running green, stopping and cancelling
+red, committing blue and rolling back amber, connecting teal and
+disconnecting purple. The command palette, **Help > Keyboard
+Shortcuts**, the explorer's tree, the details panel and the dock's tabs
+show the same icons. The platform's menu bar shows none, as the
+platforms' own menus seldom do.
 
 ## The dock
 
@@ -98,6 +108,7 @@ percent at a time, from 50 % to 300 %; **Actual Size** sets it back to
 - the theme;
 - the zoom, in percent;
 - the editor's font and its size, in points, from 8 to 48;
+- whether the toolbar shows its buttons' labels beside their icons;
 - whether open connections are checked as the computer wakes, and those
   lost connected again;
 - each command's key, under **Keys**.

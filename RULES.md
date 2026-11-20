@@ -74,6 +74,7 @@ Each is told in full in [§7](#7-the-decisions).
 | D32 | A connection's colour tints the window |
 | D33 | The catalog: the Information Schema, read as the tree opens |
 | D34 | A file saved through the platform's dialog, by the backend |
+| D35 | Icons: Phosphor's, one set, in the theme's colours |
 
 ---
 
@@ -99,6 +100,7 @@ Each is told in full in [§7](#7-the-decisions).
 | `ui/` | the front end, in TypeScript and React (D2) |
 | `ui/ipc/` | the typed commands, the front end's one way to the backend (R-TS-3) |
 | `ui/theme/` | the themes' palettes (D20) |
+| `ui/icons/` | the icons, by what each stands for (D35) |
 | `ui/shell/` | the dock, toolbar, status bar, dialogs and the explorer's connections |
 | `ui/explorer/` | the catalog's tree, the details panel and the definition view (D33) |
 | `ui/state/` | the window's store and its actions (D31) |
@@ -776,6 +778,30 @@ The review checklist:
   plug-ins.
 - *Why:* the platform's dialog is the one a person knows, and choosing
   the file is theirs.
+
+#### D35. Icons: Phosphor's, one set, in the theme's colours
+
+- **Chosen:** `@phosphor-icons/react` 2.1.10, MIT, its own stable
+  release, each icon imported from its own module so only those used
+  are built.
+- **One registry:** `ui/icons/Icon.tsx` names each icon for what it
+  stands for, a command, a panel or a kind of object, so the toolbar,
+  the palette, the list of keys, the tree, the details and the dock's
+  tabs show the same one.
+- **Weights:** regular; duotone for emphasis, as a favourite or a pin
+  set.
+- **Colours:** running green, stopping and cancelling red, committing,
+  rolling back, connecting and disconnecting each its own, from the
+  theme's tokens, each at least 3:1 on every ground (R-UI-2); every other
+  icon the text's.
+- **Sizes:** 16 pixels in trees, lists and tabs, 18 in the toolbar; SVG,
+  so crisp at any scale.
+- **Named:** an icon is hidden from assistive technology; a button of an
+  icon alone has an accessible name and a tooltip.
+- **The menu bar:** the platform's, without icons, as the platforms'
+  own menus seldom have them; its items are the same commands.
+- *Why:* a classic database IDE's toolbar and tree are read by their
+  icons, and one set keeps them alike everywhere.
 
 ---
 

@@ -10,58 +10,73 @@ import { activate, connectSaved, disconnect, forget, save, show } from "../state
 import { type OpenConnection, useStore, useStudio } from "../state/store";
 import { type Folder, tree } from "./connectionsTree";
 import { tint } from "./environment";
+import { Icon } from "../icons/Icon";
 
 /** A colour's swatch. */
 function Swatch({ colour }: { readonly colour: string | null }) {
   return <span className="swatch" aria-hidden="true" style={{ background: colour ?? "transparent" }} />;
 }
 
+/** A saved connection's delete button, which asks again before it deletes it. */
+function DeleteButton({ connection: c }: { readonly connection: SavedConnection }) {
+  const store = useStore();
+  const [deleting, setDeleting] = useState(false);
+  return deleting ? (
+    <button type="button" aria-label={`Confirm deleting ${c.name}`} onClick={() => void forget(store, c.id)}>
+      Delete {c.name}?
+    </button>
+  ) : (
+    <button
+      type="button"
+      className="tool"
+      aria-label={`Delete ${c.name}`}
+      title="Delete"
+      onClick={() => {
+        setDeleting(true);
+      }}
+    >
+      <Icon name="remove" />
+    </button>
+  );
+}
+
 /** A saved connection's item, with its actions. */
 function SavedItem({ view }: { readonly view: SavedView }) {
   const store = useStore();
-  const [deleting, setDeleting] = useState(false);
   const c: SavedConnection = view.connection;
   const connect = () => void connectSaved(store, c, null);
   return (
     <li role="treeitem" aria-selected="false" className="tree-item">
       <Swatch colour={tint(c.environment, c.colour)} />
+      <Icon name="connection" />
       <span className="tree-name" onDoubleClick={connect}>
         {c.name}
       </span>
-      <button type="button" aria-label={`Connect to ${c.name}`} onClick={connect}>
-        Connect
+      <button type="button" className="tool" aria-label={`Connect to ${c.name}`} title="Connect" onClick={connect}>
+        <Icon name="connect" />
       </button>
       <button
         type="button"
+        className="tool"
         aria-label={`Edit ${c.name}`}
+        title="Edit"
         onClick={() => {
           show(store, { kind: "connection", editing: c });
         }}
       >
-        Edit
+        <Icon name="edit" />
       </button>
       <button
         type="button"
+        className="tool"
         aria-label={`${c.pinned ? "Unpin" : "Pin"} ${c.name}`}
+        aria-pressed={c.pinned}
+        title={c.pinned ? "Unpin" : "Pin"}
         onClick={() => void save(store, { ...c, pinned: !c.pinned }, { kind: "keep" })}
       >
-        {c.pinned ? "Unpin" : "Pin"}
+        <Icon name="pin" emphasis={c.pinned} />
       </button>
-      {deleting ? (
-        <button type="button" aria-label={`Confirm deleting ${c.name}`} onClick={() => void forget(store, c.id)}>
-          Delete {c.name}?
-        </button>
-      ) : (
-        <button
-          type="button"
-          aria-label={`Delete ${c.name}`}
-          onClick={() => {
-            setDeleting(true);
-          }}
-        >
-          Delete
-        </button>
-      )}
+      <DeleteButton connection={c} />
     </li>
   );
 }
@@ -72,7 +87,10 @@ function FolderItems({ folder }: { readonly folder: Folder }) {
     <>
       {folder.folders.map((child) => (
         <li key={child.name} role="treeitem" aria-expanded="true" aria-selected="false">
-          <span className="tree-folder">{child.name}</span>
+          <span className="tree-folder with-icon">
+            <Icon name="folder" />
+            {child.name}
+          </span>
           <ul role="group">
             <FolderItems folder={child} />
           </ul>
@@ -91,6 +109,7 @@ function OpenItem({ connection, active }: { readonly connection: OpenConnection;
   return (
     <li role="treeitem" aria-selected={active} className={active ? "tree-item tree-active" : "tree-item"}>
       <Swatch colour={tint(connection.guards.environment, connection.colour)} />
+      <Icon name="connection" />
       <button
         type="button"
         className="tree-name"
@@ -103,10 +122,12 @@ function OpenItem({ connection, active }: { readonly connection: OpenConnection;
       </button>
       <button
         type="button"
+        className="tool"
         aria-label={`Disconnect ${connection.name}`}
+        title="Disconnect"
         onClick={() => void disconnect(store, connection.id)}
       >
-        Disconnect
+        <Icon name="disconnect" />
       </button>
     </li>
   );
@@ -123,10 +144,12 @@ export function ConnectionsPanel() {
     <div className="connections-panel">
       <button
         type="button"
+        className="tool"
         onClick={() => {
           show(store, { kind: "connection", editing: null });
         }}
       >
+        <Icon name="newConnection" />
         New Connection…
       </button>
       <h3>Open</h3>

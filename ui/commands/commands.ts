@@ -5,6 +5,7 @@
  */
 import { ZOOM } from "../ipc/preferences";
 import { cancel, changeSettings, disconnect, endTransaction, reconnectOpen, show } from "../state/actions";
+import type { IconName } from "../icons/Icon";
 import type { Store } from "../state/store";
 import type { ThemeChoice } from "../theme/theme";
 
@@ -24,6 +25,8 @@ export interface Command {
   readonly category: string;
   /** Its key by default, written as `Mod+Shift+P`, if it has one. */
   readonly key?: string;
+  /** Its icon, in the toolbar, the palette and the list of keys. */
+  readonly icon?: IconName;
   /** Whether it can run now. */
   readonly enabled: (context: CommandContext) => boolean;
   /** Runs it. */
@@ -47,9 +50,15 @@ function onActive(act: (store: Store, id: number) => Promise<void>): (context: C
 
 /** The command that chooses theme `choice`. */
 function theme(choice: ThemeChoice, title: string): Command {
+  const icons: Readonly<Record<ThemeChoice, IconName>> = {
+    system: "themeSystem",
+    light: "themeLight",
+    dark: "themeDark",
+  };
   return {
     id: `theme.${choice}`,
     title,
+    icon: icons[choice],
     category: "View",
     enabled: always,
     run: ({ store }) => changeSettings(store, (s) => ({ ...s, theme: choice })),
@@ -58,12 +67,14 @@ function theme(choice: ThemeChoice, title: string): Command {
 
 /** The command that changes the zoom by `step` percent, or to 100 % for 0. */
 function zoom(id: string, title: string, step: number, key: string): Command {
+  const icon: IconName = step > 0 ? "zoomIn" : step < 0 ? "zoomOut" : "zoomReset";
   const zoomed = (now: number): number => (step === 0 ? 100 : Math.min(ZOOM.most, Math.max(ZOOM.least, now + step)));
   return {
     id,
     title,
     category: "View",
     key,
+    icon,
     enabled: always,
     run: ({ store }) => changeSettings(store, (s) => ({ ...s, zoomPercent: zoomed(s.zoomPercent) })),
   };
@@ -73,6 +84,7 @@ function zoom(id: string, title: string, step: number, key: string): Command {
 export const COMMANDS: readonly Command[] = [
   {
     id: "connection.new",
+    icon: "newConnection",
     title: "New Connection…",
     category: "File",
     key: "Mod+Shift+N",
@@ -83,6 +95,7 @@ export const COMMANDS: readonly Command[] = [
   },
   {
     id: "connection.disconnect",
+    icon: "disconnect",
     title: "Disconnect",
     category: "Connection",
     enabled: connected,
@@ -90,6 +103,7 @@ export const COMMANDS: readonly Command[] = [
   },
   {
     id: "connection.reconnect",
+    icon: "reconnect",
     title: "Reconnect",
     category: "Connection",
     enabled: connected,
@@ -97,6 +111,7 @@ export const COMMANDS: readonly Command[] = [
   },
   {
     id: "statement.cancel",
+    icon: "cancel",
     title: "Cancel Statement",
     category: "Connection",
     key: "Mod+.",
@@ -105,6 +120,7 @@ export const COMMANDS: readonly Command[] = [
   },
   {
     id: "transaction.commit",
+    icon: "commit",
     title: "Commit",
     category: "Connection",
     enabled: connected,
@@ -112,6 +128,7 @@ export const COMMANDS: readonly Command[] = [
   },
   {
     id: "transaction.rollback",
+    icon: "rollback",
     title: "Rollback",
     category: "Connection",
     enabled: connected,
@@ -119,6 +136,7 @@ export const COMMANDS: readonly Command[] = [
   },
   {
     id: "palette.open",
+    icon: "palette",
     title: "Command Palette…",
     category: "View",
     key: "Mod+Shift+P",
@@ -129,6 +147,7 @@ export const COMMANDS: readonly Command[] = [
   },
   {
     id: "settings.open",
+    icon: "settings",
     title: "Settings…",
     category: "File",
     key: "Mod+,",
@@ -145,6 +164,7 @@ export const COMMANDS: readonly Command[] = [
   zoom("zoom.reset", "Actual Size", 0, "Mod+0"),
   {
     id: "layout.reset",
+    icon: "layout",
     title: "Reset Layout",
     category: "View",
     enabled: always,
@@ -154,6 +174,7 @@ export const COMMANDS: readonly Command[] = [
   },
   {
     id: "help.about",
+    icon: "about",
     title: "About Turborel Studio",
     category: "Help",
     enabled: always,
@@ -163,6 +184,7 @@ export const COMMANDS: readonly Command[] = [
   },
   {
     id: "help.shortcuts",
+    icon: "keys",
     title: "Keyboard Shortcuts",
     category: "Help",
     key: "F1",

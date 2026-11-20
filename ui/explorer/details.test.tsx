@@ -303,11 +303,11 @@ describe("favourites", () => {
     const store = await opened();
     await select(store, 1, { kind: "table", schema: "ANN", name: "STAFF" });
     within(store, <Details />);
-    fireEvent.click(screen.getByRole("button", { name: "☆ Add to favourites" }));
+    fireEvent.click(screen.getByRole("button", { name: "Add to favourites" }));
     await settle();
     const saved = asked.find((a) => a.command === "save_connection")?.args["connection"] as SavedConnection;
     expect(saved.favourites).toEqual([{ kind: "TABLE", schema: "ANN", name: "STAFF" }]);
-    expect(screen.getByRole("button", { name: "★ Favourite" }).getAttribute("aria-pressed")).toBe("true");
+    expect(screen.getByRole("button", { name: "Favourite" }).getAttribute("aria-pressed")).toBe("true");
     await toggleFavourite(store, 1, { kind: "TABLE", schema: "ANN", name: "STAFF" });
     const again = asked.filter((a) => a.command === "save_connection").at(-1)?.args["connection"] as SavedConnection;
     expect(again.favourites).toEqual([]);
@@ -326,8 +326,8 @@ describe("favourites", () => {
     within(store, <CatalogTree connection={1} />);
     await settle();
     const list = screen.getByRole("list", { name: "Favourites" });
-    expect(inside(list).getByText<HTMLButtonElement>("★ ANN.STAMPED").disabled).toBe(true);
-    fireEvent.click(inside(list).getByText("★ ANN.STAFF"));
+    expect(inside(list).getByText<HTMLButtonElement>("ANN.STAMPED").disabled).toBe(true);
+    fireEvent.click(inside(list).getByText("ANN.STAFF"));
     await settle();
     expect(store.current().selected?.object).toEqual({ kind: "table", schema: "ANN", name: "STAFF" });
   });
@@ -340,6 +340,6 @@ describe("favourites", () => {
     await toggleFavourite(store, 1, { kind: "TABLE", schema: "ANN", name: "STAFF" });
     await select(store, 1, { kind: "table", schema: "ANN", name: "STAFF" });
     within(store, <Details />);
-    expect(screen.queryByRole("button", { name: "☆ Add to favourites" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Add to favourites" })).toBeNull();
   });
 });

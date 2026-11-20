@@ -4,6 +4,7 @@
  * a filter keeps the objects whose names hold it, and their folders.
  */
 import type { SchemaObjects, TableDetail } from "../ipc/catalog";
+import { constraintIcon, type IconName } from "../icons/Icon";
 import { type CatalogState, type Selected, tableKey } from "./catalogState";
 
 /** A row of the tree. */
@@ -15,6 +16,30 @@ export interface TreeRow {
   readonly expanded: boolean;
   readonly note?: string;
   readonly select?: Selected;
+  /** Its icon, where its kind alone does not say: a view's, a constraint's. */
+  readonly icon?: IconName;
+}
+
+/** The icon of each kind of node, by the first part of its identifier. */
+const KIND_ICONS: Readonly<Record<string, IconName>> = {
+  schema: "schema",
+  folder: "folder",
+  table: "table",
+  column: "column",
+  index: "index",
+  trigger: "trigger",
+  routine: "routine",
+  sequence: "sequence",
+  domain: "domain",
+  type: "type",
+  user: "user",
+  role: "role",
+  security: "users",
+};
+
+/** The icon of `row`, if its kind has one. */
+export function iconOf(row: TreeRow): IconName | null {
+  return row.icon ?? KIND_ICONS[row.id.split(SEP)[0] ?? ""] ?? null;
 }
 
 /** What a schema too large to list whole says, of the catalog's limit on a list. */
@@ -71,6 +96,7 @@ function tableParts(detail: TableDetail | undefined, schema: string, name: strin
       expandable: false,
       expanded: false,
       note: k.kind,
+      icon: constraintIcon(k.kind),
     });
   }
   for (const i of detail.indexes.filter((x) => !x.implied)) {
@@ -110,6 +136,7 @@ function tables(state: CatalogState, schema: string, objects: SchemaObjects, vie
         expandable: true,
         expanded,
         select: { kind: "table", schema, name: t.name },
+        icon: views ? "view" : "table",
       };
       return expanded ? [row, ...tableParts(state.tables[tableKey(schema, t.name)], schema, t.name, depth + 1)] : [row];
     });

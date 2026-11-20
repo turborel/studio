@@ -431,3 +431,77 @@ kbd {
   white-space: pre-wrap;
   overflow: auto;
 }
+
+.icon {
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+.icon-run {
+  color: var(--icon-run);
+}
+
+.icon-stop {
+  color: var(--icon-stop);
+}
+
+.icon-commit {
+  color: var(--icon-commit);
+}
+
+.icon-rollback {
+  color: var(--icon-rollback);
+}
+
+.icon-connect {
+  color: var(--icon-connect);
+}
+
+.icon-disconnect {
+  color: var(--icon-disconnect);
+}
+
+button:disabled .icon {
+  opacity: 0.45;
+}
+
+.tool-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.tool {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 6px;
+}
+
+.tool-separator {
+  width: 1px;
+  align-self: stretch;
+  margin: 2px 6px;
+  background: var(--border);
+}
+
+.with-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dock-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 4px 0 8px;
+  height: 100%;
+}
+
+.dock-tab-close {
+  border: none;
+  background: none;
+  padding: 0 2px;
+  display: inline-flex;
+}

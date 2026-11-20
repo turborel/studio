@@ -131,8 +131,9 @@ The explorer lists:
   in order.
 - **Recent**: the ten saved connections used last, the latest first.
 
-A saved connection's buttons are **Connect**, **Edit**, **Pin** or
-**Unpin**, and **Delete**, which asks again before it deletes it.
+A saved connection's buttons, each an icon whose tooltip names it, are
+**Connect**, **Edit**, **Pin** or **Unpin**, and **Delete**, which asks
+again before it deletes it.
 Double-clicking its name connects too.
 
 ## Environments and guards

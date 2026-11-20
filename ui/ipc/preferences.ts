@@ -14,6 +14,7 @@ export interface Settings {
   readonly editorFontPoints: number;
   readonly keyBindings: Readonly<Record<string, string>>;
   readonly reconnectOnWake: boolean;
+  readonly toolbarLabels: boolean;
 }
 
 /** The settings Studio starts with, as the backend's defaults are. */
@@ -25,6 +26,7 @@ export const DEFAULT_SETTINGS: Settings = {
   editorFontPoints: 13,
   keyBindings: {},
   reconnectOnWake: true,
+  toolbarLabels: false,
 };
 
 /** The window's zoom, in percent: least, step and most. */

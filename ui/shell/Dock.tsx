@@ -2,7 +2,15 @@
  * The dock (RULES.md D14, R-FMT-1): its panels laid out as they were left,
  * the layout saved as it changes, and laid out afresh on Reset Layout.
  */
-import { DockviewReact, type DockviewApi, type DockviewReadyEvent, type DockviewTheme } from "dockview-react";
+import {
+  DockviewDefaultTab,
+  DockviewReact,
+  type DockviewApi,
+  type DockviewReadyEvent,
+  type DockviewTheme,
+  type IDockviewPanelHeaderProps,
+} from "dockview-react";
+import { Icon, type IconName } from "../icons/Icon";
 import type { ThemeName } from "../theme/tokens";
 import { loadLayout, saveLayout } from "../ipc/preferences";
 import { defaultLayout, PANELS } from "./layout";
@@ -19,6 +27,24 @@ const COMPONENTS = {
   [PANELS.welcome.id]: WelcomePanel,
   [PANELS.details.id]: DetailsPanel,
 };
+
+/** The icon of each panel's tab, by its component. */
+export const TAB_ICONS: Readonly<Record<string, IconName>> = {
+  [PANELS.explorer.id]: "explorer",
+  [PANELS.welcome.id]: "start",
+  [PANELS.details.id]: "details",
+};
+
+/** A panel's tab: its icon, then dockview's own tab of its title. */
+export function Tab(props: IDockviewPanelHeaderProps) {
+  const icon = TAB_ICONS[props.api.component];
+  return (
+    <div className="dock-tab">
+      {icon !== undefined && <Icon name={icon} />}
+      <DockviewDefaultTab {...props} />
+    </div>
+  );
+}
 
 /** How long the layout waits, unchanged, before it is saved, in milliseconds. */
 export const SAVE_AFTER_MS = 500;
@@ -57,5 +83,5 @@ export function Dock({ theme, onApi }: { readonly theme: ThemeName; readonly onA
     onApi(event.api);
     void restore(event.api);
   };
-  return <DockviewReact components={COMPONENTS} onReady={ready} theme={DOCK_THEMES[theme]} />;
+  return <DockviewReact components={COMPONENTS} defaultTabComponent={Tab} onReady={ready} theme={DOCK_THEMES[theme]} />;
 }

@@ -12,7 +12,8 @@ import type { ObjectRef } from "../ipc/catalog";
 import { useStore, useStudio } from "../state/store";
 import { EMPTY_CATALOG, type Selected } from "./catalogState";
 import { Favourites } from "./Favourites";
-import { type TreeRow, treeRows } from "./tree";
+import { iconOf, type TreeRow, treeRows } from "./tree";
+import { Icon } from "../icons/Icon";
 
 /** The rows of the tree, each focused in turn by the arrow keys. */
 function moveFocus(event: KeyboardEvent<HTMLElement>, step: number): void {
@@ -52,6 +53,12 @@ function rowKeys(row: TreeRow, open: () => void, choose: () => void): (event: Ke
   };
 }
 
+/** A row's icon, of its kind, if it has one. */
+function RowIcon({ row }: { row: TreeRow }) {
+  const icon = iconOf(row);
+  return icon === null ? null : <Icon name={icon} />;
+}
+
 /** A row of the tree. */
 function Row({ row, connection, selected }: { row: TreeRow; connection: number; selected: boolean }) {
   const store = useStore();
@@ -88,6 +95,7 @@ function Row({ row, connection, selected }: { row: TreeRow; connection: number; 
       ) : (
         <span className="tree-twisty" />
       )}
+      <RowIcon row={row} />
       <span>{row.label}</span>
       {row.note !== undefined && <span className="tree-note">{row.note}</span>}
     </div>

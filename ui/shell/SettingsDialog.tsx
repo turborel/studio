@@ -124,6 +124,16 @@ function Appearance({ settings, change }: PartProps) {
         />
       </label>
       <Font settings={settings} change={change} />
+      <label className="check">
+        <input
+          type="checkbox"
+          checked={settings.toolbarLabels}
+          onChange={(e) => {
+            change({ ...settings, toolbarLabels: e.target.checked });
+          }}
+        />
+        <span>Show the toolbar's labels beside its icons</span>
+      </label>
     </>
   );
 }

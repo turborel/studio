@@ -14,8 +14,9 @@ file `settings.json`, in Studio's folder of the user's configuration
 | `editorFontPoints` | The editor's font size, in points | 8 to 48 | 13 |
 | `keyBindings` | Each command's key where it is not the default, by the command's name; an empty key unbinds it | at most 500, each at most 64 characters | none |
 | `reconnectOnWake` | Whether open connections are checked as the window is shown again, or the network comes back, and those lost connected again | `true` or `false` | `true` |
+| `toolbarLabels` | Whether the toolbar's buttons show their labels beside their icons | `true` or `false` | `false` |
 
-A setting outside its values is refused, and the file is left as it was.
+A setting the file lacks takes its default. A setting outside its values is refused, and the file is left as it was.
 A file Studio cannot read, or of another format, is refused: the window
 says why, and Studio goes on with the defaults, which a setting changed
 then is saved with.

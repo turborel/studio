@@ -19,6 +19,7 @@ import {
 } from "../ipc/catalog";
 import { isStudioError } from "../state/actions";
 import { useStore, useStudio } from "../state/store";
+import { Icon, type IconName } from "../icons/Icon";
 import { type Selected, tableKey } from "./catalogState";
 import { Definition } from "./Definition";
 import { sameObject, savedOf, toggleFavourite } from "./Favourites";
@@ -314,6 +315,18 @@ function TypeDetails({ connection, schema, name }: { connection: number; schema:
   );
 }
 
+/** The icon of each kind of object selected. */
+const KIND_ICONS: Readonly<Record<Selected["kind"], IconName>> = {
+  table: "table",
+  routine: "routine",
+  sequence: "sequence",
+  domain: "domain",
+  type: "type",
+  schema: "schema",
+  user: "user",
+  role: "role",
+};
+
 /** The heading of `object`, with its favourite's star if the connection is saved. */
 function Heading({ connection, object }: { connection: number; object: Selected }) {
   const store = useStore();
@@ -330,10 +343,17 @@ function Heading({ connection, object }: { connection: number; object: Selected 
   const title = "name" in object ? object.name : object.schema;
   return (
     <h3 className="details-title">
+      <Icon name={KIND_ICONS[object.kind]} />
       {object.kind}: {"schema" in object && "name" in object ? `${object.schema}.${title}` : title}
       {ref !== null && saved !== undefined && (
-        <button type="button" aria-pressed={starred} onClick={() => void toggleFavourite(store, connection, ref)}>
-          {starred ? "★ Favourite" : "☆ Add to favourites"}
+        <button
+          type="button"
+          className="tool"
+          aria-pressed={starred}
+          onClick={() => void toggleFavourite(store, connection, ref)}
+        >
+          <Icon name="favourite" emphasis={starred} />
+          {starred ? "Favourite" : "Add to favourites"}
         </button>
       )}
     </h3>

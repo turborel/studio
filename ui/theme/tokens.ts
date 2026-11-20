@@ -46,6 +46,18 @@ export interface Palette {
   readonly alert: string;
   /** Text on the alert's fill. */
   readonly onAlert: string;
+  /** The icon of running: green. */
+  readonly iconRun: string;
+  /** The icon of stopping and cancelling: red. */
+  readonly iconStop: string;
+  /** The icon of committing. */
+  readonly iconCommit: string;
+  /** The icon of rolling back. */
+  readonly iconRollback: string;
+  /** The icon of connecting. */
+  readonly iconConnect: string;
+  /** The icon of disconnecting. */
+  readonly iconDisconnect: string;
 }
 
 /** Studio's icon's maroon, sampled from `artwork/studio-icon.png`. */
@@ -71,6 +83,12 @@ export const PALETTES: Readonly<Record<ThemeName, Palette>> = {
     success: "#1D6531",
     alert: "#B3261E",
     onAlert: "#FFFFFF",
+    iconRun: "#1D7A36",
+    iconStop: "#B3261E",
+    iconCommit: "#0B5CAD",
+    iconRollback: "#8A4B00",
+    iconConnect: "#00796B",
+    iconDisconnect: "#7B3FA0",
   },
   dark: {
     background: "#1A1617",
@@ -90,6 +108,12 @@ export const PALETTES: Readonly<Record<ThemeName, Palette>> = {
     success: "#7DD192",
     alert: "#B3261E",
     onAlert: "#FFFFFF",
+    iconRun: "#7DD192",
+    iconStop: "#FF8A80",
+    iconCommit: "#8AB4F8",
+    iconRollback: "#F0C060",
+    iconConnect: "#64D2C4",
+    iconDisconnect: "#D0A6F0",
   },
 };
 

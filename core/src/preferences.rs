@@ -62,6 +62,10 @@ pub struct Settings {
     /// Whether open connections are checked, and lost ones connected
     /// again, as the computer wakes.
     pub reconnect_on_wake: bool,
+    /// Whether the toolbar's buttons show their labels beside their icons;
+    /// a file without it shows icons alone.
+    #[serde(default)]
+    pub toolbar_labels: bool,
 }
 
 impl Default for Settings {
@@ -74,6 +78,7 @@ impl Default for Settings {
             editor_font_points: FONT_POINTS.1,
             key_bindings: BTreeMap::new(),
             reconnect_on_wake: true,
+            toolbar_labels: false,
         }
     }
 }

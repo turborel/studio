@@ -5,6 +5,7 @@
  */
 import { type KeyboardEvent, useState } from "react";
 import { type Command, type CommandContext, COMMANDS, runCommand } from "../commands/commands";
+import { Icon } from "../icons/Icon";
 import { shown } from "../commands/keys";
 import { show } from "../state/actions";
 import { useStudio } from "../state/store";
@@ -35,7 +36,8 @@ function PaletteList({ found, chosen, run }: { found: readonly Command[]; chosen
               run(c.id);
             }}
           >
-            <span>
+            <span className="with-icon">
+              {c.icon !== undefined && <Icon name={c.icon} />}
               {c.category}: {c.title}
             </span>
             {key !== undefined && key !== "" && <kbd>{shown(key)}</kbd>}

@@ -6,6 +6,7 @@
 import { useEffect, useState } from "react";
 import { COMMANDS } from "../commands/commands";
 import { shown } from "../commands/keys";
+import { Icon } from "../icons/Icon";
 import { type AppInfo, appInfo } from "../ipc/commands";
 import { show } from "../state/actions";
 import { useStore, useStudio } from "../state/store";
@@ -62,7 +63,8 @@ export function ShortcutsDialog() {
             const key = keys[c.id] ?? c.key ?? "";
             return (
               <tr key={c.id}>
-                <td>
+                <td className="with-icon">
+                  {c.icon !== undefined && <Icon name={c.icon} />}
                   {c.category}: {c.title}
                 </td>
                 <td>{key === "" ? "—" : <kbd>{shown(key)}</kbd>}</td>

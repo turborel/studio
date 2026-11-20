@@ -22,6 +22,10 @@ schema opens on its folders:
 | **Domains** | its domains |
 | **Types** | its user-defined types, distinct and structured |
 
+Each row shows the icon of its kind: a schema, a folder, a table, a
+view, a column, a key, a foreign key, a check, an index, a trigger, a
+routine, a sequence, a domain, a type, a user or a role.
+
 A table or view opens on its parts: each column, with its type and NOT
 NULL where it is so; each constraint, with its kind; each index made
 by CREATE INDEX; and each trigger. The index a key's constraint is
