@@ -40,9 +40,10 @@ Disconnect with no connection open, is disabled.
 The dock holds the panels. When Studio is first opened:
 
 - the **Explorer** is on the left, with the connections, open and saved
-  ([Connections](03-connections.md));
+  ([Connections](03-connections.md)), and the catalog of the active
+  connection ([The Object Explorer](04-explorer.md));
 - the centre is the **Start** panel, until worksheets open there;
-- **Details** is on the right.
+- **Details** is on the right, showing what is selected in the explorer.
 
 A panel is moved by dragging its tab: onto another group to join it, or
 to a group's edge to split it. A group is resized by dragging the line

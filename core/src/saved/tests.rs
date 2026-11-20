@@ -117,5 +117,6 @@ fn the_manuals_example_is_read() {
     let list = saved.list().unwrap();
     assert_eq!(list.connections[0].connection.name, "Orders");
     assert_eq!(list.connections[0].connection.folder, ["Team", "EU"]);
+    assert_eq!(list.connections[0].connection.favourites[0].name, "ORDERS");
     assert_eq!(list.recent.len(), 1);
 }

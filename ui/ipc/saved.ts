@@ -4,6 +4,7 @@
  * one way, to the backend.
  */
 import { invoke } from "@tauri-apps/api/core";
+import type { ObjectRef } from "./catalog";
 import type { ConnectionSpec, Environment, Opened } from "./connections";
 
 /** A saved connection. */
@@ -16,6 +17,7 @@ export interface SavedConnection {
   readonly colour: string | null;
   readonly readOnly: boolean;
   readonly pinned: boolean;
+  readonly favourites: readonly ObjectRef[];
 }
 
 /** A saved connection, and whether its password is in the keychain. */

@@ -124,6 +124,30 @@ pub fn a_table_is_made_again_of_its_definition(live: &Live) {
     manager.close(id).unwrap();
 }
 
+/// The blocks of SQL under `## {heading}` of the manual's page `page`, a
+/// path under `doc/`, in order, up to the next heading of its level.
+fn manual_sql(page: &str, heading: &str) -> Vec<String> {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("..").join("doc").join(page);
+    let text = std::fs::read_to_string(path).unwrap();
+    let after = text.split_once(&format!("\n## {heading}\n")).unwrap().1;
+    let section = after.split("\n## ").next().unwrap_or_default();
+    section.split("```sql\n").skip(1).map(|block| block.split_once("```").unwrap().0.to_owned()).collect()
+}
+
+/// [STUDIO The definition] [DESIGN] D33: the manual's table, made as it
+/// says, has the definition it shows.
+pub fn the_manuals_definition_is_written(live: &Live) {
+    let (manager, _) = live.manager();
+    let id = live.owner(&manager);
+    let blocks = manual_sql("user/04-explorer.md", "The definition");
+    let [made, shown] = blocks.as_slice() else { panic!("the page shows {} blocks of SQL", blocks.len()) };
+    run_script(&manager, id, made);
+    let written = create(&Catalog::of(&manager, id).table(OWNER, "ORDERS").unwrap());
+    run_script(&manager, id, "DROP TABLE ORDERS CASCADE");
+    assert_eq!(written, *shown, "the definition written:\n{written}");
+    manager.close(id).unwrap();
+}
+
 /// [DOC sql/23-partitioning.md The Information Schema] [DOC sql/statements/create-index.md SYNOPSIS] [DESIGN] D33:
 /// a partitioned table is read with its strategy, key and partitions, each
 /// partition with its table and bound, its template's indexes not its own;

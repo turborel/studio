@@ -321,3 +321,113 @@ kbd {
 .about dt {
   font-weight: 600;
 }
+
+.explorer-connections summary,
+.catalog-bar {
+  font-weight: 600;
+  margin: 4px 0;
+}
+
+.catalog-search {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 4px 0;
+}
+
+.catalog-search input {
+  flex: 1;
+  min-width: 80px;
+}
+
+.found,
+.favourites {
+  list-style: none;
+  margin: 4px 0;
+  padding: 0;
+  width: 100%;
+}
+
+.link {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--accent-text);
+  text-align: left;
+}
+
+.tree-row {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  padding: 1px 4px;
+  cursor: default;
+  white-space: nowrap;
+}
+
+.tree-twisty {
+  display: inline-block;
+  width: 14px;
+  border: none;
+  background: none;
+  padding: 0;
+}
+
+.tree-note {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.tree-row.tree-active .tree-note {
+  color: var(--on-selection);
+}
+
+.details-title {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+
+.tabs {
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 6px;
+}
+
+.tabs [aria-selected="true"] {
+  border-bottom: 2px solid var(--accent-text);
+}
+
+.details-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.details-table th,
+.details-table td {
+  text-align: left;
+  padding: 2px 6px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.definition-bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.definition-text {
+  margin: 0;
+  padding: 8px;
+  background: var(--background);
+  border: 1px solid var(--border);
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 12px;
+  white-space: pre-wrap;
+  overflow: auto;
+}

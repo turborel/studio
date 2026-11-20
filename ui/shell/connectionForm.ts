@@ -18,6 +18,7 @@ export interface ConnectionForm {
   readonly spec: Readonly<Record<SpecField, string>>;
   readonly password: string;
   readonly savePassword: boolean;
+  readonly favourites: SavedConnection["favourites"];
 }
 
 /** The settings' fields, as the dialog names them. */
@@ -64,6 +65,7 @@ function newForm(): ConnectionForm {
     spec: { ...spec, tlsMode: NEW_TLS_MODE },
     password: "",
     savePassword: false,
+    favourites: [],
   };
 }
 
@@ -82,6 +84,7 @@ export function formOf(saved: SavedConnection | null): ConnectionForm {
     colour: saved.colour ?? "",
     readOnly: saved.readOnly,
     pinned: saved.pinned,
+    favourites: saved.favourites,
     spec,
   };
 }
@@ -112,6 +115,7 @@ export function savedOf(form: ConnectionForm): SavedConnection {
     colour: form.colour === "" ? null : form.colour.toUpperCase(),
     readOnly: form.readOnly,
     pinned: form.pinned,
+    favourites: form.favourites,
   };
 }
 

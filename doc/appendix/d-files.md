@@ -47,7 +47,8 @@ The saved connections, each with no password, and those used last:
       "environment": "production",
       "colour": null,
       "readOnly": true,
-      "pinned": true
+      "pinned": true,
+      "favourites": [{ "kind": "TABLE", "schema": "ANN", "name": "ORDERS" }]
     }
   ],
   "recent": ["6f1c0e2a9b3d4c5e8f7a6b5c4d3e2f10"]
@@ -60,7 +61,11 @@ name: `uri`, `host`, `port`, `user`, `tlsMode`, `channelBinding`,
 `loadBalance`, `tlsRoots`, `tlsSystemRoots`, `tlsCertificate`, `tlsKey`
 and `serverName`. A key not of these is refused. `environment` is
 `development`, `test` or `production`, and `colour` is `#RRGGBB` or
-null.
+null. `favourites` lists the connection's favourite objects
+([The Object Explorer](../user/04-explorer.md#favourites)), at most 500,
+each by its kind, `TABLE` (of a table or view), `ROUTINE` (by its
+specific name), `SEQUENCE`, `DOMAIN` or `TYPE`, its schema and its name;
+it may be left out, for none.
 
 ## settings.json
 

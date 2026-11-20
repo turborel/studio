@@ -10,6 +10,7 @@ const SAVED: SavedConnection = {
   colour: "#123456",
   readOnly: true,
   pinned: true,
+  favourites: [],
 };
 
 describe("the connection dialog's fields", () => {

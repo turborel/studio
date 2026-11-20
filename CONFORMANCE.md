@@ -79,29 +79,29 @@ each as the session's user may see it.
 
 | ID | Views | Read for | Status |
 |---|---|---|---|
-| S-VIEW-1 | SCHEMATA | the explorer's schemas | not yet |
-| S-VIEW-2 | TABLES | tables and views, by type | not yet |
-| S-VIEW-3 | COLUMNS | columns, types, defaults, nullability, identity and generation | not yet |
-| S-VIEW-4 | VIEWS | a view's definition | not yet |
-| S-VIEW-5 | TABLE_CONSTRAINTS | keys, unique constraints, foreign keys and checks | not yet |
-| S-VIEW-6 | KEY_COLUMN_USAGE | a key's columns, in order | not yet |
-| S-VIEW-7 | REFERENTIAL_CONSTRAINTS | a foreign key's referenced key and rules | not yet |
-| S-VIEW-8 | CHECK_CONSTRAINTS | a check's condition | not yet |
-| S-VIEW-9 | INDEXES, INDEX_OPTIONS | indexes, their methods, columns and options | not yet |
-| S-VIEW-10 | ROUTINES, PARAMETERS | functions and procedures, and their parameters | not yet |
-| S-VIEW-11 | TRIGGERS | triggers, their events, timing and actions | not yet |
-| S-VIEW-12 | DOMAINS, DOMAIN_CONSTRAINTS | domains and their constraints | not yet |
-| S-VIEW-13 | SEQUENCES | sequence generators | not yet |
-| S-VIEW-14 | USERS | users | not yet |
-| S-VIEW-15 | APPLICABLE_ROLES, ENABLED_ROLES, ADMINISTRABLE_ROLE_AUTHORIZATIONS | roles and their grants | not yet |
-| S-VIEW-16 | TABLE_PRIVILEGES, COLUMN_PRIVILEGES, USAGE_PRIVILEGES, ROUTINE_PRIVILEGES | privileges | not yet |
+| S-VIEW-1 | SCHEMATA | the explorer's schemas | done |
+| S-VIEW-2 | TABLES | tables and views, by type | done |
+| S-VIEW-3 | COLUMNS | columns, types, defaults, nullability, identity and generation | done |
+| S-VIEW-4 | VIEWS | a view's definition | done |
+| S-VIEW-5 | TABLE_CONSTRAINTS | keys, unique constraints, foreign keys and checks | done |
+| S-VIEW-6 | KEY_COLUMN_USAGE | a key's columns, in order | done |
+| S-VIEW-7 | REFERENTIAL_CONSTRAINTS | a foreign key's referenced key and rules | done |
+| S-VIEW-8 | CHECK_CONSTRAINTS | a check's condition | done |
+| S-VIEW-9 | INDEXES, INDEX_OPTIONS | indexes, their methods, columns and options | done |
+| S-VIEW-10 | ROUTINES, PARAMETERS | functions and procedures, and their parameters | done |
+| S-VIEW-11 | TRIGGERS | triggers, their events, timing and actions | done |
+| S-VIEW-12 | DOMAINS, DOMAIN_CONSTRAINTS | domains and their constraints | done |
+| S-VIEW-13 | SEQUENCES | sequence generators | done |
+| S-VIEW-14 | USERS | users | done |
+| S-VIEW-15 | APPLICABLE_ROLES, ENABLED_ROLES, ADMINISTRABLE_ROLE_AUTHORIZATIONS | roles and their grants | done |
+| S-VIEW-16 | TABLE_PRIVILEGES, COLUMN_PRIVILEGES, USAGE_PRIVILEGES, ROUTINE_PRIVILEGES | privileges | done |
 | S-VIEW-17 | SERVER, CONNECTIONS, CONNECTION_ATTRIBUTES | the server and session monitor | not yet |
 | S-VIEW-18 | JOBS, FILES, MEMORY_RESERVATIONS | the server's work, files and memory | not yet |
 | S-VIEW-19 | SETTINGS | session and database settings | not yet |
 | S-VIEW-20 | REPLICAS | replication's status | not yet |
 | S-VIEW-21 | PROPERTY_GRAPHS, PG_ELEMENT_TABLES, PG_EDGE_ENDPOINTS | property graphs, drawn as diagrams | not yet |
-| S-VIEW-22 | PARTITIONED_TABLES, PARTITIONS, PARTITION_INDEXES | partitions and their indexes | not yet |
-| S-VIEW-23 | USER_DEFINED_TYPES, ATTRIBUTES | user-defined types | not yet |
+| S-VIEW-22 | PARTITIONED_TABLES, PARTITIONS, PARTITION_INDEXES | partitions and their indexes | done |
+| S-VIEW-23 | USER_DEFINED_TYPES, ATTRIBUTES | user-defined types | done |
 
 ## turborel-client
 

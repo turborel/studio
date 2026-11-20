@@ -9,6 +9,7 @@ import type { Guards, ServerTime, SessionState, StudioError } from "../ipc/conne
 import type { Settings } from "../ipc/preferences";
 import { DEFAULT_SETTINGS } from "../ipc/preferences";
 import type { KeychainStatus, SavedConnection, SavedList } from "../ipc/saved";
+import type { CatalogState, Selected } from "../explorer/catalogState";
 
 /** A connection open in this window. */
 export interface OpenConnection {
@@ -38,6 +39,8 @@ export interface StudioState {
   readonly active: number | null;
   readonly dialog: Dialog | null;
   readonly error: StudioError | null;
+  readonly catalogs: Readonly<Record<number, CatalogState>>;
+  readonly selected: { readonly connection: number; readonly object: Selected } | null;
 }
 
 /** The state before anything is loaded. */
@@ -49,6 +52,8 @@ export const INITIAL: StudioState = {
   active: null,
   dialog: null,
   error: null,
+  catalogs: {},
+  selected: null,
 };
 
 /** The store of a window: its state, and who reads it. */

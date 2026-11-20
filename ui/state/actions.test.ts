@@ -26,6 +26,7 @@ const SAVED: SavedConnection = {
   colour: null,
   readOnly: true,
   pinned: false,
+  favourites: [],
 };
 
 describe("the actions", () => {

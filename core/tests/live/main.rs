@@ -147,6 +147,7 @@ const TESTS: &[(&str, Test)] = &[
     ("routines_and_users_are_read", catalog::routines_and_users_are_read),
     ("dependencies_and_search", catalog::dependencies_and_search),
     ("a_table_is_made_again_of_its_definition", catalog::a_table_is_made_again_of_its_definition),
+    ("the_manuals_definition_is_written", catalog::the_manuals_definition_is_written),
     ("partitions_and_index_options_are_read", catalog::partitions_and_index_options_are_read),
     ("types_are_read_and_made_again", catalog::types_are_read_and_made_again),
     ("privileges_and_roles_are_read", catalog::privileges_and_roles_are_read),

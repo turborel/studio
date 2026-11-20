@@ -100,6 +100,7 @@ Each is told in full in [§7](#7-the-decisions).
 | `ui/ipc/` | the typed commands, the front end's one way to the backend (R-TS-3) |
 | `ui/theme/` | the themes' palettes (D20) |
 | `ui/shell/` | the dock, toolbar, status bar, dialogs and the explorer's connections |
+| `ui/explorer/` | the catalog's tree, the details panel and the definition view (D33) |
 | `ui/state/` | the window's store and its actions (D31) |
 | `ui/commands/` | the commands and their keys (D30) |
 | `ui/test/` | the one Vitest setup and the one mock of the backend (R-TEST-7) |

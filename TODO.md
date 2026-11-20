@@ -7,22 +7,11 @@ become decisions in [RULES.md](RULES.md).
 
 Code never cites this file (R-DOC-5).
 
-## M3 Object Explorer
-
-- The catalog tree from the Information Schema (S-VIEW-1 to S-VIEW-16,
-  S-VIEW-22, S-VIEW-23).
-- Search, the details panel and the DDL view.
-- Favourite objects pinned at the top of the explorer.
-- Filter and search the tree, inside definitions too: routine bodies,
-  views, triggers and checks.
-- Drag a table into the editor to write a SELECT or INSERT of its
-  columns.
-- Script as CREATE, ALTER, DROP, SELECT, INSERT, UPDATE and DELETE, to a
-  worksheet, the clipboard or a file; scripts of a whole schema or of
-  objects chosen.
-- A dependencies view: what an object uses, and what uses it.
-
 ## M4 SQL worksheet
+
+- From the explorer: a table dragged into the editor writes a SELECT or
+  INSERT of its columns; Script as, to a worksheet; a script of the
+  objects chosen in the tree.
 
 - CodeMirror 6, its Turborel SQL mode from Turborel's key words, and
   completion from the catalog.
@@ -90,6 +79,9 @@ Code never cites this file (R-DOC-5).
   and exported (S-VIEW-21).
 - Models designed offline (S-FILE-1), compared with a live schema, and
   their DDL script; schema compare.
+- A structured type's definition with its supertype, its reference
+  type's options and its methods, which the explorer's definition does
+  not yet write.
 - A visual query builder: tables picked, joins from their foreign keys,
   columns, filters, grouping and order, its SQL written live in a
   worksheet.

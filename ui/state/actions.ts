@@ -112,7 +112,9 @@ export async function disconnect(store: Store, id: number): Promise<void> {
   });
   store.update((now) => {
     const open = now.open.filter((c) => c.id !== id);
-    return { ...now, open, active: now.active === id ? (open[0]?.id ?? null) : now.active };
+    const catalogs = Object.fromEntries(Object.entries(now.catalogs).filter(([key]) => key !== String(id)));
+    const selected = now.selected?.connection === id ? null : now.selected;
+    return { ...now, open, catalogs, selected, active: now.active === id ? (open[0]?.id ?? null) : now.active };
   });
 }
 

@@ -4,7 +4,17 @@ import { tree } from "./connectionsTree";
 /** A saved connection of `name`, in `folder`. */
 function view(id: string, name: string, folder: string[], pinned = false): SavedView {
   return {
-    connection: { id, name, folder, spec: {}, environment: "development", colour: null, readOnly: false, pinned },
+    connection: {
+      id,
+      name,
+      folder,
+      spec: {},
+      environment: "development",
+      colour: null,
+      readOnly: false,
+      pinned,
+      favourites: [],
+    },
     passwordSaved: false,
   };
 }

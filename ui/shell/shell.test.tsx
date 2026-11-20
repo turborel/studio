@@ -301,6 +301,7 @@ describe("the dialogs' keys and fields", () => {
       colour: null,
       readOnly: false,
       pinned: false,
+      favourites: [],
     } as const;
     const asked = mockBackend({ save_connection: (args) => args["connection"] });
     const store = new Store();

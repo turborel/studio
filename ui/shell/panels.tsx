@@ -1,11 +1,19 @@
-/** The dock's panels: the explorer's connections, the centre, and details. */
+/** The dock's panels: the explorer, the centre, and the details. */
+import { CatalogTree } from "../explorer/CatalogTree";
+import { Details } from "../explorer/Details";
+import { useStudio } from "../state/store";
 import { ConnectionsPanel } from "./ConnectionsPanel";
 
-/** The Object Explorer: the connections, open and saved. */
+/** The Object Explorer: the connections, open and saved, then the active connection's catalog. */
 export function ExplorerPanel() {
+  const active = useStudio((s) => s.active);
   return (
     <div className="panel" role="region" aria-label="Object Explorer">
-      <ConnectionsPanel />
+      <details className="explorer-connections" open>
+        <summary>Connections</summary>
+        <ConnectionsPanel />
+      </details>
+      {active !== null && <CatalogTree key={active} connection={active} />}
     </div>
   );
 }
@@ -22,5 +30,5 @@ export function WelcomePanel() {
 
 /** Details of what is selected. */
 export function DetailsPanel() {
-  return <div className="panel-empty">Nothing is selected.</div>;
+  return <Details />;
 }
