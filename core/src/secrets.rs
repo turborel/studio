@@ -157,8 +157,9 @@ mod tests {
     }
 }
 
-/// The variable that runs the test of the platform's own keychain: it
-/// writes to the user's keychain, so it runs only where a person asks.
+/// The variable that runs the test of the platform's own keychain, set and
+/// not empty: it writes to the user's keychain, so it runs only where a
+/// person, or CI, asks.
 #[cfg(test)]
 const KEYCHAIN_VARIABLE: &str = "STUDIO_TEST_KEYCHAIN";
 
@@ -168,7 +169,7 @@ const KEYCHAIN_VARIABLE: &str = "STUDIO_TEST_KEYCHAIN";
 #[cfg(test)]
 #[test]
 fn the_platforms_keychain_keeps_a_secret() {
-    if std::env::var(KEYCHAIN_VARIABLE).is_err() {
+    if std::env::var(KEYCHAIN_VARIABLE).map_or(true, |set| set.is_empty()) {
         return;
     }
     let keychain = Keychain::open().unwrap();

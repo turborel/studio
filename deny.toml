@@ -24,6 +24,12 @@ ignore = [
     # which Tauri's Linux webview needs, in no code Studio ships. No release
     # of Tauri leaves gtk-rs 0.18 yet.
     { id = "RUSTSEC-2024-0370", reason = "a build-time macro of gtk-rs 0.18, which Tauri's Linux webview needs" },
+    # zvariant, zbus_names and zvariant_derive are unmaintained as crates of
+    # their own, merged into zbus 6; the Secret Service's keyring store
+    # (RULES.md D16) has no release on zbus 6 yet.
+    { id = "RUSTSEC-2026-0370", reason = "zvariant, merged into zbus 6; the keyring store is on zbus 5" },
+    { id = "RUSTSEC-2026-0371", reason = "zbus_names, merged into zbus 6; the keyring store is on zbus 5" },
+    { id = "RUSTSEC-2026-0372", reason = "zvariant_derive, merged into zbus 6; the keyring store is on zbus 5" },
 ]
 
 [licenses]

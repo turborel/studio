@@ -106,9 +106,11 @@ fn totals(tools: &Path, merged: &Path, objects: &[String]) -> Result<(f64, f64)>
     if !ok {
         return fail(format!("llvm-cov export failed: {text}"));
     }
+    // The JSON is followed, in what the tool wrote, by any warnings it
+    // gave on standard error: the first value alone is read.
     let start = text.find('{').unwrap_or_default();
-    let json: serde_json::Value =
-        serde_json::from_str(text.get(start..).unwrap_or_default()).map_err(|e| Error(format!("llvm-cov: {e}")))?;
+    let mut values = serde_json::Deserializer::from_str(text.get(start..).unwrap_or_default()).into_iter::<serde_json::Value>();
+    let json = values.next().transpose().map_err(|e| Error(format!("llvm-cov: {e}")))?.unwrap_or_default();
     let percent = |kind: &str| json.pointer(&format!("/data/0/totals/{kind}/percent")).and_then(serde_json::Value::as_f64);
     match (percent("lines"), percent("regions")) {
         (Some(lines), Some(regions)) => Ok((lines, regions)),
