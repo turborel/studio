@@ -1,0 +1,105 @@
+# Files are laid out by area (RULES.md §2), so these globs label a pull
+# request by the areas it touches.
+
+area/connections:
+  - changed-files:
+      - any-glob-to-any-file: ["core/src/connections/**", "core/src/connections.rs", "core/tests/**"]
+
+area/secrets:
+  - changed-files:
+      - any-glob-to-any-file: ["core/src/secrets/**", "core/src/secrets.rs"]
+
+area/ipc:
+  - changed-files:
+      - any-glob-to-any-file: ["src-tauri/src/**", "src-tauri/build.rs", "src-tauri/capabilities/**", "ui/ipc/**"]
+
+area/shell:
+  - changed-files:
+      - any-glob-to-any-file:
+          ["ui/shell/**", "ui/theme/**", "ui/App.tsx", "ui/main.tsx", "ui/styles.css", "src-tauri/tauri.conf.json"]
+
+area/explorer:
+  - changed-files:
+      - any-glob-to-any-file: ["core/src/catalog/**", "core/src/catalog.rs", "ui/explorer/**"]
+
+area/worksheet:
+  - changed-files:
+      - any-glob-to-any-file: ["ui/worksheet/**"]
+
+area/grid:
+  - changed-files:
+      - any-glob-to-any-file: ["ui/grid/**"]
+
+area/editing:
+  - changed-files:
+      - any-glob-to-any-file: ["ui/editing/**", "core/src/editing/**", "core/src/editing.rs"]
+
+area/modeling:
+  - changed-files:
+      - any-glob-to-any-file: ["ui/modeling/**", "core/src/model/**", "core/src/model.rs"]
+
+area/analyzer:
+  - changed-files:
+      - any-glob-to-any-file: ["ui/analyzer/**", "core/src/analyzer/**", "core/src/analyzer.rs"]
+
+area/assistant:
+  - changed-files:
+      - any-glob-to-any-file: ["ui/assistant/**", "core/src/assistant/**", "core/src/assistant.rs"]
+
+area/admin:
+  - changed-files:
+      - any-glob-to-any-file: ["ui/admin/**", "core/src/admin/**", "core/src/admin.rs"]
+
+area/doc:
+  - changed-files:
+      - any-glob-to-any-file:
+          [
+            "doc/**",
+            "README.md",
+            "RULES.md",
+            "CONFORMANCE.md",
+            "TODO.md",
+            "AGENTS.md",
+            "CLAUDE.md",
+            "CONTRIBUTING.md",
+            "SECURITY.md",
+            "TRADEMARK.md",
+            "VERSIONING.md",
+          ]
+
+area/ci:
+  - changed-files:
+      - any-glob-to-any-file: [".github/**"]
+
+area/build:
+  - changed-files:
+      - any-glob-to-any-file:
+          [
+            "Cargo.toml",
+            "Cargo.lock",
+            "package.json",
+            "package-lock.json",
+            "xtask/**",
+            "deny.toml",
+            "src-tauri/icons/**",
+            "artwork/**",
+            ".githooks/**",
+            ".gitattributes",
+            ".gitignore",
+            "rust-toolchain.toml",
+            "tsconfig.json",
+            "vite.config.ts",
+            "eslint.config.js",
+          ]
+
+dependencies:
+  - changed-files:
+      - any-glob-to-any-file:
+          [
+            "Cargo.toml",
+            "Cargo.lock",
+            "package.json",
+            "package-lock.json",
+            ".github/workflows/**",
+            ".github/dependabot.yml",
+          ]

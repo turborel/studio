@@ -1,0 +1,44 @@
+name: Feature
+description: Something Studio should do that it does not.
+labels: ["feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Check TODO.md and CONFORMANCE.md first: it may be planned already.
+        A feature of the server or its SQL is proposed to turborel.
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What you need to do, and why Studio cannot do it today, or not well.
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Area
+      options:
+        - Connections
+        - The Object Explorer
+        - Worksheets and results
+        - Editing data and definitions
+        - Schema modeling
+        - The analyzer
+        - The assistant
+        - Administration
+        - Documentation
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you propose
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives
+      description: What else would solve the problem, and why this is better.

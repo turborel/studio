@@ -1,0 +1,6 @@
+# The toolchain Turborel itself pins (RULES.md D3): every build, test and
+# coverage run uses exactly this version. Change it in its own commit.
+[toolchain]
+channel = "1.99.1"
+components = ["clippy", "rustfmt", "llvm-tools"]
+profile = "minimal"

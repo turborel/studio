@@ -1,0 +1,19 @@
+[package]
+name = "turborel-studio-core"
+description = "Turborel Studio's backend: connections on worker threads over turborel-client, the catalog, the analyzer, schema models and the assistant, with no user interface (RULES.md D1)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+turborel-client.workspace = true
+turborel.workspace = true
+turborel-protocol.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+[lints]
+workspace = true

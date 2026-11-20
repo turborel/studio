@@ -1,0 +1,60 @@
+# Builds Studio's installers, run only by hand (VERSIONING.md, Publishing):
+# a .dmg on macOS, an .msi on Windows, an .AppImage and a .deb on Linux,
+# unsigned, kept as the run's artifacts. It publishes nothing. Signing,
+# notarization and publishing wait for the owner: the steps that tag and
+# publish are written below and left disabled.
+name: release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  LINUX_PACKAGES: libwebkit2gtk-4.1-dev build-essential pkg-config libxdo-dev librsvg2-dev file
+
+jobs:
+  bundle:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "26"
+          cache: npm
+      - name: Tauri's Linux packages
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y $LINUX_PACKAGES
+      - name: Install the pinned toolchain
+        run: rustup toolchain install
+      - name: The front end's packages
+        run: npm ci --no-fund --no-audit
+      - name: Every check
+        run: cargo xtask verify
+      - name: The installers
+        run: npm exec -- tauri build
+      - name: Keep what was built
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: turborel-studio-${{ runner.os }}
+          path: |
+            target/release/bundle/dmg/*.dmg
+            target/release/bundle/msi/*.msi
+            target/release/bundle/appimage/*.AppImage
+            target/release/bundle/deb/*.deb
+          if-no-files-found: error
+
+      # Publishing, disabled: the owner enables these once installers are
+      # to be released (VERSIONING.md, Publishing), by signing them with
+      # the owner's certificates, removing each `if: false`, and giving
+      # the job `contents: write`.
+      - name: Tag and publish the release
+        if: false
+        run: echo "The owner enables publishing."

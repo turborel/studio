@@ -1,0 +1,72 @@
+# Turborel Studio's Rust workspace (RULES.md D1): the backend library, the
+# Tauri application over it, and the checks tool.
+[workspace]
+resolver = "3"
+members = ["core", "src-tauri", "xtask"]
+
+[workspace.package]
+# The Turborel release Studio is made for (RULES.md D5, VERSIONING.md).
+version = "0.0.0"
+edition = "2024"
+rust-version = "1.99.1"
+license = "BSD-2-Clause-Patent"
+repository = "https://github.com/turborel/studio"
+publish = false
+
+[workspace.dependencies]
+# Turborel's own client library, at a pinned commit of Turborel's main
+# (RULES.md D10). The crates.io 0.0.0 crates are frozen and never used.
+turborel-client = { git = "https://github.com/turborel/turborel", rev = "8052705ecab0f3cd9668f992ff14505c7a60f5dc", features = ["tls", "scram", "system-roots"] }
+turborel = { git = "https://github.com/turborel/turborel", rev = "8052705ecab0f3cd9668f992ff14505c7a60f5dc" }
+turborel-protocol = { git = "https://github.com/turborel/turborel", rev = "8052705ecab0f3cd9668f992ff14505c7a60f5dc" }
+# The IPC's and the files' encoding (RULES.md D17).
+serde = { version = "=1.0.229", features = ["derive"] }
+serde_json = "=1.0.154"
+# The desktop shell (RULES.md D9).
+tauri = { version = "=2.12.7", features = [] }
+tauri-build = { version = "=2.7.6", features = [] }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"                                    # R-SAFE-2
+missing_docs = "warn"                                     # R-DOC-1
+rust_2018_idioms = { level = "warn", priority = -1 }
+unused_qualifications = "warn"
+
+[workspace.lints.clippy]
+pedantic = { level = "warn", priority = -1 }              # R-LINT-2
+must_use_candidate = "allow"                              # R-LINT-2: too noisy to help
+doc_markdown = "allow"                                    # R-DOC-4: names of SQL and of views are cited as printed
+# R-ERR-1: no panics in library code
+unwrap_used = "warn"
+expect_used = "warn"
+panic = "warn"
+todo = "warn"
+unimplemented = "warn"
+unreachable = "warn"
+get_unwrap = "warn"
+unwrap_in_result = "warn"
+panic_in_result_fn = "warn"
+fallible_impl_from = "warn"
+indexing_slicing = "warn"
+string_slice = "warn"
+exit = "warn"
+# R-NUM: arithmetic and conversions
+arithmetic_side_effects = "warn"
+as_conversions = "warn"
+integer_division = "warn"
+lossy_float_literal = "warn"
+# R-SIZE-5
+cognitive_complexity = "warn"
+excessive_nesting = "warn"
+# R-STYLE-3: hygiene
+dbg_macro = "warn"
+print_stdout = "warn"
+print_stderr = "warn"
+mem_forget = "warn"
+allow_attributes_without_reason = "warn"                  # R-LINT-3
+
+[profile.release]
+# A desktop program: smaller and faster, its panics none (R-ERR-1).
+lto = "thin"
+codegen-units = 1
+strip = "symbols"

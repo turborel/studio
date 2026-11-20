@@ -1,0 +1,12 @@
+# Build output: Rust's, the front end's and Tauri's generated schemas.
+target/
+dist/
+node_modules/
+src-tauri/gen/
+coverage/
+# Editors and the platform.
+.idea/
+.vscode/
+.DS_Store
+# Agents' local files, and live tests' data directories under them.
+.claude/

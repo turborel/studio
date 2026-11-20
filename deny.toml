@@ -1,0 +1,45 @@
+# cargo deny's policy (RULES.md D23, R-SEC-10): advisories, licenses, bans
+# and sources of every crate Studio and its tools are built from.
+
+[graph]
+all-features = false
+
+[advisories]
+# Every advisory fails the check, unmaintained crates too; one accepted is
+# listed here with its reason.
+version = 2
+yanked = "deny"
+ignore = []
+
+[licenses]
+version = 2
+confidence-threshold = 0.9
+# MIT and Apache-2.0 first (R-DEP-2); the others are those of crates the
+# toolkits pull in, each permissive: BSD-3-Clause, ISC, Zlib, Unicode's
+# data license, and MPL-2.0, a file-level copyleft whose files are used
+# unchanged. Turborel's own crates are BSD-2-Clause-Patent. A license no
+# crate has is not listed.
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause-Patent",
+    "BSD-3-Clause",
+    "ISC",
+    "Zlib",
+    "Unicode-3.0",
+    "MPL-2.0",
+]
+
+[bans]
+multiple-versions = "allow"
+wildcards = "deny"
+allow-wildcard-paths = true
+# TLS and its cryptography are rustls on aws-lc-rs (R-SEC-10).
+deny = [{ crate = "ring", reason = "TLS is rustls on aws-lc-rs, as Turborel's" }]
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+allow-git = ["https://github.com/turborel/turborel"]

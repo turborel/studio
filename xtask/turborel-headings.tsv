@@ -1,0 +1,2136 @@
+# The headings of Turborel's manual at 8052705ecab0f3cd9668f992ff14505c7a60f5dc, copied by `cargo xtask headings` (RULES.md D6).
+README.md	The Turborel Documentation Set
+README.md	The volumes
+README.md	Conventions
+README.md	Pages of reference
+appendix/README.md	Appendices
+appendix/README.md	Contents
+appendix/a-sqlstate.md	Appendix A: SQLSTATE and SQLCODE
+appendix/a-sqlstate.md	SQLSTATE values
+appendix/a-sqlstate.md	SQLCODE values
+appendix/a-sqlstate.md	Property graph conditions
+appendix/b-key-words.md	Appendix B: Key Words
+appendix/b-key-words.md	Reserved words
+appendix/b-key-words.md	Non-reserved words
+appendix/c-settings.md	Appendix C: Settings *(extension)*
+appendix/c-settings.md	The database's settings
+appendix/c-settings.md	The server's settings
+appendix/d-limits.md	Appendix D: Limits
+appendix/d-limits.md	Lengths and precisions
+appendix/d-limits.md	Nesting
+appendix/d-limits.md	Grouping
+appendix/d-limits.md	Sizes
+appendix/e-implementation.md	Appendix E: Implementation-Defined Choices
+appendix/e-implementation.md	By clause of the standard
+appendix/f-versions.md	Appendix F: Versions
+appendix/f-versions.md	Releases and codenames
+appendix/f-versions.md	Format and protocol versions
+appendix/g-table-options.md	Appendix G: Table Options *(extension)*
+appendix/g-table-options.md	The column store
+appendix/glossary.md	Glossary
+appendix/glossary.md	Terms
+client/01-turborel.md	The turborel Command
+client/01-turborel.md	Synopsis
+client/01-turborel.md	Options
+client/01-turborel.md	Typed sessions
+client/01-turborel.md	Running files and commands
+client/01-turborel.md	Timing
+client/01-turborel.md	Importing
+client/01-turborel.md	Connections
+client/01-turborel.md	Interrupting a statement
+client/01-turborel.md	Extensions
+client/01-turborel.md	Exit status
+client/02-library-connections.md	Settings, Pipelines and Pools
+client/02-library-connections.md	Connecting by settings
+client/02-library-connections.md	Where settings come from
+client/02-library-connections.md	The connection URI
+client/02-library-connections.md	The service file
+client/02-library-connections.md	The password file
+client/02-library-connections.md	Several servers
+client/02-library-connections.md	TLS by mode
+client/02-library-connections.md	Pipelines
+client/02-library-connections.md	Pools
+client/02-library-connections.md	The SCRAM key cache
+client/02-library.md	The Client Library
+client/02-library.md	Connecting
+client/02-library.md	Timeouts
+client/02-library.md	Running statements
+client/02-library.md	Prepared statements
+client/02-library.md	Large objects
+client/02-library.md	XML values
+client/02-library.md	UUIDs
+client/02-library.md	Importing
+client/02-library.md	What a connection asks for
+client/02-library.md	What the server tells
+client/02-library.md	Controlling the session
+client/02-library.md	Copying and exporting
+client/02-library.md	The SQL-agent
+client/03-embedding.md	The Embedded Library
+client/03-embedding.md	The database
+client/03-embedding.md	Sessions
+client/03-embedding.md	Reading rows
+client/03-embedding.md	Parameters
+client/03-embedding.md	Cursors
+client/03-embedding.md	Prepared statements
+client/03-embedding.md	Large objects
+client/03-embedding.md	Functions
+client/03-embedding.md	Table functions and procedures *(extension)*
+client/03-embedding.md	XML names
+client/03-embedding.md	Engines and other plug-ins
+client/03-embedding.md	Indexes for function calls *(extension)*
+client/03-embedding.md	Full-text rankings *(extension)*
+client/03-embedding.md	Partition strategies *(extension)*
+client/03-embedding.md	Spatial data *(extension)*
+client/03-embedding.md	Spatial storage primitives
+client/03-embedding.md	Backups *(extension)*
+client/03-embedding.md	See also
+client/04-plugins-host.md	Host Plug-ins
+client/04-plugins-host.md	Declaring a host plug-in
+client/04-plugins-host.md	Settings of a host plug-in
+client/04-plugins-host.md	When a host plug-in fails
+client/04-plugins-host.md	Encodings and checksums
+client/04-plugins-host.md	The clock
+client/04-plugins-host.md	The log and the catalog
+client/04-plugins-host.md	Spill
+client/04-plugins-host.md	The file system
+client/04-plugins-host.md	Keys and package cryptography
+client/04-plugins-host.md	Jobs
+client/04-plugins-host.md	Buffer eviction
+client/04-plugins-host.md	Connections
+client/04-plugins-host.md	What is no kind
+client/04-plugins-kinds.md	Kinds of Plug-in
+client/04-plugins-kinds.md	Rankings
+client/04-plugins-kinds.md	Quantizers
+client/04-plugins-kinds.md	Collations
+client/04-plugins-kinds.md	System tables
+client/04-plugins-kinds.md	XQuery functions
+client/04-plugins-kinds.md	Types
+client/04-plugins-kinds.md	Storage engines
+client/04-plugins-kinds.md	Index methods
+client/04-plugins-kinds.md	Credentials and sinks of events
+client/04-plugins-kinds.md	Languages of full-text search
+client/04-plugins-kinds.md	The points a plug-in may not serve
+client/04-plugins-packages.md	Packages
+client/04-plugins-packages.md	Versions and ranges
+client/04-plugins-packages.md	For authors
+client/04-plugins-packages.md	The manifest of a package
+client/04-plugins-packages.md	Licenses
+client/04-plugins-packages.md	Signing and packing
+client/04-plugins-packages.md	For operators
+client/04-plugins-packages.md	Settings
+client/04-plugins-packages.md	Installing
+client/04-plugins-packages.md	The lock
+client/04-plugins-packages.md	Looking after packages
+client/04-plugins-packages.md	Conditions
+client/04-plugins-planner.md	Optimizer Rules and Statistics
+client/04-plugins-planner.md	Optimizer rules
+client/04-plugins-planner.md	The plan form
+client/04-plugins-planner.md	Statistics for the planner
+client/04-plugins-planner.md	Statistics a plug-in asks
+client/04-plugins-planner.md	The SDK
+client/04-plugins-replication.md	Replication and Archive Plug-ins
+client/04-plugins-replication.md	Declaring them
+client/04-plugins-replication.md	Failing stop
+client/04-plugins-replication.md	Replica transports
+client/04-plugins-replication.md	Journals
+client/04-plugins-replication.md	State transfers
+client/04-plugins-replication.md	Consensus
+client/04-plugins-replication.md	Archives
+client/04-plugins-replication.md	Serving them from the SDK
+client/04-plugins-sdk.md	Writing a Plug-in
+client/04-plugins-sdk.md	Starting a project
+client/04-plugins-sdk.md	Building
+client/04-plugins-sdk.md	Testing
+client/04-plugins-sdk.md	Packing
+client/04-plugins-sdk.md	Installing
+client/04-plugins.md	Plug-ins
+client/04-plugins.md	Loading an extension
+client/04-plugins.md	The manifest
+client/04-plugins.md	Settings
+client/04-plugins.md	Protocol 1
+client/04-plugins.md	The plug-in SDK
+client/04-plugins.md	Functions, aggregates, table functions and procedures
+client/04-plugins.md	Metrics and embedding models
+client/04-plugins.md	Authenticators
+client/04-plugins.md	Backup targets
+client/04-plugins.md	Partitioning strategies
+client/04-plugins.md	Rankings
+client/04-plugins.md	Quantizers
+client/04-plugins.md	Collations
+client/04-plugins.md	System tables
+client/04-plugins.md	XQuery functions
+client/04-plugins.md	Types
+client/04-plugins.md	Storage engines
+client/04-plugins.md	Index methods
+client/04-plugins.md	Optimizer rules and statistics
+client/04-plugins.md	Languages
+client/04-plugins.md	Credentials and sinks of events
+client/04-plugins.md	A plug-in by hand
+client/04-plugins.md	When a plug-in fails
+client/04-plugins.md	What is loaded
+client/04-plugins.md	Other plug-in points
+client/05-protocol.md	The Native Protocol
+client/05-protocol.md	Frames
+client/05-protocol.md	Compressed frames
+client/05-protocol.md	Values and fields
+client/05-protocol.md	Data types
+client/05-protocol.md	Values
+client/05-protocol.md	JSON values
+client/05-protocol.md	Composite fields
+client/05-protocol.md	The tail
+client/05-protocol.md	Opening a connection
+client/05-protocol.md	Mechanisms
+client/05-protocol.md	Capabilities
+client/05-protocol.md	Requests
+client/05-protocol.md	Hello 'H'
+client/05-protocol.md	Answer 'A'
+client/05-protocol.md	Query 'Q'
+client/05-protocol.md	Prepare 'P'
+client/05-protocol.md	Execute 'E'
+client/05-protocol.md	Fetch 'F'
+client/05-protocol.md	Close 'C'
+client/05-protocol.md	Deallocate 'D'
+client/05-protocol.md	Lob 'L'
+client/05-protocol.md	Cancel 'Z'
+client/05-protocol.md	Terminate 'X'
+client/05-protocol.md	Describe 'Y'
+client/05-protocol.md	Ping 'G'
+client/05-protocol.md	Reset 'W'
+client/05-protocol.md	ChangeUser 'U'
+client/05-protocol.md	CopyIn 'I'
+client/05-protocol.md	CopyData 'J'
+client/05-protocol.md	CopyEnd 'N'
+client/05-protocol.md	Replies
+client/05-protocol.md	Challenge 'C'
+client/05-protocol.md	Ready 'R'
+client/05-protocol.md	Prepared 'P'
+client/05-protocol.md	Description 'D'
+client/05-protocol.md	Declared types
+client/05-protocol.md	Rows 'B'
+client/05-protocol.md	Suspended 'S'
+client/05-protocol.md	Complete 'K'
+client/05-protocol.md	Error 'E'
+client/05-protocol.md	Lob 'L'
+client/05-protocol.md	Notice 'N'
+client/05-protocol.md	Status 'T'
+client/05-protocol.md	Pong 'G'
+client/05-protocol.md	Conversations
+client/05-protocol.md	Errors and notices
+client/05-protocol.md	Sample frames
+client/05-protocol.md	A worked example
+client/05-turborel-commands.md	Working in the turborel Command
+client/05-turborel-commands.md	Backslash commands
+client/05-turborel-commands.md	Typing
+client/05-turborel-commands.md	Variables
+client/05-turborel-commands.md	Conditionals
+client/05-turborel-commands.md	Output formats
+client/05-turborel-commands.md	The pager
+client/05-turborel-commands.md	Describing the database
+client/05-turborel-commands.md	Scripts
+client/05-turborel-commands.md	Importing and exporting
+client/05-turborel-commands.md	Prompts
+client/05-turborel-commands.md	The connection
+client/05-turborel-commands.md	Statement help
+client/05-turborel-commands.md	Administration
+client/README.md	Volume IV: Client Reference
+client/README.md	Contents
+data/01-fulltext.md	Full-Text Search
+data/01-fulltext.md	The tickets
+data/01-fulltext.md	Searching
+data/01-fulltext.md	Indexing
+data/01-fulltext.md	Searching by pattern
+data/02-spatial.md	Spatial Data
+data/02-spatial.md	The deliveries
+data/02-spatial.md	Coordinates and reference systems
+data/02-spatial.md	Importing and exporting
+data/02-spatial.md	Searching a map window
+data/02-spatial.md	Service areas and routes
+data/02-spatial.md	Nearby depots
+data/03-json.md	JSON Data
+data/03-json.md	The orders
+data/03-json.md	Reading values
+data/03-json.md	Finding orders
+data/03-json.md	Items as rows
+data/03-json.md	Dates and times
+data/03-json.md	Building JSON
+data/03-json.md	Indexes
+data/04-vectors.md	Vectors *(extension)*
+data/04-vectors.md	The recipes
+data/04-vectors.md	Finding the nearest
+data/04-vectors.md	Indexing
+data/04-vectors.md	Choosing a metric
+data/04-vectors.md	Working with vectors
+data/04-vectors.md	A distance of one's own
+data/05-xml.md	XML Data
+data/05-xml.md	The catalogs
+data/05-xml.md	Reading values
+data/05-xml.md	Finding catalogs
+data/05-xml.md	Products as rows
+data/05-xml.md	Typed values
+data/05-xml.md	Asking XQuery
+data/05-xml.md	Building XML
+data/05-xml.md	Indexes
+data/06-graphs.md	Graphs
+data/06-graphs.md	The accounts and transfers
+data/06-graphs.md	The graph
+data/06-graphs.md	Patterns
+data/06-graphs.md	Paths
+data/06-graphs.md	Each account
+data/README.md	Volume V: Specialized Data
+data/README.md	Contents
+operator/01-installing.md	Installing
+operator/01-installing.md	Platforms
+operator/01-installing.md	The latest alpha
+operator/01-installing.md	The container image
+operator/01-installing.md	Building from source
+operator/01-installing.md	What is installed
+operator/02-turboreld.md	Running the Server
+operator/02-turboreld.md	The turboreld command line
+operator/02-turboreld.md	Configuration files
+operator/02-turboreld.md	Starting and stopping
+operator/02-turboreld.md	Signals
+operator/03-databases.md	Databases
+operator/03-databases.md	A database's directory
+operator/03-databases.md	Opening and closing
+operator/03-databases.md	Recovery after a crash
+operator/03-databases.md	Checkpoints
+operator/03-databases.md	Open files
+operator/03-databases.md	Background work
+operator/04-settings.md	Settings *(extension)*
+operator/04-settings.md	Scopes
+operator/04-settings.md	SET DATABASE
+operator/04-settings.md	When a change takes effect
+operator/04-settings.md	Reading settings
+operator/04-settings.md	A session's own
+operator/04-settings.md	Parallel queries
+operator/04-settings.md	Batches and morsels
+operator/04-settings.md	Settings of plug-ins
+operator/05-users.md	Users and Authentication *(extension)*
+operator/05-users.md	Users and the owner
+operator/05-users.md	A user's sessions
+operator/05-users.md	Passwords
+operator/05-users.md	Certificates
+operator/05-users.md	Trusted local clients
+operator/05-users.md	Managing users from turboreld
+operator/05-users.md	The owner of a database kept nowhere
+operator/06-network.md	Connections
+operator/06-network.md	TCP
+operator/06-network.md	Unix sockets and named pipes
+operator/06-network.md	TLS
+operator/06-network.md	Certificates renewed
+operator/06-network.md	Limits on connections
+operator/06-network.md	What a connection holds
+operator/06-network.md	Pipelined requests
+operator/06-network.md	Logins
+operator/06-network.md	Clients gone
+operator/06-network.md	Ending a connection
+operator/07-encryption.md	Encryption
+operator/07-encryption.md	Keys
+operator/07-encryption.md	Ciphers
+operator/07-encryption.md	Table encodings
+operator/07-encryption.md	Retiring a key
+operator/07-encryption.md	The files' formats
+operator/07-encryption.md	Checksums
+operator/08-diagnostics.md	Diagnostics
+operator/08-diagnostics.md	The event log
+operator/08-diagnostics.md	Levels
+operator/08-diagnostics.md	Rotating the log
+operator/08-diagnostics.md	Slow statements
+operator/09-replication.md	Replication *(extension)*
+operator/09-replication.md	A replica group
+operator/09-replication.md	Serving
+operator/09-replication.md	Commands on a replicated database
+operator/09-replication.md	Changing the members
+operator/09-replication.md	The log kept
+operator/10-backups.md	Backups and Recovery *(extension)*
+operator/10-backups.md	Backups
+operator/10-backups.md	Verifying a backup
+operator/10-backups.md	Restoring
+operator/10-backups.md	The archive of the log
+operator/10-backups.md	Recovery to a point in time
+operator/10-backups.md	The backup history
+operator/10-backups.md	Adding a target
+operator/README.md	Volume III: Operator's Guide
+operator/README.md	Contents
+sql/01-lexical.md	Lexical Elements
+sql/01-lexical.md	Characters
+sql/01-lexical.md	Tokens and separators
+sql/01-lexical.md	Identifiers
+sql/01-lexical.md	Literals
+sql/01-lexical.md	Comments
+sql/01-lexical.md	Key words
+sql/02-data-types.md	Data Types
+sql/02-data-types.md	Character strings
+sql/02-data-types.md	Collations
+sql/02-data-types.md	Binary strings
+sql/02-data-types.md	Large objects
+sql/02-data-types.md	Booleans
+sql/02-data-types.md	Numbers
+sql/02-data-types.md	Datetimes
+sql/02-data-types.md	Intervals
+sql/02-data-types.md	Arrays and rows
+sql/02-data-types.md	Multisets
+sql/02-data-types.md	Distinct types
+sql/02-data-types.md	Structured types
+sql/02-data-types.md	Reference types
+sql/02-data-types.md	XML
+sql/02-data-types.md	JSON
+sql/02-data-types.md	UUIDs
+sql/02-data-types.md	Full-text
+sql/02-data-types.md	Vectors
+sql/02-data-types.md	Spatial types
+sql/02-data-types.md	Assignment and CAST
+sql/03-names.md	Names and Qualification
+sql/03-names.md	Schema-qualified names
+sql/03-names.md	Catalog-qualified names
+sql/03-names.md	MODULE
+sql/03-names.md	How an unqualified name is resolved
+sql/04-expressions.md	Value Expressions
+sql/04-expressions.md	Value specifications
+sql/04-expressions.md	Numeric expressions
+sql/04-expressions.md	String expressions
+sql/04-expressions.md	Regular expressions
+sql/04-expressions.md	Datetime and interval expressions
+sql/04-expressions.md	CASE, NULLIF and COALESCE
+sql/04-expressions.md	GREATEST and LEAST
+sql/04-expressions.md	UUID_V4 and UUID_V7
+sql/04-expressions.md	Set functions
+sql/04-expressions.md	NEXT VALUE FOR
+sql/04-expressions.md	Arrays and rows
+sql/04-expressions.md	Multisets
+sql/04-expressions.md	Structured values and references
+sql/04-expressions.md	SQL/JSON
+sql/04-expressions.md	Returned types and behaviors
+sql/04-expressions.md	The path language
+sql/04-expressions.md	JSON_OBJECT and JSON_ARRAY
+sql/04-expressions.md	XML values
+sql/04-expressions.md	Conditions as values
+sql/04-expressions.md	CAST
+sql/05-predicates.md	Predicates and Search Conditions
+sql/05-predicates.md	Comparison
+sql/05-predicates.md	BETWEEN
+sql/05-predicates.md	IN
+sql/05-predicates.md	LIKE
+sql/05-predicates.md	LIKE_REGEX
+sql/05-predicates.md	JSON_EXISTS
+sql/05-predicates.md	IS JSON
+sql/05-predicates.md	NULL
+sql/05-predicates.md	DISTINCT
+sql/05-predicates.md	Quantified comparison
+sql/05-predicates.md	EXISTS
+sql/05-predicates.md	UNIQUE
+sql/05-predicates.md	MATCH
+sql/05-predicates.md	OVERLAPS
+sql/05-predicates.md	Period predicates
+sql/05-predicates.md	MEMBER, SUBMULTISET and IS A SET
+sql/05-predicates.md	Type predicate
+sql/05-predicates.md	DOCUMENT and CONTENT
+sql/05-predicates.md	Search conditions
+sql/06-queries.md	Query Expressions
+sql/06-queries.md	Table references and joins
+sql/06-queries.md	Reading a table's history
+sql/06-queries.md	Partitioned joins
+sql/06-queries.md	How joins are planned *(extension)*
+sql/06-queries.md	UNNEST
+sql/06-queries.md	Polymorphic table functions
+sql/06-queries.md	Row pattern recognition
+sql/06-queries.md	Row patterns in a window
+sql/06-queries.md	The WHERE, GROUP BY and HAVING clauses
+sql/06-queries.md	Functionally dependent columns
+sql/06-queries.md	Grouping sets
+sql/06-queries.md	Correlated subqueries
+sql/06-queries.md	The select list
+sql/06-queries.md	Window functions
+sql/06-queries.md	Frames
+sql/06-queries.md	Offsets and values
+sql/06-queries.md	Nested window functions
+sql/06-queries.md	Where windows are computed
+sql/06-queries.md	Set operations
+sql/06-queries.md	ORDER BY
+sql/06-queries.md	OFFSET and FETCH FIRST
+sql/06-queries.md	FETCH APPROX and FETCH EXACT *(extension)*
+sql/06-queries.md	Table value constructors
+sql/06-queries.md	WITH and WITH RECURSIVE
+sql/06-queries.md	SEARCH and CYCLE
+sql/07-information-schema.md	The Information Schema
+sql/07-information-schema.md	The views
+sql/07-information-schema.md	What depends on what
+sql/07-information-schema.md	What turborel supports
+sql/07-information-schema.md	The short name views
+sql/07-information-schema.md	This implementation's own views *(extension)*
+sql/07-information-schema.md	Graph statistics
+sql/08-fulltext.md	Full-Text Search
+sql/08-fulltext.md	The FULLTEXT type
+sql/08-fulltext.md	The FT_PATTERN type
+sql/08-fulltext.md	Routines
+sql/08-fulltext.md	Searching
+sql/08-fulltext.md	Character string documents *(extension)*
+sql/08-fulltext.md	Tokenizing
+sql/08-fulltext.md	Ranking
+sql/08-fulltext.md	Ranked by an index
+sql/08-fulltext.md	The best rows first
+sql/08-fulltext.md	Choosing the ranking
+sql/08-fulltext.md	The fulltext index method
+sql/08-fulltext.md	TEXT_MATCHES
+sql/08-fulltext.md	How text is read
+sql/08-fulltext.md	Languages
+sql/08-fulltext.md	Languages plug-ins serve *(extension)*
+sql/08-fulltext.md	Snowball's license
+sql/08-fulltext.md	The Full-Text Information Schema
+sql/08-fulltext.md	Errors
+sql/08-fulltext.md	Standard
+sql/08-fulltext.md	See also
+sql/09-fulltext-patterns.md	Full-Text Patterns
+sql/09-fulltext-patterns.md	Grammar
+sql/09-fulltext-patterns.md	Words and phrases
+sql/09-fulltext-patterns.md	Wild cards and escapes
+sql/09-fulltext-patterns.md	Languages
+sql/09-fulltext-patterns.md	Stop words
+sql/09-fulltext-patterns.md	And, or and not
+sql/09-fulltext-patterns.md	Stems and topics
+sql/09-fulltext-patterns.md	Sound-alike and misspelt words
+sql/09-fulltext-patterns.md	Proximity
+sql/09-fulltext-patterns.md	Sentences and paragraphs
+sql/09-fulltext-patterns.md	Thesauri
+sql/09-fulltext-patterns.md	Making a thesaurus
+sql/09-fulltext-patterns.md	Searching with a thesaurus
+sql/09-fulltext-patterns.md	Errors
+sql/09-fulltext-patterns.md	Standard
+sql/09-fulltext-patterns.md	See also
+sql/10-spatial.md	Spatial Data
+sql/10-spatial.md	The geometry types
+sql/10-spatial.md	Routines
+sql/10-spatial.md	Methods
+sql/10-spatial.md	Constraints
+sql/10-spatial.md	Cast methods
+sql/10-spatial.md	Constructors and mutators
+sql/10-spatial.md	Text and binary forms
+sql/10-spatial.md	GML
+sql/10-spatial.md	Curves
+sql/10-spatial.md	Surfaces
+sql/10-spatial.md	TINs
+sql/10-spatial.md	Measures
+sql/10-spatial.md	Relationships
+sql/10-spatial.md	Set operations
+sql/10-spatial.md	Buffer, hull and boundary
+sql/10-spatial.md	Validity and measures
+sql/10-spatial.md	Polygons from rings
+sql/10-spatial.md	Distance
+sql/10-spatial.md	Transform
+sql/10-spatial.md	Systems, angles, directions and vectors
+sql/10-spatial.md	Routines in space
+sql/10-spatial.md	The rtree index method
+sql/10-spatial.md	How the index is priced
+sql/10-spatial.md	Joins of two indexes
+sql/10-spatial.md	The Spatial Information Schema
+sql/10-spatial.md	Simple feature access
+sql/10-spatial.md	Annotation text
+sql/10-spatial.md	Errors
+sql/10-spatial.md	Standard
+sql/10-spatial.md	See also
+sql/11-json-path.md	The SQL/JSON Path Language
+sql/11-json-path.md	Grammar
+sql/11-json-path.md	Lax and strict
+sql/11-json-path.md	Accessors
+sql/11-json-path.md	Filters
+sql/11-json-path.md	Arithmetic
+sql/11-json-path.md	Item methods
+sql/11-json-path.md	keyvalue()
+sql/11-json-path.md	Variables
+sql/11-json-path.md	Numbers
+sql/11-json-path.md	Errors
+sql/11-json-path.md	Standard
+sql/11-json-path.md	See also
+sql/12-json-type.md	The JSON Type
+sql/12-json-type.md	Syntax
+sql/12-json-type.md	Values
+sql/12-json-type.md	Reading values
+sql/12-json-type.md	The simplified accessor
+sql/12-json-type.md	Comparison and ordering
+sql/12-json-type.md	Errors
+sql/12-json-type.md	Standard
+sql/13-json-table.md	JSON_TABLE
+sql/13-json-table.md	Syntax
+sql/13-json-table.md	Columns
+sql/13-json-table.md	ON EMPTY and ON ERROR
+sql/13-json-table.md	Nested columns and plans
+sql/13-json-table.md	PASSING
+sql/13-json-table.md	EXPLAIN
+sql/13-json-table.md	Errors
+sql/13-json-table.md	Standard
+sql/14-vectors.md	Vectors *(extension)*
+sql/14-vectors.md	The VECTOR type
+sql/14-vectors.md	Writing vectors
+sql/14-vectors.md	No order and no equality
+sql/14-vectors.md	Distances
+sql/14-vectors.md	Finding the nearest
+sql/14-vectors.md	Arithmetic
+sql/14-vectors.md	Functions
+sql/14-vectors.md	Aggregates
+sql/14-vectors.md	Distance functions
+sql/14-vectors.md	The catalog
+sql/14-vectors.md	Errors
+sql/14-vectors.md	See also
+sql/15-hybrid-search.md	Hybrid Search *(extension)*
+sql/15-hybrid-search.md	The hybrid index
+sql/15-hybrid-search.md	An index that embeds its text
+sql/15-hybrid-search.md	HYBRID_SEARCH
+sql/15-hybrid-search.md	Fusion
+sql/15-hybrid-search.md	The plan
+sql/15-hybrid-search.md	Sparse vectors
+sql/15-hybrid-search.md	Errors
+sql/15-hybrid-search.md	See also
+sql/16-topology.md	Topology-Geometry
+sql/16-topology.md	A topology's schema
+sql/16-topology.md	Routines
+sql/16-topology.md	Building a topology
+sql/16-topology.md	Editing a topology
+sql/16-topology.md	Building from geometry
+sql/16-topology.md	Errors
+sql/16-topology.md	Standard
+sql/16-topology.md	See also
+sql/17-linear-referencing.md	Linear Referencing
+sql/17-linear-referencing.md	Methods and measures
+sql/17-linear-referencing.md	Locating a point
+sql/17-linear-referencing.md	Vector offsets
+sql/17-linear-referencing.md	Methods and columns in the catalog
+sql/18-spatial-networks.md	Spatial Networks
+sql/18-spatial-networks.md	Making a network
+sql/18-spatial-networks.md	Nodes and links
+sql/18-spatial-networks.md	Splits and heals
+sql/18-spatial-networks.md	Networks from other data
+sql/18-spatial-networks.md	Checking a network
+sql/18-spatial-networks.md	Shortest paths
+sql/18-spatial-networks.md	Errors
+sql/18-spatial-networks.md	Standard
+sql/18-spatial-networks.md	See also
+sql/19-xml.md	XML Values
+sql/19-xml.md	The type
+sql/19-xml.md	XMLPARSE
+sql/19-xml.md	XMLSERIALIZE
+sql/19-xml.md	CAST
+sql/19-xml.md	XMLCAST
+sql/19-xml.md	XMLDOCUMENT
+sql/19-xml.md	IS DOCUMENT and IS CONTENT
+sql/19-xml.md	Publishing XML
+sql/19-xml.md	XMLAGG
+sql/19-xml.md	XML in other types
+sql/19-xml.md	Querying XML
+sql/19-xml.md	Arguments
+sql/19-xml.md	XMLQUERY
+sql/19-xml.md	XMLEXISTS
+sql/19-xml.md	XMLTABLE
+sql/19-xml.md	What XQuery evaluates
+sql/19-xml.md	Static typing
+sql/19-xml.md	Functions
+sql/19-xml.md	XML indexes
+sql/19-xml.md	Queries an XML index reads for
+sql/19-xml.md	XML options of a scope
+sql/19-xml.md	Mapping names
+sql/19-xml.md	Mapping tables to XML
+sql/19-xml.md	Registered XML Schemas
+sql/19-xml.md	The XMLSCHEMA types
+sql/19-xml.md	XMLVALIDATE
+sql/19-xml.md	IS VALID
+sql/19-xml.md	The validate expression
+sql/19-xml.md	Schema imports
+sql/19-xml.md	XQuery modules
+sql/19-xml.md	Clients
+sql/19-xml.md	Limits
+sql/20-property-graphs.md	Property Graphs
+sql/20-property-graphs.md	Syntax
+sql/20-property-graphs.md	Matches
+sql/20-property-graphs.md	Functions
+sql/20-property-graphs.md	Subpaths and iterations
+sql/20-property-graphs.md	Conditions on the path
+sql/20-property-graphs.md	Derived graphs
+sql/20-property-graphs.md	Rows
+sql/20-property-graphs.md	Limits
+sql/20-property-graphs.md	Plans
+sql/20-property-graphs.md	EXPLAIN
+sql/21-graph-algorithms.md	Graph Algorithms *(extension)*
+sql/21-graph-algorithms.md	Syntax
+sql/21-graph-algorithms.md	The algorithms
+sql/21-graph-algorithms.md	Examples
+sql/21-graph-algorithms.md	INTO PROPERTY
+sql/21-graph-algorithms.md	Runs
+sql/21-graph-algorithms.md	Errors
+sql/21-graph-algorithms.md	Standard
+sql/22-graph-compatibility.md	Graph Compatibility Syntax *(extension)*
+sql/22-graph-compatibility.md	MATCH in a WHERE clause
+sql/22-graph-compatibility.md	GRAPH_TABLE as Oracle writes it
+sql/22-graph-compatibility.md	PGQL
+sql/22-graph-compatibility.md	openCypher
+sql/23-partitioning.md	Partitioned Tables *(extension)*
+sql/23-partitioning.md	Syntax
+sql/23-partitioning.md	Strategies
+sql/23-partitioning.md	Writing rows
+sql/23-partitioning.md	Reading rows
+sql/23-partitioning.md	Keys and constraints
+sql/23-partitioning.md	Indexes
+sql/23-partitioning.md	Attaching and detaching
+sql/23-partitioning.md	Other tables
+sql/23-partitioning.md	The Information Schema
+sql/23-partitioning.md	Errors
+sql/24-delta-tables.md	Data Change Delta Tables
+sql/24-delta-tables.md	The delta table
+sql/24-delta-tables.md	Rows inserted, deleted and updated
+sql/24-delta-tables.md	Where a delta table stands
+sql/24-delta-tables.md	Of a view or a typed table
+sql/24-delta-tables.md	Rules
+sql/24-delta-tables.md	Errors
+sql/24-delta-tables.md	Standard
+sql/24-delta-tables.md	See also
+sql/README.md	Volume II: SQL Reference Manual
+sql/README.md	Contents
+sql/statements/README.md	Statements
+sql/statements/README.md	Valid SQL not processed
+sql/statements/allocate-cursor.md	ALLOCATE CURSOR
+sql/statements/allocate-cursor.md	NAME
+sql/statements/allocate-cursor.md	SYNOPSIS
+sql/statements/allocate-cursor.md	DESCRIPTION
+sql/statements/allocate-cursor.md	RULES
+sql/statements/allocate-cursor.md	PRIVILEGES
+sql/statements/allocate-cursor.md	ERRORS
+sql/statements/allocate-cursor.md	EXAMPLES
+sql/statements/allocate-cursor.md	STANDARD
+sql/statements/allocate-cursor.md	SEE ALSO
+sql/statements/allocate-descriptor.md	ALLOCATE DESCRIPTOR
+sql/statements/allocate-descriptor.md	NAME
+sql/statements/allocate-descriptor.md	SYNOPSIS
+sql/statements/allocate-descriptor.md	DESCRIPTION
+sql/statements/allocate-descriptor.md	RULES
+sql/statements/allocate-descriptor.md	PRIVILEGES
+sql/statements/allocate-descriptor.md	ERRORS
+sql/statements/allocate-descriptor.md	EXAMPLES
+sql/statements/allocate-descriptor.md	STANDARD
+sql/statements/allocate-descriptor.md	SEE ALSO
+sql/statements/alter-database.md	ALTER DATABASE
+sql/statements/alter-database.md	NAME
+sql/statements/alter-database.md	SYNOPSIS
+sql/statements/alter-database.md	DESCRIPTION
+sql/statements/alter-database.md	RULES
+sql/statements/alter-database.md	PRIVILEGES
+sql/statements/alter-database.md	ERRORS
+sql/statements/alter-database.md	EXAMPLES
+sql/statements/alter-database.md	STANDARD
+sql/statements/alter-database.md	SEE ALSO
+sql/statements/alter-domain.md	ALTER DOMAIN
+sql/statements/alter-domain.md	NAME
+sql/statements/alter-domain.md	SYNOPSIS
+sql/statements/alter-domain.md	DESCRIPTION
+sql/statements/alter-domain.md	RULES
+sql/statements/alter-domain.md	PRIVILEGES
+sql/statements/alter-domain.md	ERRORS
+sql/statements/alter-domain.md	EXAMPLES
+sql/statements/alter-domain.md	STANDARD
+sql/statements/alter-domain.md	SEE ALSO
+sql/statements/alter-embedding-model.md	ALTER EMBEDDING MODEL
+sql/statements/alter-embedding-model.md	NAME
+sql/statements/alter-embedding-model.md	SYNOPSIS
+sql/statements/alter-embedding-model.md	DESCRIPTION
+sql/statements/alter-embedding-model.md	RULES
+sql/statements/alter-embedding-model.md	PRIVILEGES
+sql/statements/alter-embedding-model.md	ERRORS
+sql/statements/alter-embedding-model.md	EXAMPLES
+sql/statements/alter-embedding-model.md	STANDARD
+sql/statements/alter-embedding-model.md	SEE ALSO
+sql/statements/alter-extension.md	ALTER EXTENSION
+sql/statements/alter-extension.md	NAME
+sql/statements/alter-extension.md	SYNOPSIS
+sql/statements/alter-extension.md	DESCRIPTION
+sql/statements/alter-extension.md	RULES
+sql/statements/alter-extension.md	PRIVILEGES
+sql/statements/alter-extension.md	ERRORS
+sql/statements/alter-extension.md	EXAMPLES
+sql/statements/alter-extension.md	STANDARD
+sql/statements/alter-extension.md	SEE ALSO
+sql/statements/alter-index.md	ALTER INDEX
+sql/statements/alter-index.md	NAME
+sql/statements/alter-index.md	SYNOPSIS
+sql/statements/alter-index.md	DESCRIPTION
+sql/statements/alter-index.md	RULES
+sql/statements/alter-index.md	PRIVILEGES
+sql/statements/alter-index.md	ERRORS
+sql/statements/alter-index.md	EXAMPLES
+sql/statements/alter-index.md	STANDARD
+sql/statements/alter-index.md	SEE ALSO
+sql/statements/alter-property-graph.md	ALTER PROPERTY GRAPH
+sql/statements/alter-property-graph.md	NAME
+sql/statements/alter-property-graph.md	SYNOPSIS
+sql/statements/alter-property-graph.md	DESCRIPTION
+sql/statements/alter-property-graph.md	RULES
+sql/statements/alter-property-graph.md	PRIVILEGES
+sql/statements/alter-property-graph.md	ERRORS
+sql/statements/alter-property-graph.md	EXAMPLES
+sql/statements/alter-property-graph.md	STANDARD
+sql/statements/alter-property-graph.md	SEE ALSO
+sql/statements/alter-sequence.md	ALTER SEQUENCE
+sql/statements/alter-sequence.md	NAME
+sql/statements/alter-sequence.md	SYNOPSIS
+sql/statements/alter-sequence.md	DESCRIPTION
+sql/statements/alter-sequence.md	RULES
+sql/statements/alter-sequence.md	PRIVILEGES
+sql/statements/alter-sequence.md	ERRORS
+sql/statements/alter-sequence.md	EXAMPLES
+sql/statements/alter-sequence.md	STANDARD
+sql/statements/alter-sequence.md	SEE ALSO
+sql/statements/alter-table.md	ALTER TABLE
+sql/statements/alter-table.md	NAME
+sql/statements/alter-table.md	SYNOPSIS
+sql/statements/alter-table.md	DESCRIPTION
+sql/statements/alter-table.md	RULES
+sql/statements/alter-table.md	PRIVILEGES
+sql/statements/alter-table.md	ERRORS
+sql/statements/alter-table.md	EXAMPLES
+sql/statements/alter-table.md	STANDARD
+sql/statements/alter-table.md	SEE ALSO
+sql/statements/alter-transform.md	ALTER TRANSFORM
+sql/statements/alter-transform.md	NAME
+sql/statements/alter-transform.md	SYNOPSIS
+sql/statements/alter-transform.md	DESCRIPTION
+sql/statements/alter-transform.md	RULES
+sql/statements/alter-transform.md	PRIVILEGES
+sql/statements/alter-transform.md	ERRORS
+sql/statements/alter-transform.md	EXAMPLES
+sql/statements/alter-transform.md	STANDARD
+sql/statements/alter-transform.md	SEE ALSO
+sql/statements/alter-type.md	ALTER TYPE
+sql/statements/alter-type.md	NAME
+sql/statements/alter-type.md	SYNOPSIS
+sql/statements/alter-type.md	DESCRIPTION
+sql/statements/alter-type.md	RULES
+sql/statements/alter-type.md	PRIVILEGES
+sql/statements/alter-type.md	ERRORS
+sql/statements/alter-type.md	EXAMPLES
+sql/statements/alter-type.md	STANDARD
+sql/statements/alter-type.md	SEE ALSO
+sql/statements/alter-user.md	ALTER USER
+sql/statements/alter-user.md	NAME
+sql/statements/alter-user.md	SYNOPSIS
+sql/statements/alter-user.md	DESCRIPTION
+sql/statements/alter-user.md	RULES
+sql/statements/alter-user.md	PRIVILEGES
+sql/statements/alter-user.md	ERRORS
+sql/statements/alter-user.md	EXAMPLES
+sql/statements/alter-user.md	STANDARD
+sql/statements/alter-user.md	SEE ALSO
+sql/statements/alter-xquery-module.md	ALTER XQUERY MODULE
+sql/statements/alter-xquery-module.md	NAME
+sql/statements/alter-xquery-module.md	SYNOPSIS
+sql/statements/alter-xquery-module.md	DESCRIPTION
+sql/statements/alter-xquery-module.md	RULES
+sql/statements/alter-xquery-module.md	PRIVILEGES
+sql/statements/alter-xquery-module.md	ERRORS
+sql/statements/alter-xquery-module.md	EXAMPLES
+sql/statements/alter-xquery-module.md	STANDARD
+sql/statements/alter-xquery-module.md	SEE ALSO
+sql/statements/backup-database.md	BACKUP DATABASE
+sql/statements/backup-database.md	NAME
+sql/statements/backup-database.md	SYNOPSIS
+sql/statements/backup-database.md	DESCRIPTION
+sql/statements/backup-database.md	RULES
+sql/statements/backup-database.md	PRIVILEGES
+sql/statements/backup-database.md	ERRORS
+sql/statements/backup-database.md	EXAMPLES
+sql/statements/backup-database.md	STANDARD
+sql/statements/backup-database.md	SEE ALSO
+sql/statements/begin.md	BEGIN
+sql/statements/begin.md	NAME
+sql/statements/begin.md	SYNOPSIS
+sql/statements/begin.md	DESCRIPTION
+sql/statements/begin.md	RULES
+sql/statements/begin.md	PRIVILEGES
+sql/statements/begin.md	ERRORS
+sql/statements/begin.md	EXAMPLES
+sql/statements/begin.md	STANDARD
+sql/statements/begin.md	SEE ALSO
+sql/statements/call.md	CALL
+sql/statements/call.md	NAME
+sql/statements/call.md	SYNOPSIS
+sql/statements/call.md	DESCRIPTION
+sql/statements/call.md	RULES
+sql/statements/call.md	PRIVILEGES
+sql/statements/call.md	ERRORS
+sql/statements/call.md	EXAMPLES
+sql/statements/call.md	STANDARD
+sql/statements/call.md	SEE ALSO
+sql/statements/cancel-connection.md	CANCEL CONNECTION
+sql/statements/cancel-connection.md	NAME
+sql/statements/cancel-connection.md	SYNOPSIS
+sql/statements/cancel-connection.md	DESCRIPTION
+sql/statements/cancel-connection.md	RULES
+sql/statements/cancel-connection.md	PRIVILEGES
+sql/statements/cancel-connection.md	ERRORS
+sql/statements/cancel-connection.md	EXAMPLES
+sql/statements/cancel-connection.md	STANDARD
+sql/statements/cancel-connection.md	SEE ALSO
+sql/statements/case-statement.md	CASE (statement)
+sql/statements/case-statement.md	NAME
+sql/statements/case-statement.md	SYNOPSIS
+sql/statements/case-statement.md	DESCRIPTION
+sql/statements/case-statement.md	RULES
+sql/statements/case-statement.md	PRIVILEGES
+sql/statements/case-statement.md	ERRORS
+sql/statements/case-statement.md	EXAMPLES
+sql/statements/case-statement.md	STANDARD
+sql/statements/case-statement.md	SEE ALSO
+sql/statements/close.md	CLOSE
+sql/statements/close.md	NAME
+sql/statements/close.md	SYNOPSIS
+sql/statements/close.md	DESCRIPTION
+sql/statements/close.md	RULES
+sql/statements/close.md	PRIVILEGES
+sql/statements/close.md	ERRORS
+sql/statements/close.md	EXAMPLES
+sql/statements/close.md	STANDARD
+sql/statements/close.md	SEE ALSO
+sql/statements/commit.md	COMMIT
+sql/statements/commit.md	NAME
+sql/statements/commit.md	SYNOPSIS
+sql/statements/commit.md	DESCRIPTION
+sql/statements/commit.md	RULES
+sql/statements/commit.md	PRIVILEGES
+sql/statements/commit.md	ERRORS
+sql/statements/commit.md	EXAMPLES
+sql/statements/commit.md	STANDARD
+sql/statements/commit.md	SEE ALSO
+sql/statements/connect.md	CONNECT
+sql/statements/connect.md	NAME
+sql/statements/connect.md	SYNOPSIS
+sql/statements/connect.md	DESCRIPTION
+sql/statements/connect.md	RULES
+sql/statements/connect.md	PRIVILEGES
+sql/statements/connect.md	ERRORS
+sql/statements/connect.md	EXAMPLES
+sql/statements/connect.md	STANDARD
+sql/statements/connect.md	SEE ALSO
+sql/statements/copy-descriptor.md	COPY DESCRIPTOR
+sql/statements/copy-descriptor.md	NAME
+sql/statements/copy-descriptor.md	SYNOPSIS
+sql/statements/copy-descriptor.md	DESCRIPTION
+sql/statements/copy-descriptor.md	RULES
+sql/statements/copy-descriptor.md	PRIVILEGES
+sql/statements/copy-descriptor.md	ERRORS
+sql/statements/copy-descriptor.md	EXAMPLES
+sql/statements/copy-descriptor.md	STANDARD
+sql/statements/copy-descriptor.md	SEE ALSO
+sql/statements/create-adjacency-index.md	CREATE ADJACENCY INDEX
+sql/statements/create-adjacency-index.md	NAME
+sql/statements/create-adjacency-index.md	SYNOPSIS
+sql/statements/create-adjacency-index.md	DESCRIPTION
+sql/statements/create-adjacency-index.md	RULES
+sql/statements/create-adjacency-index.md	PRIVILEGES
+sql/statements/create-adjacency-index.md	ERRORS
+sql/statements/create-adjacency-index.md	EXAMPLES
+sql/statements/create-adjacency-index.md	STANDARD
+sql/statements/create-adjacency-index.md	SEE ALSO
+sql/statements/create-assertion.md	CREATE ASSERTION
+sql/statements/create-assertion.md	NAME
+sql/statements/create-assertion.md	SYNOPSIS
+sql/statements/create-assertion.md	DESCRIPTION
+sql/statements/create-assertion.md	RULES
+sql/statements/create-assertion.md	PRIVILEGES
+sql/statements/create-assertion.md	ERRORS
+sql/statements/create-assertion.md	EXAMPLES
+sql/statements/create-assertion.md	STANDARD
+sql/statements/create-assertion.md	SEE ALSO
+sql/statements/create-cast.md	CREATE CAST
+sql/statements/create-cast.md	NAME
+sql/statements/create-cast.md	SYNOPSIS
+sql/statements/create-cast.md	DESCRIPTION
+sql/statements/create-cast.md	RULES
+sql/statements/create-cast.md	PRIVILEGES
+sql/statements/create-cast.md	ERRORS
+sql/statements/create-cast.md	EXAMPLES
+sql/statements/create-cast.md	STANDARD
+sql/statements/create-cast.md	SEE ALSO
+sql/statements/create-collation.md	CREATE COLLATION
+sql/statements/create-collation.md	NAME
+sql/statements/create-collation.md	SYNOPSIS
+sql/statements/create-collation.md	DESCRIPTION
+sql/statements/create-collation.md	RULES
+sql/statements/create-collation.md	PRIVILEGES
+sql/statements/create-collation.md	ERRORS
+sql/statements/create-collation.md	EXAMPLES
+sql/statements/create-collation.md	STANDARD
+sql/statements/create-collation.md	SEE ALSO
+sql/statements/create-domain.md	CREATE DOMAIN
+sql/statements/create-domain.md	NAME
+sql/statements/create-domain.md	SYNOPSIS
+sql/statements/create-domain.md	DESCRIPTION
+sql/statements/create-domain.md	RULES
+sql/statements/create-domain.md	PRIVILEGES
+sql/statements/create-domain.md	ERRORS
+sql/statements/create-domain.md	EXAMPLES
+sql/statements/create-domain.md	STANDARD
+sql/statements/create-domain.md	SEE ALSO
+sql/statements/create-embedding-model.md	CREATE EMBEDDING MODEL
+sql/statements/create-embedding-model.md	NAME
+sql/statements/create-embedding-model.md	SYNOPSIS
+sql/statements/create-embedding-model.md	DESCRIPTION
+sql/statements/create-embedding-model.md	RULES
+sql/statements/create-embedding-model.md	PRIVILEGES
+sql/statements/create-embedding-model.md	ERRORS
+sql/statements/create-embedding-model.md	EXAMPLES
+sql/statements/create-embedding-model.md	STANDARD
+sql/statements/create-embedding-model.md	SEE ALSO
+sql/statements/create-extension.md	CREATE EXTENSION
+sql/statements/create-extension.md	NAME
+sql/statements/create-extension.md	SYNOPSIS
+sql/statements/create-extension.md	DESCRIPTION
+sql/statements/create-extension.md	RULES
+sql/statements/create-extension.md	PRIVILEGES
+sql/statements/create-extension.md	ERRORS
+sql/statements/create-extension.md	EXAMPLES
+sql/statements/create-extension.md	STANDARD
+sql/statements/create-extension.md	SEE ALSO
+sql/statements/create-function.md	CREATE FUNCTION
+sql/statements/create-function.md	NAME
+sql/statements/create-function.md	SYNOPSIS
+sql/statements/create-function.md	DESCRIPTION
+sql/statements/create-function.md	Polymorphic table functions
+sql/statements/create-function.md	RULES
+sql/statements/create-function.md	PRIVILEGES
+sql/statements/create-function.md	ERRORS
+sql/statements/create-function.md	EXAMPLES
+sql/statements/create-function.md	STANDARD
+sql/statements/create-function.md	SEE ALSO
+sql/statements/create-graph-type.md	CREATE GRAPH TYPE
+sql/statements/create-graph-type.md	NAME
+sql/statements/create-graph-type.md	SYNOPSIS
+sql/statements/create-graph-type.md	DESCRIPTION
+sql/statements/create-graph-type.md	RULES
+sql/statements/create-graph-type.md	PRIVILEGES
+sql/statements/create-graph-type.md	ERRORS
+sql/statements/create-graph-type.md	EXAMPLES
+sql/statements/create-graph-type.md	STANDARD
+sql/statements/create-graph-type.md	SEE ALSO
+sql/statements/create-graph.md	CREATE GRAPH
+sql/statements/create-graph.md	NAME
+sql/statements/create-graph.md	SYNOPSIS
+sql/statements/create-graph.md	DESCRIPTION
+sql/statements/create-graph.md	RULES
+sql/statements/create-graph.md	PRIVILEGES
+sql/statements/create-graph.md	ERRORS
+sql/statements/create-graph.md	EXAMPLES
+sql/statements/create-graph.md	STANDARD
+sql/statements/create-graph.md	SEE ALSO
+sql/statements/create-hybrid-vector-index.md	CREATE HYBRID VECTOR INDEX
+sql/statements/create-hybrid-vector-index.md	NAME
+sql/statements/create-hybrid-vector-index.md	SYNOPSIS
+sql/statements/create-hybrid-vector-index.md	DESCRIPTION
+sql/statements/create-hybrid-vector-index.md	RULES
+sql/statements/create-hybrid-vector-index.md	PRIVILEGES
+sql/statements/create-hybrid-vector-index.md	ERRORS
+sql/statements/create-hybrid-vector-index.md	EXAMPLES
+sql/statements/create-hybrid-vector-index.md	STANDARD
+sql/statements/create-hybrid-vector-index.md	SEE ALSO
+sql/statements/create-index.md	CREATE INDEX
+sql/statements/create-index.md	NAME
+sql/statements/create-index.md	SYNOPSIS
+sql/statements/create-index.md	DESCRIPTION
+sql/statements/create-index.md	RULES
+sql/statements/create-index.md	PRIVILEGES
+sql/statements/create-index.md	ERRORS
+sql/statements/create-index.md	EXAMPLES
+sql/statements/create-index.md	STANDARD
+sql/statements/create-index.md	SEE ALSO
+sql/statements/create-label-index.md	CREATE LABEL INDEX
+sql/statements/create-label-index.md	NAME
+sql/statements/create-label-index.md	SYNOPSIS
+sql/statements/create-label-index.md	DESCRIPTION
+sql/statements/create-label-index.md	RULES
+sql/statements/create-label-index.md	PRIVILEGES
+sql/statements/create-label-index.md	ERRORS
+sql/statements/create-label-index.md	EXAMPLES
+sql/statements/create-label-index.md	STANDARD
+sql/statements/create-label-index.md	SEE ALSO
+sql/statements/create-method.md	CREATE METHOD
+sql/statements/create-method.md	NAME
+sql/statements/create-method.md	SYNOPSIS
+sql/statements/create-method.md	DESCRIPTION
+sql/statements/create-method.md	RULES
+sql/statements/create-method.md	PRIVILEGES
+sql/statements/create-method.md	ERRORS
+sql/statements/create-method.md	EXAMPLES
+sql/statements/create-method.md	STANDARD
+sql/statements/create-method.md	SEE ALSO
+sql/statements/create-module.md	CREATE MODULE
+sql/statements/create-module.md	NAME
+sql/statements/create-module.md	SYNOPSIS
+sql/statements/create-module.md	DESCRIPTION
+sql/statements/create-module.md	RULES
+sql/statements/create-module.md	PRIVILEGES
+sql/statements/create-module.md	ERRORS
+sql/statements/create-module.md	EXAMPLES
+sql/statements/create-module.md	STANDARD
+sql/statements/create-module.md	SEE ALSO
+sql/statements/create-ordering.md	CREATE ORDERING
+sql/statements/create-ordering.md	NAME
+sql/statements/create-ordering.md	SYNOPSIS
+sql/statements/create-ordering.md	DESCRIPTION
+sql/statements/create-ordering.md	RULES
+sql/statements/create-ordering.md	PRIVILEGES
+sql/statements/create-ordering.md	ERRORS
+sql/statements/create-ordering.md	EXAMPLES
+sql/statements/create-ordering.md	STANDARD
+sql/statements/create-ordering.md	SEE ALSO
+sql/statements/create-procedure.md	CREATE PROCEDURE
+sql/statements/create-procedure.md	NAME
+sql/statements/create-procedure.md	SYNOPSIS
+sql/statements/create-procedure.md	DESCRIPTION
+sql/statements/create-procedure.md	RULES
+sql/statements/create-procedure.md	PRIVILEGES
+sql/statements/create-procedure.md	ERRORS
+sql/statements/create-procedure.md	EXAMPLES
+sql/statements/create-procedure.md	STANDARD
+sql/statements/create-procedure.md	SEE ALSO
+sql/statements/create-property-graph.md	CREATE PROPERTY GRAPH
+sql/statements/create-property-graph.md	NAME
+sql/statements/create-property-graph.md	SYNOPSIS
+sql/statements/create-property-graph.md	DESCRIPTION
+sql/statements/create-property-graph.md	RULES
+sql/statements/create-property-graph.md	PRIVILEGES
+sql/statements/create-property-graph.md	ERRORS
+sql/statements/create-property-graph.md	EXAMPLES
+sql/statements/create-property-graph.md	STANDARD
+sql/statements/create-property-graph.md	SEE ALSO
+sql/statements/create-reachability-index.md	CREATE REACHABILITY INDEX
+sql/statements/create-reachability-index.md	NAME
+sql/statements/create-reachability-index.md	SYNOPSIS
+sql/statements/create-reachability-index.md	DESCRIPTION
+sql/statements/create-reachability-index.md	RULES
+sql/statements/create-reachability-index.md	PRIVILEGES
+sql/statements/create-reachability-index.md	ERRORS
+sql/statements/create-reachability-index.md	EXAMPLES
+sql/statements/create-reachability-index.md	STANDARD
+sql/statements/create-reachability-index.md	SEE ALSO
+sql/statements/create-restore-point.md	CREATE RESTORE POINT
+sql/statements/create-restore-point.md	NAME
+sql/statements/create-restore-point.md	SYNOPSIS
+sql/statements/create-restore-point.md	DESCRIPTION
+sql/statements/create-restore-point.md	RULES
+sql/statements/create-restore-point.md	PRIVILEGES
+sql/statements/create-restore-point.md	ERRORS
+sql/statements/create-restore-point.md	EXAMPLES
+sql/statements/create-restore-point.md	STANDARD
+sql/statements/create-restore-point.md	SEE ALSO
+sql/statements/create-role.md	CREATE ROLE
+sql/statements/create-role.md	NAME
+sql/statements/create-role.md	SYNOPSIS
+sql/statements/create-role.md	DESCRIPTION
+sql/statements/create-role.md	RULES
+sql/statements/create-role.md	PRIVILEGES
+sql/statements/create-role.md	ERRORS
+sql/statements/create-role.md	EXAMPLES
+sql/statements/create-role.md	STANDARD
+sql/statements/create-role.md	SEE ALSO
+sql/statements/create-schema.md	CREATE SCHEMA
+sql/statements/create-schema.md	NAME
+sql/statements/create-schema.md	SYNOPSIS
+sql/statements/create-schema.md	DESCRIPTION
+sql/statements/create-schema.md	RULES
+sql/statements/create-schema.md	PRIVILEGES
+sql/statements/create-schema.md	ERRORS
+sql/statements/create-schema.md	EXAMPLES
+sql/statements/create-schema.md	STANDARD
+sql/statements/create-schema.md	SEE ALSO
+sql/statements/create-sequence.md	CREATE SEQUENCE
+sql/statements/create-sequence.md	NAME
+sql/statements/create-sequence.md	SYNOPSIS
+sql/statements/create-sequence.md	DESCRIPTION
+sql/statements/create-sequence.md	RULES
+sql/statements/create-sequence.md	PRIVILEGES
+sql/statements/create-sequence.md	ERRORS
+sql/statements/create-sequence.md	EXAMPLES
+sql/statements/create-sequence.md	STANDARD
+sql/statements/create-sequence.md	SEE ALSO
+sql/statements/create-table.md	CREATE TABLE
+sql/statements/create-table.md	NAME
+sql/statements/create-table.md	SYNOPSIS
+sql/statements/create-table.md	DESCRIPTION
+sql/statements/create-table.md	RULES
+sql/statements/create-table.md	PRIVILEGES
+sql/statements/create-table.md	ERRORS
+sql/statements/create-table.md	EXAMPLES
+sql/statements/create-table.md	STANDARD
+sql/statements/create-table.md	SEE ALSO
+sql/statements/create-transform.md	CREATE TRANSFORM
+sql/statements/create-transform.md	NAME
+sql/statements/create-transform.md	SYNOPSIS
+sql/statements/create-transform.md	DESCRIPTION
+sql/statements/create-transform.md	RULES
+sql/statements/create-transform.md	PRIVILEGES
+sql/statements/create-transform.md	ERRORS
+sql/statements/create-transform.md	EXAMPLES
+sql/statements/create-transform.md	STANDARD
+sql/statements/create-transform.md	SEE ALSO
+sql/statements/create-trigger.md	CREATE TRIGGER
+sql/statements/create-trigger.md	NAME
+sql/statements/create-trigger.md	SYNOPSIS
+sql/statements/create-trigger.md	DESCRIPTION
+sql/statements/create-trigger.md	RULES
+sql/statements/create-trigger.md	PRIVILEGES
+sql/statements/create-trigger.md	ERRORS
+sql/statements/create-trigger.md	EXAMPLES
+sql/statements/create-trigger.md	STANDARD
+sql/statements/create-trigger.md	SEE ALSO
+sql/statements/create-type.md	CREATE TYPE
+sql/statements/create-type.md	NAME
+sql/statements/create-type.md	SYNOPSIS
+sql/statements/create-type.md	DESCRIPTION
+sql/statements/create-type.md	RULES
+sql/statements/create-type.md	PRIVILEGES
+sql/statements/create-type.md	ERRORS
+sql/statements/create-type.md	EXAMPLES
+sql/statements/create-type.md	STANDARD
+sql/statements/create-type.md	SEE ALSO
+sql/statements/create-user.md	CREATE USER
+sql/statements/create-user.md	NAME
+sql/statements/create-user.md	SYNOPSIS
+sql/statements/create-user.md	DESCRIPTION
+sql/statements/create-user.md	RULES
+sql/statements/create-user.md	PRIVILEGES
+sql/statements/create-user.md	ERRORS
+sql/statements/create-user.md	EXAMPLES
+sql/statements/create-user.md	STANDARD
+sql/statements/create-user.md	SEE ALSO
+sql/statements/create-vector-distance-function.md	CREATE VECTOR DISTANCE FUNCTION
+sql/statements/create-vector-distance-function.md	NAME
+sql/statements/create-vector-distance-function.md	SYNOPSIS
+sql/statements/create-vector-distance-function.md	DESCRIPTION
+sql/statements/create-vector-distance-function.md	RULES
+sql/statements/create-vector-distance-function.md	PRIVILEGES
+sql/statements/create-vector-distance-function.md	ERRORS
+sql/statements/create-vector-distance-function.md	EXAMPLES
+sql/statements/create-vector-distance-function.md	STANDARD
+sql/statements/create-vector-distance-function.md	SEE ALSO
+sql/statements/create-vector-index.md	CREATE VECTOR INDEX
+sql/statements/create-vector-index.md	NAME
+sql/statements/create-vector-index.md	SYNOPSIS
+sql/statements/create-vector-index.md	DESCRIPTION
+sql/statements/create-vector-index.md	RULES
+sql/statements/create-vector-index.md	PRIVILEGES
+sql/statements/create-vector-index.md	ERRORS
+sql/statements/create-vector-index.md	EXAMPLES
+sql/statements/create-vector-index.md	STANDARD
+sql/statements/create-vector-index.md	SEE ALSO
+sql/statements/create-vector-pipeline.md	CREATE VECTOR PIPELINE
+sql/statements/create-vector-pipeline.md	NAME
+sql/statements/create-vector-pipeline.md	SYNOPSIS
+sql/statements/create-vector-pipeline.md	DESCRIPTION
+sql/statements/create-vector-pipeline.md	RULES
+sql/statements/create-vector-pipeline.md	PRIVILEGES
+sql/statements/create-vector-pipeline.md	ERRORS
+sql/statements/create-vector-pipeline.md	EXAMPLES
+sql/statements/create-vector-pipeline.md	STANDARD
+sql/statements/create-vector-pipeline.md	SEE ALSO
+sql/statements/create-view.md	CREATE VIEW
+sql/statements/create-view.md	NAME
+sql/statements/create-view.md	SYNOPSIS
+sql/statements/create-view.md	DESCRIPTION
+sql/statements/create-view.md	RULES
+sql/statements/create-view.md	PRIVILEGES
+sql/statements/create-view.md	ERRORS
+sql/statements/create-view.md	EXAMPLES
+sql/statements/create-view.md	STANDARD
+sql/statements/create-view.md	SEE ALSO
+sql/statements/create-xml-schema.md	CREATE XML SCHEMA
+sql/statements/create-xml-schema.md	NAME
+sql/statements/create-xml-schema.md	SYNOPSIS
+sql/statements/create-xml-schema.md	DESCRIPTION
+sql/statements/create-xml-schema.md	RULES
+sql/statements/create-xml-schema.md	PRIVILEGES
+sql/statements/create-xml-schema.md	ERRORS
+sql/statements/create-xml-schema.md	EXAMPLES
+sql/statements/create-xml-schema.md	STANDARD
+sql/statements/create-xml-schema.md	SEE ALSO
+sql/statements/create-xquery-module.md	CREATE XQUERY MODULE
+sql/statements/create-xquery-module.md	NAME
+sql/statements/create-xquery-module.md	SYNOPSIS
+sql/statements/create-xquery-module.md	DESCRIPTION
+sql/statements/create-xquery-module.md	RULES
+sql/statements/create-xquery-module.md	PRIVILEGES
+sql/statements/create-xquery-module.md	ERRORS
+sql/statements/create-xquery-module.md	EXAMPLES
+sql/statements/create-xquery-module.md	STANDARD
+sql/statements/create-xquery-module.md	SEE ALSO
+sql/statements/deallocate-descriptor.md	DEALLOCATE DESCRIPTOR
+sql/statements/deallocate-descriptor.md	NAME
+sql/statements/deallocate-descriptor.md	SYNOPSIS
+sql/statements/deallocate-descriptor.md	DESCRIPTION
+sql/statements/deallocate-descriptor.md	RULES
+sql/statements/deallocate-descriptor.md	PRIVILEGES
+sql/statements/deallocate-descriptor.md	ERRORS
+sql/statements/deallocate-descriptor.md	EXAMPLES
+sql/statements/deallocate-descriptor.md	STANDARD
+sql/statements/deallocate-descriptor.md	SEE ALSO
+sql/statements/deallocate-prepare.md	DEALLOCATE PREPARE
+sql/statements/deallocate-prepare.md	NAME
+sql/statements/deallocate-prepare.md	SYNOPSIS
+sql/statements/deallocate-prepare.md	DESCRIPTION
+sql/statements/deallocate-prepare.md	RULES
+sql/statements/deallocate-prepare.md	PRIVILEGES
+sql/statements/deallocate-prepare.md	ERRORS
+sql/statements/deallocate-prepare.md	EXAMPLES
+sql/statements/deallocate-prepare.md	STANDARD
+sql/statements/deallocate-prepare.md	SEE ALSO
+sql/statements/declare-cursor.md	DECLARE CURSOR
+sql/statements/declare-cursor.md	NAME
+sql/statements/declare-cursor.md	SYNOPSIS
+sql/statements/declare-cursor.md	DESCRIPTION
+sql/statements/declare-cursor.md	RULES
+sql/statements/declare-cursor.md	PRIVILEGES
+sql/statements/declare-cursor.md	ERRORS
+sql/statements/declare-cursor.md	EXAMPLES
+sql/statements/declare-cursor.md	STANDARD
+sql/statements/declare-cursor.md	SEE ALSO
+sql/statements/declare-handler.md	DECLARE HANDLER
+sql/statements/declare-handler.md	NAME
+sql/statements/declare-handler.md	SYNOPSIS
+sql/statements/declare-handler.md	DESCRIPTION
+sql/statements/declare-handler.md	RULES
+sql/statements/declare-handler.md	PRIVILEGES
+sql/statements/declare-handler.md	ERRORS
+sql/statements/declare-handler.md	EXAMPLES
+sql/statements/declare-handler.md	STANDARD
+sql/statements/declare-handler.md	SEE ALSO
+sql/statements/declare-local-temporary-table.md	DECLARE LOCAL TEMPORARY TABLE
+sql/statements/declare-local-temporary-table.md	NAME
+sql/statements/declare-local-temporary-table.md	SYNOPSIS
+sql/statements/declare-local-temporary-table.md	DESCRIPTION
+sql/statements/declare-local-temporary-table.md	RULES
+sql/statements/declare-local-temporary-table.md	PRIVILEGES
+sql/statements/declare-local-temporary-table.md	ERRORS
+sql/statements/declare-local-temporary-table.md	EXAMPLES
+sql/statements/declare-local-temporary-table.md	STANDARD
+sql/statements/declare-local-temporary-table.md	SEE ALSO
+sql/statements/delete.md	DELETE
+sql/statements/delete.md	NAME
+sql/statements/delete.md	SYNOPSIS
+sql/statements/delete.md	DESCRIPTION
+sql/statements/delete.md	RULES
+sql/statements/delete.md	PRIVILEGES
+sql/statements/delete.md	ERRORS
+sql/statements/delete.md	EXAMPLES
+sql/statements/delete.md	STANDARD
+sql/statements/delete.md	SEE ALSO
+sql/statements/describe.md	DESCRIBE
+sql/statements/describe.md	NAME
+sql/statements/describe.md	SYNOPSIS
+sql/statements/describe.md	DESCRIPTION
+sql/statements/describe.md	RULES
+sql/statements/describe.md	PRIVILEGES
+sql/statements/describe.md	ERRORS
+sql/statements/describe.md	EXAMPLES
+sql/statements/describe.md	STANDARD
+sql/statements/describe.md	SEE ALSO
+sql/statements/disconnect.md	DISCONNECT
+sql/statements/disconnect.md	NAME
+sql/statements/disconnect.md	SYNOPSIS
+sql/statements/disconnect.md	DESCRIPTION
+sql/statements/disconnect.md	RULES
+sql/statements/disconnect.md	PRIVILEGES
+sql/statements/disconnect.md	ERRORS
+sql/statements/disconnect.md	EXAMPLES
+sql/statements/disconnect.md	STANDARD
+sql/statements/disconnect.md	SEE ALSO
+sql/statements/drop-assertion.md	DROP ASSERTION
+sql/statements/drop-assertion.md	NAME
+sql/statements/drop-assertion.md	SYNOPSIS
+sql/statements/drop-assertion.md	DESCRIPTION
+sql/statements/drop-assertion.md	RULES
+sql/statements/drop-assertion.md	PRIVILEGES
+sql/statements/drop-assertion.md	ERRORS
+sql/statements/drop-assertion.md	EXAMPLES
+sql/statements/drop-assertion.md	STANDARD
+sql/statements/drop-assertion.md	SEE ALSO
+sql/statements/drop-cast.md	DROP CAST
+sql/statements/drop-cast.md	NAME
+sql/statements/drop-cast.md	SYNOPSIS
+sql/statements/drop-cast.md	DESCRIPTION
+sql/statements/drop-cast.md	RULES
+sql/statements/drop-cast.md	PRIVILEGES
+sql/statements/drop-cast.md	ERRORS
+sql/statements/drop-cast.md	EXAMPLES
+sql/statements/drop-cast.md	STANDARD
+sql/statements/drop-cast.md	SEE ALSO
+sql/statements/drop-collation.md	DROP COLLATION
+sql/statements/drop-collation.md	NAME
+sql/statements/drop-collation.md	SYNOPSIS
+sql/statements/drop-collation.md	DESCRIPTION
+sql/statements/drop-collation.md	RULES
+sql/statements/drop-collation.md	PRIVILEGES
+sql/statements/drop-collation.md	ERRORS
+sql/statements/drop-collation.md	EXAMPLES
+sql/statements/drop-collation.md	STANDARD
+sql/statements/drop-collation.md	SEE ALSO
+sql/statements/drop-domain.md	DROP DOMAIN
+sql/statements/drop-domain.md	NAME
+sql/statements/drop-domain.md	SYNOPSIS
+sql/statements/drop-domain.md	DESCRIPTION
+sql/statements/drop-domain.md	RULES
+sql/statements/drop-domain.md	PRIVILEGES
+sql/statements/drop-domain.md	ERRORS
+sql/statements/drop-domain.md	EXAMPLES
+sql/statements/drop-domain.md	STANDARD
+sql/statements/drop-domain.md	SEE ALSO
+sql/statements/drop-embedding-model.md	DROP EMBEDDING MODEL
+sql/statements/drop-embedding-model.md	NAME
+sql/statements/drop-embedding-model.md	SYNOPSIS
+sql/statements/drop-embedding-model.md	DESCRIPTION
+sql/statements/drop-embedding-model.md	RULES
+sql/statements/drop-embedding-model.md	PRIVILEGES
+sql/statements/drop-embedding-model.md	ERRORS
+sql/statements/drop-embedding-model.md	EXAMPLES
+sql/statements/drop-embedding-model.md	STANDARD
+sql/statements/drop-embedding-model.md	SEE ALSO
+sql/statements/drop-extension.md	DROP EXTENSION
+sql/statements/drop-extension.md	NAME
+sql/statements/drop-extension.md	SYNOPSIS
+sql/statements/drop-extension.md	DESCRIPTION
+sql/statements/drop-extension.md	RULES
+sql/statements/drop-extension.md	PRIVILEGES
+sql/statements/drop-extension.md	ERRORS
+sql/statements/drop-extension.md	EXAMPLES
+sql/statements/drop-extension.md	STANDARD
+sql/statements/drop-extension.md	SEE ALSO
+sql/statements/drop-graph-type.md	DROP GRAPH TYPE
+sql/statements/drop-graph-type.md	NAME
+sql/statements/drop-graph-type.md	SYNOPSIS
+sql/statements/drop-graph-type.md	DESCRIPTION
+sql/statements/drop-graph-type.md	RULES
+sql/statements/drop-graph-type.md	PRIVILEGES
+sql/statements/drop-graph-type.md	ERRORS
+sql/statements/drop-graph-type.md	EXAMPLES
+sql/statements/drop-graph-type.md	STANDARD
+sql/statements/drop-graph-type.md	SEE ALSO
+sql/statements/drop-graph.md	DROP GRAPH
+sql/statements/drop-graph.md	NAME
+sql/statements/drop-graph.md	SYNOPSIS
+sql/statements/drop-graph.md	DESCRIPTION
+sql/statements/drop-graph.md	RULES
+sql/statements/drop-graph.md	PRIVILEGES
+sql/statements/drop-graph.md	ERRORS
+sql/statements/drop-graph.md	EXAMPLES
+sql/statements/drop-graph.md	STANDARD
+sql/statements/drop-graph.md	SEE ALSO
+sql/statements/drop-index.md	DROP INDEX
+sql/statements/drop-index.md	NAME
+sql/statements/drop-index.md	SYNOPSIS
+sql/statements/drop-index.md	DESCRIPTION
+sql/statements/drop-index.md	RULES
+sql/statements/drop-index.md	PRIVILEGES
+sql/statements/drop-index.md	ERRORS
+sql/statements/drop-index.md	EXAMPLES
+sql/statements/drop-index.md	STANDARD
+sql/statements/drop-index.md	SEE ALSO
+sql/statements/drop-module.md	DROP MODULE
+sql/statements/drop-module.md	NAME
+sql/statements/drop-module.md	SYNOPSIS
+sql/statements/drop-module.md	DESCRIPTION
+sql/statements/drop-module.md	RULES
+sql/statements/drop-module.md	PRIVILEGES
+sql/statements/drop-module.md	ERRORS
+sql/statements/drop-module.md	EXAMPLES
+sql/statements/drop-module.md	STANDARD
+sql/statements/drop-module.md	SEE ALSO
+sql/statements/drop-ordering.md	DROP ORDERING
+sql/statements/drop-ordering.md	NAME
+sql/statements/drop-ordering.md	SYNOPSIS
+sql/statements/drop-ordering.md	DESCRIPTION
+sql/statements/drop-ordering.md	RULES
+sql/statements/drop-ordering.md	PRIVILEGES
+sql/statements/drop-ordering.md	ERRORS
+sql/statements/drop-ordering.md	EXAMPLES
+sql/statements/drop-ordering.md	STANDARD
+sql/statements/drop-ordering.md	SEE ALSO
+sql/statements/drop-property-graph.md	DROP PROPERTY GRAPH
+sql/statements/drop-property-graph.md	NAME
+sql/statements/drop-property-graph.md	SYNOPSIS
+sql/statements/drop-property-graph.md	DESCRIPTION
+sql/statements/drop-property-graph.md	RULES
+sql/statements/drop-property-graph.md	PRIVILEGES
+sql/statements/drop-property-graph.md	ERRORS
+sql/statements/drop-property-graph.md	EXAMPLES
+sql/statements/drop-property-graph.md	STANDARD
+sql/statements/drop-property-graph.md	SEE ALSO
+sql/statements/drop-role.md	DROP ROLE
+sql/statements/drop-role.md	NAME
+sql/statements/drop-role.md	SYNOPSIS
+sql/statements/drop-role.md	DESCRIPTION
+sql/statements/drop-role.md	RULES
+sql/statements/drop-role.md	PRIVILEGES
+sql/statements/drop-role.md	ERRORS
+sql/statements/drop-role.md	EXAMPLES
+sql/statements/drop-role.md	STANDARD
+sql/statements/drop-role.md	SEE ALSO
+sql/statements/drop-routine.md	DROP ROUTINE
+sql/statements/drop-routine.md	NAME
+sql/statements/drop-routine.md	SYNOPSIS
+sql/statements/drop-routine.md	DESCRIPTION
+sql/statements/drop-routine.md	RULES
+sql/statements/drop-routine.md	PRIVILEGES
+sql/statements/drop-routine.md	ERRORS
+sql/statements/drop-routine.md	EXAMPLES
+sql/statements/drop-routine.md	STANDARD
+sql/statements/drop-routine.md	SEE ALSO
+sql/statements/drop-schema.md	DROP SCHEMA
+sql/statements/drop-schema.md	NAME
+sql/statements/drop-schema.md	SYNOPSIS
+sql/statements/drop-schema.md	DESCRIPTION
+sql/statements/drop-schema.md	RULES
+sql/statements/drop-schema.md	PRIVILEGES
+sql/statements/drop-schema.md	ERRORS
+sql/statements/drop-schema.md	EXAMPLES
+sql/statements/drop-schema.md	STANDARD
+sql/statements/drop-schema.md	SEE ALSO
+sql/statements/drop-sequence.md	DROP SEQUENCE
+sql/statements/drop-sequence.md	NAME
+sql/statements/drop-sequence.md	SYNOPSIS
+sql/statements/drop-sequence.md	DESCRIPTION
+sql/statements/drop-sequence.md	RULES
+sql/statements/drop-sequence.md	PRIVILEGES
+sql/statements/drop-sequence.md	ERRORS
+sql/statements/drop-sequence.md	EXAMPLES
+sql/statements/drop-sequence.md	STANDARD
+sql/statements/drop-sequence.md	SEE ALSO
+sql/statements/drop-table.md	DROP TABLE
+sql/statements/drop-table.md	NAME
+sql/statements/drop-table.md	SYNOPSIS
+sql/statements/drop-table.md	DESCRIPTION
+sql/statements/drop-table.md	RULES
+sql/statements/drop-table.md	PRIVILEGES
+sql/statements/drop-table.md	ERRORS
+sql/statements/drop-table.md	EXAMPLES
+sql/statements/drop-table.md	STANDARD
+sql/statements/drop-table.md	SEE ALSO
+sql/statements/drop-transform.md	DROP TRANSFORM
+sql/statements/drop-transform.md	NAME
+sql/statements/drop-transform.md	SYNOPSIS
+sql/statements/drop-transform.md	DESCRIPTION
+sql/statements/drop-transform.md	RULES
+sql/statements/drop-transform.md	PRIVILEGES
+sql/statements/drop-transform.md	ERRORS
+sql/statements/drop-transform.md	EXAMPLES
+sql/statements/drop-transform.md	STANDARD
+sql/statements/drop-transform.md	SEE ALSO
+sql/statements/drop-trigger.md	DROP TRIGGER
+sql/statements/drop-trigger.md	NAME
+sql/statements/drop-trigger.md	SYNOPSIS
+sql/statements/drop-trigger.md	DESCRIPTION
+sql/statements/drop-trigger.md	RULES
+sql/statements/drop-trigger.md	PRIVILEGES
+sql/statements/drop-trigger.md	ERRORS
+sql/statements/drop-trigger.md	EXAMPLES
+sql/statements/drop-trigger.md	STANDARD
+sql/statements/drop-trigger.md	SEE ALSO
+sql/statements/drop-type.md	DROP TYPE
+sql/statements/drop-type.md	NAME
+sql/statements/drop-type.md	SYNOPSIS
+sql/statements/drop-type.md	DESCRIPTION
+sql/statements/drop-type.md	RULES
+sql/statements/drop-type.md	PRIVILEGES
+sql/statements/drop-type.md	ERRORS
+sql/statements/drop-type.md	EXAMPLES
+sql/statements/drop-type.md	STANDARD
+sql/statements/drop-type.md	SEE ALSO
+sql/statements/drop-user.md	DROP USER
+sql/statements/drop-user.md	NAME
+sql/statements/drop-user.md	SYNOPSIS
+sql/statements/drop-user.md	DESCRIPTION
+sql/statements/drop-user.md	RULES
+sql/statements/drop-user.md	PRIVILEGES
+sql/statements/drop-user.md	ERRORS
+sql/statements/drop-user.md	EXAMPLES
+sql/statements/drop-user.md	STANDARD
+sql/statements/drop-user.md	SEE ALSO
+sql/statements/drop-vector-distance-function.md	DROP VECTOR DISTANCE FUNCTION
+sql/statements/drop-vector-distance-function.md	NAME
+sql/statements/drop-vector-distance-function.md	SYNOPSIS
+sql/statements/drop-vector-distance-function.md	DESCRIPTION
+sql/statements/drop-vector-distance-function.md	RULES
+sql/statements/drop-vector-distance-function.md	PRIVILEGES
+sql/statements/drop-vector-distance-function.md	ERRORS
+sql/statements/drop-vector-distance-function.md	EXAMPLES
+sql/statements/drop-vector-distance-function.md	STANDARD
+sql/statements/drop-vector-distance-function.md	SEE ALSO
+sql/statements/drop-vector-pipeline.md	DROP VECTOR PIPELINE
+sql/statements/drop-vector-pipeline.md	NAME
+sql/statements/drop-vector-pipeline.md	SYNOPSIS
+sql/statements/drop-vector-pipeline.md	DESCRIPTION
+sql/statements/drop-vector-pipeline.md	RULES
+sql/statements/drop-vector-pipeline.md	PRIVILEGES
+sql/statements/drop-vector-pipeline.md	ERRORS
+sql/statements/drop-vector-pipeline.md	EXAMPLES
+sql/statements/drop-vector-pipeline.md	STANDARD
+sql/statements/drop-vector-pipeline.md	SEE ALSO
+sql/statements/drop-view.md	DROP VIEW
+sql/statements/drop-view.md	NAME
+sql/statements/drop-view.md	SYNOPSIS
+sql/statements/drop-view.md	DESCRIPTION
+sql/statements/drop-view.md	RULES
+sql/statements/drop-view.md	PRIVILEGES
+sql/statements/drop-view.md	ERRORS
+sql/statements/drop-view.md	EXAMPLES
+sql/statements/drop-view.md	STANDARD
+sql/statements/drop-view.md	SEE ALSO
+sql/statements/drop-xml-schema.md	DROP XML SCHEMA
+sql/statements/drop-xml-schema.md	NAME
+sql/statements/drop-xml-schema.md	SYNOPSIS
+sql/statements/drop-xml-schema.md	DESCRIPTION
+sql/statements/drop-xml-schema.md	RULES
+sql/statements/drop-xml-schema.md	PRIVILEGES
+sql/statements/drop-xml-schema.md	ERRORS
+sql/statements/drop-xml-schema.md	EXAMPLES
+sql/statements/drop-xml-schema.md	STANDARD
+sql/statements/drop-xml-schema.md	SEE ALSO
+sql/statements/drop-xquery-module.md	DROP XQUERY MODULE
+sql/statements/drop-xquery-module.md	NAME
+sql/statements/drop-xquery-module.md	SYNOPSIS
+sql/statements/drop-xquery-module.md	DESCRIPTION
+sql/statements/drop-xquery-module.md	RULES
+sql/statements/drop-xquery-module.md	PRIVILEGES
+sql/statements/drop-xquery-module.md	ERRORS
+sql/statements/drop-xquery-module.md	EXAMPLES
+sql/statements/drop-xquery-module.md	STANDARD
+sql/statements/drop-xquery-module.md	SEE ALSO
+sql/statements/end-connection.md	END CONNECTION
+sql/statements/end-connection.md	NAME
+sql/statements/end-connection.md	SYNOPSIS
+sql/statements/end-connection.md	DESCRIPTION
+sql/statements/end-connection.md	RULES
+sql/statements/end-connection.md	PRIVILEGES
+sql/statements/end-connection.md	ERRORS
+sql/statements/end-connection.md	EXAMPLES
+sql/statements/end-connection.md	STANDARD
+sql/statements/end-connection.md	SEE ALSO
+sql/statements/execute-gql.md	EXECUTE GQL
+sql/statements/execute-gql.md	NAME
+sql/statements/execute-gql.md	SYNOPSIS
+sql/statements/execute-gql.md	DESCRIPTION
+sql/statements/execute-gql.md	RULES
+sql/statements/execute-gql.md	PRIVILEGES
+sql/statements/execute-gql.md	ERRORS
+sql/statements/execute-gql.md	EXAMPLES
+sql/statements/execute-gql.md	STANDARD
+sql/statements/execute-gql.md	SEE ALSO
+sql/statements/execute-immediate.md	EXECUTE IMMEDIATE
+sql/statements/execute-immediate.md	NAME
+sql/statements/execute-immediate.md	SYNOPSIS
+sql/statements/execute-immediate.md	DESCRIPTION
+sql/statements/execute-immediate.md	RULES
+sql/statements/execute-immediate.md	PRIVILEGES
+sql/statements/execute-immediate.md	ERRORS
+sql/statements/execute-immediate.md	EXAMPLES
+sql/statements/execute-immediate.md	STANDARD
+sql/statements/execute-immediate.md	SEE ALSO
+sql/statements/execute.md	EXECUTE
+sql/statements/execute.md	NAME
+sql/statements/execute.md	SYNOPSIS
+sql/statements/execute.md	DESCRIPTION
+sql/statements/execute.md	RULES
+sql/statements/execute.md	PRIVILEGES
+sql/statements/execute.md	ERRORS
+sql/statements/execute.md	EXAMPLES
+sql/statements/execute.md	STANDARD
+sql/statements/execute.md	SEE ALSO
+sql/statements/explain.md	EXPLAIN
+sql/statements/explain.md	NAME
+sql/statements/explain.md	SYNOPSIS
+sql/statements/explain.md	DESCRIPTION
+sql/statements/explain.md	RULES
+sql/statements/explain.md	PRIVILEGES
+sql/statements/explain.md	ERRORS
+sql/statements/explain.md	EXAMPLES
+sql/statements/explain.md	STANDARD
+sql/statements/explain.md	SEE ALSO
+sql/statements/fetch.md	FETCH
+sql/statements/fetch.md	NAME
+sql/statements/fetch.md	SYNOPSIS
+sql/statements/fetch.md	DESCRIPTION
+sql/statements/fetch.md	RULES
+sql/statements/fetch.md	PRIVILEGES
+sql/statements/fetch.md	ERRORS
+sql/statements/fetch.md	EXAMPLES
+sql/statements/fetch.md	STANDARD
+sql/statements/fetch.md	SEE ALSO
+sql/statements/for.md	FOR
+sql/statements/for.md	NAME
+sql/statements/for.md	SYNOPSIS
+sql/statements/for.md	DESCRIPTION
+sql/statements/for.md	RULES
+sql/statements/for.md	PRIVILEGES
+sql/statements/for.md	ERRORS
+sql/statements/for.md	EXAMPLES
+sql/statements/for.md	STANDARD
+sql/statements/for.md	SEE ALSO
+sql/statements/free-locator.md	FREE LOCATOR
+sql/statements/free-locator.md	NAME
+sql/statements/free-locator.md	SYNOPSIS
+sql/statements/free-locator.md	DESCRIPTION
+sql/statements/free-locator.md	RULES
+sql/statements/free-locator.md	PRIVILEGES
+sql/statements/free-locator.md	ERRORS
+sql/statements/free-locator.md	EXAMPLES
+sql/statements/free-locator.md	STANDARD
+sql/statements/free-locator.md	SEE ALSO
+sql/statements/get-descriptor.md	GET DESCRIPTOR
+sql/statements/get-descriptor.md	NAME
+sql/statements/get-descriptor.md	SYNOPSIS
+sql/statements/get-descriptor.md	DESCRIPTION
+sql/statements/get-descriptor.md	RULES
+sql/statements/get-descriptor.md	PRIVILEGES
+sql/statements/get-descriptor.md	ERRORS
+sql/statements/get-descriptor.md	EXAMPLES
+sql/statements/get-descriptor.md	STANDARD
+sql/statements/get-descriptor.md	SEE ALSO
+sql/statements/get-diagnostics.md	GET DIAGNOSTICS
+sql/statements/get-diagnostics.md	NAME
+sql/statements/get-diagnostics.md	SYNOPSIS
+sql/statements/get-diagnostics.md	DESCRIPTION
+sql/statements/get-diagnostics.md	RULES
+sql/statements/get-diagnostics.md	PRIVILEGES
+sql/statements/get-diagnostics.md	ERRORS
+sql/statements/get-diagnostics.md	EXAMPLES
+sql/statements/get-diagnostics.md	STANDARD
+sql/statements/get-diagnostics.md	SEE ALSO
+sql/statements/grant.md	GRANT
+sql/statements/grant.md	NAME
+sql/statements/grant.md	SYNOPSIS
+sql/statements/grant.md	DESCRIPTION
+sql/statements/grant.md	RULES
+sql/statements/grant.md	PRIVILEGES
+sql/statements/grant.md	ERRORS
+sql/statements/grant.md	EXAMPLES
+sql/statements/grant.md	STANDARD
+sql/statements/grant.md	SEE ALSO
+sql/statements/hold-locator.md	HOLD LOCATOR
+sql/statements/hold-locator.md	NAME
+sql/statements/hold-locator.md	SYNOPSIS
+sql/statements/hold-locator.md	DESCRIPTION
+sql/statements/hold-locator.md	RULES
+sql/statements/hold-locator.md	PRIVILEGES
+sql/statements/hold-locator.md	ERRORS
+sql/statements/hold-locator.md	EXAMPLES
+sql/statements/hold-locator.md	STANDARD
+sql/statements/hold-locator.md	SEE ALSO
+sql/statements/if.md	IF
+sql/statements/if.md	NAME
+sql/statements/if.md	SYNOPSIS
+sql/statements/if.md	DESCRIPTION
+sql/statements/if.md	RULES
+sql/statements/if.md	PRIVILEGES
+sql/statements/if.md	ERRORS
+sql/statements/if.md	EXAMPLES
+sql/statements/if.md	STANDARD
+sql/statements/if.md	SEE ALSO
+sql/statements/insert.md	INSERT
+sql/statements/insert.md	NAME
+sql/statements/insert.md	SYNOPSIS
+sql/statements/insert.md	DESCRIPTION
+sql/statements/insert.md	RULES
+sql/statements/insert.md	PRIVILEGES
+sql/statements/insert.md	ERRORS
+sql/statements/insert.md	EXAMPLES
+sql/statements/insert.md	STANDARD
+sql/statements/insert.md	SEE ALSO
+sql/statements/iterate.md	ITERATE
+sql/statements/iterate.md	NAME
+sql/statements/iterate.md	SYNOPSIS
+sql/statements/iterate.md	DESCRIPTION
+sql/statements/iterate.md	RULES
+sql/statements/iterate.md	PRIVILEGES
+sql/statements/iterate.md	ERRORS
+sql/statements/iterate.md	EXAMPLES
+sql/statements/iterate.md	STANDARD
+sql/statements/iterate.md	SEE ALSO
+sql/statements/leave.md	LEAVE
+sql/statements/leave.md	NAME
+sql/statements/leave.md	SYNOPSIS
+sql/statements/leave.md	DESCRIPTION
+sql/statements/leave.md	RULES
+sql/statements/leave.md	PRIVILEGES
+sql/statements/leave.md	ERRORS
+sql/statements/leave.md	EXAMPLES
+sql/statements/leave.md	STANDARD
+sql/statements/leave.md	SEE ALSO
+sql/statements/loop.md	LOOP
+sql/statements/loop.md	NAME
+sql/statements/loop.md	SYNOPSIS
+sql/statements/loop.md	DESCRIPTION
+sql/statements/loop.md	RULES
+sql/statements/loop.md	PRIVILEGES
+sql/statements/loop.md	ERRORS
+sql/statements/loop.md	EXAMPLES
+sql/statements/loop.md	STANDARD
+sql/statements/loop.md	SEE ALSO
+sql/statements/merge.md	MERGE
+sql/statements/merge.md	NAME
+sql/statements/merge.md	SYNOPSIS
+sql/statements/merge.md	DESCRIPTION
+sql/statements/merge.md	RULES
+sql/statements/merge.md	PRIVILEGES
+sql/statements/merge.md	ERRORS
+sql/statements/merge.md	EXAMPLES
+sql/statements/merge.md	STANDARD
+sql/statements/merge.md	SEE ALSO
+sql/statements/open.md	OPEN
+sql/statements/open.md	NAME
+sql/statements/open.md	SYNOPSIS
+sql/statements/open.md	DESCRIPTION
+sql/statements/open.md	RULES
+sql/statements/open.md	PRIVILEGES
+sql/statements/open.md	ERRORS
+sql/statements/open.md	EXAMPLES
+sql/statements/open.md	STANDARD
+sql/statements/open.md	SEE ALSO
+sql/statements/pipe-row.md	PIPE ROW
+sql/statements/pipe-row.md	NAME
+sql/statements/pipe-row.md	SYNOPSIS
+sql/statements/pipe-row.md	DESCRIPTION
+sql/statements/pipe-row.md	RULES
+sql/statements/pipe-row.md	PRIVILEGES
+sql/statements/pipe-row.md	ERRORS
+sql/statements/pipe-row.md	EXAMPLES
+sql/statements/pipe-row.md	STANDARD
+sql/statements/pipe-row.md	SEE ALSO
+sql/statements/prepare.md	PREPARE
+sql/statements/prepare.md	NAME
+sql/statements/prepare.md	SYNOPSIS
+sql/statements/prepare.md	DESCRIPTION
+sql/statements/prepare.md	RULES
+sql/statements/prepare.md	PRIVILEGES
+sql/statements/prepare.md	ERRORS
+sql/statements/prepare.md	EXAMPLES
+sql/statements/prepare.md	STANDARD
+sql/statements/prepare.md	SEE ALSO
+sql/statements/release-savepoint.md	RELEASE SAVEPOINT
+sql/statements/release-savepoint.md	NAME
+sql/statements/release-savepoint.md	SYNOPSIS
+sql/statements/release-savepoint.md	DESCRIPTION
+sql/statements/release-savepoint.md	RULES
+sql/statements/release-savepoint.md	PRIVILEGES
+sql/statements/release-savepoint.md	ERRORS
+sql/statements/release-savepoint.md	EXAMPLES
+sql/statements/release-savepoint.md	STANDARD
+sql/statements/release-savepoint.md	SEE ALSO
+sql/statements/repeat.md	REPEAT
+sql/statements/repeat.md	NAME
+sql/statements/repeat.md	SYNOPSIS
+sql/statements/repeat.md	DESCRIPTION
+sql/statements/repeat.md	RULES
+sql/statements/repeat.md	PRIVILEGES
+sql/statements/repeat.md	ERRORS
+sql/statements/repeat.md	EXAMPLES
+sql/statements/repeat.md	STANDARD
+sql/statements/repeat.md	SEE ALSO
+sql/statements/rescan-backup-target.md	RESCAN BACKUP TARGET
+sql/statements/rescan-backup-target.md	NAME
+sql/statements/rescan-backup-target.md	SYNOPSIS
+sql/statements/rescan-backup-target.md	DESCRIPTION
+sql/statements/rescan-backup-target.md	RULES
+sql/statements/rescan-backup-target.md	PRIVILEGES
+sql/statements/rescan-backup-target.md	ERRORS
+sql/statements/rescan-backup-target.md	EXAMPLES
+sql/statements/rescan-backup-target.md	STANDARD
+sql/statements/rescan-backup-target.md	SEE ALSO
+sql/statements/resignal.md	RESIGNAL
+sql/statements/resignal.md	NAME
+sql/statements/resignal.md	SYNOPSIS
+sql/statements/resignal.md	DESCRIPTION
+sql/statements/resignal.md	RULES
+sql/statements/resignal.md	PRIVILEGES
+sql/statements/resignal.md	ERRORS
+sql/statements/resignal.md	EXAMPLES
+sql/statements/resignal.md	STANDARD
+sql/statements/resignal.md	SEE ALSO
+sql/statements/return.md	RETURN
+sql/statements/return.md	NAME
+sql/statements/return.md	SYNOPSIS
+sql/statements/return.md	DESCRIPTION
+sql/statements/return.md	RULES
+sql/statements/return.md	PRIVILEGES
+sql/statements/return.md	ERRORS
+sql/statements/return.md	EXAMPLES
+sql/statements/return.md	STANDARD
+sql/statements/return.md	SEE ALSO
+sql/statements/revoke.md	REVOKE
+sql/statements/revoke.md	NAME
+sql/statements/revoke.md	SYNOPSIS
+sql/statements/revoke.md	DESCRIPTION
+sql/statements/revoke.md	RULES
+sql/statements/revoke.md	PRIVILEGES
+sql/statements/revoke.md	ERRORS
+sql/statements/revoke.md	EXAMPLES
+sql/statements/revoke.md	STANDARD
+sql/statements/revoke.md	SEE ALSO
+sql/statements/rollback.md	ROLLBACK
+sql/statements/rollback.md	NAME
+sql/statements/rollback.md	SYNOPSIS
+sql/statements/rollback.md	DESCRIPTION
+sql/statements/rollback.md	RULES
+sql/statements/rollback.md	PRIVILEGES
+sql/statements/rollback.md	ERRORS
+sql/statements/rollback.md	EXAMPLES
+sql/statements/rollback.md	STANDARD
+sql/statements/rollback.md	SEE ALSO
+sql/statements/savepoint.md	SAVEPOINT
+sql/statements/savepoint.md	NAME
+sql/statements/savepoint.md	SYNOPSIS
+sql/statements/savepoint.md	DESCRIPTION
+sql/statements/savepoint.md	RULES
+sql/statements/savepoint.md	PRIVILEGES
+sql/statements/savepoint.md	ERRORS
+sql/statements/savepoint.md	EXAMPLES
+sql/statements/savepoint.md	STANDARD
+sql/statements/savepoint.md	SEE ALSO
+sql/statements/select.md	SELECT
+sql/statements/select.md	NAME
+sql/statements/select.md	SYNOPSIS
+sql/statements/select.md	DESCRIPTION
+sql/statements/select.md	RULES
+sql/statements/select.md	PRIVILEGES
+sql/statements/select.md	ERRORS
+sql/statements/select.md	EXAMPLES
+sql/statements/select.md	SELECT INTO
+sql/statements/select.md	STANDARD
+sql/statements/select.md	SEE ALSO
+sql/statements/set-catalog.md	SET CATALOG
+sql/statements/set-catalog.md	NAME
+sql/statements/set-catalog.md	SYNOPSIS
+sql/statements/set-catalog.md	DESCRIPTION
+sql/statements/set-catalog.md	RULES
+sql/statements/set-catalog.md	PRIVILEGES
+sql/statements/set-catalog.md	ERRORS
+sql/statements/set-catalog.md	EXAMPLES
+sql/statements/set-catalog.md	STANDARD
+sql/statements/set-catalog.md	SEE ALSO
+sql/statements/set-collation.md	SET COLLATION
+sql/statements/set-collation.md	NAME
+sql/statements/set-collation.md	SYNOPSIS
+sql/statements/set-collation.md	DESCRIPTION
+sql/statements/set-collation.md	RULES
+sql/statements/set-collation.md	PRIVILEGES
+sql/statements/set-collation.md	ERRORS
+sql/statements/set-collation.md	EXAMPLES
+sql/statements/set-collation.md	STANDARD
+sql/statements/set-collation.md	SEE ALSO
+sql/statements/set-connection.md	SET CONNECTION
+sql/statements/set-connection.md	NAME
+sql/statements/set-connection.md	SYNOPSIS
+sql/statements/set-connection.md	DESCRIPTION
+sql/statements/set-connection.md	RULES
+sql/statements/set-connection.md	PRIVILEGES
+sql/statements/set-connection.md	ERRORS
+sql/statements/set-connection.md	EXAMPLES
+sql/statements/set-connection.md	STANDARD
+sql/statements/set-connection.md	SEE ALSO
+sql/statements/set-constraints.md	SET CONSTRAINTS
+sql/statements/set-constraints.md	NAME
+sql/statements/set-constraints.md	SYNOPSIS
+sql/statements/set-constraints.md	DESCRIPTION
+sql/statements/set-constraints.md	RULES
+sql/statements/set-constraints.md	PRIVILEGES
+sql/statements/set-constraints.md	ERRORS
+sql/statements/set-constraints.md	EXAMPLES
+sql/statements/set-constraints.md	STANDARD
+sql/statements/set-constraints.md	SEE ALSO
+sql/statements/set-database.md	SET DATABASE
+sql/statements/set-database.md	NAME
+sql/statements/set-database.md	SYNOPSIS
+sql/statements/set-database.md	DESCRIPTION
+sql/statements/set-database.md	RULES
+sql/statements/set-database.md	PRIVILEGES
+sql/statements/set-database.md	ERRORS
+sql/statements/set-database.md	EXAMPLES
+sql/statements/set-database.md	STANDARD
+sql/statements/set-database.md	SEE ALSO
+sql/statements/set-descriptor.md	SET DESCRIPTOR
+sql/statements/set-descriptor.md	NAME
+sql/statements/set-descriptor.md	SYNOPSIS
+sql/statements/set-descriptor.md	DESCRIPTION
+sql/statements/set-descriptor.md	RULES
+sql/statements/set-descriptor.md	PRIVILEGES
+sql/statements/set-descriptor.md	ERRORS
+sql/statements/set-descriptor.md	EXAMPLES
+sql/statements/set-descriptor.md	STANDARD
+sql/statements/set-descriptor.md	SEE ALSO
+sql/statements/set-role.md	SET ROLE
+sql/statements/set-role.md	NAME
+sql/statements/set-role.md	SYNOPSIS
+sql/statements/set-role.md	DESCRIPTION
+sql/statements/set-role.md	RULES
+sql/statements/set-role.md	PRIVILEGES
+sql/statements/set-role.md	ERRORS
+sql/statements/set-role.md	EXAMPLES
+sql/statements/set-role.md	STANDARD
+sql/statements/set-role.md	SEE ALSO
+sql/statements/set-schema.md	SET SCHEMA
+sql/statements/set-schema.md	NAME
+sql/statements/set-schema.md	SYNOPSIS
+sql/statements/set-schema.md	DESCRIPTION
+sql/statements/set-schema.md	RULES
+sql/statements/set-schema.md	PRIVILEGES
+sql/statements/set-schema.md	ERRORS
+sql/statements/set-schema.md	EXAMPLES
+sql/statements/set-schema.md	STANDARD
+sql/statements/set-schema.md	SEE ALSO
+sql/statements/set-session-authorization.md	SET SESSION AUTHORIZATION
+sql/statements/set-session-authorization.md	NAME
+sql/statements/set-session-authorization.md	SYNOPSIS
+sql/statements/set-session-authorization.md	DESCRIPTION
+sql/statements/set-session-authorization.md	RULES
+sql/statements/set-session-authorization.md	PRIVILEGES
+sql/statements/set-session-authorization.md	ERRORS
+sql/statements/set-session-authorization.md	EXAMPLES
+sql/statements/set-session-authorization.md	STANDARD
+sql/statements/set-session-authorization.md	SEE ALSO
+sql/statements/set-setting.md	SET
+sql/statements/set-setting.md	NAME
+sql/statements/set-setting.md	SYNOPSIS
+sql/statements/set-setting.md	DESCRIPTION
+sql/statements/set-setting.md	RULES
+sql/statements/set-setting.md	PRIVILEGES
+sql/statements/set-setting.md	ERRORS
+sql/statements/set-setting.md	EXAMPLES
+sql/statements/set-setting.md	STANDARD
+sql/statements/set-setting.md	SEE ALSO
+sql/statements/set-time-zone.md	SET TIME ZONE
+sql/statements/set-time-zone.md	NAME
+sql/statements/set-time-zone.md	SYNOPSIS
+sql/statements/set-time-zone.md	DESCRIPTION
+sql/statements/set-time-zone.md	RULES
+sql/statements/set-time-zone.md	PRIVILEGES
+sql/statements/set-time-zone.md	ERRORS
+sql/statements/set-time-zone.md	EXAMPLES
+sql/statements/set-time-zone.md	STANDARD
+sql/statements/set-time-zone.md	SEE ALSO
+sql/statements/set-transaction.md	SET TRANSACTION
+sql/statements/set-transaction.md	NAME
+sql/statements/set-transaction.md	SYNOPSIS
+sql/statements/set-transaction.md	DESCRIPTION
+sql/statements/set-transaction.md	RULES
+sql/statements/set-transaction.md	PRIVILEGES
+sql/statements/set-transaction.md	ERRORS
+sql/statements/set-transaction.md	EXAMPLES
+sql/statements/set-transaction.md	STANDARD
+sql/statements/set-transaction.md	SEE ALSO
+sql/statements/set-transform-group.md	SET TRANSFORM GROUP
+sql/statements/set-transform-group.md	NAME
+sql/statements/set-transform-group.md	SYNOPSIS
+sql/statements/set-transform-group.md	DESCRIPTION
+sql/statements/set-transform-group.md	RULES
+sql/statements/set-transform-group.md	PRIVILEGES
+sql/statements/set-transform-group.md	ERRORS
+sql/statements/set-transform-group.md	EXAMPLES
+sql/statements/set-transform-group.md	STANDARD
+sql/statements/set-transform-group.md	SEE ALSO
+sql/statements/set-variable.md	SET (assignment)
+sql/statements/set-variable.md	NAME
+sql/statements/set-variable.md	SYNOPSIS
+sql/statements/set-variable.md	DESCRIPTION
+sql/statements/set-variable.md	RULES
+sql/statements/set-variable.md	PRIVILEGES
+sql/statements/set-variable.md	ERRORS
+sql/statements/set-variable.md	EXAMPLES
+sql/statements/set-variable.md	STANDARD
+sql/statements/set-variable.md	SEE ALSO
+sql/statements/signal.md	SIGNAL
+sql/statements/signal.md	NAME
+sql/statements/signal.md	SYNOPSIS
+sql/statements/signal.md	DESCRIPTION
+sql/statements/signal.md	RULES
+sql/statements/signal.md	PRIVILEGES
+sql/statements/signal.md	ERRORS
+sql/statements/signal.md	EXAMPLES
+sql/statements/signal.md	STANDARD
+sql/statements/signal.md	SEE ALSO
+sql/statements/truncate-table.md	TRUNCATE TABLE
+sql/statements/truncate-table.md	NAME
+sql/statements/truncate-table.md	SYNOPSIS
+sql/statements/truncate-table.md	DESCRIPTION
+sql/statements/truncate-table.md	RULES
+sql/statements/truncate-table.md	PRIVILEGES
+sql/statements/truncate-table.md	ERRORS
+sql/statements/truncate-table.md	EXAMPLES
+sql/statements/truncate-table.md	STANDARD
+sql/statements/truncate-table.md	SEE ALSO
+sql/statements/update.md	UPDATE
+sql/statements/update.md	NAME
+sql/statements/update.md	SYNOPSIS
+sql/statements/update.md	DESCRIPTION
+sql/statements/update.md	RULES
+sql/statements/update.md	PRIVILEGES
+sql/statements/update.md	ERRORS
+sql/statements/update.md	EXAMPLES
+sql/statements/update.md	STANDARD
+sql/statements/update.md	SEE ALSO
+sql/statements/while.md	WHILE
+sql/statements/while.md	NAME
+sql/statements/while.md	SYNOPSIS
+sql/statements/while.md	DESCRIPTION
+sql/statements/while.md	RULES
+sql/statements/while.md	PRIVILEGES
+sql/statements/while.md	ERRORS
+sql/statements/while.md	EXAMPLES
+sql/statements/while.md	STANDARD
+sql/statements/while.md	SEE ALSO
+user/01-introduction.md	Introduction
+user/01-introduction.md	What Turborel is
+user/01-introduction.md	The SQL it speaks
+user/01-introduction.md	How this guide is organized
+user/02-getting-started.md	Getting Started
+user/02-getting-started.md	Connecting with the Turborel client
+user/02-getting-started.md	A first schema
+user/02-getting-started.md	A first query
+user/02-getting-started.md	Ending a session
+user/03-concepts.md	Concepts
+user/03-concepts.md	Catalogs and schemas
+user/03-concepts.md	Tables and views
+user/03-concepts.md	Domains
+user/03-concepts.md	Users and authorization identifiers
+user/03-concepts.md	Privileges
+user/04-queries.md	Retrieving Data
+user/04-queries.md	The query specification
+user/04-queries.md	Joins
+user/04-queries.md	Subqueries
+user/04-queries.md	Set operations
+user/04-queries.md	Ordering
+user/05-changing-data.md	Changing Data
+user/05-changing-data.md	Inserting rows
+user/05-changing-data.md	Updating rows
+user/05-changing-data.md	Deleting rows
+user/05-changing-data.md	Merging rows
+user/05-changing-data.md	Cursors
+user/06-transactions.md	Transactions
+user/06-transactions.md	When a transaction begins and ends
+user/06-transactions.md	Savepoints
+user/06-transactions.md	Isolation levels
+user/06-transactions.md	Conflicts
+user/06-transactions.md	Read-only transactions
+user/07-constraints.md	Constraints
+user/07-constraints.md	NOT NULL and UNIQUE
+user/07-constraints.md	Primary and foreign keys
+user/07-constraints.md	CHECK constraints
+user/07-constraints.md	Assertions
+user/07-constraints.md	Deferred checking
+user/07-constraints.md	Triggers
+user/08-datetimes.md	Dates, Times and Intervals
+user/08-datetimes.md	The datetime types
+user/08-datetimes.md	Time zones
+user/08-datetimes.md	Intervals
+user/08-datetimes.md	Arithmetic
+user/09-temporary-tables.md	Temporary Tables
+user/09-temporary-tables.md	Global and created local temporary tables
+user/09-temporary-tables.md	Declared local temporary tables
+user/09-temporary-tables.md	ON COMMIT
+user/09-temporary-tables.md	Changing a temporary table
+user/09-temporary-tables.md	Where the rows are kept
+user/10-errors.md	Errors and Diagnostics
+user/10-errors.md	SQLCODE and SQLSTATE
+user/10-errors.md	Where an error is placed
+user/10-errors.md	GET DIAGNOSTICS
+user/README.md	Volume I: User's Guide
+user/README.md	Contents

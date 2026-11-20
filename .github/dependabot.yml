@@ -1,0 +1,27 @@
+# Dependabot proposes each bump of the Rust crates, the npm packages and
+# the workflows' actions (RULES.md D4, R-DEP-3). Each is applied as a
+# commit of its own, with the decision in RULES.md that names its version
+# changed with it.
+version: 2
+updates:
+  - package-ecosystem: cargo
+    directory: /
+    schedule:
+      interval: weekly
+    labels: ["dependencies"]
+    commit-message:
+      prefix: build
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    labels: ["dependencies"]
+    commit-message:
+      prefix: build
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    labels: ["dependencies"]
+    commit-message:
+      prefix: ci

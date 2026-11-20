@@ -1,0 +1,578 @@
+# Turborel Studio rules
+
+How Turborel Studio is designed, written and verified. Every change
+follows these rules; `cargo xtask verify` checks those a tool can check,
+and review checks the rest.
+
+Rules (R-…) say how code and tests are written. **shall** is mandatory,
+and a departure needs a decision recorded here (§7). **should** is
+expected, and a reviewer may accept a reasoned exception.
+
+Decisions (D1…) record how Studio is built and why. Change one only by
+changing this file in a reviewed commit. A decision says what was chosen
+and why, and the module it names holds the mechanism.
+
+Cite both by ID in code, tests, reviews and commit messages, as in
+`RULES.md D6` or `R-SEC-2`.
+
+The rules are those of every Turborel repository: Turborel's own
+[RULES.md](https://github.com/turborel/turborel/blob/main/RULES.md) and
+its drivers', adapted to a desktop application. Decisions D1 to D8 have
+the same subjects as the drivers'; Studio's own begin at D9, and its own
+requirements are in families of their own (R-SEC, R-UI, R-FMT, R-TS).
+
+Before changing code, read §3 (code rules), §4 (test rules) and the
+decisions covering your area. What Studio supports of Turborel is in
+[CONFORMANCE.md](CONFORMANCE.md), and open work is in [TODO.md](TODO.md).
+
+[1 Decisions](#1-decisions) · [2 Layout](#2-project-layout) ·
+[3 Code](#3-code-rules) · [4 Tests](#4-test-rules) ·
+[5 Coverage](#5-coverage) · [6 Process](#6-process-and-tools) ·
+[7 The decisions](#7-the-decisions) · [8 References](#8-references)
+
+---
+
+## 1. Decisions
+
+Each is told in full in [§7](#7-the-decisions).
+
+| # | Decision |
+|---|---|
+| **The subjects every Turborel repository decides** | |
+| D1 | A Tauri application: a Rust backend over turborel-client, a webview that holds no secret |
+| D2 | The front end: React and TypeScript on Vite |
+| D3 | The platforms and the toolchains |
+| D4 | One command runs every check, before each commit and in CI on three platforms |
+| D5 | The version is the Turborel release's: 0.0.0 in the alpha |
+| D6 | Tests and code cite Turborel's documents by their headings |
+| D7 | Coverage floors, enforced in CI, that only rise |
+| D8 | Where these rules depart from the toolkits' conventions |
+| **Studio's own** | |
+| D9 | Tauri 2 for the desktop shell |
+| D10 | turborel-client, a git dependency at a pinned commit |
+| D11 | React 18, the version Glide Data Grid supports |
+| D12 | CodeMirror 6 for the SQL editor |
+| D13 | Glide Data Grid for results |
+| D14 | dockview for the dockable panels |
+| D15 | React Flow and dagre for schema diagrams |
+| D16 | The keyring crate for the operating system's keychain |
+| D17 | serde and serde_json for the IPC and the files |
+| D18 | The front end's tools: Vite, TypeScript, ESLint, Prettier and Vitest |
+| D19 | The checks tool is Rust, in `xtask/` |
+| D20 | Two themes, their accent the icon's maroon |
+| D21 | The icon set, made from the owner's icon by `cargo xtask icons` |
+| D22 | The webview's content security policy |
+| D23 | The supply chain: cargo deny and npm audit |
+
+---
+
+## 2. Project layout
+
+| Path | What |
+|---|---|
+| `Cargo.toml` | the Rust workspace: the version (D5), the pinned Turborel commit (D10), every Rust dependency and the lints |
+| `core/` | `turborel-studio-core`, the backend: everything Studio does but draw, tested without a window (D1) |
+| `src-tauri/` | `turborel-studio`, the application: the window, its capability and the commands, each a thin layer over `core` (D1, D9) |
+| `src-tauri/build.rs` | names each command, so each is a permission (R-SEC-5) |
+| `src-tauri/capabilities/` | what each window may call (R-SEC-5) |
+| `src-tauri/tauri.conf.json` | the window, the content security policy (D22) and the bundles |
+| `src-tauri/icons/` | the icon set, made by `cargo xtask icons` (D21) |
+| `package.json`, `package-lock.json` | the front end's packages, pinned (D18, R-DEP-3) |
+| `ui/` | the front end, in TypeScript and React (D2) |
+| `ui/ipc/` | the typed commands, the front end's one way to the backend (R-TS-3) |
+| `ui/theme/` | the themes' palettes (D20) |
+| `ui/shell/` | the dock, menus, toolbar and status bar |
+| `xtask/` | the checks tool (D19) and its copy of Turborel's headings (D6) |
+| `artwork/` | Turborel's logos, and Studio's icon, the source of the set (D21) |
+| `doc/` | the manual (R-DOC-7) |
+| `.github/` | CI, issue forms, the pull request template, labels, Dependabot |
+| `.githooks/pre-commit` | hands over to the checks tool (D4) |
+| `deny.toml` | cargo deny's policy (D23) |
+
+---
+
+## 3. Code rules
+
+The tools named by "the formatter", "the linters", "the type checker" and
+"the checks tool" are D4's: rustfmt and Prettier, Clippy and ESLint,
+`tsc`, and `cargo xtask`.
+
+### R-STYLE: formatting and idiom
+
+| ID | Rule | Checked by |
+|---|---|---|
+| R-STYLE-1 | Code **shall** be formatted by the formatter. | the formatter |
+| R-STYLE-2 | Names **shall** follow the language's own conventions; code for a view, statement or setting of Turborel is named after it, as Turborel's manual names it. | the linters; review |
+| R-STYLE-3 | Library code **shall not** print, or write to a stream it was not given; the front end **shall not** write to the console. | the linters |
+| R-STYLE-4 | What is not public **shall** be private, by the language's own means. | review |
+
+### R-SIZE: short functions and files
+
+| ID | Rule | Checked by |
+|---|---|---|
+| R-SIZE-1 | A function **shall** have at most 50 lines of code, blank lines and comments not counted. | the linters |
+| R-SIZE-2 | A source file **shall** have at most 600 lines; split it by concept. | the linters; the checks tool |
+| R-SIZE-3 | A function **shall** take at most 5 parameters; else a structure or an options object. | the linters |
+| R-SIZE-4 | A module **should** hold one concept, stated in its doc comment. | review |
+| R-SIZE-5 | A function's complexity **shall** be at most 15, and its blocks nested at most 5 deep. | the linters |
+
+### R-DOC: comments and documentation
+
+| ID | Rule | Checked by |
+|---|---|---|
+| R-DOC-1 | Every public item **shall** have a doc comment, rustdoc or TSDoc, saying each parameter, what it returns, and each failure it gives. | the linters; review |
+| R-DOC-2 | Comments **shall** say *why*: the section implemented, the choice made, the invariant relied on. | review |
+| R-DOC-3 | When behaviour changes, every comment, page of `doc/`, and line of RULES.md, CONFORMANCE.md and TODO.md that describes it **shall** change in the same commit. | review |
+| R-DOC-4 | Behaviour Turborel governs **shall** cite Turborel's manual by its heading; Studio's own choices cite their decision (D6). Code cites RULES.md, CONFORMANCE.md and Turborel's manual, never TODO.md. | review; the checks tool |
+| R-DOC-5 | No commented-out code, and no open-work markers in code: open work goes in TODO.md, which code never names. | the checks tool |
+| R-DOC-6 | Every Rust source file **shall** begin with a doc comment giving its responsibility; every TypeScript module with a TSDoc block. | the checks tool; review |
+| R-DOC-7 | A change a user can see **shall** update the manual, `doc/`, in the same commit; every claim is checked against the code, and every example and step is run. The manual keeps Turborel's layout, which turborel.com's documentation site reads: each page opens with its `# Title` and a line holding only `[Contents](README.md)`, each volume's README.md lists its pages, links within `doc/` and to this repository's files are relative links that resolve, a link to Turborel's own manual is its GitHub address, `user/01-installing.md` keeps its name, and `doc/` holds no images. | review; the checks tool |
+| R-DOC-8 | No document or comment gives timings or speedups; figures go in TODO.md or a commit message. | review |
+
+### R-CONST: no magic numbers or strings
+
+| ID | Rule | Checked by |
+|---|---|---|
+| R-CONST-1 | Numbers other than `0` or `1` **shall** be named constants, documenting the value's source. | the linters; review |
+| R-CONST-2 | SQL Studio sends, the names of Turborel's views, settings and capabilities, IPC command and event names, and file keys **shall** be named constants, defined once. | review |
+| R-CONST-3 | Related constants **shall** live together in their module, under a comment naming where they come from. | review |
+| R-CONST-4 | Tests may use literal fixtures; an expected value restating a constant **should** use it. | review |
+
+### R-ERR: errors
+
+| ID | Rule | Checked by |
+|---|---|---|
+| R-ERR-1 | Every failure the backend gives the front end **shall** be Studio's error: no panic, abort or process exit in library code, and no error of a library reaches the user unexplained. | the linters; tests; review |
+| R-ERR-2 | A failure of the server **shall** keep all of it: its SQLCODE, SQLSTATE, message, the rule it cites, its position and its diagnostics, shown in the messages pane. A failure Studio raises itself carries the SQLCODE and SQLSTATE turborel-client gives the same failure. | tests |
+| R-ERR-3 | No failure **shall** be silenced. One caught and given again keeps its cause; a result left unread says why it cannot matter. | the linters; review |
+| R-ERR-4 | A connection that fails **shall** be closed, its worker ended, and every request waiting on it given that failure. | tests; review |
+
+### R-NUM: numbers
+
+| ID | Rule | Checked by |
+|---|---|---|
+| R-NUM-1 | An exact number and a DECFLOAT **shall** reach the front end as text, never through a binary floating-point type, so each is shown as the server gave it. | review; tests |
+| R-NUM-2 | A value out of range for its type **shall** be refused with Studio's error, never truncated, wrapped or rounded. | tests |
+| R-NUM-3 | Arithmetic on sizes, counts and offsets **shall** be checked or saturating. | the linters |
+
+### R-LINT: warnings
+
+| ID | Rule | Checked by |
+|---|---|---|
+| R-LINT-1 | A warning is an error: of the compilers, the linters and the type checker. | the checks tool |
+| R-LINT-2 | The strictest standard lints **shall** be on: Clippy's pedantic group and the restrictions the workspace names, typescript-eslint's strict type-checked rules, and TypeScript's strict options; a check left off says why where it is left off. | review |
+| R-LINT-3 | A warning **shall** be silenced only on its item, naming its rule and saying why (`#[allow(…, reason = "…")]`, or an ESLint comment with its reason). | the linters; review |
+
+### R-DEP: dependencies
+
+| ID | Rule | Checked by |
+|---|---|---|
+| R-DEP-1 | No dependency, Rust or npm, of the product or of its tools, **shall** be added without a decision here, saying its use, version, license and readiness. | review |
+| R-DEP-2 | A dependency **shall** be production-grade by its makers' own claims, read in its current documentation: a stable release they support. Licenses are MIT or Apache-2.0, or as `deny.toml` allows with its reason. | review; cargo deny |
+| R-DEP-3 | Versions **shall** be pinned exactly, with Cargo.lock and package-lock.json under version control; a change of a version is a commit of its own. | review |
+
+### R-SAFE: what a server sends, and what lasts
+
+| ID | Rule | Checked by |
+|---|---|---|
+| R-SAFE-1 | A query's rows **shall** be read through a cursor, a page at a time as the grid asks; no result sits whole in the backend's memory or the webview. | tests; review |
+| R-SAFE-2 | Nothing a server, a file or a model sends **shall** be run, loaded or rendered as code or markup. | the linters; review |
+| R-SAFE-3 | A length or count read from a file Studio opens **shall** be bounded before anything is held for it. | tests; review |
+| R-SAFE-4 | No module-level mutable state: what lasts belongs to an object the application made, such as the connection manager. | review |
+| R-SAFE-5 | Every thread **shall** be started by the connection manager or the application's task holder, named for what it does, and listed by it; none is started ad hoc, and a closed connection leaves none behind. | tests; review |
+| R-SAFE-6 | A setting **shall** be named after what it controls, never generically; a new setting is raised with the owner first. | review |
+
+### R-SEC: security
+
+| ID | Rule | Checked by |
+|---|---|---|
+| R-SEC-1 | Database passwords and the assistant's keys **shall** live in the operating system's keychain alone. They never reach the webview, a file, a log, the history, a crash report or the clipboard; the front end sees only whether one is saved. | tests; review |
+| R-SEC-2 | A file Studio writes **shall** hold no secret, and be readable by its owner alone: mode 0600 on Unix, in the user's own profile on Windows. | tests |
+| R-SEC-3 | TLS **shall** be verified by default for every host but a local socket; a connection that is not secure says so plainly in the status bar. | tests; review |
+| R-SEC-4 | The webview **shall** load nothing remote and run no `eval`, under a strict content security policy (D22). | the linters; review |
+| R-SEC-5 | A window **shall** be granted only the application's own commands it uses, each named in `build.rs`, registered and granted alike; no shell, file system or HTTP plug-in is reachable from the webview. | the checks tool |
+| R-SEC-6 | Every argument of a command **shall** be validated in Rust before it is used. | tests; review |
+| R-SEC-7 | A production connection **shall** ask before a statement that writes, and one set read-only **shall** begin each transaction READ ONLY. | tests |
+| R-SEC-8 | A statement that destroys (DROP, TRUNCATE, and DELETE or UPDATE without WHERE) **shall** ask first, wherever it is run from. | tests |
+| R-SEC-9 | Studio **shall** touch the network only for the user's connections and, when turned on, the assistant's provider: no telemetry, analytics or updates. | review |
+| R-SEC-10 | The supply chain **shall** pass `cargo xtask audit`: cargo deny's advisories, licenses and sources, npm audit of the shipped packages, and no `ring` in the tree. | CI |
+| R-SEC-11 | A log **shall** never hold a secret or a row's values; a statement's text only when the user turns that on. | tests; review |
+| R-SEC-12 | A model **shall** be called from the Rust backend alone, with only what the user chose to send; no tool acts without the user, and what is read from the database is data to a model, never instructions. | tests; review |
+| R-SEC-13 | A provider's endpoint **shall** be HTTPS, but one on the loopback interface, which may be HTTP. | tests |
+
+### R-UI: the user interface
+
+| ID | Rule | Checked by |
+|---|---|---|
+| R-UI-1 | Every action **shall** be reachable by the keyboard, and the focused control always visible. | tests; review |
+| R-UI-2 | Text **shall** meet WCAG 2.2 AA contrast in both themes, 4.5:1, and controls and focus rings 3:1. | tests |
+| R-UI-3 | Every control **shall** have an accessible name and role. | tests; review |
+| R-UI-4 | What the database gives (names, comments, values) **shall** be shown as text, never as markup. | the linters; review |
+
+### R-TS: TypeScript
+
+| ID | Rule | Checked by |
+|---|---|---|
+| R-TS-1 | TypeScript's strict options **shall** be on, and `any` is never written. | the type checker; the linters |
+| R-TS-2 | A value from the backend **shall** have its type declared once, beside the command that gives it. | review |
+| R-TS-3 | The front end **shall** reach the backend through `ui/ipc/` alone. | review |
+
+### R-FMT: Studio's files
+
+| ID | Rule | Checked by |
+|---|---|---|
+| R-FMT-1 | Each file Studio writes (a model, saved connections, settings, the layout, the assistant's log) **shall** carry a format version of 1. During the alpha a format changes in place, and no reader of an older layout is kept; a file of another version is refused, saying so. | tests |
+| R-FMT-2 | Each format **shall** be described in the manual, with an example that Studio reads. | review |
+
+### R-PLAT: platforms
+
+| ID | Rule | Checked by |
+|---|---|---|
+| R-PLAT-1 | Studio **shall** build, run and pass its checks on Linux, macOS and Windows (D3, D4). | CI |
+| R-PLAT-2 | Code of one platform **shall** be chosen by `cfg`, and elsewhere refused with Studio's error, saying so; never silently something else. | tests; review |
+| R-PLAT-3 | Paths **shall** be made by `Path` and `PathBuf`, and files kept with LF line endings (`.gitattributes`). | review |
+| R-PLAT-4 | Code built for one platform only **shall** say, when handed back, that it was not run on the others. | review |
+
+---
+
+## 4. Test rules
+
+### R-TEST: levels and layout
+
+| ID | Rule | Checked by |
+|---|---|---|
+| R-TEST-1 | A test **shall** sit at the lowest level that shows its requirement: a unit test of the backend or the front end, a test of the backend over a server it starts, or a test of the front end over a mocked IPC. | review |
+| R-TEST-2 | Tests **shall** derive from Turborel's manual, turborel-client and these rules, not from the code: normal cases, boundaries, and failures with the exact SQLCODE and SQLSTATE expected. | review |
+| R-TEST-3 | A test's name **shall** say the behaviour checked. | review |
+| R-TEST-4 | Test code may assert, print and use literal fixtures; every other rule applies. | the linters' configuration |
+| R-TEST-5 | Tests **shall** be deterministic and independent: no clock, randomness, network beyond loopback, or order between them. A live test runs against a server on loopback that the shared harness starts, on port 17440 and a data directory of its own. | review |
+| R-TEST-6 | Every fixed defect **shall** get a regression test that fails without the fix, its doc comment saying so. | review |
+| R-TEST-7 | There **shall** be one harness of each kind, written once and reused: one Rust live-server harness, one Vitest setup, one mock model server. No test file makes a framework of its own. | review |
+| R-TEST-8 | Live tests **shall** run against `ghcr.io/turborel/turborel:nightly` in CI on Linux, set up by the shared harness, with test certificates made as it starts, SCRAM users and SERVER.TRUST_LOCAL. | CI |
+| R-TEST-9 | No test **shall** call a real model or need a key; the assistant's tests use the mock model server. | review |
+
+### R-TRACE: traceability
+
+| ID | Rule | Checked by |
+|---|---|---|
+| R-TRACE-1 | Every test **shall** cite what it verifies, a Rust test in its doc comment and a TypeScript test in its title, with a tag of D6. | the checks tool |
+| R-TRACE-2 | A citation **shall** name a heading, decision or rule that exists. | the checks tool |
+| R-TRACE-3 | Code implementing a requirement **shall** cite it (R-DOC-4). | review |
+| R-TRACE-4 | CONFORMANCE.md **shall** change with the change that implements or changes a row; a row is marked done only where its code exists and tests citing it pass. | review |
+
+---
+
+## 5. Coverage
+
+| ID | Rule | Checked by |
+|---|---|---|
+| R-COV-1 | Coverage **shall** be measured by `cargo xtask coverage`, over the Rust crates and the front end, by every test. | the checks tool |
+| R-COV-2 | Coverage **shall not** fall below the floors (D7); a change raising it **should** raise them. | the checks tool, in CI |
+| R-COV-3 | A gap is closed by a test derived from a requirement, or by removing dead code; never by a test of no requirement, and never by excluding the code. | review |
+
+---
+
+## 6. Process and tools
+
+| ID | Rule | Checked by |
+|---|---|---|
+| R-PROC-1 | `cargo xtask verify` **shall** pass before every commit; CI adds every platform, the Tauri build, the live tests, coverage and the supply chain (D4). | pre-commit hook; CI |
+| R-PROC-2 | Every change **shall** be reviewed against the checklist below. | review |
+| R-PROC-3 | Commits **should** be small and single-purpose, in CONTRIBUTING.md's form (`area: summary`, then why), citing the rules applied or changed. | review |
+| R-PROC-4 | A threshold change **shall** change RULES.md and the configuration that holds it together. | review |
+| R-PROC-5 | Project automation **shall** be a `cargo xtask` command, never a shell script; npm scripts only call tools, and the git hook only hands over to the checks tool. | review |
+| R-PROC-6 | CI's actions **shall** be pinned by their full commit SHA, with the version in a comment. | review |
+| R-PROC-7 | A release **shall** be published only as VERSIONING.md says, by the owner (D5). | review |
+| R-PROC-8 | No commit, file or pull request **shall** carry AI or agent attribution, a DCO or a `Signed-off-by:`; contributors own their code. | review |
+
+The review checklist:
+
+- Turborel's manual cited in code (R-DOC-4) and tests (R-TRACE-1);
+- normal and failure tests (R-TEST-2), and a failing-first test for a
+  fix (R-TEST-6);
+- every failure Studio's, carrying its condition (R-ERR);
+- no magic numbers or strings (R-CONST);
+- no secret disclosed, every IPC argument validated, no statement run
+  the user did not run (R-SEC);
+- comments explain why (R-DOC-2), and follow the change (R-DOC-3);
+- CONFORMANCE.md (R-TRACE-4), the manual (R-DOC-7) and TODO.md updated
+  where they change.
+
+---
+
+## 7. The decisions
+
+### The subjects every Turborel repository decides
+
+#### D1. A Tauri application: a Rust backend over turborel-client, a webview that holds no secret
+
+- **Backend:** `core/` does the work: the connection manager, each
+  connection on a worker thread of its own, the catalog, the analyzer,
+  models and the assistant. It has no user interface, and is tested
+  without a window.
+- **Application:** `src-tauri/` holds the window and the commands, each
+  a thin layer that validates its arguments and calls `core`.
+- **Front end:** `ui/` draws, and reaches the backend through the
+  commands alone. It holds no secret and sends nothing to the network.
+- **Streams:** long work sends its rows, notices and progress as events
+  on a channel the command is given.
+- *Why:* the code that holds secrets and talks to servers is Rust, where
+  it is checked and tested; the webview, the part that renders what a
+  database gives, can reach nothing but what the backend offers.
+
+#### D2. The front end: React and TypeScript on Vite
+
+- **Language:** TypeScript, strict (R-TS-1).
+- **Framework:** React (D11), with CodeMirror 6 (D12), Glide Data Grid
+  (D13), dockview (D14), and React Flow with dagre (D15).
+- **Build:** Vite (D18), into `dist/`, which Tauri bundles.
+- *Why:* the editor, grid, dock and diagram libraries Studio needs are
+  each production-grade for React, and TypeScript types what the backend
+  gives (R-TS-2).
+
+#### D3. The platforms and the toolchains
+
+- **Platforms:** Linux with WebKitGTK 4.1, macOS with WKWebView, Windows
+  with WebView2, as Tauri 2 supports them.
+- **Rust:** the toolchain Turborel pins, 1.99.1, in `rust-toolchain.toml`.
+- **Node.js:** 24 or later, for the front end's tools; CI uses 26.
+- *Why:* one toolchain with Turborel's keeps turborel-client building as
+  it does in Turborel's own CI; Node.js 24 is the oldest release its
+  makers still support.
+
+#### D4. One command runs every check, before each commit and in CI on three platforms
+
+- **The command:** `cargo xtask verify`, stopping at the first failure:
+  the repository's rules, rustfmt, Prettier, `tsc`, ESLint, Clippy, the
+  Rust tests and Vitest.
+- **Coverage:** `cargo xtask coverage` (D7).
+- **Supply chain:** `cargo xtask audit` (D23).
+- **The hook:** `.githooks/pre-commit` hands over to `verify`, a script
+  only because git runs hooks as scripts.
+- **CI:** `verify` and a Tauri build on Linux, macOS and Windows; the
+  live tests against the nightly image, coverage and the audit on Linux.
+  Every action is pinned by its full commit SHA, and Dependabot proposes
+  each bump.
+- *Why:* one command, the same everywhere, is what a contributor runs
+  and what CI holds them to.
+
+#### D5. The version is the Turborel release's: 0.0.0 in the alpha
+
+- **Number:** the Turborel release Studio is made for, 0.0.0 in the
+  alpha, written once in the workspace's `Cargo.toml`;
+  `package.json` and `tauri.conf.json` are held to it by a test.
+- **Tags:** exactly the server's release tag.
+- **Publishing:** nothing until the owner says (VERSIONING.md).
+- *Why:* one number tells a user which server a Studio is made for.
+
+#### D6. Tests and code cite Turborel's documents by their headings
+
+- **`[CLIENT <heading>]`:** a heading of The Client Library,
+  `doc/client/02-library.md`, or of Settings, Pipelines and Pools,
+  `doc/client/02-library-connections.md`, in Turborel's repository.
+- **`[DOC <page> <heading>]`:** a heading of any other page of
+  Turborel's manual, by its path under `doc/`, as
+  `[DOC sql/07-information-schema.md TABLES]`.
+- **`[STUDIO <heading>]`:** a heading of this repository's manual.
+- **`[DESIGN] D<n>`** and **`[RULE] R-<id>`:** this file's.
+- **The copy:** `xtask/turborel-headings.tsv` holds the headings of
+  Turborel's manual at the commit D10 pins, made by
+  `cargo xtask headings`; the checks tool refuses a citation of what is
+  not there.
+- *Why:* a heading is what a reader finds; the copy checks citations with
+  no checkout of Turborel.
+
+#### D7. Coverage floors, enforced in CI, that only rise
+
+- **Rust:** lines and regions of `core/src` and `src-tauri/src`, by
+  rustc's source-based coverage and the toolchain's LLVM tools, held to
+  `xtask/src/coverage.rs`'s floors.
+- **TypeScript:** lines, branches, functions and statements of `ui/`,
+  by Vitest's V8 coverage, held to `vite.config.ts`'s floors.
+- **Rising:** a change that raises coverage well above a floor raises it.
+- **Below 100 %:** the program's `main` and `run` open the platform's
+  window, which no test can; `ui/main.tsx` only mounts the window, which
+  the tests render themselves.
+- *Why:* untested code is where the defects are.
+
+#### D8. Where these rules depart from the toolkits' conventions
+
+- **Sizes:** functions and files are bounded (R-SIZE), where React and
+  Tauri projects commonly leave them to taste.
+- **Errors:** every failure is Studio's, with its SQLCODE and SQLSTATE
+  (R-ERR-1), where a Tauri command commonly returns a string.
+- **Layout:** the front end is `ui/`, not Vite's `src/`, so `src` names
+  no folder of two languages.
+- *Why:* each keeps a rule every Turborel repository holds.
+
+### Studio's own
+
+#### D9. Tauri 2 for the desktop shell
+
+- **Chosen:** `tauri` 2.12.7 and `tauri-build` 2.7.6, `@tauri-apps/api`
+  2.12.5 and `@tauri-apps/cli` 2.12.6; MIT or Apache-2.0.
+- **Readiness:** Tauri 2 is its makers' stable major release, supported
+  on Linux, macOS and Windows.
+- **Use:** the window, the commands and their permissions, channels for
+  streams, the native menu, and the bundles. No plug-in is granted to the
+  webview (R-SEC-5).
+- *Why:* the platform's own webview, a Rust backend, and permissions per
+  window and command.
+
+#### D10. turborel-client, a git dependency at a pinned commit
+
+- **Chosen:** `turborel-client` (features `tls`, `scram`,
+  `system-roots`), `turborel` and `turborel-protocol`, from
+  github.com/turborel/turborel at commit
+  `8052705ecab0f3cd9668f992ff14505c7a60f5dc` of `main`; BSD-2-Clause
+  Plus Patent.
+- **Not crates.io:** the 0.0.0 crates published there are frozen and
+  never used.
+- **Moving:** a new pin is a commit of its own, which moves the pin in
+  `Cargo.toml` and `core/src/version.rs`, copies the headings again
+  (D6), and follows what changed.
+- *Why:* Studio is a client of the server Turborel's main builds, and
+  turborel-client is the reference client; a pin makes each build the
+  same.
+
+#### D11. React 18, the version Glide Data Grid supports
+
+- **Chosen:** `react` and `react-dom` 18.3.1, `@types/react` 18.3.31 and
+  `@types/react-dom` 18.3.7; MIT.
+- **Readiness:** React 18.3 is a stable release its makers support.
+- *Why:* Glide Data Grid 6.0.3 (D13) supports React up to 18; React 19
+  waits for a release of it that supports 19.
+
+#### D12. CodeMirror 6 for the SQL editor
+
+- **Chosen:** CodeMirror 6's packages (`@codemirror/*`), MIT, from M4.
+- **Readiness:** version 6 is its maker's stable, maintained line.
+- **Use:** a Turborel SQL mode built from Turborel's key words, and
+  completion from the catalog.
+- *Why:* an editor built for extension, with no eval.
+
+#### D13. Glide Data Grid for results
+
+- **Chosen:** `@glideapps/glide-data-grid` 6.0.3, MIT, with its peer
+  packages, from M5.
+- **Readiness:** 6.0.3 is its makers' latest stable release.
+- **Use:** a canvas grid that asks for the cells it draws, so the
+  backend's pages fill it as it scrolls (R-SAFE-1).
+- *Why:* a virtualized canvas grid draws millions of rows without a DOM
+  node each.
+
+#### D14. dockview for the dockable panels
+
+- **Chosen:** `dockview-react` 8.9.1, with `dockview`, MIT.
+- **Readiness:** its maker's stable major release, with no runtime
+  dependency beyond its own core.
+- **Use:** the panels, tabs and groups, and the layout saved and restored
+  (from M2), in Studio's colours (D20).
+- *Why:* panels that dock, tab and float, with layouts as data.
+
+#### D15. React Flow and dagre for schema diagrams
+
+- **Chosen:** `@xyflow/react` and `@dagrejs/dagre`, MIT, from M7.
+- **Readiness:** each its makers' stable major release.
+- **Use:** tables as nodes and foreign keys as edges, laid out by dagre.
+- *Why:* diagrams of many tables, laid out automatically.
+
+#### D16. The keyring crate for the operating system's keychain
+
+- **Chosen:** `keyring` 4, MIT or Apache-2.0, with each platform's own
+  store: the macOS Keychain, the Windows Credential Manager, and the
+  Secret Service on Linux, from M2.
+- **Readiness:** a stable release its makers support.
+- *Why:* secrets kept by the platform, never in Studio's files (R-SEC-1).
+
+#### D17. serde and serde_json for the IPC and the files
+
+- **Chosen:** `serde` 1.0.229 and `serde_json` 1.0.154, MIT or
+  Apache-2.0.
+- **Use:** the commands' arguments and results, and Studio's files
+  (R-FMT-1).
+- *Why:* Tauri's own encoding of its IPC, and the Rust ecosystem's
+  standard.
+
+#### D18. The front end's tools: Vite, TypeScript, ESLint, Prettier and Vitest
+
+- **Chosen:** `vite` 8.3.8 with `@vitejs/plugin-react` 6.3.0;
+  `typescript` 6.0.3; `eslint` 10.15.0 with `@eslint/js`,
+  `typescript-eslint` 8.73.0, `eslint-plugin-react-hooks` and `globals`;
+  `prettier` 3.10.1; `vitest` 5.1.1 with `@vitest/coverage-v8`, `jsdom`
+  and `@testing-library/react`. MIT, TypeScript Apache-2.0.
+- **TypeScript 6.0:** the newest that typescript-eslint supports.
+- **Readiness:** each a stable release its makers support.
+- *Why:* the standard tools of a React front end on Vite, one of each.
+
+#### D19. The checks tool is Rust, in `xtask/`
+
+- **Chosen:** `cargo xtask`, a program of the workspace, as Turborel's.
+- **Commands:** `verify`, `coverage`, `audit`, `rules`, `headings`,
+  `icons` and `install-hooks`.
+- **Its own rules:** file sizes, doc comments and markers; the manual's
+  layout and every relative link; citations; the IPC's three lists.
+- *Why:* automation in the project's own language runs the same on every
+  platform, and is tested (R-PROC-5).
+
+#### D20. Two themes, their accent the icon's maroon
+
+- **Themes:** light and dark, following the system's preference; their
+  palettes are `ui/theme/tokens.ts`, written as CSS variables.
+- **Accent:** #562024, the tile's maroon in `artwork/studio-icon.png`. It fills
+  the chrome in both themes under white text; on the dark background, a
+  tint of it, #E8A4AC, draws accent text and focus rings.
+- **Contrast:** tests hold every pair to WCAG 2.2 AA (R-UI-2).
+- *Why:* the maroon is Studio's mark; too dark to read on the dark
+  background, its tint keeps the accent legible there.
+
+#### D21. The icon set, made from the owner's icon by `cargo xtask icons`
+
+- **Source:** `artwork/studio-icon.png`, the owner's, kept unchanged: a
+  maroon tile of continuous corners on a transparent 2048 px canvas, in
+  the proportion of Apple's app icon grid, so one file serves every
+  platform.
+- **The set:** `cargo xtask icons` runs Tauri's CLI on it, into
+  `src-tauri/icons`, and removes the CLI's mobile folders; Studio is
+  built for the desktop alone.
+- *Why:* the icon set is made again by one command anyone can run, from
+  the one file the owner keeps.
+
+#### D22. The webview's content security policy
+
+- **Policy:** scripts, styles, fonts and images from the application
+  alone; IPC to Tauri's own scheme; no objects, frames, workers, forms or
+  base URI.
+- **Styles:** `style-src` allows inline styles, which CodeMirror and the
+  grid inject, and Tauri is told not to add nonces to it
+  (`dangerousDisableAssetCspModification`), which would disable that.
+  Scripts keep Tauri's hashes and nothing inline.
+- **Prototypes:** frozen (`freezePrototype`).
+- *Why:* no remote content and no eval (R-SEC-4); inline styles cannot
+  run code.
+
+#### D23. The supply chain: cargo deny and npm audit
+
+- **Rust:** `cargo deny`, by `deny.toml`: advisories, licenses, bans and
+  sources; crates come from crates.io, and Turborel's from its
+  repository alone.
+- **npm:** `npm audit --omit=dev`, of the packages that ship.
+- **ring:** never in the tree; TLS is rustls on aws-lc-rs, as Turborel's.
+- **Where:** `cargo xtask audit`, in CI.
+- *Why:* every library Studio ships is a library it answers for.
+
+---
+
+## 8. References
+
+- Turborel, `doc/client/02-library.md`, *The Client Library*, and
+  `doc/client/02-library-connections.md`, *Settings, Pipelines and
+  Pools*: what Studio's connections do.
+- Turborel, `doc/sql/07-information-schema.md`, *The Information
+  Schema*: what the explorer reads.
+- Turborel, `doc/sql/statements/explain.md`, *EXPLAIN*: what the
+  analyzer reads.
+- W3C, *Web Content Accessibility Guidelines (WCAG) 2.2*: contrast and
+  keyboard reach (R-UI).
+- Tauri 2's documentation: capabilities, permissions and the content
+  security policy.

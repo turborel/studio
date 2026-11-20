@@ -1,0 +1,52 @@
+name: Conformance
+description: Studio departs from Turborel's manual, from turborel-client, or from what CONFORMANCE.md says it supports.
+labels: ["conformance"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Check CONFORMANCE.md first: a row not yet done is open work, not a departure.
+  - type: dropdown
+    id: reference
+    attributes:
+      label: Departs from
+      options:
+        - Turborel's manual
+        - turborel-client
+        - CONFORMANCE.md
+    validations:
+      required: true
+  - type: input
+    id: section
+    attributes:
+      label: The section or row
+      description: The manual's page and heading, e.g. "sql/07-information-schema.md, The views", or the row's ID, e.g. S-VIEW-3.
+    validations:
+      required: true
+  - type: textarea
+    id: text
+    attributes:
+      label: What it says
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps
+      description: The smallest steps that show the departure, and the SQL they need.
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What Studio does
+      render: text
+    validations:
+      required: true
+  - type: input
+    id: commit
+    attributes:
+      label: Commit
+      description: "`git rev-parse --short=12 HEAD`"
+    validations:
+      required: true
