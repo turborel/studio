@@ -10,3 +10,5 @@ coverage/
 .DS_Store
 # Agents' local files, and live tests' data directories under them.
 .claude/
+# Coverage profiles a test program left where it ran.
+*.profraw

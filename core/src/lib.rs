@@ -7,7 +7,12 @@ pub mod connections;
 pub mod error;
 pub mod events;
 pub mod files;
+pub mod guard;
+pub mod preferences;
+pub mod saved;
 pub mod secret;
+pub mod secrets;
+pub mod store;
 pub mod version;
 
 #[cfg(test)]

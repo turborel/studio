@@ -55,7 +55,7 @@ Each is told in full in [§7](#7-the-decisions).
 | D13 | Glide Data Grid for results |
 | D14 | dockview for the dockable panels |
 | D15 | React Flow and dagre for schema diagrams |
-| D16 | The keyring crate for the operating system's keychain |
+| D16 | The keychain through keyring-core and each platform's store |
 | D17 | serde and serde_json for the IPC and the files |
 | D18 | The front end's tools: Vite, TypeScript, ESLint, Prettier and Vitest |
 | D19 | The checks tool is Rust, in `xtask/` |
@@ -67,6 +67,8 @@ Each is told in full in [§7](#7-the-decisions).
 | D25 | A result read through its cursor, its pages spooled sealed |
 | D26 | Studio's defaults for a connection: TLS verified, its name told |
 | D27 | The live tests: one harness, one server, made as it starts |
+| D28 | Saved connections: a file of no secret, passwords in the keychain |
+| D29 | Guards on what runs, by Turborel's own parser |
 
 ---
 
@@ -77,6 +79,9 @@ Each is told in full in [§7](#7-the-decisions).
 | `Cargo.toml` | the Rust workspace: the version (D5), the pinned Turborel commit (D10), every Rust dependency and the lints |
 | `core/` | `turborel-studio-core`, the backend: everything Studio does but draw, tested without a window (D1) |
 | `core/src/connections/` | the connection manager and its workers (D24), settings (D26), statements' outcomes, and results paged (D25) |
+| `core/src/guard/` | statements classified, and the guards on what runs (D29) |
+| `core/src/saved.rs`, `secrets.rs` | saved connections, and the keychain (D16, D28) |
+| `core/src/preferences.rs`, `store.rs` | settings and the layout, and Studio's files of format 1 (R-FMT-1) |
 | `core/tests/live/` | the live tests, their harness and server (D27) |
 | `src-tauri/` | `turborel-studio`, the application: the window, its capability and the commands, each a thin layer over `core` (D1, D9) |
 | `src-tauri/build.rs` | names each command, so each is a permission (R-SEC-5) |
@@ -397,8 +402,10 @@ The review checklist:
   by Vitest's V8 coverage, held to `vite.config.ts`'s floors.
 - **Rising:** a change that raises coverage well above a floor raises it.
 - **Below 100 %:** the program's `main` and `run` open the platform's
-  window, which no test can; `ui/main.tsx` only mounts the window, which
-  the tests render themselves.
+  window, which no test can; the keychain's test touches the platform's
+  own keychain, so it runs where CI or a person sets
+  `STUDIO_TEST_KEYCHAIN` (D16); `ui/main.tsx` only mounts the window,
+  which the tests render themselves.
 - *Why:* untested code is where the defects are.
 
 #### D8. Where these rules depart from the toolkits' conventions
@@ -483,12 +490,21 @@ The review checklist:
 - **Use:** tables as nodes and foreign keys as edges, laid out by dagre.
 - *Why:* diagrams of many tables, laid out automatically.
 
-#### D16. The keyring crate for the operating system's keychain
+#### D16. The keychain through keyring-core and each platform's store
 
-- **Chosen:** `keyring` 4, MIT or Apache-2.0, with each platform's own
-  store: the macOS Keychain, the Windows Credential Manager, and the
-  Secret Service on Linux, from M2.
-- **Readiness:** a stable release its makers support.
+- **Chosen:** `keyring-core` 1.1.0, with `apple-native-keyring-store`
+  1.0.2 (the macOS Keychain), `windows-native-keyring-store` 1.1.0 (the
+  Windows Credential Manager) and `zbus-secret-service-keyring-store`
+  1.0.1 (the Secret Service, on Linux and the other Unix systems), each
+  chosen by `cfg`; MIT or Apache-2.0.
+- **Not `keyring`:** its makers advise an application to link
+  keyring-core and the stores it needs, as here, rather than that crate.
+- **No global store:** each entry names its store, so no store is set
+  for the process (R-SAFE-4).
+- **Readiness:** each its makers' stable 1.x release.
+- **No keychain:** where none opens, as a Linux session with no Secret
+  Service, a password is kept in memory until Studio closes, and the
+  connection dialog says why it cannot be saved.
 - *Why:* secrets kept by the platform, never in Studio's files (R-SEC-1).
 
 #### D17. serde and serde_json for the IPC and the files
@@ -638,6 +654,46 @@ The review checklist:
 - **Unset:** with no server named, the live tests are skipped.
 - *Why:* every connection path is tested against a real server, the one
   CI runs (R-TEST-8), and one harness serves every live test (R-TEST-7).
+
+#### D28. Saved connections: a file of no secret, passwords in the keychain
+
+- **The file:** `connections.json`, in the application's configuration,
+  format 1, its owner's alone, at most 4 MiB and 1000 connections.
+- **A connection:** an identifier of 16 random octets, a name, its
+  folders (at most 8 deep), its settings with no password, its
+  environment (development, test or production), its colour, whether it
+  is read-only, and whether it is pinned.
+- **Its password:** in the keychain as `connection:<identifier>`, under
+  the service `com.turborel.studio`; the front end is told whether one
+  is saved, and a password typed goes one way, to the backend.
+- **Recent:** the 10 used last, the latest first.
+- *Why:* a person's connections are kept and grouped as they work, with
+  no secret on disk (R-SEC-1, R-SEC-2).
+
+#### D29. Guards on what runs, by Turborel's own parser
+
+- **Classified:** each statement of a script, split as the server splits
+  it, is parsed by the `turborel` crate's parser, of the commit D10 pins,
+  and classed by the kind of its syntax tree: read, transaction,
+  session, write rows, change schema, security, administration, or
+  unclassified. A script is as strict as its strictest statement.
+- **Fail closed:** what does not parse, dynamic SQL, CALL, compound
+  statements and EXECUTE GQL are unclassified, the strictest. A query
+  that holds a data change delta table writes rows.
+- **Destroys:** every DROP, TRUNCATE, and DELETE or UPDATE without WHERE.
+- **The guards:** a statement that destroys, or one unclassified, asks
+  first on every connection; a production connection asks before one
+  that may write; a read-only one refuses one that may write, or that
+  makes a transaction READ WRITE (SQLSTATE 25006), and begins each
+  transaction by SET TRANSACTION READ ONLY, so the server refuses what
+  the guards might miss.
+- **Where:** in the connection manager, so every path a statement takes,
+  typed, made by a dialog, or proposed by the assistant, goes through
+  them; the front end only shows what to confirm.
+- **The floor:** each statement the assistant may never run is marked
+  as it is classified (`core/src/guard/classify.rs`), for M9.
+- *Why:* a database's own grammar is the one way to know what a
+  statement does; guessing from its words fails open.
 
 ---
 

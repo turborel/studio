@@ -65,3 +65,12 @@ fn stale_spools_are_cleared() {
     assert_eq!(clear_stale(&dir).unwrap(), 1);
     assert_eq!(only_file(&dir).file_name().unwrap(), "other");
 }
+
+/// [RULE] R-ERR-1: a spool that cannot be made, or a folder that cannot be
+/// listed, is Studio's error.
+#[test]
+fn a_spool_with_no_folder_is_refused() {
+    let missing = crate::testing::scratch("spool/missing").join("no-such-folder");
+    assert_eq!(Spool::new(&missing).unwrap_err().sqlstate, "TB910");
+    assert_eq!(clear_stale(&missing).unwrap_err().sqlstate, "TB910");
+}

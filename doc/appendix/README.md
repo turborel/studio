@@ -1,7 +1,7 @@
 # Appendices
 
 What to look up while using Turborel Studio: its keyboard shortcuts, its
-settings, and its versions.
+settings, its versions, and the files it keeps.
 
 [The documentation set](../README.md)
 
@@ -10,3 +10,4 @@ settings, and its versions.
 - A. [Keyboard Shortcuts](a-keyboard.md)
 - B. [Settings](b-settings.md)
 - C. [Versions](c-versions.md)
+- D. [Files](d-files.md)

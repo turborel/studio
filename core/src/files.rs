@@ -43,4 +43,14 @@ mod tests {
         }
         private_dir(&dir).unwrap();
     }
+
+    /// [RULE] R-ERR-1: a folder that cannot be made, as one under a file, is
+    /// Studio's error, naming it.
+    #[test]
+    fn a_folder_under_a_file_is_refused() {
+        let file = crate::testing::scratch("files/under").join("a-file");
+        std::fs::write(&file, b"x").unwrap();
+        let error = private_dir(&file.join("folder")).unwrap_err();
+        assert!(error.message.contains("a-file"), "{error}");
+    }
 }

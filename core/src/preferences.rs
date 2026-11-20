@@ -1,0 +1,223 @@
+//! Studio's settings and the dock's layout (RULES.md R-FMT-1, R-SAFE-6),
+//! each a file of format 1 in the application's configuration. A setting
+//! is named after what it controls, and refused outside its bounds.
+
+use std::collections::BTreeMap;
+use std::path::Path;
+
+use serde::{Deserialize, Serialize};
+
+use crate::error::{Result, StudioError};
+use crate::store::{self, FORMAT};
+
+/// Studio's settings' file.
+pub const SETTINGS_FILE: &str = "settings.json";
+/// The dock's layout's file.
+pub const LAYOUT_FILE: &str = "layout.json";
+/// The longest the settings' file may be, in bytes.
+pub const MAX_SETTINGS_BYTES: u64 = 256 * 1024;
+/// The longest the layout's file may be, in bytes.
+pub const MAX_LAYOUT_BYTES: u64 = 1024 * 1024;
+/// The window's zoom, in percent: at least, by default, at most.
+pub const ZOOM_PERCENT: (u16, u16, u16) = (50, 100, 300);
+/// The editor's font size, in points: at least, by default, at most.
+pub const FONT_POINTS: (u8, u8, u8) = (8, 13, 48);
+/// The longest name of a font, in characters.
+pub const MAX_FONT_CHARS: usize = 128;
+/// The most key bindings changed from their defaults.
+pub const MAX_KEY_BINDINGS: usize = 500;
+/// The longest name of a command or a key, in characters.
+pub const MAX_KEY_CHARS: usize = 64;
+
+/// The theme chosen.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ThemeChoice {
+    /// The system's preference.
+    #[default]
+    System,
+    /// Light.
+    Light,
+    /// Dark.
+    Dark,
+}
+
+/// Studio's settings, each named after what it controls.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct Settings {
+    /// The file's format version.
+    pub format: u32,
+    /// The theme.
+    pub theme: ThemeChoice,
+    /// The window's zoom, in percent.
+    pub zoom_percent: u16,
+    /// The editor's font, by family; empty for the platform's monospace.
+    pub editor_font_family: String,
+    /// The editor's font size, in points.
+    pub editor_font_points: u8,
+    /// Each command's key, where it is not the default: the command's
+    /// name, and its key as `Mod+Shift+K`, or empty for none.
+    pub key_bindings: BTreeMap<String, String>,
+    /// Whether open connections are checked, and lost ones connected
+    /// again, as the computer wakes.
+    pub reconnect_on_wake: bool,
+}
+
+impl Default for Settings {
+    fn default() -> Settings {
+        Settings {
+            format: FORMAT,
+            theme: ThemeChoice::System,
+            zoom_percent: ZOOM_PERCENT.1,
+            editor_font_family: String::new(),
+            editor_font_points: FONT_POINTS.1,
+            key_bindings: BTreeMap::new(),
+            reconnect_on_wake: true,
+        }
+    }
+}
+
+/// `value` of `name`, refused outside `low..=high`.
+fn within<T: PartialOrd + std::fmt::Display + Copy>(name: &str, value: T, (low, high): (T, T)) -> Result<()> {
+    if value < low || value > high {
+        return Err(StudioError::misuse(format!("[DESIGN] {name} is from {low} to {high}")));
+    }
+    Ok(())
+}
+
+/// `text` of `name`, refused if longer than `max` characters or holding a
+/// control character.
+fn text(name: &str, value: &str, max: usize) -> Result<()> {
+    if value.chars().count() > max || value.chars().any(char::is_control) {
+        return Err(StudioError::misuse(format!("[DESIGN] {name} is at most {max} characters, none a control")));
+    }
+    Ok(())
+}
+
+impl Settings {
+    /// Checks every setting is within its bounds (R-SEC-6).
+    ///
+    /// # Errors
+    ///
+    /// SQLCODE -910, naming the setting.
+    pub fn validate(&self) -> Result<()> {
+        within("zoomPercent", self.zoom_percent, (ZOOM_PERCENT.0, ZOOM_PERCENT.2))?;
+        within("editorFontPoints", self.editor_font_points, (FONT_POINTS.0, FONT_POINTS.2))?;
+        text("editorFontFamily", &self.editor_font_family, MAX_FONT_CHARS)?;
+        if self.key_bindings.len() > MAX_KEY_BINDINGS {
+            return Err(StudioError::misuse(format!("[DESIGN] at most {MAX_KEY_BINDINGS} keys are bound")));
+        }
+        for (command, key) in &self.key_bindings {
+            text("a command", command, MAX_KEY_CHARS)?;
+            text("a key", key, MAX_KEY_CHARS)?;
+        }
+        Ok(())
+    }
+
+    /// The settings of `dir`'s file, the defaults if there is none.
+    ///
+    /// # Errors
+    ///
+    /// The file's, or a setting out of its bounds.
+    pub fn load(dir: &Path) -> Result<Settings> {
+        let settings = store::read(&dir.join(SETTINGS_FILE), MAX_SETTINGS_BYTES)?.unwrap_or_default();
+        Settings::validate(&settings)?;
+        Ok(settings)
+    }
+
+    /// Writes the settings to `dir`'s file.
+    ///
+    /// # Errors
+    ///
+    /// A setting out of its bounds; the file's.
+    pub fn save(&self, dir: &Path) -> Result<()> {
+        self.validate()?;
+        store::write(&dir.join(SETTINGS_FILE), self)
+    }
+}
+
+/// The dock's layout, as dockview gives it, kept as it is.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct Layout {
+    /// The file's format version.
+    pub format: u32,
+    /// The dock's own description of its panels and groups.
+    pub dock: serde_json::Value,
+}
+
+impl Layout {
+    /// The layout of `dir`'s file, if there is one.
+    ///
+    /// # Errors
+    ///
+    /// The file's.
+    pub fn load(dir: &Path) -> Result<Option<Layout>> {
+        store::read(&dir.join(LAYOUT_FILE), MAX_LAYOUT_BYTES)
+    }
+
+    /// Writes `dock` as `dir`'s layout.
+    ///
+    /// # Errors
+    ///
+    /// SQLCODE -910 if it is longer than the file may be; the file's.
+    pub fn save(dir: &Path, dock: serde_json::Value) -> Result<()> {
+        let layout = Layout { format: FORMAT, dock };
+        let length = serde_json::to_vec(&layout).map_or(usize::MAX, |b| b.len());
+        if u64::try_from(length).unwrap_or(u64::MAX) > MAX_LAYOUT_BYTES {
+            return Err(StudioError::misuse(format!("[DESIGN] a layout is at most {MAX_LAYOUT_BYTES} bytes")));
+        }
+        store::write(&dir.join(LAYOUT_FILE), &layout)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{Layout, Settings, ThemeChoice};
+
+    /// [RULE] R-FMT-1: settings saved are read back, and none saved are the
+    /// defaults.
+    #[test]
+    fn settings_are_read_back() {
+        let dir = crate::testing::scratch("preferences/settings");
+        assert_eq!(Settings::load(&dir).unwrap(), Settings::default());
+        let mut settings = Settings { theme: ThemeChoice::Dark, zoom_percent: 125, ..Settings::default() };
+        settings.key_bindings.insert("worksheet.run".into(), "Mod+Enter".into());
+        settings.save(&dir).unwrap();
+        assert_eq!(Settings::load(&dir).unwrap(), settings);
+    }
+
+    /// [RULE] R-SEC-6: a setting outside its bounds is refused, saved or read.
+    #[test]
+    fn settings_out_of_bounds_are_refused() {
+        let dir = crate::testing::scratch("preferences/bounds");
+        assert!(Settings { zoom_percent: 49, ..Settings::default() }.save(&dir).is_err());
+        assert!(Settings { editor_font_points: 49, ..Settings::default() }.save(&dir).is_err());
+        assert!(Settings { editor_font_family: "Mono\n".into(), ..Settings::default() }.save(&dir).is_err());
+        std::fs::write(dir.join(super::SETTINGS_FILE), br#"{"format":1,"theme":"dark","zoomPercent":400,"editorFontFamily":"","editorFontPoints":13,"keyBindings":{},"reconnectOnWake":true}"#).unwrap();
+        assert!(Settings::load(&dir).is_err());
+    }
+
+    /// [RULE] R-FMT-2 [STUDIO settings.json] [STUDIO layout.json]: the
+    /// manual's examples of the files are ones Studio reads.
+    #[test]
+    fn the_manuals_examples_are_read() {
+        let dir = crate::testing::scratch("preferences/manual");
+        std::fs::write(dir.join(super::SETTINGS_FILE), crate::testing::manual_json("appendix/d-files.md", "settings.json")).unwrap();
+        assert_eq!(Settings::load(&dir).unwrap().zoom_percent, 110);
+        std::fs::write(dir.join(super::LAYOUT_FILE), crate::testing::manual_json("appendix/d-files.md", "layout.json")).unwrap();
+        assert!(Layout::load(&dir).unwrap().is_some());
+    }
+
+    /// [RULE] R-FMT-1: the dock's layout is kept as the dock gave it.
+    #[test]
+    fn the_layout_is_kept_as_given() {
+        let dir = crate::testing::scratch("preferences/layout");
+        assert_eq!(Layout::load(&dir).unwrap(), None);
+        let dock = serde_json::json!({"grid": {"root": {"type": "branch"}}, "panels": {}});
+        Layout::save(&dir, dock.clone()).unwrap();
+        assert_eq!(Layout::load(&dir).unwrap().unwrap().dock, dock);
+        assert!(Layout::save(&dir, serde_json::json!("x".repeat(2 * 1024 * 1024))).is_err());
+    }
+}

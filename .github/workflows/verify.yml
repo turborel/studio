@@ -53,10 +53,15 @@ jobs:
       # The live tests run on Linux against the nightly server image, set
       # up by the shared harness. The image is built for Linux alone, and
       # macOS and Windows runners have no turboreld, so there they skip.
+      # The keychain's test writes to the platform's own keychain: the
+      # runner's login Keychain on macOS and Credential Manager on Windows.
+      # Linux runners have no Secret Service, so there it runs in the
+      # coverage job, which starts one.
       - name: Every check
         timeout-minutes: 60
         env:
           TURBOREL_TEST_SERVER: ${{ runner.os == 'Linux' && 'docker:ghcr.io/turborel/turborel:nightly' || '' }}
+          STUDIO_TEST_KEYCHAIN: ${{ runner.os != 'Linux' && '1' || '' }}
         run: cargo xtask verify
       - name: The application builds
         timeout-minutes: 60
@@ -72,18 +77,21 @@ jobs:
         with:
           node-version: "26"
           cache: npm
-      - name: Tauri's Linux packages
-        run: sudo apt-get update && sudo apt-get install -y $LINUX_PACKAGES
+      - name: Tauri's Linux packages, and a Secret Service
+        run: sudo apt-get update && sudo apt-get install -y $LINUX_PACKAGES gnome-keyring dbus-x11
       - name: Install the pinned toolchain
         run: rustup toolchain install
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
       - name: The front end's packages
         run: npm ci --no-fund --no-audit
+      # A session bus with gnome-keyring's Secret Service, unlocked with an
+      # empty password, so the keychain's test runs against Linux's store.
       - name: Coverage and its floors
         timeout-minutes: 60
         env:
           TURBOREL_TEST_SERVER: docker:ghcr.io/turborel/turborel:nightly
-        run: cargo xtask coverage
+          STUDIO_TEST_KEYCHAIN: "1"
+        run: dbus-run-session -- sh -c 'printf "\n" | gnome-keyring-daemon --unlock --components=secrets >/dev/null && cargo xtask coverage'
 
   audit:
     runs-on: ubuntu-latest

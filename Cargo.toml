@@ -27,6 +27,13 @@ serde_json = "=1.0.154"
 aws-lc-rs = "=1.18.2"
 # The live tests' certificates (RULES.md D27), on aws-lc-rs, never ring.
 rcgen = { version = "=0.14.10", default-features = false, features = ["aws_lc_rs", "crypto", "pem"] }
+# The operating system's keychain (RULES.md D16): keyring-core, and each
+# platform's own store, as the keyring crate's makers advise an
+# application to link them.
+keyring-core = "=1.1.0"
+apple-native-keyring-store = { version = "=1.0.2", features = ["keychain"] }
+windows-native-keyring-store = "=1.1.0"
+zbus-secret-service-keyring-store = { version = "=1.0.1", features = ["crypto-rust"] }
 # The desktop shell (RULES.md D9).
 tauri = { version = "=2.12.7", features = [] }
 tauri-build = { version = "=2.7.6", features = [] }

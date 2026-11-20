@@ -10,3 +10,12 @@ pub(crate) fn scratch(name: &str) -> PathBuf {
     std::fs::create_dir_all(&dir).unwrap();
     dir
 }
+
+/// The JSON example under the heading `heading` of the manual's page
+/// `page`, a path under `doc/`: the first block of JSON after it.
+pub(crate) fn manual_json(page: &str, heading: &str) -> String {
+    let text = std::fs::read_to_string(Path::new(env!("CARGO_MANIFEST_DIR")).join("..").join("doc").join(page)).unwrap();
+    let after = text.split_once(&format!("## {heading}\n")).unwrap().1;
+    let block = after.split_once("```json\n").unwrap().1;
+    block.split_once("```").unwrap().0.to_owned()
+}
