@@ -13,8 +13,9 @@ and at the top of the window on Linux and Windows. Its menus are:
 
 | Menu | Items |
 |---|---|
-| **File** | New Connection…, Settings…, Close Window |
+| **File** | New Connection…, New Worksheet, Open File…, Save, Save As…, Reopen Closed Worksheet, History…, Settings…, Close Window |
 | **Edit** | Undo, Redo, Cut, Copy, Paste, Select All |
+| **Worksheet** | Run Statement, Run Script, Run Script on a Folder's Connections…, Explain, Explain Analyze, Format, Toggle Comment, Upper Case, Lower Case, Find and Replace…, Toggle Bookmark, Next Bookmark, Previous Bookmark, Go to Definition, Describe, Split Editor, Outline, Add to Favourite Queries…, Autocommit, Pin Tab, Close Worksheet, Close Other Worksheets |
 | **Connection** | Disconnect, Reconnect, Cancel Statement, Commit, Rollback |
 | **View** | Command Palette…, Theme: System, Theme: Light, Theme: Dark, Zoom In, Zoom Out, Actual Size, Reset Layout |
 | **Window** | Minimize, Full Screen |
@@ -22,7 +23,8 @@ and at the top of the window on Linux and Windows. Its menus are:
 
 On macOS the first menu, **Turborel Studio**, holds About, Hide and
 Quit. The items of **Connection** act on the active connection, and do
-nothing while none is open.
+nothing while none is open; those of **Worksheet**, and Save, act on the
+active worksheet ([Worksheets](05-worksheets.md)).
 
 The menus show no keys. Each item is one of Studio's commands, and each
 command's key, which may be changed, is shown by the command palette and
@@ -52,7 +54,8 @@ The dock holds the panels. When Studio is first opened:
 - the **Explorer** is on the left, with the connections, open and saved
   ([Connections](03-connections.md)), and the catalog of the active
   connection ([The Object Explorer](04-explorer.md));
-- the centre is the **Start** panel, until worksheets open there;
+- the centre is the **Start** panel, and each worksheet opens there as a
+  tab of its own, marked by the colour of the connection it runs on;
 - **Details** is on the right, showing what is selected in the explorer.
 
 A panel is moved by dragging its tab: onto another group to join it, or
@@ -109,6 +112,9 @@ percent at a time, from 50 % to 300 %; **Actual Size** sets it back to
 - the zoom, in percent;
 - the editor's font and its size, in points, from 8 to 48;
 - whether the toolbar shows its buttons' labels beside their icons;
+- whether what runs is kept in the history; the formatter's case of key
+  words, its indentation and its width of lines; and how long a run
+  lasts before its end, in the background, is notified;
 - whether open connections are checked as the computer wakes, and those
   lost connected again;
 - each command's key, under **Keys**.

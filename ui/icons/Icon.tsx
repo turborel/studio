@@ -6,6 +6,26 @@
  * alone: what names a control is its label, or its accessible name.
  */
 import type { Icon as PhosphorIcon } from "@phosphor-icons/react";
+import { FileSqlIcon } from "@phosphor-icons/react/dist/csr/FileSql";
+import { PlayIcon } from "@phosphor-icons/react/dist/csr/Play";
+import { PlayCircleIcon } from "@phosphor-icons/react/dist/csr/PlayCircle";
+import { StopIcon } from "@phosphor-icons/react/dist/csr/Stop";
+import { FlowArrowIcon } from "@phosphor-icons/react/dist/csr/FlowArrow";
+import { GaugeIcon } from "@phosphor-icons/react/dist/csr/Gauge";
+import { TextAlignLeftIcon } from "@phosphor-icons/react/dist/csr/TextAlignLeft";
+import { ChatCircleTextIcon } from "@phosphor-icons/react/dist/csr/ChatCircleText";
+import { TextAaIcon } from "@phosphor-icons/react/dist/csr/TextAa";
+import { BookmarkSimpleIcon } from "@phosphor-icons/react/dist/csr/BookmarkSimple";
+import { ArrowSquareOutIcon } from "@phosphor-icons/react/dist/csr/ArrowSquareOut";
+import { RowsIcon } from "@phosphor-icons/react/dist/csr/Rows";
+import { ListBulletsIcon } from "@phosphor-icons/react/dist/csr/ListBullets";
+import { FloppyDiskIcon } from "@phosphor-icons/react/dist/csr/FloppyDisk";
+import { FloppyDiskBackIcon } from "@phosphor-icons/react/dist/csr/FloppyDiskBack";
+import { FolderOpenIcon } from "@phosphor-icons/react/dist/csr/FolderOpen";
+import { FilePlusIcon } from "@phosphor-icons/react/dist/csr/FilePlus";
+import { ClockCounterClockwiseIcon } from "@phosphor-icons/react/dist/csr/ClockCounterClockwise";
+import { XSquareIcon } from "@phosphor-icons/react/dist/csr/XSquare";
+import { CheckSquareIcon } from "@phosphor-icons/react/dist/csr/CheckSquare";
 import { ArrowCounterClockwiseIcon } from "@phosphor-icons/react/dist/csr/ArrowCounterClockwise";
 import { ArrowsClockwiseIcon } from "@phosphor-icons/react/dist/csr/ArrowsClockwise";
 import { CheckCircleIcon } from "@phosphor-icons/react/dist/csr/CheckCircle";
@@ -101,6 +121,28 @@ const ICONS = {
   users: [IdentificationBadgeIcon, "plain"],
   graph: [GraphIcon, "plain"],
   other: [HashIcon, "plain"],
+  worksheet: [FileSqlIcon, "plain"],
+  newWorksheet: [FilePlusIcon, "plain"],
+  open: [FolderOpenIcon, "plain"],
+  save: [FloppyDiskIcon, "plain"],
+  saveAs: [FloppyDiskBackIcon, "plain"],
+  reopen: [ClockCounterClockwiseIcon, "plain"],
+  history: [ClockCounterClockwiseIcon, "plain"],
+  run: [PlayIcon, "run"],
+  runScript: [PlayCircleIcon, "run"],
+  stop: [StopIcon, "stop"],
+  explain: [FlowArrowIcon, "plain"],
+  explainAnalyze: [GaugeIcon, "plain"],
+  format: [TextAlignLeftIcon, "plain"],
+  comment: [ChatCircleTextIcon, "plain"],
+  letterCase: [TextAaIcon, "plain"],
+  find: [MagnifyingGlassIcon, "plain"],
+  bookmark: [BookmarkSimpleIcon, "plain"],
+  definition: [ArrowSquareOutIcon, "plain"],
+  split: [RowsIcon, "plain"],
+  outline: [ListBulletsIcon, "plain"],
+  autocommit: [CheckSquareIcon, "commit"],
+  closeOthers: [XSquareIcon, "plain"],
 } as const satisfies Record<string, readonly [PhosphorIcon, Tone]>;
 
 /** An icon's name. */

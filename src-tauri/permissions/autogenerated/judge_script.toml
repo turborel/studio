@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-judge-script"
+description = "Enables the judge_script command without any pre-configured scope."
+commands.allow = ["judge_script"]
+
+[[permission]]
+identifier = "deny-judge-script"
+description = "Denies the judge_script command without any pre-configured scope."
+commands.deny = ["judge_script"]

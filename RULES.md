@@ -75,6 +75,9 @@ Each is told in full in [§7](#7-the-decisions).
 | D33 | The catalog: the Information Schema, read as the tree opens |
 | D34 | A file saved through the platform's dialog, by the backend |
 | D35 | Icons: Phosphor's, one set, in the theme's colours |
+| D36 | Worksheets: scripts split as the server splits them, run through the guards |
+| D37 | The editor: CodeMirror 6 in Turborel's SQL |
+| D38 | A run's end notified by the platform, from the backend |
 
 ---
 
@@ -87,6 +90,7 @@ Each is told in full in [§7](#7-the-decisions).
 | `core/src/connections/` | the connection manager and its workers (D24), settings (D26), statements' outcomes, and results paged (D25) |
 | `core/src/guard/` | statements classified, and the guards on what runs (D29) |
 | `core/src/catalog/` | the catalog read from the Information Schema, and the definitions written of it (D33) |
+| `core/src/worksheet/` | scripts split, the history, the worksheets and queries kept, and the files a worksheet may use (D36) |
 | `core/src/saved.rs`, `secrets.rs` | saved connections, and the keychain (D16, D28) |
 | `core/src/preferences.rs`, `store.rs` | settings and the layout, and Studio's files of format 1 (R-FMT-1) |
 | `core/tests/live/` | the live tests, their harness and server (D27) |
@@ -103,6 +107,7 @@ Each is told in full in [§7](#7-the-decisions).
 | `ui/icons/` | the icons, by what each stands for (D35) |
 | `ui/shell/` | the dock, toolbar, status bar, dialogs and the explorer's connections |
 | `ui/explorer/` | the catalog's tree, the details panel and the definition view (D33) |
+| `ui/worksheet/` | the worksheet, its editor, panes, plan view, formatter and dialogs (D36, D37) |
 | `ui/state/` | the window's store and its actions (D31) |
 | `ui/commands/` | the commands and their keys (D30) |
 | `ui/test/` | the one Vitest setup and the one mock of the backend (R-TEST-7) |
@@ -802,6 +807,56 @@ The review checklist:
   own menus seldom have them; its items are the same commands.
 - *Why:* a classic database IDE's toolbar and tree are read by their
   icons, and one set keeps them alike everywhere.
+
+#### D36. Worksheets: scripts split as the server splits them, run through the guards
+
+- **Split:** by turborel-client's splitter, as the server splits a
+  request of several; each statement's place given in UTF-16 code units,
+  as the editor counts, and its class.
+- **Judged once:** a script's statements together, by the connection's
+  guards (D29), then each run in turn until one fails or the run is
+  stopped; CONNECT, SET CONNECTION and DISCONNECT refused, as each
+  connection is bound to its session.
+- **Markers:** `?` and `:name`, a statement's parameters, given values
+  as text or NULL, each cast to the type the server describes; `${name}`,
+  a script variable, replaced before the statement is sent. None read in
+  a string, a delimited identifier or a comment.
+- **Kept:** the worksheets, with their text, a second after they change;
+  the history, at most 1000, never of a statement that changes who may
+  do what; favourite queries; project folders; each a file of format 1.
+- **Files:** only those chosen in the platform's dialog this session, and
+  the `.sql` files of project folders, are read or written.
+- **Settings:** `historyKept`, `formatKeyWords`, `formatIndent`,
+  `formatLineWidth` and `notifyAfterSeconds`, each named for what it
+  controls.
+- *Why:* what the worksheet runs is what the server would run of the
+  same text, and nothing reaches it the guards did not judge.
+
+#### D37. The editor: CodeMirror 6 in Turborel's SQL
+
+- **Chosen:** `@codemirror/state` 6.7.6, `view` 6.43.15, `commands`
+  6.11.1, `language` 6.13.1, `search` 6.7.2, `autocomplete` 6.20.4,
+  `lang-sql` 6.10.0 and `@lezer/highlight` 1.2.5; MIT; each its makers'
+  stable 6.x or 1.x release.
+- **Turborel's dialect:** the reserved words from Turborel's own lexer,
+  given by the backend; the words its statements read, and its types,
+  from its manual's appendix of key words and chapter of data types.
+- **Completion:** of the catalog the explorer has read, a table's
+  columns read as they are asked for; snippets of fields.
+- **Keys:** Studio's commands' keys taken before the editor sees them,
+  so each is the same everywhere; the editor's own keys the rest.
+- *Why:* an editor of SQL that people know, kept to Turborel's language.
+
+#### D38. A run's end notified by the platform, from the backend
+
+- **Chosen:** `tauri-plugin-notification` 2.8.0, Tauri's own; Apache-2.0
+  or MIT; its makers' stable 2.x release.
+- **Backend only:** the command `notify_finished` shows it, its title and
+  body bounded; the plug-in's commands are granted to no window.
+- **When:** a run longer than `notifyAfterSeconds`, ended while the
+  window is hidden.
+- *Why:* a long statement is waited on in another window, and its end
+  should not be missed.
 
 ---
 

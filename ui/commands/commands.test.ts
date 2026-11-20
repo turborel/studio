@@ -1,5 +1,7 @@
+import menuSource from "../../src-tauri/src/menu.rs?raw";
 import { connectSpec } from "../state/actions";
 import { Store } from "../state/store";
+import { closeWorksheet, openWorksheet } from "../state/worksheets";
 import { mockBackend, SESSION } from "../test/backend";
 import { type CommandContext, COMMANDS, command, defaultKeys, runCommand } from "./commands";
 
@@ -83,5 +85,40 @@ describe("the commands", () => {
     expect(shown).toEqual(["connection", "palette", "settings", "about", "shortcuts"]);
     await runCommand("layout.reset", ctx);
     expect(ctx.resets).toBe(1);
+  });
+});
+
+describe("the menus", () => {
+  it("name only Studio's commands, each by its title [DESIGN] D30", () => {
+    const items = [...menuSource.matchAll(/Some\(\("([^"]+)", "([^"]+)"\)\)/gu)].map(([, id = "", label = ""]) => [
+      id,
+      label,
+    ]);
+    expect(items.length).toBeGreaterThan(30);
+    for (const [id, label] of items) {
+      expect(command(id ?? "")?.title, id).toBe(label);
+    }
+  });
+});
+
+describe("every command", () => {
+  it("runs on the active worksheet, or does nothing where it cannot [DESIGN] D30", async () => {
+    mockBackend({ open_sql_file: () => null, save_text_file: () => null, keep_worksheets: () => null });
+    const store = await connected();
+    const sheet = openWorksheet(store, "VALUES (1)");
+    const ctx = context(store);
+    for (const c of COMMANDS.filter(
+      (x) =>
+        x.category === "Worksheet" || x.id.startsWith("worksheet.") || x.id === "file.open" || x.id === "history.open",
+    )) {
+      await runCommand(c.id, ctx);
+    }
+    expect(["history", "folders"]).toContain(store.current().dialog?.kind);
+    store.update((now) => ({ ...now, dialog: null }));
+    expect(store.current().worksheets.length).toBeGreaterThanOrEqual(1);
+    expect(sheet).not.toBe("");
+    await runCommand("statement.cancel", ctx);
+    closeWorksheet(store, store.current().activeWorksheet ?? "");
+    expect(command("worksheet.reopen")?.enabled(ctx)).toBe(true);
   });
 });

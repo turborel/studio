@@ -104,7 +104,8 @@ template, the partition's schema and its name, shown apart by `/`.
 
 A routine shows its parameters, with their modes and types; its body,
 which only the owner of its schema sees; the privileges granted on it;
-and its definition. A type
+and its definition. Its **Debug** tab is unavailable: Turborel does not
+yet give a debugger of SQL routines, with breakpoints and stepping. A type
 shows its category; a distinct type its source type, and a structured
 type its attributes, and whether it is final and instantiable; and its
 definition. A sequence and a domain show their definitions and, under

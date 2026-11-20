@@ -79,7 +79,7 @@ describe("the actions", () => {
     await endTransaction(store, 1, "COMMIT");
     expect(asked.at(-1)).toEqual({
       command: "run_statement",
-      args: { connection: 1, sql: "COMMIT", confirmed: false },
+      args: { connection: 1, sql: "COMMIT", confirmed: false, values: [] },
     });
   });
 

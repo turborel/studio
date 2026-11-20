@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-statement-parameters"
+description = "Enables the statement_parameters command without any pre-configured scope."
+commands.allow = ["statement_parameters"]
+
+[[permission]]
+identifier = "deny-statement-parameters"
+description = "Denies the statement_parameters command without any pre-configured scope."
+commands.deny = ["statement_parameters"]

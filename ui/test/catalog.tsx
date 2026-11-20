@@ -204,3 +204,17 @@ export async function opened(saved: SavedConnection = SAVED): Promise<Store> {
   await connectSaved(store, saved, null);
   return store;
 }
+
+/** `value`, which the test is sure of: a failure of the test if it is none. */
+export function must<T>(value: T | null | undefined): T {
+  if (value === null || value === undefined) {
+    throw new Error("the test expected a value");
+  }
+  return value;
+}
+
+/** A promise the backend rejects with Studio's error `error`, as it fails. */
+export function refused(error: object): Promise<never> {
+  // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors -- the backend rejects with Studio's error, not an Error
+  return Promise.reject(error);
+}

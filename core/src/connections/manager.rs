@@ -28,6 +28,10 @@ use crate::secret::Secret;
 /// The longest statement text Studio sends, in bytes: the protocol's
 /// longest body (`[CLIENT Timeouts]`, `MAX_BODY`).
 pub const MAX_SQL_BYTES: usize = 16 * 1024 * 1024;
+/// The most values given a statement's dynamic parameters.
+pub const MAX_VALUES: usize = 10_000;
+/// The longest value given a dynamic parameter, in bytes.
+pub const MAX_VALUE_BYTES: usize = 16 * 1024 * 1024;
 /// The prefix of a worker thread's name (R-SAFE-5).
 pub const WORKER_PREFIX: &str = "studio-connection-";
 
@@ -182,6 +186,22 @@ impl ConnectionManager {
     /// connection; SQLSTATE 25006 for a write on a read-only connection;
     /// the statement's failure, as the server gives it.
     pub fn run(&self, id: ConnectionId, sql: &str, confirmed: bool) -> Result<RunAnswer> {
+        self.run_with(id, (sql, &[]), confirmed)
+    }
+
+    /// As `run`, the statement's dynamic parameters given `values`, as
+    /// text or null, each cast to its parameter's type.
+    ///
+    /// # Errors
+    ///
+    /// As `run`'s; SQLCODE -910 if the values are not as many as the
+    /// parameters, or too many or too long; a value's cast's failure.
+    pub fn run_with(&self, id: ConnectionId, (sql, values): (&str, &[Option<String>]), confirmed: bool) -> Result<RunAnswer> {
+        if values.len() > MAX_VALUES || values.iter().flatten().any(|v| v.len() > MAX_VALUE_BYTES) {
+            return Err(StudioError::misuse(format!(
+                "[DESIGN] at most {MAX_VALUES} values are given, each at most {MAX_VALUE_BYTES} bytes"
+            )));
+        }
         if sql.len() > MAX_SQL_BYTES {
             return Err(StudioError::misuse(format!("[DESIGN] a statement is at most {MAX_SQL_BYTES} bytes")));
         }
@@ -191,9 +211,9 @@ impl ConnectionManager {
         {
             return Ok(RunAnswer::Confirm(confirm));
         }
-        match self.ask(id, Request::Run { sql: sql.to_owned(), read_only: guards.read_only })? {
+        match self.ask(id, Request::Run { sql: sql.to_owned(), read_only: guards.read_only, values: values.to_vec() })? {
             Reply::Ran(ran) => Ok(RunAnswer::Ran(ran)),
-            Reply::Rows(_) | Reply::Columns(_) | Reply::Page(_) | Reply::Session(_) | Reply::Done => Err(unexpected()),
+            Reply::Rows(_) | Reply::Columns(_) | Reply::Types(_) | Reply::Page(_) | Reply::Session(_) | Reply::Done => Err(unexpected()),
         }
     }
 
@@ -206,7 +226,7 @@ impl ConnectionManager {
     pub fn rows(&self, id: ConnectionId, result: ResultId, (from, count): (u64, u32)) -> Result<Page> {
         match self.ask(id, Request::Rows { result, from, count })? {
             Reply::Page(page) => Ok(page),
-            Reply::Ran(_) | Reply::Rows(_) | Reply::Columns(_) | Reply::Session(_) | Reply::Done => Err(unexpected()),
+            Reply::Ran(_) | Reply::Rows(_) | Reply::Columns(_) | Reply::Types(_) | Reply::Session(_) | Reply::Done => Err(unexpected()),
         }
     }
 
@@ -253,7 +273,7 @@ impl ConnectionManager {
         let request = Request::Catalog { sql: sql.to_owned(), params: params.to_vec(), cap };
         match self.ask(id, request)? {
             Reply::Rows(rows) => Ok(rows),
-            Reply::Ran(_) | Reply::Columns(_) | Reply::Page(_) | Reply::Session(_) | Reply::Done => Err(unexpected()),
+            Reply::Ran(_) | Reply::Columns(_) | Reply::Types(_) | Reply::Page(_) | Reply::Session(_) | Reply::Done => Err(unexpected()),
         }
     }
 
@@ -266,8 +286,37 @@ impl ConnectionManager {
     pub fn describe(&self, id: ConnectionId, sql: &str) -> Result<Vec<crate::connections::cells::ColumnInfo>> {
         match self.ask(id, Request::Describe(sql.to_owned()))? {
             Reply::Columns(columns) => Ok(columns),
-            Reply::Ran(_) | Reply::Rows(_) | Reply::Page(_) | Reply::Session(_) | Reply::Done => Err(unexpected()),
+            Reply::Ran(_) | Reply::Rows(_) | Reply::Types(_) | Reply::Page(_) | Reply::Session(_) | Reply::Done => Err(unexpected()),
         }
+    }
+
+    /// The types of `sql`'s dynamic parameters on connection `id`, in
+    /// order, as SQL writes them: prepared and let go, never run.
+    ///
+    /// # Errors
+    ///
+    /// SQLCODE -910 for SQL longer than `MAX_SQL_BYTES` or an unknown
+    /// connection; the server's, as of a statement that cannot be prepared.
+    pub fn parameters(&self, id: ConnectionId, sql: &str) -> Result<Vec<String>> {
+        if sql.len() > MAX_SQL_BYTES {
+            return Err(StudioError::misuse(format!("[DESIGN] a statement is at most {MAX_SQL_BYTES} bytes")));
+        }
+        match self.ask(id, Request::Parameters(sql.to_owned()))? {
+            Reply::Types(types) => Ok(types),
+            Reply::Ran(_) | Reply::Rows(_) | Reply::Columns(_) | Reply::Page(_) | Reply::Session(_) | Reply::Done => Err(unexpected()),
+        }
+    }
+
+    /// What connection `id`'s guards would ask of `script` before it runs,
+    /// if anything (RULES.md D29).
+    ///
+    /// # Errors
+    ///
+    /// SQLCODE -910 for an unknown connection; SQLSTATE 25006 if the
+    /// connection is read-only and the script may write.
+    pub fn judge(&self, id: ConnectionId, script: &str) -> Result<Option<Confirm>> {
+        let guards = self.handles().get(&id).ok_or_else(|| unknown(id))?.guards;
+        guards.judge(script)
     }
 
     /// Asks whether connection `id`'s server answers.
@@ -342,7 +391,7 @@ impl Drop for ConnectionManager {
 fn session(reply: Reply) -> Result<SessionState> {
     match reply {
         Reply::Session(session) => Ok(session),
-        Reply::Ran(_) | Reply::Rows(_) | Reply::Columns(_) | Reply::Page(_) | Reply::Done => Err(unexpected()),
+        Reply::Ran(_) | Reply::Rows(_) | Reply::Columns(_) | Reply::Types(_) | Reply::Page(_) | Reply::Done => Err(unexpected()),
     }
 }
 

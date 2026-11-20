@@ -9,6 +9,7 @@ export const PANELS = {
   explorer: { id: "explorer", title: "Explorer" },
   welcome: { id: "welcome", title: "Start" },
   details: { id: "details", title: "Details" },
+  worksheet: { id: "worksheet", title: "Worksheet" },
 } as const;
 
 /** The width of the side panels as the layout first opens, in pixels. */

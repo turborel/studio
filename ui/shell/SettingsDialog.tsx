@@ -1,11 +1,12 @@
 /**
  * The settings (RULES.md R-FMT-1, R-SAFE-6): the theme, the zoom, the
- * editor's font, reconnecting on wake, and each command's key, saved as
- * they change.
+ * editor's font, the toolbar's labels, reconnecting on wake, the
+ * worksheet's history, formatter and notification, and each command's
+ * key, saved as they change.
  */
 import { COMMANDS } from "../commands/commands";
 import { normalize } from "../commands/keys";
-import { type Settings, ZOOM } from "../ipc/preferences";
+import { FORMAT_BOUNDS, type KeyWordCase, NOTIFY_BOUNDS, type Settings, ZOOM } from "../ipc/preferences";
 import { changeSettings, show } from "../state/actions";
 import { useStore, useStudio } from "../state/store";
 import { THEME_CHOICES, type ThemeChoice } from "../theme/theme";
@@ -138,6 +139,96 @@ function Appearance({ settings, change }: PartProps) {
   );
 }
 
+/** A setting of a number from `least` to `most`. */
+function NumberField({
+  label,
+  value,
+  bounds,
+  change,
+}: {
+  label: string;
+  value: number;
+  bounds: readonly [number, number];
+  change: (n: number) => void;
+}) {
+  return (
+    <label className="field">
+      <span>{label}</span>
+      <input
+        type="number"
+        min={bounds[0]}
+        max={bounds[1]}
+        value={value}
+        onChange={(e) => {
+          change(clamped(Number(e.target.value), ...bounds));
+        }}
+      />
+    </label>
+  );
+}
+
+/** The case the formatter writes key words in. */
+function KeyWords({ settings, change }: PartProps) {
+  return (
+    <label className="field">
+      <span>Format key words in</span>
+      <select
+        value={settings.formatKeyWords}
+        onChange={(e) => {
+          change({ ...settings, formatKeyWords: e.target.value as KeyWordCase });
+        }}
+      >
+        <option value="upper">upper case</option>
+        <option value="lower">lower case</option>
+        <option value="keep">the case written</option>
+      </select>
+    </label>
+  );
+}
+
+/** The worksheet's settings: its history, its formatter and its notification. */
+function Worksheets({ settings, change }: PartProps) {
+  return (
+    <>
+      <label className="check">
+        <input
+          type="checkbox"
+          checked={settings.historyKept}
+          onChange={(e) => {
+            change({ ...settings, historyKept: e.target.checked });
+          }}
+        />
+        <span>Keep a history of what runs</span>
+      </label>
+      <KeyWords settings={settings} change={change} />
+      <NumberField
+        label="Format with an indentation of (spaces)"
+        value={settings.formatIndent}
+        bounds={FORMAT_BOUNDS.indent}
+        change={(n) => {
+          change({ ...settings, formatIndent: n });
+        }}
+      />
+      <NumberField
+        label="Format lines within (characters)"
+        value={settings.formatLineWidth}
+        bounds={FORMAT_BOUNDS.lineWidth}
+        change={(n) => {
+          change({ ...settings, formatLineWidth: n });
+        }}
+      />
+      <NumberField
+        label="Notify a run's end, in the background, after (seconds; 0 for never)"
+        value={settings.notifyAfterSeconds}
+        bounds={NOTIFY_BOUNDS}
+        change={(n) => {
+          change({ ...settings, notifyAfterSeconds: n });
+        }}
+      />
+    </>
+  );
+}
+
 /** The settings dialog. */
 export function SettingsDialog() {
   const store = useStore();
@@ -159,6 +250,7 @@ export function SettingsDialog() {
         />
         <span>Check connections as the computer wakes, and connect lost ones again</span>
       </label>
+      <Worksheets settings={settings} change={change} />
       <Keys settings={settings} change={change} />
       <div className="dialog-buttons">
         <button type="button" onClick={close}>

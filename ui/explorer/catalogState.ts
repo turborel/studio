@@ -25,6 +25,8 @@ export interface CatalogState {
   readonly expanded: readonly string[];
   readonly filter: string;
   readonly found: readonly Found[] | null;
+  /** The objects chosen, by Cmd or Ctrl and a click, for a script of them. */
+  readonly chosen: readonly Selected[];
 }
 
 /** A catalog of which nothing is read. */
@@ -36,6 +38,7 @@ export const EMPTY_CATALOG: CatalogState = {
   expanded: [],
   filter: "",
   found: null,
+  chosen: [],
 };
 
 /** The key of a table's detail: its schema and name. */

@@ -7,7 +7,9 @@
  * and definitions on the server.
  */
 import { type KeyboardEvent, useEffect, useState } from "react";
-import { filterTree, loadSchemas, searchCatalog, select, toggle } from "../state/catalog";
+import { filterTree, loadSchemas, scriptChosen, searchCatalog, select, toggle, toggleChosen } from "../state/catalog";
+import { openWorksheet } from "../state/worksheets";
+import { TABLE_DRAG } from "../worksheet/editor/extensions";
 import type { ObjectRef } from "../ipc/catalog";
 import { useStore, useStudio } from "../state/store";
 import { EMPTY_CATALOG, type Selected } from "./catalogState";
@@ -59,42 +61,73 @@ function RowIcon({ row }: { row: TreeRow }) {
   return icon === null ? null : <Icon name={icon} />;
 }
 
+/** Carries a table dragged from the tree, for the editor to write a query of it where it is dropped. */
+function dragged(event: React.DragEvent, row: TreeRow): void {
+  const table = row.select?.kind === "table" ? row.select : null;
+  if (table !== null) {
+    event.dataTransfer.setData(TABLE_DRAG, JSON.stringify({ schema: table.schema, name: table.name }));
+    event.dataTransfer.effectAllowed = "copy";
+  }
+}
+
+/** A row's triangle, which opens or closes it, or its place where it has none. */
+function Twisty({ row, open }: { row: TreeRow; open: () => void }) {
+  if (!row.expandable) {
+    return <span className="tree-twisty" />;
+  }
+  return (
+    <button
+      type="button"
+      className="tree-twisty"
+      aria-label={row.expanded ? `Close ${row.label}` : `Open ${row.label}`}
+      tabIndex={-1}
+      onClick={open}
+    >
+      {row.expanded ? "▾" : "▸"}
+    </button>
+  );
+}
+
 /** A row of the tree. */
 function Row({ row, connection, selected }: { row: TreeRow; connection: number; selected: boolean }) {
   const store = useStore();
   const open = () => void toggle(store, connection, row.id);
-  const choose = () => {
-    if (row.select !== undefined) {
+  const choose = (event?: { metaKey: boolean; ctrlKey: boolean }) => {
+    if (row.select === undefined) {
+      return;
+    }
+    if (event !== undefined && (event.metaKey || event.ctrlKey)) {
+      toggleChosen(store, connection, row.select);
+    } else {
       void select(store, connection, row.select);
     }
   };
-  const keyDown = rowKeys(row, open, choose);
+  const chosen = useStudio(
+    (s) => s.catalogs[connection]?.chosen.some((c) => JSON.stringify(c) === JSON.stringify(row.select)) === true,
+  );
+  const className = ["tree-row", selected ? "tree-active" : "", chosen ? "tree-chosen" : ""]
+    .filter((c) => c !== "")
+    .join(" ");
   return (
     <div
       role="treeitem"
       tabIndex={0}
+      draggable={row.select?.kind === "table"}
+      onDragStart={(e) => {
+        dragged(e, row);
+      }}
       aria-level={row.depth + 1}
       aria-expanded={row.expandable ? row.expanded : undefined}
       aria-selected={selected}
-      className={selected ? "tree-row tree-active" : "tree-row"}
+      className={className}
       style={{ paddingLeft: `${String(row.depth * 14 + 4)}px` }}
-      onKeyDown={keyDown}
-      onClick={choose}
+      onKeyDown={rowKeys(row, open, choose)}
+      onClick={(e) => {
+        choose(e);
+      }}
       onDoubleClick={open}
     >
-      {row.expandable ? (
-        <button
-          type="button"
-          className="tree-twisty"
-          aria-label={row.expanded ? `Close ${row.label}` : `Open ${row.label}`}
-          tabIndex={-1}
-          onClick={open}
-        >
-          {row.expanded ? "▾" : "▸"}
-        </button>
-      ) : (
-        <span className="tree-twisty" />
-      )}
+      <Twisty row={row} open={open} />
       <RowIcon row={row} />
       <span>{row.label}</span>
       {row.note !== undefined && <span className="tree-note">{row.note}</span>}
@@ -189,6 +222,16 @@ export function CatalogTree({ connection }: { readonly connection: number }) {
         <button type="button" onClick={() => void loadSchemas(store, connection)}>
           Refresh
         </button>
+        {catalog.chosen.length > 0 && (
+          <button
+            type="button"
+            onClick={() =>
+              void scriptChosen(store, connection).then((text) => text !== null && openWorksheet(store, text, "Script"))
+            }
+          >
+            Script {String(catalog.chosen.length)} Chosen
+          </button>
+        )}
       </div>
       <Search connection={connection} />
       <Favourites connection={connection} />

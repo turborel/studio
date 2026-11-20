@@ -1,6 +1,7 @@
 //! Running statements and paging their results (`[CLIENT Running
 //! statements]`, `[CLIENT Prepared statements]`).
 
+use turborel_studio_core::connections::manager::RunAnswer;
 use turborel_studio_core::connections::outcome::Outcome;
 use turborel_studio_core::connections::pages::PAGE_ROWS;
 
@@ -117,5 +118,59 @@ pub fn a_cursor_fails_or_closes_early(live: &Live) {
     let Outcome::Rows { result, .. } = crate::run(&manager, id, NUMBERS).unwrap().outcome else { panic!("no rows") };
     manager.close_result(id, result).unwrap();
     assert_eq!(column(&manager, id, "VALUES (2)"), [Some("2".to_owned())]);
+    manager.close(id).unwrap();
+}
+
+/// [DOC sql/statements/prepare.md DESCRIPTION] [DESIGN] D36: a statement's
+/// dynamic parameters are told by their types, and given values as text,
+/// each cast to its parameter's type, or null; a value of no number, or
+/// values not as many as the parameters, are refused.
+pub fn parameters_are_given_values_as_text(live: &Live) {
+    let (manager, _) = live.manager();
+    let id = live.owner(&manager);
+    manager.set_autocommit(id, true).unwrap();
+    crate::run(&manager, id, "CREATE TABLE BOUND (I INTEGER, S VARCHAR(10))").unwrap();
+    let insert = "INSERT INTO BOUND VALUES (?, ?)";
+    // An INTEGER column's parameter is of its tag's type, an exact numeric
+    // type of precision 10 and scale 0 ([CLIENT Prepared statements]).
+    assert_eq!(manager.parameters(id, insert).unwrap(), ["NUMERIC(10,0)", "CHARACTER VARYING(10)"]);
+    let values = [Some("42".to_owned()), None];
+    let RunAnswer::Ran(ran) = manager.run_with(id, (insert, &values), false).unwrap() else { panic!("asked") };
+    assert!(matches!(ran.outcome, Outcome::Done { rows_affected: Some(1), .. }), "{:?}", ran.outcome);
+    let query = "SELECT S FROM BOUND WHERE I = ?";
+    let RunAnswer::Ran(ran) = manager.run_with(id, (query, &[Some("42".to_owned())]), false).unwrap() else { panic!("asked") };
+    let Outcome::Rows { page, .. } = ran.outcome else { panic!("no rows") };
+    assert_eq!(page.rows, [[None]]);
+    assert_eq!(manager.run_with(id, (query, &[Some("x".to_owned())]), false).unwrap_err().sqlstate, "22018");
+    assert_eq!(manager.run_with(id, (query, &[]), false).unwrap_err().sqlstate, "TB910");
+    assert!(manager.judge(id, "DROP TABLE BOUND CASCADE").unwrap().is_some());
+    assert!(manager.judge(id, query).unwrap().is_none());
+    crate::run(&manager, id, "DROP TABLE BOUND CASCADE").unwrap();
+    manager.close(id).unwrap();
+}
+
+/// [DOC sql/statements/explain.md EXPLAIN ANALYZE] [DESIGN] D36: EXPLAIN and
+/// EXPLAIN ANALYZE of a query run as a worksheet runs them, a read, each
+/// giving the plan's lines as rows of PLAN; ANALYZE's ending with the rows
+/// the query gave.
+pub fn a_plan_is_explained_and_analyzed(live: &Live) {
+    let (manager, _) = live.manager();
+    let id = live.owner(&manager);
+    manager.set_autocommit(id, true).unwrap();
+    crate::run(&manager, id, "CREATE TABLE PLANNED (ID INTEGER PRIMARY KEY, NAME VARCHAR(20))").unwrap();
+    crate::run(&manager, id, "INSERT INTO PLANNED VALUES (1, 'a'), (2, 'b')").unwrap();
+    assert!(manager.judge(id, "EXPLAIN ANALYZE SELECT * FROM PLANNED").unwrap().is_none());
+    for (sql, last) in [("EXPLAIN SELECT ID FROM PLANNED", "-- physical:"), ("EXPLAIN ANALYZE SELECT ID FROM PLANNED", "-- ran: 2 rows")] {
+        let Outcome::Rows { result, columns, page } = crate::run(&manager, id, sql).unwrap().outcome else { panic!("no plan") };
+        assert_eq!(columns[0].name.as_deref(), Some("PLAN"));
+        let mut lines: Vec<String> = page.rows.iter().map(|r| r[0].clone().unwrap_or_default()).collect();
+        if !page.complete {
+            let rest = manager.rows(id, result, (page.rows_read, 1000)).unwrap();
+            lines.extend(rest.rows.iter().map(|r| r[0].clone().unwrap_or_default()));
+        }
+        assert!(lines.iter().any(|l| l.trim() == last || l.trim().starts_with(last)), "{sql}: {lines:?}");
+        let _ = manager.close_result(id, result);
+    }
+    crate::run(&manager, id, "DROP TABLE PLANNED CASCADE").unwrap();
     manager.close(id).unwrap();
 }

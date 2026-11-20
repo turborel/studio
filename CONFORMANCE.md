@@ -29,18 +29,18 @@ shows what it gives. These rows say how each kind is shown.
 
 | ID | Statements | How Studio runs and shows them | Status |
 |---|---|---|---|
-| S-STMT-1 | Queries: SELECT, VALUES, TABLE, WITH ([DOC sql/06-queries.md Query Expressions]) | prepared and read through a cursor, a page at a time, into the grid, with each column's declared type | not yet |
-| S-STMT-2 | INSERT, UPDATE, DELETE, MERGE | the rows affected, and the identity values an INSERT generated, in the messages pane | not yet |
-| S-STMT-3 | TRUNCATE TABLE | confirmed first, as a statement that destroys | not yet |
-| S-STMT-4 | CREATE, ALTER and DROP of each object Turborel defines | run as typed; a DROP confirmed first; the explorer read again after | not yet |
-| S-STMT-5 | COMMIT, ROLLBACK, SAVEPOINT, RELEASE SAVEPOINT, START TRANSACTION, SET TRANSACTION, SET CONSTRAINTS | the transaction's state in the status bar after each | not yet |
-| S-STMT-6 | SET SCHEMA, SET CATALOG, SET TIME ZONE, SET ROLE, SET SESSION AUTHORIZATION, and SET of a setting | the session's status as the server tells it, at once | not yet |
-| S-STMT-7 | GRANT, REVOKE, and CREATE, ALTER and DROP of a user or role | run as typed; the explorer's users, roles and privileges read again | not yet |
-| S-STMT-8 | EXPLAIN | its text, and the plan view of its stages | not yet |
-| S-STMT-9 | CALL | a procedure's output parameters, as one row | not yet |
-| S-STMT-10 | PREPARE, EXECUTE, EXECUTE IMMEDIATE, DEALLOCATE PREPARE, DESCRIBE, descriptors, and cursors declared in SQL | sent to the server as typed, their outcomes shown | not yet |
-| S-STMT-11 | CONNECT, SET CONNECTION, DISCONNECT | refused in a worksheet, which is bound to its connection (S-IMPL-3) | not yet |
-| S-STMT-12 | A script of several statements | split as the server splits a request of several, each run in turn, each result its own | not yet |
+| S-STMT-1 | Queries: SELECT, VALUES, TABLE, WITH ([DOC sql/06-queries.md Query Expressions]) | prepared and read through a cursor, a page at a time, into the worksheet's results, with each column's declared type | done |
+| S-STMT-2 | INSERT, UPDATE, DELETE, MERGE | the rows affected, and the identity values an INSERT generated, in the messages pane | done |
+| S-STMT-3 | TRUNCATE TABLE | confirmed first, as a statement that destroys | done |
+| S-STMT-4 | CREATE, ALTER and DROP of each object Turborel defines | run as typed; a DROP confirmed first; the explorer read again after | done |
+| S-STMT-5 | COMMIT, ROLLBACK, SAVEPOINT, RELEASE SAVEPOINT, START TRANSACTION, SET TRANSACTION, SET CONSTRAINTS | the transaction's state in the status bar after each | done |
+| S-STMT-6 | SET SCHEMA, SET CATALOG, SET TIME ZONE, SET ROLE, SET SESSION AUTHORIZATION, and SET of a setting | the session's status as the server tells it, at once | done |
+| S-STMT-7 | GRANT, REVOKE, and CREATE, ALTER and DROP of a user or role | run as typed; the explorer's users, roles and privileges read again | done |
+| S-STMT-8 | EXPLAIN | its text, and the plan view of its stages | done |
+| S-STMT-9 | CALL | a procedure's output parameters, as one row | done |
+| S-STMT-10 | PREPARE, EXECUTE, EXECUTE IMMEDIATE, DEALLOCATE PREPARE, DESCRIBE, descriptors, and cursors declared in SQL | sent to the server as typed, their outcomes shown | done |
+| S-STMT-11 | CONNECT, SET CONNECTION, DISCONNECT | refused in a worksheet, which is bound to its connection (S-IMPL-3) | done |
+| S-STMT-12 | A script of several statements | split as the server splits a request of several, each run in turn, each result its own | done |
 
 ## Types
 
@@ -124,12 +124,12 @@ them.
 | S-CLIENT-12 | Cancel ([CLIENT Running statements]) | the toolbar's Cancel, through the canceller, from another thread | done |
 | S-CLIENT-13 | Ending a connection ([CLIENT Connecting]) | terminate on close; a lost connection reconnected on request | done |
 | S-CLIENT-14 | Prepared statements and cursors ([CLIENT Prepared statements]) | a query's rows a page at a time | done |
-| S-CLIENT-15 | The splitter of statements ([CLIENT Controlling the session]) | a script split as the server splits it | not yet |
+| S-CLIENT-15 | The splitter of statements ([CLIENT Controlling the session]) | a script split as the server splits it | done |
 | S-CLIENT-16 | Declared types ([CLIENT Prepared statements]) | each column's type as SQL writes it | done |
-| S-CLIENT-17 | Notices and conditions ([CLIENT What the server tells]) | the messages pane | not yet |
+| S-CLIENT-17 | Notices and conditions ([CLIENT What the server tells]) | the messages pane | done |
 | S-CLIENT-18 | The session's status and settings ([CLIENT What the server tells]) | the status bar: user, schema, transaction, read-only, replica | done |
-| S-CLIENT-19 | Rows affected, generated values and server time ([CLIENT What the server tells]) | the messages pane and the status bar | not yet |
-| S-CLIENT-20 | A failure's diagnostics ([CLIENT What the server tells]) | the messages pane | not yet |
+| S-CLIENT-19 | Rows affected, generated values and server time ([CLIENT What the server tells]) | the messages pane and the status bar | done |
+| S-CLIENT-20 | A failure's diagnostics ([CLIENT What the server tells]) | the messages pane | done |
 | S-CLIENT-21 | Large objects ([CLIENT Large objects]) | the viewers, a chunk at a time; edited values written by `create_lob` | not yet |
 | S-CLIENT-22 | Copying ([CLIENT Copying and exporting]) | importing CSV | not yet |
 | S-CLIENT-23 | Exporting, CSV and native ([CLIENT Copying and exporting]) | the grid's export | not yet |
@@ -147,7 +147,7 @@ never sent.
 
 | ID | Capability | Studio's use | Status |
 |---|---|---|---|
-| S-CAP-1 | `notices` | the messages pane | not yet |
+| S-CAP-1 | `notices` | the messages pane | done |
 | S-CAP-2 | `status` | the status bar | done |
 | S-CAP-3 | `diagnostics` | a failure's detail, hint and objects | done |
 | S-CAP-4 | `describe` | not used: a statement is prepared again rather than described | done |
@@ -179,6 +179,10 @@ the manual.
 | S-FILE-3 | Studio's settings | done |
 | S-FILE-4 | The dock's layout | done |
 | S-FILE-5 | The assistant's audit log | not yet |
+| S-FILE-6 | The worksheets, with their text | done |
+| S-FILE-7 | The history of what ran, with no statement of security | done |
+| S-FILE-8 | The favourite queries | done |
+| S-FILE-9 | The project folders | done |
 
 ## Security
 
@@ -187,9 +191,9 @@ the manual.
 | S-SEC-1 | Passwords and keys in the operating system's keychain alone (R-SEC-1) | done |
 | S-SEC-2 | Files owner-only, with no secret (R-SEC-2) | done |
 | S-SEC-3 | TLS verified by default; a connection not secure shown so (R-SEC-3) | done |
-| S-SEC-4 | Environments by colour; a production connection asks before a statement that writes (R-SEC-7) | not yet |
+| S-SEC-4 | Environments by colour; a production connection asks before a statement that writes (R-SEC-7) | done |
 | S-SEC-5 | A read-only connection begins each transaction READ ONLY (R-SEC-7) | done |
-| S-SEC-6 | A statement that destroys asks first (R-SEC-8) | not yet |
+| S-SEC-6 | A statement that destroys asks first (R-SEC-8) | done |
 | S-SEC-7 | The webview's policy and capability (R-SEC-4, R-SEC-5) | done |
 | S-SEC-8 | The assistant sends only what the user chose, shown first, and its tools never act alone (R-SEC-12) | not yet |
 
@@ -201,9 +205,9 @@ makes them.
 | ID | Choice | Studio's | Status |
 |---|---|---|---|
 | S-IMPL-1 | The rows a cursor's fetch asks for | 500 rows, one page | done |
-| S-IMPL-2 | A worksheet's transactions: autocommit or not | set in M4 | not yet |
-| S-IMPL-3 | Connection statements in a worksheet | refused (S-STMT-11) | not yet |
-| S-IMPL-4 | How a script is split | as the server splits it (S-STMT-12) | not yet |
+| S-IMPL-2 | A worksheet's transactions: autocommit or not | the connection's, transactions held until Commit or Rollback, Autocommit a toggle of the worksheet's toolbar | done |
+| S-IMPL-3 | Connection statements in a worksheet | refused (S-STMT-11) | done |
+| S-IMPL-4 | How a script is split | as the server splits it (S-STMT-12) | done |
 | S-IMPL-5 | How a value is shown | as text the server's value gives, exact numbers never through a float | not yet |
 | S-IMPL-6 | TLS of a new connection | verify-full, trusting the platform's authorities where the settings name none, below every layer that names a mode; a local socket uses no TLS | done |
 | S-IMPL-7 | The application's name, as the server is told it | Turborel Studio, unless the settings name another | done |
@@ -215,5 +219,5 @@ makes them.
 | S-LIMIT-1 | The rows a result keeps in memory | 8 pages of 500 rows; the rest spooled to disk, sealed, at most 1 GiB a result | done |
 | S-LIMIT-2 | The text of a cell the grid draws | set in M5 | not yet |
 | S-LIMIT-3 | A large object's viewer reads at most | set in M5 | not yet |
-| S-LIMIT-4 | A worksheet's history | set in M4 | not yet |
+| S-LIMIT-4 | A worksheet's history | 1000 statements, each at most 64 KiB | done |
 | S-LIMIT-5 | The rows the assistant's `run_query` returns | set in M9 | not yet |

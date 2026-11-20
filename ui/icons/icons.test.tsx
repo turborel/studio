@@ -120,10 +120,19 @@ describe("a dock's tab", () => {
         },
       );
     const props = { api: api("explorer"), containerApi: {}, params: {} } as unknown as IDockviewPanelHeaderProps;
-    const { container } = render(<Tab {...props} />);
+    const store = new Store();
+    const { container } = render(
+      <StoreContext.Provider value={store}>
+        <Tab {...props} />
+      </StoreContext.Provider>,
+    );
     expect(container.querySelector(".dock-tab svg")).not.toBeNull();
     const other = { ...props, api: api("unknown") } as unknown as IDockviewPanelHeaderProps;
-    const { container: plain } = render(<Tab {...other} />);
+    const { container: plain } = render(
+      <StoreContext.Provider value={store}>
+        <Tab {...other} />
+      </StoreContext.Provider>,
+    );
     expect(plain.querySelector(".dock-tab > svg")).toBeNull();
   });
 });

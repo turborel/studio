@@ -71,7 +71,7 @@ fn app_info_gives_the_version_and_the_pinned_commit() {
 #[test]
 fn no_plugin_command_is_granted() {
     let (_app, window) = window();
-    for command in ["plugin:fs|read_file", "plugin:shell|execute", "plugin:http|fetch"] {
+    for command in ["plugin:fs|read_file", "plugin:shell|execute", "plugin:http|fetch", "plugin:notification|notify"] {
         assert!(get_ipc_response(&window, request(&window, command, serde_json::json!({}))).is_err(), "{command}");
     }
 }
@@ -266,4 +266,65 @@ fn the_dialog_is_the_backends_alone() {
     assert!(get_ipc_response(&window, request(&window, "plugin:dialog|save", serde_json::json!({}))).is_err());
     let error = refusal(&window, "save_text_file", serde_json::json!({"name": "../x.sql", "text": "SELECT 1"}));
     assert_eq!(error["sqlstate"], "TB910");
+}
+
+/// The JSON `command` answered `args` with.
+fn answer(window: &WebviewWindow<MockRuntime>, command: &str, args: serde_json::Value) -> serde_json::Value {
+    json(get_ipc_response(window, request(window, command, args)).unwrap())
+}
+
+/// [DESIGN] D36: a script is split into its statements, each with its
+/// place and class, and the reserved words are the lexer's.
+#[test]
+fn a_script_is_split_and_the_words_given() {
+    let (_app, window) = window();
+    let pieces = answer(&window, "split_script", serde_json::json!({"text": "VALUES (1); DROP TABLE T CASCADE"}));
+    assert_eq!(pieces[0]["from"], 0);
+    assert_eq!(pieces[0]["statement"]["class"], "read");
+    assert_eq!(pieces[1]["statement"]["destroys"], "DROP TABLE");
+    let words = answer(&window, "sql_words", serde_json::json!({}));
+    assert!(words.as_array().unwrap().iter().any(|w| w == "SELECT"));
+}
+
+/// [RULE] R-SEC-1 [DESIGN] D36: the history keeps what ran, but never a
+/// statement that changes who may do what, and is cleared; the worksheets
+/// and queries come back as kept.
+#[test]
+fn the_history_and_worksheets_are_kept() {
+    let (_app, window) = window();
+    let entry = |sql: &str| serde_json::json!({"entry": {"sql": sql, "at": 1, "connection": "Orders", "saved": null, "millis": 2, "rows": 1, "sqlstate": "00000"}});
+    assert_eq!(answer(&window, "record_history", entry("SELECT 1")), true);
+    assert_eq!(answer(&window, "record_history", entry("CREATE USER BOB PASSWORD 'x'")), false);
+    let found = answer(&window, "search_history", serde_json::json!({"text": "", "limit": 10}));
+    assert_eq!(found.as_array().unwrap().len(), 1);
+    assert_eq!(refusal(&window, "search_history", serde_json::json!({"text": "", "limit": 5000}))["sqlstate"], "TB910");
+    answer(&window, "clear_history", serde_json::json!({}));
+    assert_eq!(answer(&window, "search_history", serde_json::json!({"text": "", "limit": 10})), serde_json::json!([]));
+    let sheet = serde_json::json!({"id": "w1", "title": "Untitled", "text": "SELECT 1", "connection": null, "pinned": true, "path": null, "modified": true});
+    answer(&window, "keep_worksheets", serde_json::json!({"worksheets": [sheet.clone()]}));
+    assert_eq!(answer(&window, "load_worksheets", serde_json::json!({})), serde_json::json!([sheet]));
+    let query = serde_json::json!({"id": "q1", "name": "One", "sql": "SELECT 1"});
+    assert_eq!(answer(&window, "keep_query", serde_json::json!({"query": query.clone()})), serde_json::json!([query]));
+    assert_eq!(answer(&window, "list_queries", serde_json::json!({})), serde_json::json!([query]));
+    assert_eq!(answer(&window, "forget_query", serde_json::json!({"id": "q1"})), serde_json::json!([]));
+}
+
+/// [RULE] R-SEC-5 [DESIGN] D36: no file the user did not choose, nor a
+/// folder not a project, is read, written or listed; a connection not open
+/// is neither judged nor described; a notification too long is refused.
+#[test]
+fn files_not_chosen_are_refused() {
+    let (_app, window) = window();
+    let elsewhere = std::env::temp_dir().join("studio-not-chosen.sql").display().to_string();
+    assert_eq!(refusal(&window, "read_sql_file", serde_json::json!({"path": elsewhere}))["sqlstate"], "TB910");
+    assert_eq!(refusal(&window, "write_sql_file", serde_json::json!({"path": elsewhere, "text": "x"}))["sqlstate"], "TB910");
+    assert_eq!(refusal(&window, "project_files", serde_json::json!({"folder": "/"}))["sqlstate"], "TB910");
+    assert_eq!(answer(&window, "project_folders", serde_json::json!({})), serde_json::json!([]));
+    assert_eq!(answer(&window, "remove_project_folder", serde_json::json!({"folder": "/"})), serde_json::json!([]));
+    assert_eq!(refusal(&window, "judge_script", serde_json::json!({"connection": 7, "sql": "SELECT 1"}))["sqlstate"], "TB910");
+    assert_eq!(refusal(&window, "statement_parameters", serde_json::json!({"connection": 7, "sql": "SELECT ?"}))["sqlstate"], "TB910");
+    let long = "x".repeat(501);
+    assert_eq!(refusal(&window, "notify_finished", serde_json::json!({"title": long, "body": ""}))["sqlstate"], "TB910");
+    let values = serde_json::json!({"connection": 7, "sql": "SELECT 1", "confirmed": false, "values": ["1"]});
+    assert_eq!(refusal(&window, "run_statement", values)["sqlstate"], "TB910");
 }

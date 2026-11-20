@@ -10,7 +10,7 @@
 /// Every command the application defines, as `src/commands.rs` registers
 /// them and `capabilities/main.json` grants them; the checks tool holds the
 /// three lists equal.
-const COMMANDS: [&str; 32] = [
+const COMMANDS: [&str; 52] = [
     "app_info",
     "open_connection",
     "close_connection",
@@ -43,6 +43,26 @@ const COMMANDS: [&str; 32] = [
     "catalog_search",
     "catalog_definition",
     "save_text_file",
+    "notify_finished",
+    "sql_words",
+    "split_script",
+    "judge_script",
+    "statement_parameters",
+    "search_history",
+    "record_history",
+    "clear_history",
+    "load_worksheets",
+    "keep_worksheets",
+    "list_queries",
+    "keep_query",
+    "forget_query",
+    "open_sql_file",
+    "read_sql_file",
+    "write_sql_file",
+    "project_folders",
+    "add_project_folder",
+    "remove_project_folder",
+    "project_files",
 ];
 
 /// The manifest every Windows program of the package is linked with.

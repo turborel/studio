@@ -97,6 +97,22 @@ impl From<Failure> for StudioError {
     }
 }
 
+impl From<turborel::error::SqlError> for StudioError {
+    /// A failure of Turborel's own code run in Studio, as a value cast to
+    /// a parameter's type: its SQLCODE, SQLSTATE, message and rule.
+    fn from(e: turborel::error::SqlError) -> StudioError {
+        StudioError {
+            sqlcode: e.sqlcode(),
+            sqlstate: e.sqlstate().as_str().to_owned(),
+            message: e.msg,
+            rule: e.rule,
+            position: None,
+            active: false,
+            diagnostics: None,
+        }
+    }
+}
+
 impl StudioError {
     /// A failure Studio raises itself, of `sqlcode` and `sqlstate`.
     pub fn new(sqlcode: i32, sqlstate: &str, message: impl Into<String>) -> StudioError {

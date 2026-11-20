@@ -18,16 +18,19 @@ export const TOOLBAR: readonly (readonly string[])[] = [
   ["palette.open"],
 ];
 
-/** A button of the toolbar, of command `id`. */
-function ToolButton({
-  id,
-  context,
-  labels,
-}: {
+/** What a button of a toolbar is given. */
+export interface ToolButtonProps {
   readonly id: string;
   readonly context: CommandContext;
   readonly labels: boolean;
-}) {
+  /** Whether it is disabled, if not as its command says. */
+  readonly disabled?: boolean;
+  /** What is done before its command runs, as a worksheet made the active one. */
+  readonly before?: () => void;
+}
+
+/** A button of a toolbar, of command `id`: its icon, its name its accessible name, its tooltip its name and key. */
+export function ToolButton({ id, context, labels, disabled, before }: ToolButtonProps) {
   const found = command(id);
   if (found === undefined) {
     return null;
@@ -40,13 +43,21 @@ function ToolButton({
       className="tool"
       title={`${found.title}${key}`}
       aria-label={name}
-      disabled={!found.enabled(context)}
-      onClick={() => void runCommand(id, context)}
+      disabled={disabled ?? !found.enabled(context)}
+      onClick={() => {
+        before?.();
+        void runCommand(id, context);
+      }}
     >
       {found.icon !== undefined && <Icon name={found.icon} size={LARGE} />}
       {labels && <span className="tool-label">{name}</span>}
     </button>
   );
+}
+
+/** A separator between a toolbar's groups. */
+export function ToolSeparator() {
+  return <span className="tool-separator" role="separator" aria-orientation="vertical" />;
 }
 
 /** The toolbar, its commands run with `context`. */
@@ -58,7 +69,7 @@ export function Toolbar({ context }: { readonly context: CommandContext }) {
     <div className="toolbar" role="toolbar" aria-label="Toolbar">
       {TOOLBAR.map((group, i) => (
         <div key={group.join()} className="tool-group" role="group">
-          {i > 0 && <span className="tool-separator" role="separator" aria-orientation="vertical" />}
+          {i > 0 && <ToolSeparator />}
           {group.map((id) => (
             <ToolButton key={id} id={id} context={context} labels={labels} />
           ))}

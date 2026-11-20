@@ -13,8 +13,53 @@ pub const MENU_EVENT: &str = "studio:menu";
 pub type Item = Option<(&'static str, &'static str)>;
 
 /// The menus, each its title and its items.
-pub const MENUS: [(&str, &[Item]); 5] = [
-    ("File", &[Some(("connection.new", "New Connection…")), None, Some(("settings.open", "Settings…"))]),
+pub const MENUS: [(&str, &[Item]); 6] = [
+    (
+        "File",
+        &[
+            Some(("connection.new", "New Connection…")),
+            Some(("worksheet.new", "New Worksheet")),
+            Some(("file.open", "Open File…")),
+            Some(("worksheet.save", "Save")),
+            Some(("worksheet.saveAs", "Save As…")),
+            Some(("worksheet.reopen", "Reopen Closed Worksheet")),
+            None,
+            Some(("history.open", "History…")),
+            None,
+            Some(("settings.open", "Settings…")),
+        ],
+    ),
+    (
+        "Worksheet",
+        &[
+            Some(("worksheet.run", "Run Statement")),
+            Some(("worksheet.runScript", "Run Script")),
+            Some(("worksheet.runOnFolder", "Run Script on a Folder's Connections…")),
+            Some(("worksheet.explain", "Explain")),
+            Some(("worksheet.explainAnalyze", "Explain Analyze")),
+            None,
+            Some(("worksheet.format", "Format")),
+            Some(("worksheet.comment", "Toggle Comment")),
+            Some(("worksheet.upperCase", "Upper Case")),
+            Some(("worksheet.lowerCase", "Lower Case")),
+            Some(("worksheet.find", "Find and Replace…")),
+            None,
+            Some(("worksheet.bookmark", "Toggle Bookmark")),
+            Some(("worksheet.nextBookmark", "Next Bookmark")),
+            Some(("worksheet.previousBookmark", "Previous Bookmark")),
+            Some(("worksheet.definition", "Go to Definition")),
+            Some(("worksheet.describe", "Describe")),
+            None,
+            Some(("worksheet.split", "Split Editor")),
+            Some(("worksheet.outline", "Outline")),
+            Some(("worksheet.favourite", "Add to Favourite Queries…")),
+            Some(("worksheet.autocommit", "Autocommit")),
+            None,
+            Some(("worksheet.pin", "Pin Tab")),
+            Some(("worksheet.close", "Close Worksheet")),
+            Some(("worksheet.closeOthers", "Close Other Worksheets")),
+        ],
+    ),
     (
         "Connection",
         &[

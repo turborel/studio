@@ -7,7 +7,7 @@
 import { listen } from "@tauri-apps/api/event";
 import type { DockviewApi } from "dockview-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { type CommandContext, defaultKeys, runCommand } from "./commands/commands";
+import { type CommandContext, command, defaultKeys, runCommand } from "./commands/commands";
 import { bindings, keyOf } from "./commands/keys";
 import { onStudioEvent } from "./ipc/events";
 import { ConnectionDialog } from "./shell/ConnectionDialog";
@@ -20,6 +20,8 @@ import { SettingsDialog } from "./shell/SettingsDialog";
 import { StatusBar } from "./shell/StatusBar";
 import { Toolbar } from "./shell/Toolbar";
 import { checkAfterWake, loadAll, told } from "./state/actions";
+import { keepAsChanged, restoreWorksheets } from "./state/worksheets";
+import { FavouriteDialog, FoldersDialog, GuardDialog, HistoryDialog, ValuesDialog } from "./worksheet/dialogs";
 import { openConnection, type Store, StoreContext, useStudio } from "./state/store";
 import { applyTheme, DARK_QUERY, resolveTheme } from "./theme/theme";
 import type { ThemeName } from "./theme/tokens";
@@ -51,6 +53,8 @@ function useWiring(context: CommandContext): void {
   const keyBindings = useStudio((s) => s.settings.keyBindings);
   useEffect(() => {
     void loadAll(store);
+    void restoreWorksheets(store);
+    const keeping = keepAsChanged(store);
     const events = onStudioEvent((event) => {
       told(store, event);
     });
@@ -71,6 +75,7 @@ function useWiring(context: CommandContext): void {
       });
       document.removeEventListener("visibilitychange", woke);
       window.removeEventListener("online", woke);
+      keeping();
     };
   }, [store, context]);
   useEffect(() => {
@@ -78,16 +83,19 @@ function useWiring(context: CommandContext): void {
     const pressed = (event: KeyboardEvent) => {
       const key = keyOf(event);
       const id = key === null ? undefined : keys.get(key);
-      if (id !== undefined) {
+      // A dialog takes the keys while it is open: Escape closes it.
+      if (id !== undefined && store.current().dialog === null && command(id)?.enabled(context) === true) {
         event.preventDefault();
+        event.stopPropagation();
         void runCommand(id, context);
       }
     };
-    window.addEventListener("keydown", pressed);
+    // Taken before the editor sees the key, so Studio's keys are Studio's everywhere.
+    window.addEventListener("keydown", pressed, { capture: true });
     return () => {
-      window.removeEventListener("keydown", pressed);
+      window.removeEventListener("keydown", pressed, { capture: true });
     };
-  }, [keyBindings, context]);
+  }, [keyBindings, context, store]);
 }
 
 /** The dialog shown, if any. */
@@ -104,6 +112,16 @@ function Dialogs({ context }: { readonly context: CommandContext }) {
       return <AboutDialog />;
     case "shortcuts":
       return <ShortcutsDialog />;
+    case "guard":
+      return <GuardDialog confirm={dialog.confirm} answer={dialog.answer} />;
+    case "values":
+      return <ValuesDialog {...dialog} />;
+    case "history":
+      return <HistoryDialog />;
+    case "folders":
+      return <FoldersDialog />;
+    case "favourite":
+      return <FavouriteDialog sql={dialog.sql} />;
     case undefined:
       return null;
   }
@@ -131,7 +149,12 @@ function Window({ store }: { readonly store: Store }) {
   }, [theme]);
   const active = useStudio((s) => openConnection(s, s.active));
   const colour = active === undefined ? null : tint(active.guards.environment, active.colour);
-  const style = { zoom: settings.zoomPercent / PERCENT, ...(colour === null ? {} : { "--env-colour": colour }) };
+  const style = {
+    zoom: settings.zoomPercent / PERCENT,
+    "--editor-size": `${String(settings.editorFontPoints)}pt`,
+    ...(settings.editorFontFamily === "" ? {} : { "--editor-font": settings.editorFontFamily }),
+    ...(colour === null ? {} : { "--env-colour": colour }),
+  };
   return (
     <div className={colour === null ? "app" : "app app-tinted"} style={style}>
       <Toolbar context={context} />

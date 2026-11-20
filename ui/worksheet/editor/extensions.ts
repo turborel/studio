@@ -1,0 +1,286 @@
+/**
+ * A worksheet's editor (RULES.md D36): CodeMirror 6 in Turborel's SQL, its
+ * completion from the catalog and of snippets, its markers marked, a
+ * table described on hover or by a key, a routine's parameters shown as
+ * its arguments are written, and a table dropped from the explorer
+ * written as a query of its columns.
+ */
+import {
+  autocompletion,
+  closeBrackets,
+  closeBracketsKeymap,
+  type Completion,
+  type CompletionContext,
+  type CompletionResult,
+  completionKeymap,
+  snippetCompletion,
+} from "@codemirror/autocomplete";
+import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
+import { sql } from "@codemirror/lang-sql";
+import {
+  bracketMatching,
+  defaultHighlightStyle,
+  foldGutter,
+  foldKeymap,
+  indentOnInput,
+  syntaxHighlighting,
+} from "@codemirror/language";
+import { highlightSelectionMatches, searchKeymap } from "@codemirror/search";
+import { Compartment, EditorState, type Extension } from "@codemirror/state";
+import {
+  crosshairCursor,
+  Decoration,
+  type DecorationSet,
+  drawSelection,
+  dropCursor,
+  EditorView,
+  highlightActiveLine,
+  highlightActiveLineGutter,
+  highlightSpecialChars,
+  hoverTooltip,
+  keymap,
+  lineNumbers,
+  rectangularSelection,
+  ViewPlugin,
+  type ViewUpdate,
+} from "@codemirror/view";
+import type { TableDetail } from "../../ipc/catalog";
+import { sqlName, turborelDialect } from "../dialect";
+import { markers } from "../variables";
+import { type Bridge, defaultSchema, namespace, tableDetail, tableNamed } from "./catalog";
+import { worksheetFields } from "./fields";
+import { parameterHints } from "./hints";
+
+/** The data a table dragged from the explorer carries. */
+export const TABLE_DRAG = "application/x-turborel-table";
+/** The longest text whose markers are marked, in characters: past it, none is. */
+const MAX_MARKED = 1_000_000;
+
+/** The snippets, each its name, what it is and its template, `#{}` a field Tab moves to. */
+export const SNIPPETS: readonly (readonly [string, string, string])[] = [
+  ["sel", "SELECT … FROM … WHERE …", "SELECT #{columns}\nFROM #{table}\nWHERE #{condition}"],
+  ["ins", "INSERT INTO … VALUES …", "INSERT INTO #{table} (#{columns})\nVALUES (#{values})"],
+  ["upd", "UPDATE … SET … WHERE …", "UPDATE #{table}\nSET #{column} = #{value}\nWHERE #{condition}"],
+  ["del", "DELETE FROM … WHERE …", "DELETE FROM #{table}\nWHERE #{condition}"],
+  [
+    "ct",
+    "CREATE TABLE …",
+    "CREATE TABLE #{name} (\n    #{column} #{type},\n    CONSTRAINT #{name}_PK PRIMARY KEY (#{column})\n)",
+  ],
+  ["ci", "CREATE INDEX …", "CREATE INDEX #{name} ON #{table} (#{columns})"],
+  ["cv", "CREATE VIEW …", "CREATE VIEW #{name} AS\nSELECT #{columns}\nFROM #{table}"],
+  ["with", "WITH … AS (…) SELECT …", "WITH #{name} AS (\n    #{query}\n)\nSELECT #{columns}\nFROM #{name}"],
+  ["exp", "EXPLAIN …", "EXPLAIN #{query}"],
+];
+
+/** The snippets, as completions where a word is begun. */
+function snippets(context: CompletionContext): CompletionResult | null {
+  const word = context.matchBefore(/\w+/u);
+  if (word === null || (word.from === word.to && !context.explicit)) {
+    return null;
+  }
+  const options: Completion[] = SNIPPETS.map(([label, detail, template]) =>
+    snippetCompletion(template, { label, detail, type: "text" }),
+  );
+  return { from: word.from, options, validFor: /^\w*$/u };
+}
+
+/** The columns of the table, or alias, before the cursor's period, read if need be. */
+function columns(bridge: Bridge): (context: CompletionContext) => Promise<CompletionResult | null> {
+  return async (context) => {
+    const before = context.matchBefore(/("(?:[^"]|"")+"|[A-Za-z_][A-Za-z0-9_]*)\.(\w*)$/u);
+    if (before === null) {
+      return null;
+    }
+    const name = before.text.slice(0, before.text.lastIndexOf("."));
+    const { schema, table } = tableNamed(context.state.doc.toString(), name);
+    const detail = await tableDetail(bridge, schema, table);
+    if (detail === null) {
+      return null;
+    }
+    const reserved = new Set(bridge.store.current().reservedWords);
+    const options = detail.columns.map((c) => ({
+      label: sqlName(c.name, reserved),
+      detail: c.typeWritten,
+      type: "property",
+    }));
+    return { from: before.to - (before.text.length - name.length - 1), options, validFor: /^\w*$/u };
+  };
+}
+
+/** The marks of the text's markers: parameters and script variables. */
+const PARAMETER = Decoration.mark({ class: "cm-parameter" });
+const VARIABLE = Decoration.mark({ class: "cm-script-variable" });
+
+/** The markers of `view`'s text, marked. */
+function markerDecorations(view: EditorView): DecorationSet {
+  const text = view.state.doc.toString();
+  if (text.length > MAX_MARKED) {
+    return Decoration.none;
+  }
+  return Decoration.set(markers(text).map((m) => (m.kind === "variable" ? VARIABLE : PARAMETER).range(m.from, m.to)));
+}
+
+/** Marks the text's markers as it changes. */
+const markerPlugin = ViewPlugin.fromClass(
+  class {
+    decorations: DecorationSet;
+    constructor(view: EditorView) {
+      this.decorations = markerDecorations(view);
+    }
+    update(update: ViewUpdate): void {
+      if (update.docChanged) {
+        this.decorations = markerDecorations(update.view);
+      }
+    }
+  },
+  { decorations: (plugin) => plugin.decorations },
+);
+
+/** A description of `detail`, as a tooltip shows it. */
+export function describeTable(detail: TableDetail): HTMLElement {
+  const box = document.createElement("div");
+  box.className = "cm-describe";
+  const title = document.createElement("strong");
+  title.textContent = `${detail.schema}.${detail.name} (${detail.kind})`;
+  box.append(title);
+  for (const c of detail.columns) {
+    const line = document.createElement("div");
+    line.textContent = `${c.name}  ${c.typeWritten}${c.nullable ? "" : " NOT NULL"}`;
+    box.append(line);
+  }
+  return box;
+}
+
+/** The table named at `pos`, described, if one is: the tooltip's source. */
+export function describeSource(bridge: Bridge) {
+  return async (view: EditorView, pos: number) => {
+    const word = view.state.wordAt(pos);
+    if (word === null) {
+      return null;
+    }
+    const text = view.state.sliceDoc(word.from, word.to);
+    const qualified = /("(?:[^"]|"")+"|[A-Za-z_]\w*)\.$/u.exec(
+      view.state.sliceDoc(Math.max(0, word.from - 129), word.from),
+    );
+    const { schema, table } = tableNamed(view.state.doc.toString(), text);
+    const detail = await tableDetail(
+      bridge,
+      qualified?.[1] === undefined ? schema : qualified[1].replaceAll('"', "").toUpperCase(),
+      table,
+    );
+    if (detail === null) {
+      return null;
+    }
+    return { pos: word.from, end: word.to, above: true, create: () => ({ dom: describeTable(detail) }) };
+  };
+}
+
+/** The table named at `pos`, described as the pointer rests on it. */
+function describeAt(bridge: Bridge) {
+  return hoverTooltip(describeSource(bridge));
+}
+
+/** A table dropped from the explorer, written at the drop as a SELECT of its columns, or an INSERT with Shift. */
+function dropTable(bridge: Bridge): Extension {
+  return EditorView.domEventHandlers({
+    drop(event, view) {
+      const data = event.dataTransfer?.getData(TABLE_DRAG);
+      if (data === undefined || data === "") {
+        return false;
+      }
+      event.preventDefault();
+      const { schema, name } = JSON.parse(data) as { schema: string; name: string };
+      const at = view.posAtCoords({ x: event.clientX, y: event.clientY }) ?? view.state.selection.main.head;
+      const insert = event.shiftKey;
+      void tableDetail(bridge, schema, name).then((detail) => {
+        if (detail !== null) {
+          view.dispatch({
+            changes: {
+              from: at,
+              insert: writtenFor(detail, insert, new Set(bridge.store.current().reservedWords), defaultSchema(bridge)),
+            },
+          });
+        }
+      });
+      return true;
+    },
+  });
+}
+
+/** A SELECT of `detail`'s columns, or an INSERT of them, its name qualified unless of the session's schema. */
+export function writtenFor(
+  detail: TableDetail,
+  insert: boolean,
+  reserved: ReadonlySet<string>,
+  schema: string | null,
+): string {
+  const name =
+    detail.schema === schema
+      ? sqlName(detail.name, reserved)
+      : `${sqlName(detail.schema, reserved)}.${sqlName(detail.name, reserved)}`;
+  const names = detail.columns.map((c) => sqlName(c.name, reserved));
+  if (insert) {
+    return `INSERT INTO ${name} (${names.join(", ")})\nVALUES (${names.map(() => "?").join(", ")})`;
+  }
+  return `SELECT ${names.join(", ")}\nFROM ${name}`;
+}
+
+/** The compartment of the language, given the catalog again as it changes. */
+export const languageCompartment = new Compartment();
+
+/** The language, its completion of the catalog as `bridge` reads it now. */
+export function language(bridge: Bridge): Extension {
+  const now = bridge.store.current();
+  const schema = defaultSchema(bridge);
+  return sql({
+    dialect: turborelDialect(now.reservedWords),
+    schema: namespace(bridge),
+    ...(schema === null ? {} : { defaultSchema: sqlName(schema, new Set(now.reservedWords)) }),
+    upperCaseKeywords: true,
+  });
+}
+
+/** Every extension of a worksheet's editor, `changed` told of each change of its text. */
+export function editorExtensions(bridge: Bridge, changed: (text: string) => void): Extension {
+  return [
+    lineNumbers(),
+    highlightActiveLineGutter(),
+    highlightSpecialChars(),
+    history(),
+    foldGutter(),
+    drawSelection(),
+    dropCursor(),
+    EditorState.allowMultipleSelections.of(true),
+    indentOnInput(),
+    syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+    bracketMatching(),
+    closeBrackets(),
+    autocompletion(),
+    rectangularSelection(),
+    crosshairCursor(),
+    highlightActiveLine(),
+    highlightSelectionMatches(),
+    keymap.of([
+      ...closeBracketsKeymap,
+      ...defaultKeymap,
+      ...searchKeymap,
+      ...historyKeymap,
+      ...foldKeymap,
+      ...completionKeymap,
+    ]),
+    languageCompartment.of(language(bridge)),
+    EditorState.languageData.of(() => [{ autocomplete: snippets }, { autocomplete: columns(bridge) }]),
+    markerPlugin,
+    worksheetFields(),
+    describeAt(bridge),
+    parameterHints(bridge),
+    dropTable(bridge),
+    EditorView.lineWrapping,
+    EditorView.updateListener.of((update) => {
+      if (update.docChanged) {
+        changed(update.state.doc.toString());
+      }
+    }),
+  ];
+}

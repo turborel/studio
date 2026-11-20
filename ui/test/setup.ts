@@ -35,7 +35,15 @@ class NoResizeObserver implements ResizeObserver {
   }
 }
 
+/** No boxes: jsdom lays nothing out, so a range has none, as the editor asks. */
+function noRects(): DOMRectList {
+  const rects: DOMRect[] = [];
+  return Object.assign(rects, { item: () => null });
+}
+
 window.matchMedia = mediaQueryList;
+Range.prototype.getClientRects = noRects;
+Range.prototype.getBoundingClientRect = () => new DOMRect();
 globalThis.ResizeObserver = NoResizeObserver;
 
 afterEach(async () => {

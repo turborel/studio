@@ -16,6 +16,10 @@ so a crash leaves the old file or the new. None holds a password.
 | `connections.json` | the configuration | the saved connections |
 | `settings.json` | the configuration | the settings ([Appendix B](b-settings.md)) |
 | `layout.json` | the configuration | the dock's layout |
+| `worksheets.json` | the configuration | the worksheets, with their text |
+| `history.json` | the configuration | the history of what ran |
+| `queries.json` | the configuration | the favourite queries |
+| `projects.json` | the configuration | the project folders |
 | `turborel-studio-*` | the cache, `results` | a result's pages, sealed, while it is open |
 
 The configuration's folder is, on macOS,
@@ -77,9 +81,17 @@ it may be left out, for none.
   "editorFontFamily": "",
   "editorFontPoints": 13,
   "keyBindings": { "zoom.in": "Mod+Shift+=" },
-  "reconnectOnWake": true
+  "reconnectOnWake": true,
+  "toolbarLabels": false,
+  "historyKept": true,
+  "formatKeyWords": "upper",
+  "formatIndent": 4,
+  "formatLineWidth": 100,
+  "notifyAfterSeconds": 10
 }
 ```
+
+A setting the file lacks is its default.
 
 ## layout.json
 
@@ -95,3 +107,78 @@ gives it:
 
 It is at most 1 MiB. A layout of panels this release has not is laid
 out afresh.
+
+## worksheets.json
+
+The worksheets, in their tabs' order, each with its text, kept a moment
+after it last changes ([Worksheets](../user/05-worksheets.md#keeping-worksheets)):
+
+```json
+{
+  "format": 1,
+  "worksheets": [
+    {
+      "id": "6f1c0e2a9b3d4c5e8f7a6b5c4d3e2f11",
+      "title": "report.sql",
+      "text": "SELECT * FROM STAFF",
+      "connection": "6f1c0e2a9b3d4c5e8f7a6b5c4d3e2f10",
+      "pinned": false,
+      "path": "/home/ann/sql/report.sql",
+      "modified": false
+    }
+  ]
+}
+```
+
+`connection` is the saved connection's identifier, or null; `path` the
+file the worksheet was saved to or opened from, or null; `modified`
+whether its text has changed since. At most 200 worksheets are kept,
+each text at most 16 MiB.
+
+## history.json
+
+The statements run, the latest first, at most 1000, each at most 64 KiB
+([Worksheets](../user/05-worksheets.md#the-history)):
+
+```json
+{
+  "format": 1,
+  "entries": [
+    {
+      "sql": "SELECT * FROM STAFF",
+      "at": 1795000000000,
+      "connection": "Orders",
+      "saved": "6f1c0e2a9b3d4c5e8f7a6b5c4d3e2f10",
+      "millis": 4,
+      "rows": 3,
+      "sqlstate": "00000"
+    }
+  ]
+}
+```
+
+`at` is when it ran, in milliseconds since 1970-01-01 UTC; `rows` the
+rows it gave or changed, or null. A statement that changes who may do
+what is never kept.
+
+## queries.json
+
+The favourite queries, at most 1000:
+
+```json
+{
+  "format": 1,
+  "queries": [{ "id": "q1", "name": "All staff", "sql": "SELECT * FROM STAFF" }]
+}
+```
+
+## projects.json
+
+The project folders, at most 100:
+
+```json
+{
+  "format": 1,
+  "folders": ["/home/ann/sql"]
+}
+```

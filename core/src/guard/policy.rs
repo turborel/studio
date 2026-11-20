@@ -60,6 +60,12 @@ impl Guards {
     ///
     /// As `judge`'s.
     pub fn judge_classified(&self, statements: &[Classified]) -> Result<Option<Confirm>> {
+        if let Some(connects) = statements.iter().find(|s| s.connects) {
+            return Err(StudioError::misuse(format!(
+                "[DESIGN] a connection of Studio's is bound to its own session: open another connection rather than {}",
+                connects.text
+            )));
+        }
         if self.read_only
             && let Some(refused) = statements.iter().find(|s| s.class.writes() || s.read_write)
         {
@@ -83,6 +89,17 @@ mod tests {
     use super::{Guards, READ_ONLY_REFUSAL};
     use crate::guard::classify::Class;
     use crate::saved::Environment;
+
+    /// [STUDIO Running statements]: CONNECT, SET CONNECTION and DISCONNECT
+    /// are refused, as each connection is bound to its own session.
+    #[test]
+    fn connection_statements_are_refused() {
+        let guards = Guards::default();
+        for sql in ["CONNECT TO 'db'", "SET CONNECTION 'other'", "DISCONNECT CURRENT"] {
+            assert_eq!(guards.judge(sql).unwrap_err().sqlstate, "TB910", "{sql}");
+        }
+        assert!(guards.judge("END CONNECTION 7").is_ok());
+    }
 
     /// [RULE] R-SEC-8: a statement that destroys asks first on any
     /// connection, and one that does not runs as it is.

@@ -62,6 +62,9 @@ const CLASSES: &[(&str, Class)] = &[
     ("EXPLAIN DELETE FROM STAFF", Class::Unclassified),
     ("EXPLAIN ANALYZE", Class::Unclassified),
     ("EXPLAIN", Class::Unclassified),
+    ("SELECT NAME FROM STAFF WHERE ID = ?", Class::Read),
+    ("INSERT INTO STAFF (ID, NAME) VALUES (?, ?)", Class::WriteRows),
+    ("DELETE FROM STAFF WHERE ID = ?", Class::WriteRows),
 ];
 
 /// [RULE] R-SEC-8 [DESIGN] D29 [DOC sql/statements/explain.md EXPLAIN ANALYZE]: each

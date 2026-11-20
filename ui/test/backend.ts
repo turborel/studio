@@ -40,6 +40,14 @@ const DEFAULTS: Record<string, Handler> = {
   app_info: () => ({ version: "0.0.0", turborelCommit: "3df14c1621d8063f12452a6c189017e34b8e9fd9" }),
   open_connection: () => ({ connection: 1, session: SESSION }),
   open_saved_connection: () => ({ connection: 1, session: SESSION }),
+  sql_words: () => ["SELECT", "FROM", "WHERE", "VALUE", "INTEGER"],
+  list_queries: () => [],
+  project_folders: () => [],
+  load_worksheets: () => [],
+  split_script: () => [],
+  search_history: () => [],
+  record_history: () => true,
+  judge_script: () => null,
 };
 
 /** Mocks the backend with `handlers` over the defaults, and gives the calls made. */

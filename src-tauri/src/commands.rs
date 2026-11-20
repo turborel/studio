@@ -8,6 +8,7 @@ pub(crate) mod connections;
 mod files;
 mod preferences;
 mod saved;
+mod worksheet;
 
 use tauri::Runtime;
 use tauri::ipc::Invoke;
@@ -21,6 +22,7 @@ fn app_info() -> AppInfo {
 }
 
 /// The handler of every command, for the application's builder.
+#[expect(clippy::too_many_lines, reason = "R-SIZE-1 deviation: generate_handler! takes every command in one list, a line each")]
 pub(crate) fn handler<R: Runtime>() -> impl Fn(Invoke<R>) -> bool + Send + Sync + 'static {
     tauri::generate_handler![
         app_info,
@@ -54,6 +56,26 @@ pub(crate) fn handler<R: Runtime>() -> impl Fn(Invoke<R>) -> bool + Send + Sync 
         catalog::catalog_dependencies,
         catalog::catalog_search,
         catalog::catalog_definition,
-        files::save_text_file
+        files::save_text_file,
+        files::notify_finished,
+        worksheet::sql_words,
+        worksheet::split_script,
+        worksheet::judge_script,
+        worksheet::statement_parameters,
+        worksheet::search_history,
+        worksheet::record_history,
+        worksheet::clear_history,
+        worksheet::load_worksheets,
+        worksheet::keep_worksheets,
+        worksheet::list_queries,
+        worksheet::keep_query,
+        worksheet::forget_query,
+        worksheet::open_sql_file,
+        worksheet::read_sql_file,
+        worksheet::write_sql_file,
+        worksheet::project_folders,
+        worksheet::add_project_folder,
+        worksheet::remove_project_folder,
+        worksheet::project_files
     ]
 }

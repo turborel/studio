@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-open-sql-file"
+description = "Enables the open_sql_file command without any pre-configured scope."
+commands.allow = ["open_sql_file"]
+
+[[permission]]
+identifier = "deny-open-sql-file"
+description = "Denies the open_sql_file command without any pre-configured scope."
+commands.deny = ["open_sql_file"]

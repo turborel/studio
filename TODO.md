@@ -9,41 +9,8 @@ Code never cites this file (R-DOC-5).
 
 ## M4 SQL worksheet
 
-- From the explorer: a table dragged into the editor writes a SELECT or
-  INSERT of its columns; Script as, to a worksheet; a script of the
-  objects chosen in the tree.
-
-- CodeMirror 6, its Turborel SQL mode from Turborel's key words, and
-  completion from the catalog.
-- Running the statement at the cursor, the selection or the script;
-  cancel; history (S-STMT-1 to S-STMT-12, S-CLIENT-15, S-IMPL-2 to
-  S-IMPL-4, S-LIMIT-4).
-- Notices and conditions in the messages pane, with each failure's
-  diagnostics, the rows changed, values generated and the server's time;
-  transaction state, commit and rollback; destructive statements
-  confirmed (S-CLIENT-17, S-CLIENT-19, S-CLIENT-20, S-CAP-1, S-CAP-17,
-  S-SEC-6).
-- A plan view of EXPLAIN.
-- The confirmation a statement's guards ask for, shown before it runs:
-  production's of a write, and every connection's of a statement that
-  destroys or is not classified (S-SEC-4, S-SEC-6).
-- Worksheet tabs pinned, coloured by their connection; a script run
-  against each connection of a folder, with results per connection.
-- Snippets with placeholders; a SQL formatter; comment, change case,
-  multiple cursors, find and replace by regex, bookmarks, a split
-  editor, folding and an outline of the script's statements.
-- Go to an object's definition, describe it on hover, and parameter
-  hints of routines.
-- Bind variables, `?` and named, asked for and remembered; script
-  variables, substituted before running and shown.
-- Worksheets autosaved and restored after a crash; saved as `.sql` files
-  in project folders.
-- History searchable by time, connection, duration and rows, run again;
-  favourite queries.
-- A notification when a long statement ends while the window is in the
-  background.
 - Waiting on the server, shown as unavailable until Turborel has it: a
-  debugger of SQL routines.
+  debugger of SQL routines, with breakpoints and stepping.
 
 ## M5 Results grid
 
@@ -53,6 +20,8 @@ Code never cites this file (R-DOC-5).
 - Viewers of large objects, JSON and XML; several results per script
   (S-CLIENT-21, S-LIMIT-3).
 - A result tab pinned, so the next run opens one beside it.
+- A query's cursor under autocommit, its transaction ended as its last
+  row is fetched or it is closed (S-CAP-17).
 - Results as a grid, as text, or to a file; columns frozen; one row as a
   form.
 - The status bar's count, sum, average, least and greatest of the cells

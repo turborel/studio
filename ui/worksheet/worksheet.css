@@ -1,0 +1,246 @@
+/* The worksheet: its toolbar, editor, panes, plan and dialogs (RULES.md D36). */
+
+.worksheet {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.worksheet-bar,
+.variables {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+.worksheet-body {
+  display: flex;
+  min-height: 0;
+  flex-grow: 0;
+  flex-shrink: 0;
+}
+
+.editors {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.editor {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.editors-split .editor + .editor {
+  border-top: 2px solid var(--border);
+}
+
+.editor .cm-editor {
+  height: 100%;
+  background: var(--background);
+  color: var(--text);
+}
+
+.editor .cm-scroller {
+  font-family: var(--editor-font, ui-monospace, Menlo, Consolas, monospace);
+  font-size: var(--editor-size, 13pt);
+}
+
+.cm-failure {
+  text-decoration: underline wavy var(--danger);
+}
+
+.cm-parameter {
+  color: var(--accent-text);
+  font-weight: 600;
+}
+
+.cm-script-variable {
+  background: var(--selection);
+  color: var(--on-selection);
+  border-radius: 2px;
+}
+
+.cm-bookmark {
+  color: var(--accent-text);
+}
+
+.cm-describe,
+.cm-hint {
+  padding: 4px 8px;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 12px;
+  background: var(--surface-raised);
+  color: var(--text);
+}
+
+.outline {
+  width: 220px;
+  overflow: auto;
+  border-right: 1px solid var(--border);
+  font-size: 12px;
+}
+
+.outline ol {
+  margin: 0;
+  padding-left: 24px;
+}
+
+.worksheet-divider {
+  height: 5px;
+  cursor: row-resize;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+.worksheet-divider:focus-visible {
+  outline: 2px solid var(--focus);
+}
+
+.panes {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.pane {
+  flex: 1;
+  overflow: auto;
+  padding: 4px 6px;
+}
+
+.result-table {
+  border-collapse: collapse;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 12px;
+}
+
+.result-table th,
+.result-table td {
+  border: 1px solid var(--border);
+  padding: 2px 6px;
+  text-align: left;
+  white-space: pre;
+}
+
+.result-table td.null {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.result-type {
+  display: block;
+  font-weight: normal;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.result-bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.messages {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 12px;
+}
+
+.message-error {
+  color: var(--danger);
+}
+
+.message-warning {
+  color: var(--accent-text);
+}
+
+.message-notice {
+  color: var(--text-muted);
+}
+
+.plan-tree,
+.plan-tree ul {
+  list-style: none;
+  margin: 0;
+  padding-left: 16px;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 12px;
+}
+
+.plan-figures {
+  margin-left: 8px;
+  color: var(--text-muted);
+}
+
+.plan-misestimate {
+  background: var(--alert);
+  color: var(--on-alert);
+}
+
+.plan-misestimate .plan-figures {
+  color: var(--on-alert);
+}
+
+.plan-full-scan strong {
+  text-decoration: underline;
+}
+
+.plan-never {
+  color: var(--text-muted);
+}
+
+.plan-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.guard-production,
+.guard-destroys {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+button.danger {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.value-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 4px 0;
+}
+
+.tree-row.tree-chosen {
+  outline: 1px dashed var(--accent-text);
+}
+
+.explorer-section summary {
+  font-weight: 600;
+  margin: 4px 0;
+}
+
+.library {
+  list-style: none;
+  margin: 2px 0;
+  padding: 0;
+}
+
+.library li {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}

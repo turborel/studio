@@ -10,6 +10,9 @@ import type { Settings } from "../ipc/preferences";
 import { DEFAULT_SETTINGS } from "../ipc/preferences";
 import type { KeychainStatus, SavedConnection, SavedList } from "../ipc/saved";
 import type { CatalogState, Selected } from "../explorer/catalogState";
+import type { Confirm } from "../ipc/connections";
+import type { FavouriteQuery } from "../ipc/worksheet";
+import type { WorksheetState } from "./worksheets";
 
 /** A connection open in this window. */
 export interface OpenConnection {
@@ -28,7 +31,25 @@ export type Dialog =
   | { readonly kind: "palette" }
   | { readonly kind: "settings" }
   | { readonly kind: "about" }
-  | { readonly kind: "shortcuts" };
+  | { readonly kind: "shortcuts" }
+  | { readonly kind: "guard"; readonly confirm: Confirm; readonly answer: (run: boolean) => void }
+  | {
+      readonly kind: "values";
+      readonly names: readonly string[];
+      readonly types: readonly string[];
+      readonly remembered: Readonly<Record<string, string | null>>;
+      readonly variables: readonly string[];
+      readonly answer: (given: Given | null) => void;
+    }
+  | { readonly kind: "history" }
+  | { readonly kind: "folders" }
+  | { readonly kind: "favourite"; readonly sql: string };
+
+/** The values a statement's markers are given: its parameters' and its script variables'. */
+export interface Given {
+  readonly binds: Readonly<Record<string, string | null>>;
+  readonly variables: Readonly<Record<string, string>>;
+}
 
 /** Everything the front end shows. */
 export interface StudioState {
@@ -41,6 +62,13 @@ export interface StudioState {
   readonly error: StudioError | null;
   readonly catalogs: Readonly<Record<number, CatalogState>>;
   readonly selected: { readonly connection: number; readonly object: Selected } | null;
+  readonly worksheets: readonly WorksheetState[];
+  readonly activeWorksheet: string | null;
+  readonly closedWorksheets: readonly WorksheetState[];
+  /** Turborel's reserved words, as its lexer reads them. */
+  readonly reservedWords: readonly string[];
+  readonly queries: readonly FavouriteQuery[];
+  readonly projects: readonly string[];
 }
 
 /** The state before anything is loaded. */
@@ -54,6 +82,12 @@ export const INITIAL: StudioState = {
   error: null,
   catalogs: {},
   selected: null,
+  worksheets: [],
+  activeWorksheet: null,
+  closedWorksheets: [],
+  reservedWords: [],
+  queries: [],
+  projects: [],
 };
 
 /** The store of a window: its state, and who reads it. */

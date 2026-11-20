@@ -285,6 +285,17 @@ function RoutineDetails({ connection, schema, specific }: { connection: number; 
           () => <Table label="Privileges" headings={PRIVILEGE_HEADINGS} rows={privilegeRows(detail.privileges)} />,
         ],
         ["Definition", () => <Definition connection={connection} of={{ kind: "routine", schema, specific }} />],
+        [
+          "Debug",
+          () => (
+            <>
+              <button type="button" disabled>
+                Debug
+              </button>
+              <p className="hint">{NO_DEBUGGER}</p>
+            </>
+          ),
+        ],
       ]}
     />
   );
@@ -314,6 +325,10 @@ function TypeDetails({ connection, schema, name }: { connection: number; schema:
     </>
   );
 }
+
+/** Why a routine cannot be debugged yet. */
+export const NO_DEBUGGER =
+  "Unavailable: Turborel does not yet give a debugger of SQL routines, with breakpoints and stepping.";
 
 /** The icon of each kind of object selected. */
 const KIND_ICONS: Readonly<Record<Selected["kind"], IconName>> = {

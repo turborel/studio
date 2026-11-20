@@ -175,9 +175,17 @@ export function cancelStatement(connection: number): Promise<null> {
   return invoke<null>("cancel_statement", { connection });
 }
 
-/** Runs a statement through its connection's guards: one they ask about runs only once `confirmed`. */
-export function runStatement(connection: number, sql: string, confirmed: boolean): Promise<RunAnswer> {
-  return invoke<RunAnswer>("run_statement", { connection, sql, confirmed });
+/**
+ * Runs a statement through its connection's guards: one they ask about runs only once `confirmed`;
+ * its dynamic parameters given `values`, as text or null, if it has any.
+ */
+export function runStatement(
+  connection: number,
+  sql: string,
+  confirmed: boolean,
+  values: readonly (string | null)[] = [],
+): Promise<RunAnswer> {
+  return invoke<RunAnswer>("run_statement", { connection, sql, confirmed, values });
 }
 
 /** At most `count` rows of a result, from row `from`. */

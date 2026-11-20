@@ -15,6 +15,7 @@ pub mod secret;
 pub mod secrets;
 pub mod store;
 pub mod version;
+pub mod worksheet;
 
 #[cfg(test)]
 mod testing;

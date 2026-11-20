@@ -7,6 +7,22 @@ import { ZOOM } from "../ipc/preferences";
 import { cancel, changeSettings, disconnect, endTransaction, reconnectOpen, show } from "../state/actions";
 import type { IconName } from "../icons/Icon";
 import type { Store } from "../state/store";
+import { openWorksheet } from "../state/worksheets";
+import {
+  EDITOR_ACTS,
+  explainCurrent,
+  favouriteCurrent,
+  formatCurrent,
+  goToDefinition,
+  hasWorksheet,
+  openFile,
+  runCurrent,
+  runScript,
+  saveCurrent,
+  stopCurrent,
+  TAB_ACTS,
+  toggleAutocommit,
+} from "../worksheet/commands";
 import type { ThemeChoice } from "../theme/theme";
 
 /** What a command is run with: the window's store, and its dock's layout reset. */
@@ -80,6 +96,88 @@ function zoom(id: string, title: string, step: number, key: string): Command {
   };
 }
 
+/** Whether a worksheet is active. */
+const worksheet = (context: CommandContext): boolean => hasWorksheet(context.store);
+
+/** The icon of each of the worksheet's commands. */
+const WORKSHEET_ICONS: Readonly<Record<string, IconName>> = {
+  "worksheet.run": "run",
+  "worksheet.runScript": "runScript",
+  "worksheet.runOnFolder": "folder",
+  "worksheet.explain": "explain",
+  "worksheet.explainAnalyze": "explainAnalyze",
+  "worksheet.format": "format",
+  "worksheet.comment": "comment",
+  "worksheet.upperCase": "letterCase",
+  "worksheet.lowerCase": "letterCase",
+  "worksheet.find": "find",
+  "worksheet.bookmark": "bookmark",
+  "worksheet.nextBookmark": "bookmark",
+  "worksheet.previousBookmark": "bookmark",
+  "worksheet.definition": "definition",
+  "worksheet.describe": "details",
+  "worksheet.split": "split",
+  "worksheet.outline": "outline",
+  "worksheet.favourite": "favourite",
+  "worksheet.autocommit": "autocommit",
+  "worksheet.save": "save",
+  "worksheet.saveAs": "saveAs",
+  "worksheet.pin": "pin",
+  "worksheet.close": "close",
+  "worksheet.closeOthers": "closeOthers",
+};
+
+/** A command of the Worksheet menu, run on the active worksheet. */
+function onWorksheet(
+  id: string,
+  title: string,
+  key: string | undefined,
+  run: (store: Store) => unknown,
+  category = "Worksheet",
+): Command {
+  return {
+    id,
+    title,
+    category,
+    icon: WORKSHEET_ICONS[id] ?? "worksheet",
+    ...(key === undefined ? {} : { key }),
+    enabled: worksheet,
+    run: async ({ store }) => {
+      await run(store);
+    },
+  };
+}
+
+/** The worksheet's commands, in the order the palette lists them. */
+const WORKSHEET_COMMANDS: readonly Command[] = [
+  onWorksheet("worksheet.run", "Run Statement", "Mod+Enter", runCurrent),
+  onWorksheet("worksheet.runScript", "Run Script", "Mod+Shift+Enter", runScript),
+  onWorksheet("worksheet.runOnFolder", "Run Script on a Folder's Connections…", undefined, (store) => {
+    show(store, { kind: "folders" });
+  }),
+  onWorksheet("worksheet.explain", "Explain", "Mod+E", (store) => explainCurrent(store, false)),
+  onWorksheet("worksheet.explainAnalyze", "Explain Analyze", "Mod+Shift+E", (store) => explainCurrent(store, true)),
+  onWorksheet("worksheet.format", "Format", "Mod+Shift+F", formatCurrent),
+  onWorksheet("worksheet.comment", "Toggle Comment", "Mod+/", EDITOR_ACTS.comment),
+  onWorksheet("worksheet.upperCase", "Upper Case", "Mod+Shift+U", EDITOR_ACTS.upper),
+  onWorksheet("worksheet.lowerCase", "Lower Case", "Mod+Shift+L", EDITOR_ACTS.lower),
+  onWorksheet("worksheet.find", "Find and Replace…", "Mod+F", EDITOR_ACTS.find),
+  onWorksheet("worksheet.bookmark", "Toggle Bookmark", "Mod+F2", EDITOR_ACTS.bookmark),
+  onWorksheet("worksheet.nextBookmark", "Next Bookmark", "F2", EDITOR_ACTS.nextBookmark),
+  onWorksheet("worksheet.previousBookmark", "Previous Bookmark", "Shift+F2", EDITOR_ACTS.previousBookmark),
+  onWorksheet("worksheet.definition", "Go to Definition", "F12", goToDefinition),
+  onWorksheet("worksheet.describe", "Describe", "Mod+I", EDITOR_ACTS.describe),
+  onWorksheet("worksheet.split", "Split Editor", undefined, TAB_ACTS.split),
+  onWorksheet("worksheet.outline", "Outline", undefined, TAB_ACTS.outline),
+  onWorksheet("worksheet.favourite", "Add to Favourite Queries…", undefined, favouriteCurrent),
+  onWorksheet("worksheet.autocommit", "Autocommit", undefined, toggleAutocommit),
+  onWorksheet("worksheet.save", "Save", "Mod+S", (store) => saveCurrent(store, false), "File"),
+  onWorksheet("worksheet.saveAs", "Save As…", "Mod+Shift+S", (store) => saveCurrent(store, true), "File"),
+  onWorksheet("worksheet.pin", "Pin Tab", undefined, TAB_ACTS.pin),
+  onWorksheet("worksheet.close", "Close Worksheet", "Mod+Alt+W", TAB_ACTS.close),
+  onWorksheet("worksheet.closeOthers", "Close Other Worksheets", undefined, TAB_ACTS.closeOthers),
+];
+
 /** Every command, in the order the palette lists them. */
 export const COMMANDS: readonly Command[] = [
   {
@@ -91,6 +189,48 @@ export const COMMANDS: readonly Command[] = [
     enabled: always,
     run: ({ store }) => {
       show(store, { kind: "connection", editing: null });
+    },
+  },
+  {
+    id: "worksheet.new",
+    icon: "newWorksheet",
+    title: "New Worksheet",
+    category: "File",
+    key: "Mod+T",
+    enabled: always,
+    run: ({ store }) => {
+      openWorksheet(store);
+    },
+  },
+  {
+    id: "file.open",
+    icon: "open",
+    title: "Open File…",
+    category: "File",
+    key: "Mod+O",
+    enabled: always,
+    run: ({ store }) => openFile(store),
+  },
+  {
+    id: "worksheet.reopen",
+    icon: "reopen",
+    title: "Reopen Closed Worksheet",
+    category: "File",
+    key: "Mod+Shift+T",
+    enabled: ({ store }) => store.current().closedWorksheets.length > 0,
+    run: ({ store }) => {
+      TAB_ACTS.reopen(store);
+    },
+  },
+  {
+    id: "history.open",
+    icon: "history",
+    title: "History…",
+    category: "File",
+    key: "Mod+Shift+H",
+    enabled: always,
+    run: ({ store }) => {
+      show(store, { kind: "history" });
     },
   },
   {
@@ -115,8 +255,16 @@ export const COMMANDS: readonly Command[] = [
     title: "Cancel Statement",
     category: "Connection",
     key: "Mod+.",
-    enabled: connected,
-    run: onActive(cancel),
+    enabled: (context) => connected(context) || hasWorksheet(context.store),
+    run: async (context) => {
+      const { store } = context;
+      const sheet = store.current().worksheets.find((w) => w.id === store.current().activeWorksheet);
+      if (sheet?.running === true) {
+        await stopCurrent(store);
+      } else {
+        await onActive(cancel)(context);
+      }
+    },
   },
   {
     id: "transaction.commit",
@@ -134,6 +282,7 @@ export const COMMANDS: readonly Command[] = [
     enabled: connected,
     run: onActive((store, id) => endTransaction(store, id, "ROLLBACK")),
   },
+  ...WORKSHEET_COMMANDS,
   {
     id: "palette.open",
     icon: "palette",

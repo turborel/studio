@@ -3,7 +3,15 @@
  * reads what the tree opens, a list or an object at a time, and keeps it
  * in the window's store; a failure is kept as the error shown.
  */
-import { catalogObjects, catalogSchemas, catalogSearch, catalogSecurity, catalogTable } from "../ipc/catalog";
+import {
+  catalogDefinition,
+  catalogObjects,
+  catalogSchemas,
+  catalogSearch,
+  catalogSecurity,
+  catalogTable,
+  type DefinitionOf,
+} from "../ipc/catalog";
 import { EMPTY_CATALOG, type CatalogState, type Selected, tableKey } from "../explorer/catalogState";
 import { nodeId, SEP } from "../explorer/tree";
 import { isStudioError } from "./actions";
@@ -106,4 +114,55 @@ export async function select(store: Store, id: number, object: Selected): Promis
   if (object.kind === "table") {
     await loadTable(store, id, object.schema, object.name);
   }
+}
+
+/** Chooses `object` of connection `id` for a script of the objects chosen, or lets it go. */
+export function toggleChosen(store: Store, id: number, object: Selected): void {
+  const key = JSON.stringify(object);
+  changeCatalog(store, id, (c) => ({
+    ...c,
+    chosen: c.chosen.some((o) => JSON.stringify(o) === key)
+      ? c.chosen.filter((o) => JSON.stringify(o) !== key)
+      : [...c.chosen, object],
+  }));
+}
+
+/** What a script of `object` is asked of, if it has a definition. */
+export function definitionOf(object: Selected): DefinitionOf | null {
+  switch (object.kind) {
+    case "table":
+      return { kind: "table", schema: object.schema, name: object.name, script: "create" };
+    case "routine":
+      return { kind: "routine", schema: object.schema, specific: object.specific };
+    case "sequence":
+    case "domain":
+    case "type":
+      return { kind: object.kind, schema: object.schema, name: object.name };
+    case "schema":
+      return { kind: "schema", schema: object.schema };
+    case "user":
+    case "role":
+      return null;
+  }
+}
+
+/** The definitions of the objects chosen on connection `id`, in the order chosen, as one script; the choice let go. */
+export async function scriptChosen(store: Store, id: number): Promise<string | null> {
+  const chosen = store.current().catalogs[id]?.chosen ?? [];
+  const parts: string[] = [];
+  try {
+    for (const object of chosen) {
+      const of = definitionOf(object);
+      if (of !== null) {
+        parts.push(await catalogDefinition(id, of));
+      }
+    }
+  } catch (thrown: unknown) {
+    if (isStudioError(thrown)) {
+      store.update((now) => ({ ...now, error: thrown }));
+    }
+    return null;
+  }
+  changeCatalog(store, id, (c) => ({ ...c, chosen: [] }));
+  return parts.join("\n");
 }

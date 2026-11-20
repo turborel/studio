@@ -15,7 +15,15 @@ export interface Settings {
   readonly keyBindings: Readonly<Record<string, string>>;
   readonly reconnectOnWake: boolean;
   readonly toolbarLabels: boolean;
+  readonly historyKept: boolean;
+  readonly formatKeyWords: KeyWordCase;
+  readonly formatIndent: number;
+  readonly formatLineWidth: number;
+  readonly notifyAfterSeconds: number;
 }
+
+/** How the formatter writes key words. */
+export type KeyWordCase = "upper" | "lower" | "keep";
 
 /** The settings Studio starts with, as the backend's defaults are. */
 export const DEFAULT_SETTINGS: Settings = {
@@ -27,7 +35,18 @@ export const DEFAULT_SETTINGS: Settings = {
   keyBindings: {},
   reconnectOnWake: true,
   toolbarLabels: false,
+  historyKept: true,
+  formatKeyWords: "upper",
+  formatIndent: 4,
+  formatLineWidth: 100,
+  notifyAfterSeconds: 10,
 };
+
+/** The formatter's bounds: indentation in spaces, and line width in characters. */
+export const FORMAT_BOUNDS = { indent: [1, 8], lineWidth: [40, 240] } as const;
+
+/** How long a run lasts, in seconds, before its end is notified: least (never) and most. */
+export const NOTIFY_BOUNDS = [0, 3600] as const;
 
 /** The window's zoom, in percent: least, step and most. */
 export const ZOOM = { least: 50, step: 10, most: 300 } as const;

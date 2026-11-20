@@ -135,6 +135,8 @@ const TESTS: &[(&str, Test)] = &[
     ("warnings_come_with_the_outcome", statements::warnings_come_with_the_outcome),
     ("a_statement_not_preparable_runs_directly", statements::a_statement_not_preparable_runs_directly),
     ("a_cursor_fails_or_closes_early", statements::a_cursor_fails_or_closes_early),
+    ("parameters_are_given_values_as_text", statements::parameters_are_given_values_as_text),
+    ("a_plan_is_explained_and_analyzed", statements::a_plan_is_explained_and_analyzed),
     ("a_running_statement_is_cancelled", session::a_running_statement_is_cancelled),
     ("the_transaction_is_followed", session::the_transaction_is_followed),
     ("a_lost_connection_is_told_and_reconnected", session::a_lost_connection_is_told_and_reconnected),

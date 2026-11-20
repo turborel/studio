@@ -71,10 +71,17 @@ pub(crate) async fn cancel_statement(studio: State<'_, Studio>, connection: Conn
 }
 
 /// Runs a statement through its connection's guards: one they ask about
-/// runs only once `confirmed` (RULES.md D29).
+/// runs only once `confirmed` (RULES.md D29); its dynamic parameters given
+/// `values`, as text or null, if it has any (D36).
 #[tauri::command]
-pub(crate) async fn run_statement(studio: State<'_, Studio>, connection: ConnectionId, sql: String, confirmed: bool) -> Result<RunAnswer> {
-    blocking(&studio, move |m| m.run(connection, &sql, confirmed)).await
+pub(crate) async fn run_statement(
+    studio: State<'_, Studio>,
+    connection: ConnectionId,
+    sql: String,
+    confirmed: bool,
+    values: Option<Vec<Option<String>>>,
+) -> Result<RunAnswer> {
+    blocking(&studio, move |m| m.run_with(connection, (&sql, &values.unwrap_or_default()), confirmed)).await
 }
 
 /// Rows of a result.

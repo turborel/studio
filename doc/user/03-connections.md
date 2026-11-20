@@ -153,7 +153,8 @@ without WHERE; so does one Studio cannot classify, as dynamic SQL or a
 CALL, which may hide one. Studio classifies each statement by Turborel's
 own parser, and a script by its strictest statement. EXPLAIN, and
 EXPLAIN ANALYZE, which runs its query, take only a query, and are
-classified as it is.
+classified as it is. A statement of dynamic parameters, `?`, is classified as
+the server reads it prepared.
 
 A connection set **Read-only** begins each transaction READ ONLY, so the
 server refuses a change; and Studio refuses, before sending it, a

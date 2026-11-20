@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-keep-worksheets"
+description = "Enables the keep_worksheets command without any pre-configured scope."
+commands.allow = ["keep_worksheets"]
+
+[[permission]]
+identifier = "deny-keep-worksheets"
+description = "Denies the keep_worksheets command without any pre-configured scope."
+commands.deny = ["keep_worksheets"]

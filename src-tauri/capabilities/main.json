@@ -37,6 +37,26 @@
     "allow-catalog-dependencies",
     "allow-catalog-search",
     "allow-catalog-definition",
-    "allow-save-text-file"
+    "allow-save-text-file",
+    "allow-notify-finished",
+    "allow-sql-words",
+    "allow-split-script",
+    "allow-judge-script",
+    "allow-statement-parameters",
+    "allow-search-history",
+    "allow-record-history",
+    "allow-clear-history",
+    "allow-load-worksheets",
+    "allow-keep-worksheets",
+    "allow-list-queries",
+    "allow-keep-query",
+    "allow-forget-query",
+    "allow-open-sql-file",
+    "allow-read-sql-file",
+    "allow-write-sql-file",
+    "allow-project-folders",
+    "allow-add-project-folder",
+    "allow-remove-project-folder",
+    "allow-project-files"
   ]
 }

@@ -63,6 +63,9 @@ pub struct Classified {
     /// Whether it makes the next transaction READ WRITE, which a read-only
     /// connection refuses.
     pub read_write: bool,
+    /// Whether it is CONNECT, SET CONNECTION or DISCONNECT, which Studio's
+    /// connections refuse: each is bound to its own session (S-IMPL-3).
+    pub connects: bool,
 }
 
 /// The statements of `script`, split as the server splits a request of
@@ -84,7 +87,8 @@ pub fn strictest(statements: &[Classified]) -> Class {
 /// is none of them.
 pub fn classify(text: &str) -> Classified {
     let text = text.trim().to_owned();
-    let unclassified = Classified { text: text.clone(), class: Class::Unclassified, destroys: None, floor: None, read_write: false };
+    let unclassified =
+        Classified { text: text.clone(), class: Class::Unclassified, destroys: None, floor: None, read_write: false, connects: false };
     // A comment the text ends in is ended, as the client ends one its
     // input cuts short ([DOC sql/01-lexical.md Comments]).
     let ended = format!("{text}\n");
@@ -92,22 +96,28 @@ pub fn classify(text: &str) -> Classified {
     if let Some(class) = explained(&text).or_else(|| query(&text)) {
         return Classified { class, ..unclassified };
     }
-    let Ok(statement) = Parser::with_extensions(&text, true).and_then(|mut p| p.sql_statement()) else {
+    let Some(statement) = PARSERS.iter().find_map(|parser| parser(&text).and_then(|mut p| p.sql_statement()).ok()) else {
         return unclassified;
     };
     let (class, destroys, floor) = of(&statement);
     let read_write = matches!(&statement, SqlStatement::SetTransaction(_)) && sets_read_write(&text);
-    Classified { class, destroys, floor, read_write, ..unclassified }
+    let connects = matches!(&statement, SqlStatement::Connection(_));
+    Classified { class, destroys, floor, read_write, connects, ..unclassified }
 }
 
 /// The class of `text` if it is a query: Read, or WriteRows if it holds a
 /// data change delta table, as FINAL TABLE (INSERT ...), which changes
 /// rows, and so is judged by its words.
 fn query(text: &str) -> Option<Class> {
-    let mut parser = Parser::with_extensions(text, true).ok()?;
-    parser.cursor_specification().ok()?;
+    PARSERS.iter().find_map(|parser| parser(text).and_then(|mut p| p.cursor_specification()).ok())?;
     Some(if changes_rows(text) { Class::WriteRows } else { Class::Read })
 }
+
+/// The parsers a statement is read by, in turn: as direct SQL, then as a
+/// statement prepared, whose dynamic parameters, `?`, a worksheet gives
+/// values ([DOC sql/statements/prepare.md DESCRIPTION]).
+const PARSERS: [fn(&str) -> turborel::error::Result<Parser>; 2] =
+    [|text| Parser::with_extensions(text, true), |text| Parser::for_prepare(text, true)];
 
 /// The class of `text` if it is `EXPLAIN [ ANALYZE ] <cursor
 /// specification>` ([DOC sql/statements/explain.md EXPLAIN ANALYZE]): its

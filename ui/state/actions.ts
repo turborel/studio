@@ -17,6 +17,7 @@ import {
   type StudioError,
 } from "../ipc/connections";
 import type { StudioEvent } from "../ipc/events";
+import { listQueries, projectFolders, sqlWords } from "../ipc/worksheet";
 import { loadSettings, saveSettings, type Settings } from "../ipc/preferences";
 import {
   deleteSavedConnection,
@@ -28,6 +29,7 @@ import {
   saveConnection,
 } from "../ipc/saved";
 import type { Dialog, OpenConnection, Store } from "./store";
+import { tell } from "./worksheets";
 
 /** Whether `thrown` is Studio's error, as the backend fails. */
 export function isStudioError(thrown: unknown): thrown is StudioError {
@@ -55,11 +57,18 @@ async function attempt<T>(store: Store, work: () => Promise<T>): Promise<T | und
   }
 }
 
-/** Loads the settings, the saved connections and the keychain's status. */
+/** Loads the settings, the saved connections, the keychain's status, Turborel's reserved words, the favourite queries and the project folders. */
 export async function loadAll(store: Store): Promise<void> {
   await attempt(store, async () => {
-    const [settings, saved, keychain] = await Promise.all([loadSettings(), listSavedConnections(), keychainStatus()]);
-    store.update((now) => ({ ...now, settings, saved, keychain }));
+    const [settings, saved, keychain, reservedWords, queries, projects] = await Promise.all([
+      loadSettings(),
+      listSavedConnections(),
+      keychainStatus(),
+      sqlWords(),
+      listQueries(),
+      projectFolders(),
+    ]);
+    store.update((now) => ({ ...now, settings, saved, keychain, reservedWords, queries, projects }));
   });
 }
 
@@ -78,7 +87,19 @@ function opened(
   about: Pick<OpenConnection, "name" | "savedId" | "guards" | "colour">,
 ): void {
   const connection: OpenConnection = { ...about, id: opened.connection, session: opened.session, serverTime: null };
-  store.update((now) => ({ ...now, open: [...now.open, connection], active: connection.id, dialog: null }));
+  store.update((now) => ({
+    ...now,
+    open: [...now.open, connection],
+    active: connection.id,
+    dialog: null,
+    // A worksheet kept on this saved connection, or on none while none was open, runs on it.
+    worksheets: now.worksheets.map((w) =>
+      w.connection === null &&
+      (w.savedConnection === about.savedId || (w.savedConnection === null && now.open.length === 0))
+        ? { ...w, connection: connection.id, savedConnection: about.savedId }
+        : w,
+    ),
+  }));
 }
 
 /** Opens the saved connection `saved`, proving `password` if given, else the keychain's. */
@@ -112,14 +133,22 @@ export async function disconnect(store: Store, id: number): Promise<void> {
   });
   store.update((now) => {
     const open = now.open.filter((c) => c.id !== id);
+    const worksheets = now.worksheets.map((w) => (w.connection === id ? { ...w, connection: null } : w));
     const catalogs = Object.fromEntries(Object.entries(now.catalogs).filter(([key]) => key !== String(id)));
     const selected = now.selected?.connection === id ? null : now.selected;
-    return { ...now, open, catalogs, selected, active: now.active === id ? (open[0]?.id ?? null) : now.active };
+    return {
+      ...now,
+      open,
+      catalogs,
+      selected,
+      worksheets,
+      active: now.active === id ? (open[0]?.id ?? null) : now.active,
+    };
   });
 }
 
-/** Sets the session of connection `id`. */
-function session(store: Store, id: number, session: SessionState): void {
+/** Sets the session of connection `id`, as the server last told it. */
+export function session(store: Store, id: number, session: SessionState): void {
   store.update((now) => ({ ...now, open: now.open.map((c) => (c.id === id ? { ...c, session } : c)) }));
 }
 
@@ -187,14 +216,27 @@ export async function changeSettings(store: Store, change: (now: Settings) => Se
   await attempt(store, () => saveSettings(settings));
 }
 
-/** Takes in an event the backend tells. */
+/** Takes in an event the backend tells: a notice is told in the messages of the worksheet that runs on its connection. */
 export function told(store: Store, event: StudioEvent): void {
-  if (event.kind === "lost") {
+  if (event.kind === "notice") {
+    const now = store.current();
+    const sheet =
+      now.worksheets.find((w) => w.connection === event.connection && w.running) ??
+      now.worksheets.find((w) => w.connection === event.connection);
+    if (sheet !== undefined) {
+      tell(store, sheet.id, {
+        at: Date.now(),
+        kind: "notice",
+        text: `${event.sqlstate}: ${event.message}`,
+        position: null,
+      });
+    }
+  } else if (event.kind === "lost") {
     store.update((now) => ({
       ...now,
       open: now.open.map((c) => (c.id === event.connection ? { ...c, session: { ...c.session, lost: true } } : c)),
     }));
-  } else if (event.kind === "session") {
+  } else {
     session(store, event.connection, event.session);
   }
 }

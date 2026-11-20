@@ -16,6 +16,9 @@ use turborel_studio_core::events::Hub;
 use turborel_studio_core::files::private_dir;
 use turborel_studio_core::saved::{FILE as SAVED_FILE, SavedConnections};
 use turborel_studio_core::secrets::{Keychain, MemorySecrets, SecretStore};
+use turborel_studio_core::worksheet::files::Kept;
+use turborel_studio_core::worksheet::folders::Files;
+use turborel_studio_core::worksheet::history::History;
 
 use crate::state::{KeychainStatus, RESULTS_DIR, Studio, WebviewEvents};
 
@@ -60,6 +63,9 @@ pub(crate) fn manage<R: Runtime>(
         saved: Arc::new(SavedConnections::new(folders.config.join(SAVED_FILE), secrets)),
         config: folders.config.clone(),
         keychain,
+        history: Arc::new(History::new(&folders.config)),
+        kept: Kept::new(&folders.config),
+        files: Arc::new(Files::new(&folders.config)),
     });
     Ok(())
 }
@@ -68,7 +74,7 @@ pub(crate) fn manage<R: Runtime>(
 /// state and its commands, on any runtime, so the tests build it on
 /// Tauri's mock one.
 pub(crate) fn studio<R: Runtime>(builder: Builder<R>) -> Builder<R> {
-    builder.plugin(tauri_plugin_dialog::init()).setup(setup).invoke_handler(commands::handler())
+    builder.plugin(tauri_plugin_dialog::init()).plugin(tauri_plugin_notification::init()).setup(setup).invoke_handler(commands::handler())
 }
 
 /// The application's configuration, assets and capabilities, made once in

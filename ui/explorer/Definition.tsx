@@ -6,6 +6,8 @@
 import { useEffect, useState } from "react";
 import { catalogDefinition, type DefinitionOf, saveTextFile, type ScriptAs } from "../ipc/catalog";
 import { isStudioError } from "../state/actions";
+import { useStore } from "../state/store";
+import { openWorksheet } from "../state/worksheets";
 
 /** The statements a table is scripted as, in order, with their names. */
 export const SCRIPTS: readonly (readonly [ScriptAs, string])[] = [
@@ -67,6 +69,7 @@ function ScriptChoice({ script, choose }: { script: ScriptAs; choose: (script: S
 
 /** The definition of `of`, read over connection `connection`. */
 export function Definition({ connection, of }: { readonly connection: number; readonly of: DefinitionOf }) {
+  const store = useStore();
   const [script, setScript] = useState<ScriptAs>("create");
   const [said, setSaid] = useState("");
   const asked: DefinitionOf = of.kind === "table" ? { ...of, script } : of;
@@ -88,6 +91,15 @@ export function Definition({ connection, of }: { readonly connection: number; re
         </button>
         <button type="button" disabled={text === null} onClick={() => void saveIt()}>
           Save…
+        </button>
+        <button
+          type="button"
+          disabled={text === null}
+          onClick={() => {
+            openWorksheet(store, text ?? "", fileName(of));
+          }}
+        >
+          Open in Worksheet
         </button>
         <span className="hint" role="status">
           {said}

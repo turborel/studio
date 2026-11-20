@@ -8,6 +8,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::mpsc::{Receiver, Sender};
 
+use turborel::value::Value;
 use turborel_client::Notice;
 use turborel_client::agent::Connected;
 use turborel_client::statements::Statement;
@@ -30,9 +31,13 @@ const CURSOR_NOT_OPEN: &str = "24000";
 /// What a worker is asked.
 #[derive(Debug)]
 pub(crate) enum Request {
-    /// Run a statement; on a read-only connection, in a transaction begun
-    /// READ ONLY.
-    Run { sql: String, read_only: bool },
+    /// Run a statement, its dynamic parameters given `values` as text, or
+    /// null, if it has any; on a read-only connection, in a transaction
+    /// begun READ ONLY.
+    Run { sql: String, read_only: bool, values: Vec<Option<String>> },
+    /// The types of a statement's dynamic parameters, prepared and let
+    /// go, not run.
+    Parameters(String),
     /// Rows of a result.
     Rows { result: ResultId, from: u64, count: u32 },
     /// Close a result.
@@ -58,6 +63,7 @@ pub(crate) enum Reply {
     Ran(Box<Ran>),
     Rows(Vec<Vec<crate::connections::cells::Cell>>),
     Columns(Vec<ColumnInfo>),
+    Types(Vec<String>),
     Page(Page),
     Session(SessionState),
     Done,
@@ -85,6 +91,32 @@ pub(crate) struct Worker {
     spool: PathBuf,
     events: Arc<dyn EventSink>,
     told_lost: bool,
+}
+
+/// `values`, as text or null, each cast to the type of `statement`'s
+/// parameter in its place ([DOC sql/statements/prepare.md DESCRIPTION]).
+///
+/// # Errors
+///
+/// SQLCODE -910 if they are not as many as its parameters; the cast's
+/// failure, as SQLSTATE 22018 of a value no number.
+fn bound(statement: &Statement, values: &[Option<String>]) -> Result<Vec<Value>> {
+    let types = statement.parameters();
+    if types.len() != values.len() {
+        return Err(StudioError::misuse(format!(
+            "[DESIGN] the statement has {} parameters, and {} values were given",
+            types.len(),
+            values.len()
+        )));
+    }
+    types
+        .iter()
+        .zip(values)
+        .map(|(parameter, value)| match value {
+            None => Ok(Value::Null),
+            Some(text) => turborel::value::cast(Value::Char(text.clone()), &parameter.clone().data_type()).map_err(StudioError::from),
+        })
+        .collect()
 }
 
 /// A notice as the front end is told it.
@@ -130,12 +162,13 @@ impl Worker {
     /// The answer to `request`.
     fn answer(&mut self, request: Request) -> Result<Reply> {
         match request {
-            Request::Run { sql, read_only } => {
+            Request::Run { sql, read_only, values } => {
                 if read_only {
                     self.begin_read_only()?;
                 }
-                self.run(&sql).map(|ran| Reply::Ran(Box::new(ran)))
+                self.run(&sql, &values).map(|ran| Reply::Ran(Box::new(ran)))
             }
+            Request::Parameters(sql) => self.parameters(&sql).map(Reply::Types),
             Request::Rows { result, from, count } => self.rows(result, from, count).map(Reply::Page),
             Request::CloseResult(result) => self.close_result(result).map(|()| Reply::Done),
             Request::Session => self.session().map(Reply::Session),
@@ -177,13 +210,21 @@ impl Worker {
 
     /// Runs `sql`: a query through its cursor, another statement executed,
     /// one that cannot be prepared run directly.
-    fn run(&mut self, sql: &str) -> Result<Ran> {
+    fn run(&mut self, sql: &str, values: &[Option<String>]) -> Result<Ran> {
         let connection = self.connection()?;
         let _ = connection.take_conditions(); // Those of an earlier statement are not this one's.
         let (outcome, told) = match connection.prepare(sql) {
-            Ok(statement) if !statement.columns().is_empty() => self.open(statement)?,
-            Ok(statement) => self.execute(statement)?,
-            Err(failure) if failure.sqlstate == NOT_PREPARABLE => self.direct(sql)?,
+            Ok(statement) => {
+                let values = match bound(&statement, values) {
+                    Ok(values) => values,
+                    Err(failure) => {
+                        let _ = self.connection()?.deallocate(statement); // Let go; the failure is the one told.
+                        return Err(failure);
+                    }
+                };
+                if statement.columns().is_empty() { self.execute(statement, &values)? } else { self.open(statement, &values)? }
+            }
+            Err(failure) if failure.sqlstate == NOT_PREPARABLE && values.is_empty() => self.direct(sql)?,
             Err(failure) => return Err(failure.into()),
         };
         let (warnings, server_time) = told;
@@ -199,9 +240,9 @@ impl Worker {
     }
 
     /// Executes `statement`, not a query, then lets it go.
-    fn execute(&mut self, statement: Statement) -> Result<(Outcome, Told)> {
+    fn execute(&mut self, statement: Statement, values: &[Value]) -> Result<(Outcome, Told)> {
         let connection = self.connection()?;
-        let executed = connection.execute(&statement, &[]);
+        let executed = connection.execute(&statement, values);
         let outcome = match executed {
             Ok(turborel_client::connection::Outcome::Done(done)) => {
                 Ok(Outcome::done(&done, connection.rows_affected(), connection.last_generated()))
@@ -235,8 +276,8 @@ impl Worker {
     }
 
     /// Opens `statement`'s cursor, a query, and keeps its result.
-    fn open(&mut self, statement: Statement) -> Result<(Outcome, Told)> {
-        let batch = match self.connection()?.open_cursor(&statement, &[], PAGE_ROWS) {
+    fn open(&mut self, statement: Statement, values: &[Value]) -> Result<(Outcome, Told)> {
+        let batch = match self.connection()?.open_cursor(&statement, values, PAGE_ROWS) {
             Ok(batch) => batch,
             Err(failure) => {
                 let _ = self.connection()?.deallocate(statement); // Let go; the failure is the one told.
@@ -292,7 +333,7 @@ impl Worker {
     fn catalog(&mut self, sql: &str, params: &[String], cap: u32) -> Result<Vec<Vec<crate::connections::cells::Cell>>> {
         let connection = self.connection()?;
         let statement = connection.prepare(sql)?;
-        let values: Vec<turborel::value::Value> = params.iter().map(|p| turborel::value::Value::Char(p.clone())).collect();
+        let values: Vec<Value> = params.iter().map(|p| Value::Char(p.clone())).collect();
         let read = connection.open_cursor(&statement, &values, cap);
         if read.as_ref().is_ok_and(|batch| batch.more) {
             // Rows past the cap are not wanted: the cursor is closed.
@@ -300,6 +341,16 @@ impl Worker {
         }
         let _ = connection.deallocate(statement); // Let go; the rows, or the failure, are what is told.
         Ok(read?.rows.iter().map(crate::connections::cells::cells).collect())
+    }
+
+    /// The types of `sql`'s dynamic parameters, in order, as SQL writes
+    /// them, prepared and let go, never run.
+    fn parameters(&mut self, sql: &str) -> Result<Vec<String>> {
+        let connection = self.connection()?;
+        let statement = connection.prepare(sql)?;
+        let types = statement.parameters().iter().map(|p| p.clone().data_type().to_string()).collect();
+        let _ = connection.deallocate(statement); // Let go; the types are what is told.
+        Ok(types)
     }
 
     /// The columns `sql` would give, as the server declares them, prepared

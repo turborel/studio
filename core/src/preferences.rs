@@ -28,6 +28,26 @@ pub const MAX_FONT_CHARS: usize = 128;
 pub const MAX_KEY_BINDINGS: usize = 500;
 /// The longest name of a command or a key, in characters.
 pub const MAX_KEY_CHARS: usize = 64;
+/// The formatter's indentation, in spaces: at least, by default, at most.
+pub const FORMAT_INDENT: (u8, u8, u8) = (1, 4, 8);
+/// The formatter's line width, in characters: at least, by default, at most.
+pub const FORMAT_LINE_WIDTH: (u16, u16, u16) = (40, 100, 240);
+/// How long a run lasts, in seconds, before its end is notified while the
+/// window is in the background: at least (never), by default, at most.
+pub const NOTIFY_AFTER_SECONDS: (u16, u16, u16) = (0, 10, 3600);
+
+/// How the formatter writes key words.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum KeyWordCase {
+    /// In upper case.
+    #[default]
+    Upper,
+    /// In lower case.
+    Lower,
+    /// As written.
+    Keep,
+}
 
 /// The theme chosen.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -42,9 +62,10 @@ pub enum ThemeChoice {
     Dark,
 }
 
-/// Studio's settings, each named after what it controls.
+/// Studio's settings, each named after what it controls; one the file
+/// lacks is its default.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase", deny_unknown_fields, default)]
 pub struct Settings {
     /// The file's format version.
     pub format: u32,
@@ -62,10 +83,19 @@ pub struct Settings {
     /// Whether open connections are checked, and lost ones connected
     /// again, as the computer wakes.
     pub reconnect_on_wake: bool,
-    /// Whether the toolbar's buttons show their labels beside their icons;
-    /// a file without it shows icons alone.
-    #[serde(default)]
+    /// Whether the toolbar's buttons show their labels beside their icons.
     pub toolbar_labels: bool,
+    /// Whether what runs is kept in the history.
+    pub history_kept: bool,
+    /// How the formatter writes key words.
+    pub format_key_words: KeyWordCase,
+    /// The formatter's indentation, in spaces.
+    pub format_indent: u8,
+    /// The width the formatter keeps lines within, in characters.
+    pub format_line_width: u16,
+    /// How long a run lasts, in seconds, before its end is notified while
+    /// the window is in the background; 0 for never.
+    pub notify_after_seconds: u16,
 }
 
 impl Default for Settings {
@@ -79,6 +109,11 @@ impl Default for Settings {
             key_bindings: BTreeMap::new(),
             reconnect_on_wake: true,
             toolbar_labels: false,
+            history_kept: true,
+            format_key_words: KeyWordCase::Upper,
+            format_indent: FORMAT_INDENT.1,
+            format_line_width: FORMAT_LINE_WIDTH.1,
+            notify_after_seconds: NOTIFY_AFTER_SECONDS.1,
         }
     }
 }
@@ -110,6 +145,9 @@ impl Settings {
         within("zoomPercent", self.zoom_percent, (ZOOM_PERCENT.0, ZOOM_PERCENT.2))?;
         within("editorFontPoints", self.editor_font_points, (FONT_POINTS.0, FONT_POINTS.2))?;
         text("editorFontFamily", &self.editor_font_family, MAX_FONT_CHARS)?;
+        within("formatIndent", self.format_indent, (FORMAT_INDENT.0, FORMAT_INDENT.2))?;
+        within("formatLineWidth", self.format_line_width, (FORMAT_LINE_WIDTH.0, FORMAT_LINE_WIDTH.2))?;
+        within("notifyAfterSeconds", self.notify_after_seconds, (NOTIFY_AFTER_SECONDS.0, NOTIFY_AFTER_SECONDS.2))?;
         if self.key_bindings.len() > MAX_KEY_BINDINGS {
             return Err(StudioError::misuse(format!("[DESIGN] at most {MAX_KEY_BINDINGS} keys are bound")));
         }
@@ -182,11 +220,13 @@ mod tests {
     use super::{Layout, Settings, ThemeChoice};
 
     /// [RULE] R-FMT-1: settings saved are read back, and none saved are the
-    /// defaults.
+    /// defaults, as is one a file lacks.
     #[test]
     fn settings_are_read_back() {
         let dir = crate::testing::scratch("preferences/settings");
         assert_eq!(Settings::load(&dir).unwrap(), Settings::default());
+        std::fs::write(dir.join(super::SETTINGS_FILE), br#"{"format":1,"theme":"dark"}"#).unwrap();
+        assert_eq!(Settings::load(&dir).unwrap(), Settings { theme: ThemeChoice::Dark, ..Settings::default() });
         let mut settings = Settings { theme: ThemeChoice::Dark, zoom_percent: 125, ..Settings::default() };
         settings.key_bindings.insert("worksheet.run".into(), "Mod+Enter".into());
         settings.save(&dir).unwrap();
@@ -200,6 +240,9 @@ mod tests {
         assert!(Settings { zoom_percent: 49, ..Settings::default() }.save(&dir).is_err());
         assert!(Settings { editor_font_points: 49, ..Settings::default() }.save(&dir).is_err());
         assert!(Settings { editor_font_family: "Mono\n".into(), ..Settings::default() }.save(&dir).is_err());
+        assert!(Settings { format_indent: 0, ..Settings::default() }.save(&dir).is_err());
+        assert!(Settings { format_line_width: 241, ..Settings::default() }.save(&dir).is_err());
+        assert!(Settings { notify_after_seconds: 3601, ..Settings::default() }.save(&dir).is_err());
         std::fs::write(dir.join(super::SETTINGS_FILE), br#"{"format":1,"theme":"dark","zoomPercent":400,"editorFontFamily":"","editorFontPoints":13,"keyBindings":{},"reconnectOnWake":true}"#).unwrap();
         assert!(Settings::load(&dir).is_err());
     }

@@ -10,6 +10,9 @@ use tauri::{AppHandle, Emitter, Runtime};
 use turborel_studio_core::connections::manager::ConnectionManager;
 use turborel_studio_core::events::{Event, EventSink};
 use turborel_studio_core::saved::SavedConnections;
+use turborel_studio_core::worksheet::files::Kept;
+use turborel_studio_core::worksheet::folders::Files;
+use turborel_studio_core::worksheet::history::History;
 
 /// The name of the event every backend event is sent as.
 pub const EVENT: &str = "studio:event";
@@ -36,6 +39,12 @@ pub struct Studio {
     pub config: PathBuf,
     /// Whether the keychain is open.
     pub keychain: KeychainStatus,
+    /// The history of what ran.
+    pub history: Arc<History>,
+    /// The worksheets and favourite queries kept.
+    pub kept: Kept,
+    /// The files worksheets may read and write.
+    pub files: Arc<Files>,
 }
 
 /// Tells the backend's events to the webview.
