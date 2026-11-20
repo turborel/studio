@@ -44,9 +44,12 @@ pub struct Server {
 impl Server {
     /// The server `spec` names, started.
     pub fn start(spec: &str) -> Server {
-        let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("..").join(".claude").join("live").join(std::process::id().to_string());
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
+        let dir = root.join(".claude").join("live").join(std::process::id().to_string());
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
+        // A path a container can follow too: none of its parts `..`.
+        let dir = dir.canonicalize().unwrap();
         let certs = certs::make(&dir, OWNER);
         let socket = cfg!(unix).then(|| dir.join("s.sock"));
         let container = spec.strip_prefix(DOCKER).map(|_| format!("studio-live-{}", std::process::id()));

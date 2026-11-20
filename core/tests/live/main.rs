@@ -2,7 +2,8 @@
 //! real server. The program is its own harness: it starts the server
 //! `TURBOREL_TEST_SERVER` names once, runs every test, each in turn, and
 //! stops the server, so nothing is left running whatever fails. With no
-//! server named, every test is skipped.
+//! server named, or the variable empty, as CI sets it where it has none,
+//! every test is skipped.
 //!
 //! A test is a function `pub fn <name>(live: &Live)`, listed in `TESTS`,
 //! its doc comment citing what it verifies (R-TRACE-1).
@@ -124,7 +125,7 @@ const TESTS: &[(&str, Test)] = &[
 ];
 
 fn main() -> ExitCode {
-    let Ok(spec) = std::env::var(SERVER_VARIABLE) else {
+    let Some(spec) = std::env::var(SERVER_VARIABLE).ok().filter(|spec| !spec.is_empty()) else {
         println!("live: {} tests skipped, as {SERVER_VARIABLE} names no server", TESTS.len());
         return ExitCode::SUCCESS;
     };
