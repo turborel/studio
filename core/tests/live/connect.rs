@@ -6,13 +6,14 @@ use turborel_studio_core::connections::outcome::Outcome;
 use turborel_studio_core::connections::session::Transport;
 use turborel_studio_core::connections::spec::{APPLICATION, ConnectionSpec};
 use turborel_studio_core::events::ConnectionId;
+use turborel_studio_core::guard::policy::Guards;
 
 use crate::server::{OWNER, OWNER_PASSWORD, PORT};
 use crate::{Live, no_environment};
 
 /// The cells of the first column of the result `sql` gives on `id`.
 pub fn column(manager: &ConnectionManager, id: ConnectionId, sql: &str) -> Vec<Option<String>> {
-    match manager.run(id, sql).unwrap().outcome {
+    match crate::run(manager, id, sql).unwrap().outcome {
         Outcome::Rows { page, .. } => page.rows.into_iter().map(|row| row.into_iter().next().unwrap()).collect(),
         Outcome::Done { .. } => panic!("{sql} gave no rows"),
     }
@@ -23,7 +24,7 @@ pub fn column(manager: &ConnectionManager, id: ConnectionId, sql: &str) -> Vec<O
 /// secure.
 pub fn connect_over_tls_by_scram(live: &Live) {
     let (manager, _) = live.manager();
-    let opened = manager.open(&live.spec(), Some(&live.password()), no_environment).unwrap();
+    let opened = manager.open((&live.spec(), Guards::default()), Some(&live.password()), no_environment).unwrap();
     let session = opened.session;
     assert_eq!(session.transport, Transport::Tls);
     assert_eq!(session.authorization, OWNER);
@@ -38,7 +39,7 @@ pub fn connect_over_tls_by_scram(live: &Live) {
 pub fn an_untrusted_certificate_is_refused(live: &Live) {
     let (manager, _) = live.manager();
     let spec = ConnectionSpec { tls_roots: None, tls_mode: None, ..live.spec() };
-    let error = manager.open(&spec, Some(&live.password()), no_environment).unwrap_err();
+    let error = manager.open((&spec, Guards::default()), Some(&live.password()), no_environment).unwrap_err();
     assert!(error.sqlstate.starts_with("08"), "{error}");
     assert_eq!(manager.threads(), []);
 }
@@ -48,7 +49,7 @@ pub fn an_untrusted_certificate_is_refused(live: &Live) {
 pub fn a_password_is_refused_over_plain_tcp(live: &Live) {
     let (manager, _) = live.manager();
     let spec = ConnectionSpec { tls_mode: Some("disable".into()), ..live.spec() };
-    let error = manager.open(&spec, Some(&live.password()), no_environment).unwrap_err();
+    let error = manager.open((&spec, Guards::default()), Some(&live.password()), no_environment).unwrap_err();
     assert_eq!(error.sqlstate, "28000", "{error}");
 }
 
@@ -59,7 +60,7 @@ pub fn a_local_socket_is_trusted(live: &Live) {
     let Some(socket) = &live.server.socket else { return };
     let (manager, _) = live.manager();
     let spec = ConnectionSpec { host: Some(socket.display().to_string()), user: Some(OWNER.into()), ..ConnectionSpec::default() };
-    let opened = manager.open(&spec, None, no_environment).unwrap();
+    let opened = manager.open((&spec, Guards::default()), None, no_environment).unwrap();
     assert_eq!(opened.session.transport, Transport::Local);
     manager.close(opened.connection).unwrap();
 }
@@ -71,7 +72,7 @@ pub fn connect_by_uri(live: &Live) {
     let roots = live.server.certs.authority.display().to_string();
     let uri = format!("turborel://{OWNER}@localhost:{PORT}/?tls_mode=verify-full&tls_roots={roots}");
     let spec = ConnectionSpec { uri: Some(uri), ..ConnectionSpec::default() };
-    let opened = manager.open(&spec, Some(&live.password()), no_environment).unwrap();
+    let opened = manager.open((&spec, Guards::default()), Some(&live.password()), no_environment).unwrap();
     assert_eq!(opened.session.transport, Transport::Tls);
     manager.close(opened.connection).unwrap();
 }
@@ -88,7 +89,7 @@ pub fn connect_by_service_file(live: &Live) {
     std::fs::write(&file, text).unwrap();
     let spec =
         ConnectionSpec { service: Some("studio".into()), service_file: Some(file.display().to_string()), ..ConnectionSpec::default() };
-    let opened = manager.open(&spec, Some(&live.password()), no_environment).unwrap();
+    let opened = manager.open((&spec, Guards::default()), Some(&live.password()), no_environment).unwrap();
     assert_eq!(opened.session.authorization, OWNER);
     manager.close(opened.connection).unwrap();
 }
@@ -100,7 +101,7 @@ pub fn connect_by_password_file(live: &Live) {
     let file = live.server.dir.join("passfile");
     std::fs::write(&file, format!("# Studio's live tests\nlocalhost:{PORT}:{OWNER}:{OWNER_PASSWORD}\n")).unwrap();
     let spec = ConnectionSpec { passfile: Some(file.display().to_string()), ..live.spec() };
-    let opened = manager.open(&spec, None, no_environment).unwrap();
+    let opened = manager.open((&spec, Guards::default()), None, no_environment).unwrap();
     assert_eq!(opened.session.authorization, OWNER);
     manager.close(opened.connection).unwrap();
 }
@@ -112,7 +113,7 @@ pub fn connect_by_certificate(live: &Live) {
     let (chain, key) = &live.server.certs.client;
     let spec =
         ConnectionSpec { tls_certificate: Some(chain.display().to_string()), tls_key: Some(key.display().to_string()), ..live.spec() };
-    let opened = manager.open(&spec, None, no_environment).unwrap();
+    let opened = manager.open((&spec, Guards::default()), None, no_environment).unwrap();
     assert_eq!(opened.session.authorization, OWNER);
     manager.close(opened.connection).unwrap();
 }
@@ -122,7 +123,7 @@ pub fn connect_by_certificate(live: &Live) {
 pub fn the_next_host_is_tried(live: &Live) {
     let (manager, _) = live.manager();
     let spec = ConnectionSpec { host: Some(format!("127.0.0.1:1,localhost:{PORT}")), port: None, ..live.spec() };
-    let opened = manager.open(&spec, Some(&live.password()), no_environment).unwrap();
+    let opened = manager.open((&spec, Guards::default()), Some(&live.password()), no_environment).unwrap();
     assert_eq!(opened.session.transport, Transport::Tls);
     manager.close(opened.connection).unwrap();
 }

@@ -69,6 +69,9 @@ Each is told in full in [§7](#7-the-decisions).
 | D27 | The live tests: one harness, one server, made as it starts |
 | D28 | Saved connections: a file of no secret, passwords in the keychain |
 | D29 | Guards on what runs, by Turborel's own parser |
+| D30 | Commands by name: the menus, the keys and the palette |
+| D31 | The front end's state: one store per window |
+| D32 | A connection's colour tints the window |
 
 ---
 
@@ -87,12 +90,16 @@ Each is told in full in [§7](#7-the-decisions).
 | `src-tauri/build.rs` | names each command, so each is a permission (R-SEC-5) |
 | `src-tauri/capabilities/` | what each window may call (R-SEC-5) |
 | `src-tauri/tauri.conf.json` | the window, the content security policy (D22) and the bundles |
+| `src-tauri/src/menu.rs` | the menu bar (D30); `src-tauri/tests/menu.rs` its test, on the main thread |
 | `src-tauri/icons/` | the icon set, made by `cargo xtask icons` (D21) |
 | `package.json`, `package-lock.json` | the front end's packages, pinned (D18, R-DEP-3) |
 | `ui/` | the front end, in TypeScript and React (D2) |
 | `ui/ipc/` | the typed commands, the front end's one way to the backend (R-TS-3) |
 | `ui/theme/` | the themes' palettes (D20) |
-| `ui/shell/` | the dock, menus, toolbar and status bar |
+| `ui/shell/` | the dock, toolbar, status bar, dialogs and the explorer's connections |
+| `ui/state/` | the window's store and its actions (D31) |
+| `ui/commands/` | the commands and their keys (D30) |
+| `ui/test/` | the one Vitest setup and the one mock of the backend (R-TEST-7) |
 | `xtask/` | the checks tool (D19) and its copy of Turborel's headings (D6) |
 | `artwork/` | Studio's logo, and its icon, the source of the icon set (D21) |
 | `doc/` | the manual (R-DOC-7) |
@@ -694,6 +701,41 @@ The review checklist:
   as it is classified (`core/src/guard/classify.rs`), for M9.
 - *Why:* a database's own grammar is the one way to know what a
   statement does; guessing from its words fails open.
+
+#### D30. Commands by name: the menus, the keys and the palette
+
+- **Commands:** each a name, a title, a category, a default key and what
+  it does, in `ui/commands/commands.ts`.
+- **Menus:** the platform's own menu bar, its items Studio's commands by
+  name, told to the webview as `studio:menu`; Edit's and Window's items
+  are the platform's.
+- **Keys:** written `Mod+Shift+P`, `Mod` Cmd on macOS and Ctrl
+  elsewhere; each rebindable in the settings, or unbound. The menus show
+  no keys, so a key rebound is never run twice.
+- **Palette:** every command by its title, filtered as typed.
+- *Why:* one list, so a menu, a key and the palette never disagree, and
+  every action is reachable by the keyboard (R-UI-1).
+
+#### D31. The front end's state: one store per window
+
+- **The store:** an object the window makes, holding the settings, the
+  saved and open connections, the dialog shown and the last failure,
+  given to the components by a React context (R-SAFE-4).
+- **Actions:** each calls the backend through `ui/ipc/` and changes the
+  store with what it gives; a failure is kept as the error shown.
+- **No library:** React's own `useSyncExternalStore`.
+- *Why:* one place to read and test what the window shows, with no
+  dependency.
+
+#### D32. A connection's colour tints the window
+
+- **The colour:** the one a connection is given, else its environment's:
+  production #B3261E, test #7A4F00, development none.
+- **Tinted:** the window's frame and its status bar, and the
+  connection's mark in the explorer, each under white text held to
+  WCAG 2.2 AA (R-UI-2).
+- *Why:* which database a statement goes to is seen at a glance, and
+  production by its red.
 
 ---
 

@@ -38,7 +38,10 @@ class NoResizeObserver implements ResizeObserver {
 window.matchMedia = mediaQueryList;
 globalThis.ResizeObserver = NoResizeObserver;
 
-afterEach(() => {
+afterEach(async () => {
   cleanup();
+  // A listener a component let go of is let go as its promise settles,
+  // which is after the component is gone: the mocks wait for it.
+  await new Promise((settled) => setTimeout(settled, 0));
   clearMocks();
 });

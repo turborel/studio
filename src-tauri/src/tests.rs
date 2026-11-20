@@ -8,6 +8,10 @@ use tauri::test::{INVOKE_KEY, MockRuntime, get_ipc_response, mock_builder};
 use tauri::webview::InvokeRequest;
 use tauri::{App, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
 
+use std::sync::Arc;
+
+use turborel_studio_core::secrets::MemorySecrets;
+
 use crate::studio;
 
 /// The application on the mock runtime, with its own configuration and
@@ -17,8 +21,16 @@ pub(crate) fn window() -> (App<MockRuntime>, WebviewWindow<MockRuntime>) {
     // The mock runtime runs no event loop, so the setup it would run as
     // the loop starts is run here, its results kept under the build's
     // target directory rather than the user's cache.
-    let results = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("..").join("target").join("test-scratch").join("app-results");
-    crate::manage(&app, results).unwrap();
+    let scratch = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("..")
+        .join("target")
+        .join("test-scratch")
+        .join("app")
+        .join(std::thread::current().name().unwrap_or("unnamed").replace("::", "-"));
+    let _ = std::fs::remove_dir_all(&scratch);
+    let folders = crate::Folders { results: scratch.join("results"), config: scratch.join("config") };
+    let keychain = crate::state::KeychainStatus { available: false, reason: Some("the tests keep secrets in memory".into()) };
+    crate::manage(&app, &folders, (Arc::new(MemorySecrets::default()), keychain)).unwrap();
     let window = WebviewWindowBuilder::new(&app, "main", WebviewUrl::default()).build().unwrap();
     (app, window)
 }
@@ -74,7 +86,7 @@ fn refusal(window: &WebviewWindow<MockRuntime>, command: &str, args: serde_json:
 #[test]
 fn a_connection_not_open_is_refused() {
     let (_app, window) = window();
-    let error = refusal(&window, "run_statement", serde_json::json!({"connection": 7, "sql": "VALUES (1)"}));
+    let error = refusal(&window, "run_statement", serde_json::json!({"connection": 7, "sql": "VALUES (1)", "confirmed": false}));
     assert_eq!(error["sqlstate"], "TB910");
     assert_eq!(error["sqlcode"], -910);
     let error = refusal(&window, "fetch_rows", serde_json::json!({"connection": 7, "result": 1, "from": 0, "count": 10}));
@@ -86,9 +98,10 @@ fn a_connection_not_open_is_refused() {
 #[test]
 fn bad_settings_are_refused() {
     let (_app, window) = window();
-    let unknown = serde_json::json!({"spec": {"user": "ann", "secret": "x"}, "password": null});
+    let guards = serde_json::json!({"environment": "development", "readOnly": false});
+    let unknown = serde_json::json!({"spec": {"user": "ann", "secret": "x"}, "guards": guards, "password": null});
     assert!(get_ipc_response(&window, request(&window, "open_connection", unknown)).is_err());
-    let no_user = serde_json::json!({"spec": {"host": "db.example"}, "password": null});
+    let no_user = serde_json::json!({"spec": {"host": "db.example"}, "guards": guards, "password": null});
     assert_eq!(refusal(&window, "open_connection", no_user)["sqlstate"], "08001");
 }
 
@@ -119,4 +132,101 @@ fn every_connection_command_refuses_a_connection_not_open() {
     ] {
         assert_eq!(refusal(&window, command, args.clone())["sqlstate"], "TB910", "{command}");
     }
+}
+
+/// [DESIGN] D30: the menus' items are Studio's commands, each named once,
+/// and the platform's own items are not told to the webview.
+#[test]
+fn menu_items_are_commands() {
+    let ids: Vec<&str> = crate::menu::MENUS.iter().flat_map(|(_, items)| items.iter().flatten().map(|(id, _)| *id)).collect();
+    let mut unique = ids.clone();
+    unique.sort_unstable();
+    unique.dedup();
+    assert_eq!(unique.len(), ids.len());
+    assert!(ids.iter().all(|id| crate::menu::is_command(id)));
+    assert!(!crate::menu::is_command("copy"));
+}
+
+/// [RULE] R-SEC-1 [DESIGN] D28: a connection saved through the commands is
+/// listed with whether its password is saved, never the password.
+#[test]
+fn a_saved_connection_is_listed_without_its_password() {
+    let (_app, window) = window();
+    let connection = serde_json::json!({
+        "id": "", "name": "Orders", "spec": {"host": "db.example", "user": "ann"},
+        "environment": "production", "readOnly": true
+    });
+    let password = serde_json::json!({"kind": "save", "password": "ann's secret"});
+    let saved = json(
+        get_ipc_response(&window, request(&window, "save_connection", serde_json::json!({"connection": connection, "password": password})))
+            .unwrap(),
+    );
+    let list = json(get_ipc_response(&window, request(&window, "list_saved_connections", serde_json::json!({}))).unwrap());
+    assert_eq!(list["connections"][0]["connection"]["id"], saved["id"]);
+    assert_eq!(list["connections"][0]["passwordSaved"], true);
+    assert!(!list.to_string().contains("ann's secret"));
+    let deleted = request(&window, "delete_saved_connection", serde_json::json!({"id": saved["id"]}));
+    get_ipc_response(&window, deleted).unwrap();
+}
+
+/// [RULE] R-FMT-1: settings and the layout are saved and read back
+/// through the commands, and settings out of bounds refused.
+#[test]
+fn settings_and_layout_are_kept() {
+    let (_app, window) = window();
+    let mut settings = json(get_ipc_response(&window, request(&window, "load_settings", serde_json::json!({}))).unwrap());
+    settings["theme"] = serde_json::json!("dark");
+    get_ipc_response(&window, request(&window, "save_settings", serde_json::json!({"settings": settings.clone()}))).unwrap();
+    assert_eq!(json(get_ipc_response(&window, request(&window, "load_settings", serde_json::json!({}))).unwrap()), settings);
+    settings["zoomPercent"] = serde_json::json!(1000);
+    assert_eq!(refusal(&window, "save_settings", serde_json::json!({"settings": settings}))["sqlstate"], "TB910");
+    let dock = serde_json::json!({"grid": {}, "panels": {}});
+    get_ipc_response(&window, request(&window, "save_layout", serde_json::json!({"dock": dock.clone()}))).unwrap();
+    assert_eq!(json(get_ipc_response(&window, request(&window, "load_layout", serde_json::json!({}))).unwrap()), dock);
+}
+
+/// [RULE] R-SEC-1: the webview is told whether the keychain is open, and
+/// a saved connection not there is refused before any connection.
+#[test]
+fn the_keychain_status_is_told_and_an_unknown_connection_refused() {
+    let (_app, window) = window();
+    let status = json(get_ipc_response(&window, request(&window, "keychain_status", serde_json::json!({}))).unwrap());
+    assert_eq!(status["available"], false);
+    let error = refusal(&window, "open_saved_connection", serde_json::json!({"id": "nope", "password": null}));
+    assert_eq!(error["sqlstate"], "TB910");
+}
+
+/// [DESIGN] D24: the backend's events reach the webview as `studio:event`.
+#[test]
+fn events_reach_the_webview() {
+    use tauri::Listener;
+    use turborel_studio_core::events::{Event, EventSink};
+    let (app, _window) = window();
+    let (told, heard) = std::sync::mpsc::channel();
+    app.listen_any(crate::state::EVENT, move |event| {
+        let _ = told.send(event.payload().to_owned());
+    });
+    let error = turborel_studio_core::error::StudioError::lost("lost");
+    crate::state::WebviewEvents(app.handle().clone()).emit(Event::Lost { connection: 3, error });
+    let payload: serde_json::Value = serde_json::from_str(&heard.recv().unwrap()).unwrap();
+    assert_eq!(payload["kind"], "lost");
+    assert_eq!(payload["connection"], 3);
+}
+
+/// [RULE] R-SEC-1 [DESIGN] D28: a saved connection that cannot connect says
+/// why, as a connection failure, and never with its password.
+#[test]
+fn a_saved_connection_that_cannot_connect_keeps_its_secret() {
+    let (_app, window) = window();
+    let connection = serde_json::json!({
+        "id": "", "name": "Plain", "spec": {"host": "127.0.0.1", "port": "1", "user": "ann", "tlsMode": "disable"}
+    });
+    let password = serde_json::json!({"kind": "save", "password": "ann's secret"});
+    let saved = json(
+        get_ipc_response(&window, request(&window, "save_connection", serde_json::json!({"connection": connection, "password": password})))
+            .unwrap(),
+    );
+    let error = refusal(&window, "open_saved_connection", serde_json::json!({"id": saved["id"], "password": null}));
+    assert!(error["sqlstate"].as_str().unwrap().starts_with("08"), "{error}");
+    assert!(!error.to_string().contains("ann's secret"));
 }

@@ -31,3 +31,11 @@ tauri = { workspace = true, features = ["test"] }
 
 [lints]
 workspace = true
+
+# The menu bar's test (RULES.md D30): a program of its own harness, as a
+# menu is made on the main thread alone, where the standard harness never
+# runs a test.
+[[test]]
+name = "menu"
+path = "tests/menu.rs"
+harness = false

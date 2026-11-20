@@ -17,6 +17,15 @@
     "allow-session-state",
     "allow-set-autocommit",
     "allow-ping-connection",
-    "allow-list-threads"
+    "allow-list-threads",
+    "allow-list-saved-connections",
+    "allow-save-connection",
+    "allow-delete-saved-connection",
+    "allow-open-saved-connection",
+    "allow-keychain-status",
+    "allow-load-settings",
+    "allow-save-settings",
+    "allow-load-layout",
+    "allow-save-layout"
   ]
 }

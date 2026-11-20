@@ -42,6 +42,10 @@ export interface Palette {
   readonly warning: string;
   /** Success, and development connections' mark. */
   readonly success: string;
+  /** The fill of what must not be missed, as a connection not secure. */
+  readonly alert: string;
+  /** Text on the alert's fill. */
+  readonly onAlert: string;
 }
 
 /** Studio's icon's maroon, sampled from `artwork/studio-icon.png`. */
@@ -65,6 +69,8 @@ export const PALETTES: Readonly<Record<ThemeName, Palette>> = {
     danger: "#B3261E",
     warning: "#7A4F00",
     success: "#1D6531",
+    alert: "#B3261E",
+    onAlert: "#FFFFFF",
   },
   dark: {
     background: "#1A1617",
@@ -82,6 +88,8 @@ export const PALETTES: Readonly<Record<ThemeName, Palette>> = {
     danger: "#FF8A80",
     warning: "#F0C060",
     success: "#7DD192",
+    alert: "#B3261E",
+    onAlert: "#FFFFFF",
   },
 };
 

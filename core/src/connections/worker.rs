@@ -22,14 +22,17 @@ use crate::events::{ConnectionId, Event, EventSink};
 /// The SQLSTATE of a statement that cannot be prepared, which is run
 /// directly instead (`[CLIENT Prepared statements]`).
 const NOT_PREPARABLE: &str = "37000";
+/// What makes the next transaction of a read-only connection READ ONLY.
+const SET_READ_ONLY: &str = "SET TRANSACTION READ ONLY";
 /// The SQLSTATE of a cursor not open, as one a transaction's end closed.
 const CURSOR_NOT_OPEN: &str = "24000";
 
 /// What a worker is asked.
 #[derive(Debug)]
 pub(crate) enum Request {
-    /// Run a statement.
-    Run(String),
+    /// Run a statement; on a read-only connection, in a transaction begun
+    /// READ ONLY.
+    Run { sql: String, read_only: bool },
     /// Rows of a result.
     Rows { result: ResultId, from: u64, count: u32 },
     /// Close a result.
@@ -120,7 +123,12 @@ impl Worker {
     /// The answer to `request`.
     fn answer(&mut self, request: Request) -> Result<Reply> {
         match request {
-            Request::Run(sql) => self.run(&sql).map(|ran| Reply::Ran(Box::new(ran))),
+            Request::Run { sql, read_only } => {
+                if read_only {
+                    self.begin_read_only()?;
+                }
+                self.run(&sql).map(|ran| Reply::Ran(Box::new(ran)))
+            }
             Request::Rows { result, from, count } => self.rows(result, from, count).map(Reply::Page),
             Request::CloseResult(result) => self.close_result(result).map(|()| Reply::Done),
             Request::Session => self.session().map(Reply::Session),
@@ -131,6 +139,16 @@ impl Worker {
             Request::Ping => self.connection()?.ping().map(|()| Reply::Done).map_err(StudioError::from),
             Request::Terminate => self.terminate().map(|()| Reply::Done),
         }
+    }
+
+    /// Makes the next transaction READ ONLY, unless one is active
+    /// ([DOC sql/statements/set-transaction.md DESCRIPTION]).
+    fn begin_read_only(&mut self) -> Result<()> {
+        let connection = self.connection()?;
+        if !connection.in_transaction() {
+            connection.query(SET_READ_ONLY)?;
+        }
+        Ok(())
     }
 
     /// The session, as the server last told it.

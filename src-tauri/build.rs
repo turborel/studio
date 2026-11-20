@@ -10,7 +10,7 @@
 /// Every command the application defines, as `src/commands.rs` registers
 /// them and `capabilities/main.json` grants them; the checks tool holds the
 /// three lists equal.
-const COMMANDS: [&str; 12] = [
+const COMMANDS: [&str; 21] = [
     "app_info",
     "open_connection",
     "close_connection",
@@ -23,6 +23,15 @@ const COMMANDS: [&str; 12] = [
     "set_autocommit",
     "ping_connection",
     "list_threads",
+    "list_saved_connections",
+    "save_connection",
+    "delete_saved_connection",
+    "open_saved_connection",
+    "keychain_status",
+    "load_settings",
+    "save_settings",
+    "load_layout",
+    "save_layout",
 ];
 
 /// The manifest every Windows program of the package is linked with.

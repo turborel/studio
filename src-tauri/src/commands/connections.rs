@@ -10,19 +10,20 @@
 use std::sync::Arc;
 
 use tauri::State;
-use turborel_studio_core::connections::manager::{ConnectionManager, Opened, ThreadInfo};
-use turborel_studio_core::connections::outcome::{Ran, ResultId};
+use turborel_studio_core::connections::manager::{ConnectionManager, Opened, RunAnswer, ThreadInfo};
+use turborel_studio_core::connections::outcome::ResultId;
 use turborel_studio_core::connections::pages::Page;
 use turborel_studio_core::connections::session::SessionState;
 use turborel_studio_core::connections::spec::ConnectionSpec;
 use turborel_studio_core::error::{Result, StudioError};
 use turborel_studio_core::events::ConnectionId;
+use turborel_studio_core::guard::policy::Guards;
 use turborel_studio_core::secret::Secret;
 
 use crate::state::Studio;
 
 /// Runs `work` with the manager on a blocking thread, and gives its result.
-async fn blocking<T: Send + 'static>(
+pub(crate) async fn blocking<T: Send + 'static>(
     studio: &State<'_, Studio>,
     work: impl FnOnce(&ConnectionManager) -> Result<T> + Send + 'static,
 ) -> Result<T> {
@@ -33,7 +34,7 @@ async fn blocking<T: Send + 'static>(
 }
 
 /// The process's environment, as turborel-client reads it.
-fn environment(name: &str) -> Option<String> {
+pub(crate) fn environment(name: &str) -> Option<String> {
     std::env::var(name).ok()
 }
 
@@ -41,9 +42,14 @@ fn environment(name: &str) -> Option<String> {
 /// password goes one way, from the dialog to the backend, and is never
 /// given back (R-SEC-1).
 #[tauri::command]
-pub(crate) async fn open_connection(studio: State<'_, Studio>, spec: ConnectionSpec, password: Option<String>) -> Result<Opened> {
+pub(crate) async fn open_connection(
+    studio: State<'_, Studio>,
+    spec: ConnectionSpec,
+    guards: Guards,
+    password: Option<String>,
+) -> Result<Opened> {
     let password = password.map(Secret::new);
-    blocking(&studio, move |m| m.open(&spec, password.as_ref(), environment)).await
+    blocking(&studio, move |m| m.open((&spec, guards), password.as_ref(), environment)).await
 }
 
 /// Ends a connection.
@@ -64,10 +70,11 @@ pub(crate) async fn cancel_statement(studio: State<'_, Studio>, connection: Conn
     blocking(&studio, move |m| m.cancel(connection)).await
 }
 
-/// Runs a statement.
+/// Runs a statement through its connection's guards: one they ask about
+/// runs only once `confirmed` (RULES.md D29).
 #[tauri::command]
-pub(crate) async fn run_statement(studio: State<'_, Studio>, connection: ConnectionId, sql: String) -> Result<Ran> {
-    blocking(&studio, move |m| m.run(connection, &sql)).await
+pub(crate) async fn run_statement(studio: State<'_, Studio>, connection: ConnectionId, sql: String, confirmed: bool) -> Result<RunAnswer> {
+    blocking(&studio, move |m| m.run(connection, &sql, confirmed)).await
 }
 
 /// Rows of a result.

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-list-saved-connections"
+description = "Enables the list_saved_connections command without any pre-configured scope."
+commands.allow = ["list_saved_connections"]
+
+[[permission]]
+identifier = "deny-list-saved-connections"
+description = "Denies the list_saved_connections command without any pre-configured scope."
+commands.deny = ["list_saved_connections"]

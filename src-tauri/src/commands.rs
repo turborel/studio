@@ -3,7 +3,9 @@
 //! arguments to the backend, which validates them before it does anything
 //! (R-SEC-6).
 
-mod connections;
+pub(crate) mod connections;
+mod preferences;
+mod saved;
 
 use tauri::Runtime;
 use tauri::ipc::Invoke;
@@ -30,6 +32,15 @@ pub(crate) fn handler<R: Runtime>() -> impl Fn(Invoke<R>) -> bool + Send + Sync 
         connections::session_state,
         connections::set_autocommit,
         connections::ping_connection,
-        connections::list_threads
+        connections::list_threads,
+        saved::list_saved_connections,
+        saved::save_connection,
+        saved::delete_saved_connection,
+        saved::open_saved_connection,
+        saved::keychain_status,
+        preferences::load_settings,
+        preferences::save_settings,
+        preferences::load_layout,
+        preferences::save_layout
     ]
 }

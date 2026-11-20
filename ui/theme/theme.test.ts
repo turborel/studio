@@ -53,6 +53,7 @@ describe("themes", () => {
     }
     expect(contrast(p.onAccent, p.accent)).toBeGreaterThanOrEqual(TEXT);
     expect(contrast(p.onSelection, p.selection)).toBeGreaterThanOrEqual(TEXT);
+    expect(contrast(p.onAlert, p.alert)).toBeGreaterThanOrEqual(TEXT);
   });
 
   it.each(THEMES)("keeps the %s theme's focus ring and borders visible [RULE] R-UI-2", (theme) => {

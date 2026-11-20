@@ -22,6 +22,7 @@ use crate::connections::spec::ConnectionSpec;
 use crate::connections::worker::{Job, Reply, Request, Worker};
 use crate::error::{Result, StudioError};
 use crate::events::{ConnectionId, EventSink};
+use crate::guard::policy::{Confirm, Guards};
 use crate::secret::Secret;
 
 /// The longest statement text Studio sends, in bytes: the protocol's
@@ -36,6 +37,7 @@ struct Handle {
     thread: JoinHandle<()>,
     canceller: Option<Canceller>,
     settings: Settings,
+    guards: Guards,
 }
 
 /// A thread the manager holds, as `threads` lists it.
@@ -46,6 +48,17 @@ pub struct ThreadInfo {
     pub name: String,
     /// The connection it serves.
     pub connection: ConnectionId,
+}
+
+/// What running a statement answers: what it gave, or, of a statement the
+/// guards ask about, what to confirm.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase", tag = "kind", content = "answer")]
+pub enum RunAnswer {
+    /// It ran.
+    Ran(Box<Ran>),
+    /// It runs once the user confirms this.
+    Confirm(Confirm),
 }
 
 /// A connection opened: its number and its session.
@@ -103,7 +116,12 @@ impl ConnectionManager {
     ///
     /// The settings' (`ConnectionSpec::resolve`); the connection's, as
     /// turborel-client gives it.
-    pub fn open(&self, spec: &ConnectionSpec, password: Option<&Secret>, variable: impl Fn(&str) -> Option<String>) -> Result<Opened> {
+    pub fn open(
+        &self,
+        (spec, guards): (&ConnectionSpec, Guards),
+        password: Option<&Secret>,
+        variable: impl Fn(&str) -> Option<String>,
+    ) -> Result<Opened> {
         let mut settings = spec.resolve(password, variable)?;
         settings.key_cache = self.key_cache.clone();
         let id = {
@@ -112,14 +130,14 @@ impl ConnectionManager {
             *next = next.saturating_add(1);
             id
         };
-        let (handle, session) = self.start(id, settings)?;
+        let (handle, session) = self.start(id, settings, guards)?;
         self.handles().insert(id, handle);
         Ok(Opened { connection: id, session })
     }
 
     /// Starts connection `id`'s worker, which connects by `settings`, and
     /// waits for it to be connected.
-    fn start(&self, id: ConnectionId, settings: Settings) -> Result<(Handle, SessionState)> {
+    fn start(&self, id: ConnectionId, settings: Settings, guards: Guards) -> Result<(Handle, SessionState)> {
         let (jobs, inbox) = mpsc::channel::<Job>();
         let (ready, connected) = mpsc::channel::<Result<(SessionState, Option<Canceller>)>>();
         let (spool, events, worker_settings) = (self.spool.clone(), Arc::clone(&self.events), settings.clone());
@@ -138,7 +156,7 @@ impl ConnectionManager {
             .map_err(|e| StudioError::misuse(format!("[DESIGN] the connection's worker cannot start: {e}")))?;
         let started = connected.recv().map_err(|_| StudioError::lost("[DESIGN] the connection's worker ended"));
         match started.and_then(|r| r) {
-            Ok((session, canceller)) => Ok((Handle { jobs, thread, canceller, settings }, session)),
+            Ok((session, canceller)) => Ok((Handle { jobs, thread, canceller, settings, guards }, session)),
             Err(error) => {
                 let _ = thread.join(); // It has ended: its failure is the one given.
                 Err(error)
@@ -154,18 +172,27 @@ impl ConnectionManager {
         answer.recv().map_err(|_| StudioError::lost("[DESIGN] the connection's worker ended"))?
     }
 
-    /// Runs `sql` on connection `id`.
+    /// Runs `sql` on connection `id`, through its guards (D29): a statement
+    /// the guards ask about runs only once `confirmed`, and is otherwise
+    /// answered with what to confirm.
     ///
     /// # Errors
     ///
     /// SQLCODE -910 for SQL longer than `MAX_SQL_BYTES`, or an unknown
-    /// connection; the statement's failure, as the server gives it.
-    pub fn run(&self, id: ConnectionId, sql: &str) -> Result<Ran> {
+    /// connection; SQLSTATE 25006 for a write on a read-only connection;
+    /// the statement's failure, as the server gives it.
+    pub fn run(&self, id: ConnectionId, sql: &str, confirmed: bool) -> Result<RunAnswer> {
         if sql.len() > MAX_SQL_BYTES {
             return Err(StudioError::misuse(format!("[DESIGN] a statement is at most {MAX_SQL_BYTES} bytes")));
         }
-        match self.ask(id, Request::Run(sql.to_owned()))? {
-            Reply::Ran(ran) => Ok(*ran),
+        let guards = self.handles().get(&id).ok_or_else(|| unknown(id))?.guards;
+        if let Some(confirm) = guards.judge(sql)?
+            && !confirmed
+        {
+            return Ok(RunAnswer::Confirm(confirm));
+        }
+        match self.ask(id, Request::Run { sql: sql.to_owned(), read_only: guards.read_only })? {
+            Reply::Ran(ran) => Ok(RunAnswer::Ran(ran)),
             Reply::Page(_) | Reply::Session(_) | Reply::Done => Err(unexpected()),
         }
     }
@@ -257,7 +284,7 @@ impl ConnectionManager {
         let (reply, _) = mpsc::channel();
         let _ = old.jobs.send((Request::Terminate, reply)); // A worker already ended needs no Terminate.
         let _ = old.thread.join(); // It ends as it is told, or has ended.
-        let (handle, session) = self.start(id, old.settings)?;
+        let (handle, session) = self.start(id, old.settings, old.guards)?;
         self.handles().insert(id, handle);
         Ok(session)
     }

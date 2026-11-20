@@ -127,7 +127,7 @@ them.
 | S-CLIENT-15 | The splitter of statements ([CLIENT Controlling the session]) | a script split as the server splits it | not yet |
 | S-CLIENT-16 | Declared types ([CLIENT Prepared statements]) | each column's type as SQL writes it | done |
 | S-CLIENT-17 | Notices and conditions ([CLIENT What the server tells]) | the messages pane | not yet |
-| S-CLIENT-18 | The session's status and settings ([CLIENT What the server tells]) | the status bar: user, schema, transaction, read-only | not yet |
+| S-CLIENT-18 | The session's status and settings ([CLIENT What the server tells]) | the status bar: user, schema, transaction, read-only, replica | done |
 | S-CLIENT-19 | Rows affected, generated values and server time ([CLIENT What the server tells]) | the messages pane and the status bar | not yet |
 | S-CLIENT-20 | A failure's diagnostics ([CLIENT What the server tells]) | the messages pane | not yet |
 | S-CLIENT-21 | Large objects ([CLIENT Large objects]) | the viewers, a chunk at a time; edited values written by `create_lob` | not yet |
@@ -136,7 +136,7 @@ them.
 | S-CLIENT-24 | Reading CSV ([CLIENT Importing]) | importing CSV | not yet |
 | S-CLIENT-25 | Ping and reset ([CLIENT Controlling the session]) | checking a connection; a session is not reset | done |
 | S-CLIENT-26 | What a connection asks for ([CLIENT What a connection asks for]) | the attribute `application`, Turborel Studio | done |
-| S-CLIENT-27 | A connection's role ([CLIENT Several servers]) | the status bar's primary or replica | not yet |
+| S-CLIENT-27 | A connection's role ([CLIENT Several servers]) | the status bar's Replica, from the status SERVER_READ_ONLY | done |
 
 ## Capabilities
 
@@ -175,20 +175,20 @@ the manual.
 | ID | File | Status |
 |---|---|---|
 | S-FILE-1 | A schema model, the user's own file | not yet |
-| S-FILE-2 | Saved connections, with no password | not yet |
-| S-FILE-3 | Studio's settings | not yet |
-| S-FILE-4 | The dock's layout | not yet |
+| S-FILE-2 | Saved connections, with no password | done |
+| S-FILE-3 | Studio's settings | done |
+| S-FILE-4 | The dock's layout | done |
 | S-FILE-5 | The assistant's audit log | not yet |
 
 ## Security
 
 | ID | What | Status |
 |---|---|---|
-| S-SEC-1 | Passwords and keys in the operating system's keychain alone (R-SEC-1) | not yet |
-| S-SEC-2 | Files owner-only, with no secret (R-SEC-2) | not yet |
-| S-SEC-3 | TLS verified by default; a connection not secure shown so (R-SEC-3) | not yet |
+| S-SEC-1 | Passwords and keys in the operating system's keychain alone (R-SEC-1) | done |
+| S-SEC-2 | Files owner-only, with no secret (R-SEC-2) | done |
+| S-SEC-3 | TLS verified by default; a connection not secure shown so (R-SEC-3) | done |
 | S-SEC-4 | Environments by colour; a production connection asks before a statement that writes (R-SEC-7) | not yet |
-| S-SEC-5 | A read-only connection begins each transaction READ ONLY (R-SEC-7) | not yet |
+| S-SEC-5 | A read-only connection begins each transaction READ ONLY (R-SEC-7) | done |
 | S-SEC-6 | A statement that destroys asks first (R-SEC-8) | not yet |
 | S-SEC-7 | The webview's policy and capability (R-SEC-4, R-SEC-5) | done |
 | S-SEC-8 | The assistant sends only what the user chose, shown first, and its tools never act alone (R-SEC-12) | not yet |

@@ -29,8 +29,8 @@ appendices to look a thing up.
 
 ## Conventions
 
-**Menus and keys** are set in bold, as **File > New Worksheet** and
-**Ctrl+Enter**; on macOS, **Cmd** stands where **Ctrl** is written
+**Menus and keys** are set in bold, as **File > New Connection…** and
+**Ctrl+Shift+P**; on macOS, **Cmd** stands where **Ctrl** is written
 ([Keyboard shortcuts](appendix/a-keyboard.md)).
 
 **Examples** of SQL are set in a fixed-width font. SQL key words are in

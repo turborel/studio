@@ -1,10 +1,11 @@
-/** The dock's panels, before the milestones that fill them. */
+/** The dock's panels: the explorer's connections, the centre, and details. */
+import { ConnectionsPanel } from "./ConnectionsPanel";
 
-/** The Object Explorer: empty until a connection is opened. */
+/** The Object Explorer: the connections, open and saved. */
 export function ExplorerPanel() {
   return (
-    <div className="panel-empty" role="tree" aria-label="Object Explorer">
-      No connection is open.
+    <div className="panel" role="region" aria-label="Object Explorer">
+      <ConnectionsPanel />
     </div>
   );
 }
@@ -14,7 +15,7 @@ export function WelcomePanel() {
   return (
     <div className="panel-empty">
       <h1>Turborel Studio</h1>
-      <p>Open a connection to begin.</p>
+      <p>Open a connection to begin: New Connection, in the explorer or the File menu.</p>
     </div>
   );
 }

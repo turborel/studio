@@ -1,21 +1,41 @@
 //! What the application holds while it runs (RULES.md D1, D24): the
-//! connection manager, and the sink that tells its events to the webview.
+//! connection manager, the saved connections and the folder of Studio's
+//! files, and the sink that tells the backend's events to the webview.
 
+use std::path::PathBuf;
 use std::sync::Arc;
 
+use serde::Serialize;
 use tauri::{AppHandle, Emitter, Runtime};
 use turborel_studio_core::connections::manager::ConnectionManager;
 use turborel_studio_core::events::{Event, EventSink};
+use turborel_studio_core::saved::SavedConnections;
 
 /// The name of the event every backend event is sent as.
 pub const EVENT: &str = "studio:event";
 /// The folder of the application's cache that results are spooled in.
 pub const RESULTS_DIR: &str = "results";
 
+/// Whether passwords can be kept in the keychain, and why not if not.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct KeychainStatus {
+    /// Whether the operating system's keychain is open.
+    pub available: bool,
+    /// Why not, if it is not: a password is then kept until Studio closes.
+    pub reason: Option<String>,
+}
+
 /// The application's state.
 pub struct Studio {
     /// Every open connection.
     pub connections: Arc<ConnectionManager>,
+    /// The saved connections.
+    pub saved: Arc<SavedConnections>,
+    /// The folder of Studio's settings and layout, its user's alone.
+    pub config: PathBuf,
+    /// Whether the keychain is open.
+    pub keychain: KeychainStatus,
 }
 
 /// Tells the backend's events to the webview.

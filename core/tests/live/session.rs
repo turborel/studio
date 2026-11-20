@@ -4,6 +4,7 @@
 use turborel_studio_core::connections::manager::WORKER_PREFIX;
 use turborel_studio_core::connections::spec::ConnectionSpec;
 use turborel_studio_core::events::Event;
+use turborel_studio_core::guard::policy::Guards;
 
 use crate::connect::column;
 use crate::{Live, no_environment};
@@ -22,7 +23,7 @@ pub fn a_running_statement_is_cancelled(live: &Live) {
     let (manager, _) = live.manager();
     let id = live.owner(&manager);
     let error = std::thread::scope(|scope| {
-        let running = scope.spawn(|| manager.run(id, LONG));
+        let running = scope.spawn(|| crate::run(&manager, id, LONG));
         let mut tries = 0;
         while !running.is_finished() && tries < CANCEL_TRIES {
             manager.cancel(id).unwrap();
@@ -43,14 +44,14 @@ pub fn the_transaction_is_followed(live: &Live) {
     let (manager, _) = live.manager();
     let id = live.owner(&manager);
     manager.set_autocommit(id, true).unwrap();
-    manager.run(id, "CREATE TABLE T1 (A INTEGER)").unwrap();
+    crate::run(&manager, id, "CREATE TABLE T1 (A INTEGER)").unwrap();
     assert!(!manager.set_autocommit(id, false).unwrap().transaction.autocommit);
-    let ran = manager.run(id, "INSERT INTO T1 VALUES (1)").unwrap();
+    let ran = crate::run(&manager, id, "INSERT INTO T1 VALUES (1)").unwrap();
     assert!(ran.session.transaction.active);
-    assert!(!manager.run(id, "ROLLBACK").unwrap().session.transaction.active);
+    assert!(!crate::run(&manager, id, "ROLLBACK").unwrap().session.transaction.active);
     manager.set_autocommit(id, true).unwrap();
     assert_eq!(column(&manager, id, "SELECT COUNT(*) FROM T1"), [Some("0".to_owned())]);
-    manager.run(id, "DROP TABLE T1 CASCADE").unwrap();
+    crate::run(&manager, id, "DROP TABLE T1 CASCADE").unwrap();
     manager.close(id).unwrap();
 }
 
@@ -62,11 +63,11 @@ pub fn a_lost_connection_is_told_and_reconnected(live: &Live) {
     let operator = live.owner(&manager);
     let uri = Some("turborel://localhost/?application_name=victim".to_owned());
     let spec = ConnectionSpec { uri, ..live.spec() };
-    let victim = manager.open(&spec, Some(&live.password()), no_environment).unwrap().connection;
+    let victim = manager.open((&spec, Guards::default()), Some(&live.password()), no_environment).unwrap().connection;
     let ids = column(&manager, operator, "SELECT ID FROM INFORMATION_SCHEMA.CONNECTIONS WHERE APPLICATION = 'victim'");
     let [Some(server_id)] = ids.as_slice() else { panic!("{ids:?}") };
-    manager.run(operator, &format!("END CONNECTION {server_id}")).unwrap();
-    let error = manager.run(victim, "VALUES (1)").unwrap_err();
+    crate::run(&manager, operator, &format!("END CONNECTION {server_id}")).unwrap();
+    let error = crate::run(&manager, victim, "VALUES (1)").unwrap_err();
     assert!(error.ends_connection(), "{error}");
     let lost: Vec<_> = events.take().into_iter().filter(|e| matches!(e, Event::Lost { connection, .. } if *connection == victim)).collect();
     assert_eq!(lost.len(), 1);

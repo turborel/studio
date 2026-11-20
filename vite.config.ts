@@ -35,7 +35,7 @@ export default defineConfig({
       exclude: ["ui/**/*.test.{ts,tsx}", "ui/main.tsx", "ui/test/**"],
       reporter: ["text-summary", "json-summary"],
       reportsDirectory: "target/coverage-ui",
-      thresholds: { lines: 90, branches: 90, functions: 90, statements: 90 },
+      thresholds: { lines: 97, branches: 92, functions: 96, statements: 97 },
     },
   },
 });

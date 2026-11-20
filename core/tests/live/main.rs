@@ -19,11 +19,13 @@
     clippy::print_stdout,
     clippy::arithmetic_side_effects,
     clippy::missing_panics_doc,
+    clippy::panic_in_result_fn,
     reason = "a test program, whose failures are panics (R-TEST-4)"
 )]
 
 mod certs;
 mod connect;
+mod guards;
 mod server;
 mod session;
 mod statements;
@@ -33,9 +35,12 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 use std::sync::Arc;
 
-use turborel_studio_core::connections::manager::ConnectionManager;
+use turborel_studio_core::connections::manager::{ConnectionManager, RunAnswer};
+use turborel_studio_core::connections::outcome::Ran;
 use turborel_studio_core::connections::spec::ConnectionSpec;
+use turborel_studio_core::error::StudioError;
 use turborel_studio_core::events::{ConnectionId, EventSink, KeptEvents};
+use turborel_studio_core::guard::policy::Guards;
 use turborel_studio_core::secret::Secret;
 
 use crate::server::{OWNER, OWNER_PASSWORD, PORT, SERVER_VARIABLE, Server};
@@ -44,6 +49,18 @@ use crate::server::{OWNER, OWNER_PASSWORD, PORT, SERVER_VARIABLE, Server};
 pub struct Live {
     /// The server.
     pub server: Server,
+}
+
+/// Runs `sql` on `id`, confirmed, and gives what it gave.
+///
+/// # Errors
+///
+/// The statement's failure.
+pub fn run(manager: &ConnectionManager, id: ConnectionId, sql: &str) -> Result<Ran, StudioError> {
+    match manager.run(id, sql, true)? {
+        RunAnswer::Ran(ran) => Ok(*ran),
+        RunAnswer::Confirm(confirm) => panic!("{sql} asked to confirm, confirmed: {confirm:?}"),
+    }
 }
 
 /// No environment: a test's settings are its own alone.
@@ -84,14 +101,14 @@ impl Live {
     pub fn prepare(&self) {
         let (manager, _) = self.manager();
         let id = self.owner(&manager);
-        manager.run(id, &format!("CREATE SCHEMA AUTHORIZATION {OWNER}")).unwrap();
-        manager.run(id, "COMMIT").unwrap();
+        run(&manager, id, &format!("CREATE SCHEMA AUTHORIZATION {OWNER}")).unwrap();
+        run(&manager, id, "COMMIT").unwrap();
         manager.close(id).unwrap();
     }
 
     /// A connection of `manager`'s, the owner's over TLS.
     pub fn owner(&self, manager: &ConnectionManager) -> ConnectionId {
-        manager.open(&self.spec(), Some(&self.password()), no_environment).unwrap().connection
+        manager.open((&self.spec(), Guards::default()), Some(&self.password()), no_environment).unwrap().connection
     }
 }
 
@@ -122,6 +139,9 @@ const TESTS: &[(&str, Test)] = &[
     ("a_lost_connection_is_told_and_reconnected", session::a_lost_connection_is_told_and_reconnected),
     ("each_connection_has_a_named_worker", session::each_connection_has_a_named_worker),
     ("ping_answers", session::ping_answers),
+    ("a_read_only_connection_reads_alone", guards::a_read_only_connection_reads_alone),
+    ("production_asks_before_a_write", guards::production_asks_before_a_write),
+    ("a_drop_asks_first", guards::a_drop_asks_first),
 ];
 
 fn main() -> ExitCode {

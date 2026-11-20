@@ -1,29 +1,37 @@
 /**
- * Studio's window (RULES.md D1, D14): the dock of panels and the status
- * bar, in the theme the system prefers.
+ * Studio's window (RULES.md D1, D14, D30, D32): the toolbar, the dock of
+ * panels and the status bar, in the theme and zoom the settings say,
+ * tinted by the active connection's colour; the keys, the menus and the
+ * backend's events each running what they name.
  */
-import { DockviewReact, type DockviewReadyEvent, type DockviewTheme } from "dockview-react";
-import { useEffect, useState } from "react";
-import { defaultLayout, PANELS } from "./shell/layout";
-import { DetailsPanel, ExplorerPanel, WelcomePanel } from "./shell/panels";
+import { listen } from "@tauri-apps/api/event";
+import type { DockviewApi } from "dockview-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { type CommandContext, defaultKeys, runCommand } from "./commands/commands";
+import { bindings, keyOf } from "./commands/keys";
+import { onStudioEvent } from "./ipc/events";
+import { ConnectionDialog } from "./shell/ConnectionDialog";
+import { CommandPalette } from "./shell/CommandPalette";
+import { Dock, resetLayout } from "./shell/Dock";
+import { tint } from "./shell/environment";
+import { ErrorBanner } from "./shell/ErrorBanner";
+import { AboutDialog, ShortcutsDialog } from "./shell/HelpDialogs";
+import { SettingsDialog } from "./shell/SettingsDialog";
+import { StatusBar } from "./shell/StatusBar";
+import { Toolbar } from "./shell/Toolbar";
+import { checkAfterWake, loadAll, told } from "./state/actions";
+import { openConnection, type Store, StoreContext, useStudio } from "./state/store";
 import { applyTheme, DARK_QUERY, resolveTheme } from "./theme/theme";
 import type { ThemeName } from "./theme/tokens";
 
-/** The dock's theme of each of Studio's, its colours from Studio's own. */
-const DOCK_THEMES: Readonly<Record<ThemeName, DockviewTheme>> = {
-  light: { name: "studio-light", className: "dockview-theme-studio", colorScheme: "light" },
-  dark: { name: "studio-dark", className: "dockview-theme-studio", colorScheme: "dark" },
-};
+/** The event a menu item of Studio's is told as. */
+export const MENU_EVENT = "studio:menu";
+/** The percent of a whole. */
+const PERCENT = 100;
 
-const COMPONENTS = {
-  [PANELS.explorer.id]: ExplorerPanel,
-  [PANELS.welcome.id]: WelcomePanel,
-  [PANELS.details.id]: DetailsPanel,
-};
-
-/** The theme the system prefers, followed as it changes. */
-function useSystemTheme(): ThemeName {
-  const query = window.matchMedia(DARK_QUERY);
+/** Whether the system prefers dark, followed as it changes. */
+function useSystemDark(): boolean {
+  const query = useMemo(() => window.matchMedia(DARK_QUERY), []);
   const [dark, setDark] = useState(query.matches);
   useEffect(() => {
     const changed = (event: MediaQueryListEvent) => {
@@ -34,26 +42,114 @@ function useSystemTheme(): ThemeName {
       query.removeEventListener("change", changed);
     };
   }, [query]);
-  return resolveTheme("system", dark);
+  return dark;
 }
 
-/** The window. */
-export function App() {
-  const theme = useSystemTheme();
+/** Loads the state, and runs what the backend, the menus, the keys and waking tell. */
+function useWiring(context: CommandContext): void {
+  const { store } = context;
+  const keyBindings = useStudio((s) => s.settings.keyBindings);
+  useEffect(() => {
+    void loadAll(store);
+    const events = onStudioEvent((event) => {
+      told(store, event);
+    });
+    const menus = listen<string>(MENU_EVENT, (event) => void runCommand(event.payload, context));
+    const woke = () => {
+      if (document.visibilityState === "visible") {
+        void checkAfterWake(store);
+      }
+    };
+    document.addEventListener("visibilitychange", woke);
+    window.addEventListener("online", woke);
+    return () => {
+      void events.then((stop) => {
+        stop();
+      });
+      void menus.then((stop) => {
+        stop();
+      });
+      document.removeEventListener("visibilitychange", woke);
+      window.removeEventListener("online", woke);
+    };
+  }, [store, context]);
+  useEffect(() => {
+    const keys = bindings(defaultKeys(), keyBindings);
+    const pressed = (event: KeyboardEvent) => {
+      const key = keyOf(event);
+      const id = key === null ? undefined : keys.get(key);
+      if (id !== undefined) {
+        event.preventDefault();
+        void runCommand(id, context);
+      }
+    };
+    window.addEventListener("keydown", pressed);
+    return () => {
+      window.removeEventListener("keydown", pressed);
+    };
+  }, [keyBindings, context]);
+}
+
+/** The dialog shown, if any. */
+function Dialogs({ context }: { readonly context: CommandContext }) {
+  const dialog = useStudio((s) => s.dialog);
+  switch (dialog?.kind) {
+    case "connection":
+      return <ConnectionDialog editing={dialog.editing} />;
+    case "palette":
+      return <CommandPalette context={context} />;
+    case "settings":
+      return <SettingsDialog />;
+    case "about":
+      return <AboutDialog />;
+    case "shortcuts":
+      return <ShortcutsDialog />;
+    case undefined:
+      return null;
+  }
+}
+
+/** The window's parts, within its store. */
+function Window({ store }: { readonly store: Store }) {
+  const dock = useRef<DockviewApi | null>(null);
+  const context = useMemo<CommandContext>(
+    () => ({
+      store,
+      resetLayout: () => {
+        if (dock.current !== null) {
+          resetLayout(dock.current);
+        }
+      },
+    }),
+    [store],
+  );
+  useWiring(context);
+  const settings = useStudio((s) => s.settings);
+  const theme: ThemeName = resolveTheme(settings.theme, useSystemDark());
   useEffect(() => {
     applyTheme(document.documentElement, theme);
   }, [theme]);
-  const ready = (event: DockviewReadyEvent) => {
-    defaultLayout(event.api);
-  };
+  const active = useStudio((s) => openConnection(s, s.active));
+  const colour = active === undefined ? null : tint(active.guards.environment, active.colour);
+  const style = { zoom: settings.zoomPercent / PERCENT, ...(colour === null ? {} : { "--env-colour": colour }) };
   return (
-    <div className="app">
+    <div className={colour === null ? "app" : "app app-tinted"} style={style}>
+      <Toolbar context={context} />
+      <ErrorBanner />
       <main className="dock">
-        <DockviewReact components={COMPONENTS} onReady={ready} theme={DOCK_THEMES[theme]} />
+        <Dock theme={theme} onApi={(api) => (dock.current = api)} />
       </main>
-      <footer className="status-bar" role="status" aria-label="Status bar">
-        Not connected
-      </footer>
+      <StatusBar />
+      <Dialogs context={context} />
     </div>
+  );
+}
+
+/** The window, of `store`. */
+export function App({ store }: { readonly store: Store }) {
+  return (
+    <StoreContext.Provider value={store}>
+      <Window store={store} />
+    </StoreContext.Provider>
   );
 }

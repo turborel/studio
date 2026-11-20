@@ -26,11 +26,12 @@ function recording(answer: unknown = null): { command: string; args: unknown }[]
 describe("the connection commands", () => {
   it("open a connection with its settings and a password that goes one way [RULE] R-SEC-1", async () => {
     const asked = recording({ connection: 1, session: {} });
-    await openConnection({ host: "db.example", user: "ann", tlsMode: "verify-full" }, "secret");
+    const guards = { environment: "production", readOnly: true } as const;
+    await openConnection({ host: "db.example", user: "ann", tlsMode: "verify-full" }, guards, "secret");
     expect(asked).toEqual([
       {
         command: "open_connection",
-        args: { spec: { host: "db.example", user: "ann", tlsMode: "verify-full" }, password: "secret" },
+        args: { spec: { host: "db.example", user: "ann", tlsMode: "verify-full" }, guards, password: "secret" },
       },
     ]);
   });
@@ -40,7 +41,7 @@ describe("the connection commands", () => {
     await closeConnection(1);
     await reconnect(1);
     await cancelStatement(1);
-    await runStatement(1, "VALUES (1)");
+    await runStatement(1, "VALUES (1)", false);
     await fetchRows(1, 2, 500, 100);
     await closeResult(1, 2);
     await sessionState(1);
@@ -69,6 +70,6 @@ describe("the connection commands", () => {
       // eslint-disable-next-line @typescript-eslint/only-throw-error -- the backend rejects with Studio's error, not an Error
       throw failure;
     });
-    await expect(runStatement(7, "VALUES (1)")).rejects.toEqual(failure);
+    await expect(runStatement(7, "VALUES (1)", true)).rejects.toEqual(failure);
   });
 });

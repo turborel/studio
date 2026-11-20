@@ -1,15 +1,16 @@
-/** The front end's entry: Studio's window, in the page's root. */
+/** The front end's entry: Studio's window, of a store of its own, in the page's root. */
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "dockview-react/dist/styles/dockview.css";
 import "./styles.css";
 import { App } from "./App";
+import { Store } from "./state/store";
 
 const root = document.getElementById("root");
 if (root !== null) {
   createRoot(root).render(
     <StrictMode>
-      <App />
+      <App store={new Store()} />
     </StrictMode>,
   );
 }

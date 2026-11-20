@@ -130,9 +130,34 @@ export interface ThreadInfo {
   readonly connection: number;
 }
 
-/** Opens a connection, proving `password` if given. */
-export function openConnection(spec: ConnectionSpec, password: string | null): Promise<Opened> {
-  return invoke<Opened>("open_connection", { spec, password });
+/** A connection's environment, which sets its guards and colour. */
+export type Environment = "development" | "test" | "production";
+
+/** A connection's guards (RULES.md D29). */
+export interface Guards {
+  readonly environment: Environment;
+  readonly readOnly: boolean;
+}
+
+/** What a statement is, from the least a guard weighs to the most. */
+export type StatementClass =
+  "read" | "transaction" | "session" | "writeRows" | "changeSchema" | "security" | "administration" | "unclassified";
+
+/** Why a script needs the user's confirmation before it runs. */
+export interface Confirm {
+  readonly class: StatementClass;
+  readonly destroys: readonly string[];
+  readonly unclassified: readonly string[];
+  readonly production: boolean;
+}
+
+/** What running a script answers: what it gave, or what to confirm. */
+export type RunAnswer =
+  { readonly kind: "ran"; readonly answer: Ran } | { readonly kind: "confirm"; readonly answer: Confirm };
+
+/** Opens a connection under `guards`, proving `password` if given. */
+export function openConnection(spec: ConnectionSpec, guards: Guards, password: string | null): Promise<Opened> {
+  return invoke<Opened>("open_connection", { spec, guards, password });
 }
 
 /** Ends a connection. */
@@ -150,9 +175,9 @@ export function cancelStatement(connection: number): Promise<null> {
   return invoke<null>("cancel_statement", { connection });
 }
 
-/** Runs a statement. */
-export function runStatement(connection: number, sql: string): Promise<Ran> {
-  return invoke<Ran>("run_statement", { connection, sql });
+/** Runs a statement through its connection's guards: one they ask about runs only once `confirmed`. */
+export function runStatement(connection: number, sql: string, confirmed: boolean): Promise<RunAnswer> {
+  return invoke<RunAnswer>("run_statement", { connection, sql, confirmed });
 }
 
 /** At most `count` rows of a result, from row `from`. */
