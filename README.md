@@ -28,6 +28,7 @@ works with the database one window for it:
   schema, and schema compare;
 - an analyzer of indexes and plans;
 - an assistant, off until the user turns it on;
+- live sessions, a workspace shared with others as it is worked in;
 - a monitor of the server, its sessions, users and replication.
 
 It runs on Linux, macOS and Windows, built with Tauri: a Rust backend
@@ -35,7 +36,7 @@ over turborel-client, and a front end in TypeScript and React. Passwords
 and keys stay in the operating system's keychain, and the webview never
 sees them ([SECURITY.md](SECURITY.md)).
 
-Studio is built in milestones, M0 to M11. [CONFORMANCE.md](CONFORMANCE.md)
+Studio is built in milestones, M0 to M12. [CONFORMANCE.md](CONFORMANCE.md)
 says what it supports of Turborel, row by row, and [TODO.md](TODO.md)
 what is open.
 

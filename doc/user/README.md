@@ -16,4 +16,5 @@ it, from connecting to administering the server.
 7. [Schema Modeling](07-modeling.md)
 8. [The Analyzer](08-analyzer.md)
 9. [The Assistant](09-assistant.md)
-10. [Administration](10-administration.md)
+10. [Live Sessions](10-live-sessions.md)
+11. [Administration](11-administration.md)

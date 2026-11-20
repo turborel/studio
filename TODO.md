@@ -50,6 +50,8 @@ Code never cites this file (R-DOC-5).
 - Notices and conditions; transaction state, commit and rollback;
   destructive statements confirmed (S-SEC-6).
 - A plan view of EXPLAIN.
+- Waiting on the server, shown as unavailable until Turborel has it: a
+  debugger of SQL routines.
 
 ## M5 Results grid
 
@@ -76,6 +78,10 @@ Code never cites this file (R-DOC-5).
 
 - Index views, the plan view, and the analyzer's rules, each with its
   fix as SQL; what-if indexes.
+- Waiting on the server, each shown as unavailable, with a line saying
+  why, until Turborel exposes it: a plan with actual rows and timings;
+  per-statement statistics; table and index statistics; the planner's
+  column statistics.
 
 ## M9 Assistant
 
@@ -84,18 +90,32 @@ Code never cites this file (R-DOC-5).
   (S-FILE-5); the mock model server (S-SEC-8, S-LIMIT-5).
 - A manual check against the real API, for the owner to run with a key.
 
-## M10 Administration
+## M10 Live Sessions
+
+- Present and Join: a presenter shares the workspace's state live with
+  viewers, never a secret, the connection or its settings; invites,
+  approval by a safety code, QUIC on TLS 1.3 with the certificate pinned,
+  end to end through a relay, revoked at any time; the policy file; the
+  `studio-relay` program; their tests.
+
+## M11 Administration
 
 - The server and session monitor, END and CANCEL CONNECTION, users,
   roles and privileges, settings and replication status (S-VIEW-17 to
   S-VIEW-20).
+- Waiting on the server, shown as unavailable until Turborel has it:
+  each session's current statement.
 
-## M11 Polish and the security audit
+## M12 Polish and the security audit
 
 - Accessibility and keyboard reach; large results and long sessions.
 - The security review of the whole application, each finding fixed or
   written here.
 - Unsigned installers: `.dmg`, `.msi`, `.AppImage` and `.deb`. Signing
   and notarization wait for the owner's certificates.
+- The nightly: a workflow, as Turborel's, that builds the installers after
+  verify passes on main and replaces the one `nightly` pre-release, its
+  files at fixed names with SHA-256 sums; Installing then tells how to
+  open an unsigned build and check the sums, and the README points to it.
 - The full manual, every feature checked against turborel-client and
   Turborel's manual.
