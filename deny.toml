@@ -3,13 +3,28 @@
 
 [graph]
 all-features = false
+# Every platform Studio is built for, whatever platform checks it, so a
+# check on one sees the crates of all (R-PLAT-1).
+targets = [
+    "x86_64-unknown-linux-gnu",
+    "aarch64-unknown-linux-gnu",
+    "x86_64-apple-darwin",
+    "aarch64-apple-darwin",
+    "x86_64-pc-windows-msvc",
+    "aarch64-pc-windows-msvc",
+]
 
 [advisories]
 # Every advisory fails the check, unmaintained crates too; one accepted is
 # listed here with its reason.
 version = 2
 yanked = "deny"
-ignore = []
+ignore = [
+    # proc-macro-error is unmaintained: a macro run as gtk-rs 0.18 builds,
+    # which Tauri's Linux webview needs, in no code Studio ships. No release
+    # of Tauri leaves gtk-rs 0.18 yet.
+    { id = "RUSTSEC-2024-0370", reason = "a build-time macro of gtk-rs 0.18, which Tauri's Linux webview needs" },
+]
 
 [licenses]
 version = 2

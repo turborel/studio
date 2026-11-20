@@ -18,6 +18,20 @@ updates:
     labels: ["dependencies"]
     commit-message:
       prefix: build
+    ignore:
+      # React stays at 18 while Glide Data Grid supports no later (D11).
+      - dependency-name: "react"
+        versions: [">=19"]
+      - dependency-name: "react-dom"
+        versions: [">=19"]
+      - dependency-name: "@types/react"
+        versions: [">=19"]
+      - dependency-name: "@types/react-dom"
+        versions: [">=19"]
+      # TypeScript stays below 6.1 while typescript-eslint supports no
+      # later (D18).
+      - dependency-name: "typescript"
+        versions: [">=6.1"]
   - package-ecosystem: github-actions
     directory: /
     schedule:
