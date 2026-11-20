@@ -98,13 +98,19 @@ Code never cites this file (R-DOC-5).
 
 - Index views, the plan view, and the analyzer's rules, each with its
   fix as SQL; what-if indexes.
+- The plan view's actual figures, by EXPLAIN ANALYZE, which main now
+  gives: each operator's estimated rows against its actual rows, loops
+  and probes, a large misestimate marked, its time where the server gives
+  one, `(never run)` shown so; two plans compared, before and after. It
+  runs the query, so it is run only when the user asks, never of itself;
+  its text read as main's EXPLAIN page gives it, the tests on that page's
+  examples.
 - Reports: built in (object counts and sizes, files, indexes,
   privileges, sessions and settings) and the user's own, a saved query
   shown as a table or a chart, with parameters.
 - Waiting on the server, each shown as unavailable, with a line saying
-  why, until Turborel exposes it: a plan with actual rows and timings;
-  per-statement statistics; table and index statistics; the planner's
-  column statistics.
+  why, until Turborel exposes it: per-statement statistics; table and
+  index statistics; the planner's column statistics.
 
 ## M9 Assistant
 

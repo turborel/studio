@@ -6,11 +6,11 @@ describe("the commands", () => {
     const asked: string[] = [];
     mockIPC((command) => {
       asked.push(command);
-      return { version: "0.0.0", turborelCommit: "8052705ecab0f3cd9668f992ff14505c7a60f5dc" };
+      return { version: "0.0.0", turborelCommit: "3df14c1621d8063f12452a6c189017e34b8e9fd9" };
     });
     await expect(appInfo()).resolves.toEqual({
       version: "0.0.0",
-      turborelCommit: "8052705ecab0f3cd9668f992ff14505c7a60f5dc",
+      turborelCommit: "3df14c1621d8063f12452a6c189017e34b8e9fd9",
     });
     expect(asked).toEqual(["app_info"]);
   });

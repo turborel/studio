@@ -55,9 +55,18 @@ const CLASSES: &[(&str, Class)] = &[
     ("CREATE EXTENSION EXAMPLE", Class::Administration),
     ("CANCEL CONNECTION 2", Class::Administration),
     ("EXECUTE GQL ON GRAPH NET 'MATCH (p) RETURN p'", Class::Unclassified),
+    ("EXPLAIN SELECT * FROM STAFF", Class::Read),
+    ("explain analyze select * from staff", Class::Read),
+    ("EXPLAIN ANALYZE (SELECT ID FROM PARTS) FETCH FIRST 3 ROWS ONLY", Class::Read),
+    ("EXPLAIN ANALYZE SELECT * FROM FINAL TABLE (INSERT INTO STAFF (NAME) VALUES ('A'))", Class::WriteRows),
+    ("EXPLAIN DELETE FROM STAFF", Class::Unclassified),
+    ("EXPLAIN ANALYZE", Class::Unclassified),
+    ("EXPLAIN", Class::Unclassified),
 ];
 
-/// [RULE] R-SEC-8 [DESIGN] D29: each statement of the corpus has its class.
+/// [RULE] R-SEC-8 [DESIGN] D29 [DOC sql/statements/explain.md EXPLAIN ANALYZE]: each
+/// statement of the corpus has its class, EXPLAIN and EXPLAIN ANALYZE of a
+/// query its query's.
 #[test]
 fn each_statement_has_its_class() {
     for (sql, class) in CLASSES {

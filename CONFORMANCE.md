@@ -12,7 +12,7 @@ citing it pass (RULES.md R-TRACE-4); else it is **not yet**, and
 Turborel's manual where Turborel defines the behaviour, by page and
 heading as RULES.md D6 writes them. Turborel's manual is read at the
 commit turborel-client is pinned to (RULES.md D10),
-`8052705ecab0f3cd9668f992ff14505c7a60f5dc`.
+`3df14c1621d8063f12452a6c189017e34b8e9fd9`.
 
 [Statements](#statements) · [Types](#types) ·
 [The Information Schema](#the-information-schema) ·

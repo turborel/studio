@@ -80,7 +80,8 @@ pub fn strictest(statements: &[Classified]) -> Class {
 }
 
 /// The statement `text`, classified by its syntax tree: a query if it is
-/// one, else an `<SQL statement>`; unclassified if it is neither.
+/// one, or EXPLAIN of one, else an `<SQL statement>`; unclassified if it
+/// is none of them.
 pub fn classify(text: &str) -> Classified {
     let text = text.trim().to_owned();
     let unclassified = Classified { text: text.clone(), class: Class::Unclassified, destroys: None, floor: None, read_write: false };
@@ -88,12 +89,7 @@ pub fn classify(text: &str) -> Classified {
     // input cuts short ([DOC sql/01-lexical.md Comments]).
     let ended = format!("{text}\n");
     let text = ended;
-    if let Ok(mut parser) = Parser::with_extensions(&text, true)
-        && parser.cursor_specification().is_ok()
-    {
-        // A query may hold a data change delta table, as FINAL TABLE
-        // (INSERT ...), which changes rows: so judged by its words.
-        let class = if changes_rows(&text) { Class::WriteRows } else { Class::Read };
+    if let Some(class) = explained(&text).or_else(|| query(&text)) {
         return Classified { class, ..unclassified };
     }
     let Ok(statement) = Parser::with_extensions(&text, true).and_then(|mut p| p.sql_statement()) else {
@@ -102,6 +98,38 @@ pub fn classify(text: &str) -> Classified {
     let (class, destroys, floor) = of(&statement);
     let read_write = matches!(&statement, SqlStatement::SetTransaction(_)) && sets_read_write(&text);
     Classified { class, destroys, floor, read_write, ..unclassified }
+}
+
+/// The class of `text` if it is a query: Read, or WriteRows if it holds a
+/// data change delta table, as FINAL TABLE (INSERT ...), which changes
+/// rows, and so is judged by its words.
+fn query(text: &str) -> Option<Class> {
+    let mut parser = Parser::with_extensions(text, true).ok()?;
+    parser.cursor_specification().ok()?;
+    Some(if changes_rows(text) { Class::WriteRows } else { Class::Read })
+}
+
+/// The class of `text` if it is `EXPLAIN [ ANALYZE ] <cursor
+/// specification>` ([DOC sql/statements/explain.md EXPLAIN ANALYZE]): its
+/// query's, as EXPLAIN takes only a query. EXPLAIN and ANALYZE are no key
+/// words, so read as the server reads them: EXPLAIN first, then ANALYZE
+/// only where a query follows it.
+fn explained(text: &str) -> Option<Class> {
+    const EXPLAIN: &str = "EXPLAIN";
+    const ANALYZE: &str = "ANALYZE";
+    let tokens = lex(text).ok()?;
+    let [first, second, rest @ ..] = tokens.as_slice() else {
+        return None;
+    };
+    if first.tok != Tok::Identifier(EXPLAIN.to_owned()) {
+        return None;
+    }
+    let after = |token: &turborel::lexer::Token| text.get(token.start..);
+    let analyzed = match rest.first() {
+        Some(third) if second.tok == Tok::Identifier(ANALYZE.to_owned()) => after(third).and_then(query),
+        _ => None,
+    };
+    analyzed.or_else(|| after(second).and_then(query))
 }
 
 /// Whether the words of `text` include a statement that changes rows, as a

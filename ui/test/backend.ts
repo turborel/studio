@@ -37,7 +37,7 @@ const DEFAULTS: Record<string, Handler> = {
   keychain_status: () => ({ available: true, reason: null }),
   load_layout: () => null,
   save_layout: () => null,
-  app_info: () => ({ version: "0.0.0", turborelCommit: "8052705ecab0f3cd9668f992ff14505c7a60f5dc" }),
+  app_info: () => ({ version: "0.0.0", turborelCommit: "3df14c1621d8063f12452a6c189017e34b8e9fd9" }),
   open_connection: () => ({ connection: 1, session: SESSION }),
   open_saved_connection: () => ({ connection: 1, session: SESSION }),
 };

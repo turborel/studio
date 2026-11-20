@@ -1,4 +1,4 @@
-# The headings of Turborel's manual at 8052705ecab0f3cd9668f992ff14505c7a60f5dc, copied by `cargo xtask headings` (RULES.md D6).
+# The headings of Turborel's manual at 3df14c1621d8063f12452a6c189017e34b8e9fd9, copied by `cargo xtask headings` (RULES.md D6).
 README.md	The Turborel Documentation Set
 README.md	The volumes
 README.md	Conventions
@@ -1640,6 +1640,7 @@ sql/statements/explain.md	EXPLAIN
 sql/statements/explain.md	NAME
 sql/statements/explain.md	SYNOPSIS
 sql/statements/explain.md	DESCRIPTION
+sql/statements/explain.md	EXPLAIN ANALYZE
 sql/statements/explain.md	RULES
 sql/statements/explain.md	PRIVILEGES
 sql/statements/explain.md	ERRORS

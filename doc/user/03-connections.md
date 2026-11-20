@@ -150,7 +150,9 @@ asks first, and runs only once confirmed. On every connection, a
 statement that destroys asks first: DROP, TRUNCATE, and DELETE or UPDATE
 without WHERE; so does one Studio cannot classify, as dynamic SQL or a
 CALL, which may hide one. Studio classifies each statement by Turborel's
-own parser, and a script by its strictest statement.
+own parser, and a script by its strictest statement. EXPLAIN, and
+EXPLAIN ANALYZE, which runs its query, take only a query, and are
+classified as it is.
 
 A connection set **Read-only** begins each transaction READ ONLY, so the
 server refuses a change; and Studio refuses, before sending it, a
