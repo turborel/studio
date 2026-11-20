@@ -3,5 +3,20 @@
   "identifier": "main",
   "description": "The main window: the application's own commands and the events it listens to, nothing else (RULES.md R-SEC-5).",
   "windows": ["main"],
-  "permissions": ["core:event:allow-listen", "core:event:allow-unlisten", "allow-app-info"]
+  "permissions": [
+    "core:event:allow-listen",
+    "core:event:allow-unlisten",
+    "allow-app-info",
+    "allow-open-connection",
+    "allow-close-connection",
+    "allow-reconnect",
+    "allow-cancel-statement",
+    "allow-run-statement",
+    "allow-fetch-rows",
+    "allow-close-result",
+    "allow-session-state",
+    "allow-set-autocommit",
+    "allow-ping-connection",
+    "allow-list-threads"
+  ]
 }

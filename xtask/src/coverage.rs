@@ -10,9 +10,9 @@ use crate::command::{NPM, output, root, run, say};
 use crate::error::{Error, Result, fail};
 
 /// The floor of the Rust crates' line coverage, in percent (D7).
-pub const FLOOR_LINES: f64 = 84.0;
+pub const FLOOR_LINES: f64 = 90.0;
 /// The floor of their region coverage, in percent (D7).
-pub const FLOOR_REGIONS: f64 = 88.0;
+pub const FLOOR_REGIONS: f64 = 88.5;
 /// The packages whose tests are run; the checks tool is not the product.
 const EXCLUDED: &str = "xtask";
 /// The sources measured, relative to the root.

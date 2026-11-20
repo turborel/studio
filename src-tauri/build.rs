@@ -10,7 +10,20 @@
 /// Every command the application defines, as `src/commands.rs` registers
 /// them and `capabilities/main.json` grants them; the checks tool holds the
 /// three lists equal.
-const COMMANDS: [&str; 1] = ["app_info"];
+const COMMANDS: [&str; 12] = [
+    "app_info",
+    "open_connection",
+    "close_connection",
+    "reconnect",
+    "cancel_statement",
+    "run_statement",
+    "fetch_rows",
+    "close_result",
+    "session_state",
+    "set_autocommit",
+    "ping_connection",
+    "list_threads",
+];
 
 /// The manifest every Windows program of the package is linked with.
 const WINDOWS_MANIFEST: &str = "windows-app-manifest.xml";

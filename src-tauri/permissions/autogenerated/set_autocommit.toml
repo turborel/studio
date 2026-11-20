@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-set-autocommit"
+description = "Enables the set_autocommit command without any pre-configured scope."
+commands.allow = ["set_autocommit"]
+
+[[permission]]
+identifier = "deny-set-autocommit"
+description = "Denies the set_autocommit command without any pre-configured scope."
+commands.deny = ["set_autocommit"]

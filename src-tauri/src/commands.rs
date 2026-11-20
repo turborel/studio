@@ -1,6 +1,9 @@
 //! The commands the webview calls (RULES.md D1, R-SEC-5). Each is listed in
-//! `build.rs` and granted in `capabilities/main.json`; each validates its
-//! arguments before it does anything (R-SEC-6).
+//! `build.rs` and granted in `capabilities/main.json`; each hands its
+//! arguments to the backend, which validates them before it does anything
+//! (R-SEC-6).
+
+mod connections;
 
 use tauri::Runtime;
 use tauri::ipc::Invoke;
@@ -15,5 +18,18 @@ fn app_info() -> AppInfo {
 
 /// The handler of every command, for the application's builder.
 pub(crate) fn handler<R: Runtime>() -> impl Fn(Invoke<R>) -> bool + Send + Sync + 'static {
-    tauri::generate_handler![app_info]
+    tauri::generate_handler![
+        app_info,
+        connections::open_connection,
+        connections::close_connection,
+        connections::reconnect,
+        connections::cancel_statement,
+        connections::run_statement,
+        connections::fetch_rows,
+        connections::close_result,
+        connections::session_state,
+        connections::set_autocommit,
+        connections::ping_connection,
+        connections::list_threads
+    ]
 }
