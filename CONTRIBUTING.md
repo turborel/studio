@@ -11,7 +11,7 @@ adapted to pull requests and to a desktop application.
 [Before you start](#before-you-start) · [Setting up](#setting-up) ·
 [Making a change](#making-a-change) ·
 [Changes that touch security](#changes-that-touch-security) ·
-[Updating the icon](#updating-the-icon) ·
+[The artwork](#the-artwork) ·
 [Commit messages](#commit-messages) · [Pull requests](#pull-requests) ·
 [Review](#review) · [Reporting issues](#reporting-issues) ·
 [Security](#security) · [License](#license)
@@ -138,7 +138,13 @@ A change to the assistant says what it sends, and shows that the user
 sees it before it goes, and that no tool acts without the user
 (R-SEC-12).
 
-## Updating the icon
+## The artwork
+
+The logo, `artwork/studio-logo.svg`, and its white form for dark
+backgrounds, `artwork/studio-logo-white.svg`, are Studio's icon as the
+mark, from `artwork/studio-icon.png`, beside the wordmark TURBOREL
+STUDIO set in EB Garamond ExtraBold (800), under the SIL Open Font
+License, and outlined to paths. The font itself is not committed.
 
 The icon is the owner's file, `artwork/studio-icon.png`: a tile on a
 transparent canvas in the proportion of Apple's grid, the one source for

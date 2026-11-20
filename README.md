@@ -1,9 +1,7 @@
 <p align="center">
-    <img src="artwork/studio-icon.png" alt="Turborel Studio" width="96">
-    &nbsp;&nbsp;
     <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="artwork/turborel-logo-white.svg">
-      <img src="artwork/turborel-logo.svg" alt="turborel" width="360">
+      <source media="(prefers-color-scheme: dark)" srcset="artwork/studio-logo-white.svg">
+      <img src="artwork/studio-logo.svg" alt="Turborel Studio" width="480">
     </picture>
 </p>
 

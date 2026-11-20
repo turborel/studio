@@ -83,7 +83,7 @@ Each is told in full in [§7](#7-the-decisions).
 | `ui/theme/` | the themes' palettes (D20) |
 | `ui/shell/` | the dock, menus, toolbar and status bar |
 | `xtask/` | the checks tool (D19) and its copy of Turborel's headings (D6) |
-| `artwork/` | Turborel's logos, and Studio's icon, the source of the set (D21) |
+| `artwork/` | Studio's logo, and its icon, the source of the icon set (D21) |
 | `doc/` | the manual (R-DOC-7) |
 | `.github/` | CI, issue forms, the pull request template, labels, Dependabot |
 | `.githooks/pre-commit` | hands over to the checks tool (D4) |
