@@ -41,6 +41,11 @@ pub(crate) enum Request {
     Session,
     /// Make each statement its own transaction, or not.
     Autocommit(bool),
+    /// Read the catalog: the rows of a query with text parameters, at
+    /// most `cap` of them.
+    Catalog { sql: String, params: Vec<String>, cap: u32 },
+    /// The columns a statement would give, prepared and let go, not run.
+    Describe(String),
     /// Ask whether the server answers.
     Ping,
     /// End the connection, and the worker.
@@ -51,6 +56,8 @@ pub(crate) enum Request {
 #[derive(Debug)]
 pub(crate) enum Reply {
     Ran(Box<Ran>),
+    Rows(Vec<Vec<crate::connections::cells::Cell>>),
+    Columns(Vec<ColumnInfo>),
     Page(Page),
     Session(SessionState),
     Done,
@@ -137,6 +144,8 @@ impl Worker {
                 self.session().map(Reply::Session)
             }
             Request::Ping => self.connection()?.ping().map(|()| Reply::Done).map_err(StudioError::from),
+            Request::Catalog { sql, params, cap } => self.catalog(&sql, &params, cap).map(Reply::Rows),
+            Request::Describe(sql) => self.describe(&sql).map(Reply::Columns),
             Request::Terminate => self.terminate().map(|()| Reply::Done),
         }
     }
@@ -275,6 +284,32 @@ impl Worker {
             }
         }
         connection.deallocate(statement).map_err(StudioError::from)
+    }
+
+    /// The rows of the catalog's query `sql`, its parameters `params` as
+    /// character strings, at most `cap` of them, read through a cursor
+    /// closed after (R-SAFE-1).
+    fn catalog(&mut self, sql: &str, params: &[String], cap: u32) -> Result<Vec<Vec<crate::connections::cells::Cell>>> {
+        let connection = self.connection()?;
+        let statement = connection.prepare(sql)?;
+        let values: Vec<turborel::value::Value> = params.iter().map(|p| turborel::value::Value::Char(p.clone())).collect();
+        let read = connection.open_cursor(&statement, &values, cap);
+        if read.as_ref().is_ok_and(|batch| batch.more) {
+            // Rows past the cap are not wanted: the cursor is closed.
+            let _ = connection.close(&statement);
+        }
+        let _ = connection.deallocate(statement); // Let go; the rows, or the failure, are what is told.
+        Ok(read?.rows.iter().map(crate::connections::cells::cells).collect())
+    }
+
+    /// The columns `sql` would give, as the server declares them, prepared
+    /// and let go, never run.
+    fn describe(&mut self, sql: &str) -> Result<Vec<ColumnInfo>> {
+        let connection = self.connection()?;
+        let statement = connection.prepare(sql)?;
+        let columns = statement.columns().iter().map(ColumnInfo::from).collect();
+        let _ = connection.deallocate(statement); // Let go; the columns are what is told.
+        Ok(columns)
     }
 
     /// Ends the connection, its results with it.

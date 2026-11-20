@@ -72,6 +72,8 @@ Each is told in full in [§7](#7-the-decisions).
 | D30 | Commands by name: the menus, the keys and the palette |
 | D31 | The front end's state: one store per window |
 | D32 | A connection's colour tints the window |
+| D33 | The catalog: the Information Schema, read as the tree opens |
+| D34 | A file saved through the platform's dialog, by the backend |
 
 ---
 
@@ -83,6 +85,7 @@ Each is told in full in [§7](#7-the-decisions).
 | `core/` | `turborel-studio-core`, the backend: everything Studio does but draw, tested without a window (D1) |
 | `core/src/connections/` | the connection manager and its workers (D24), settings (D26), statements' outcomes, and results paged (D25) |
 | `core/src/guard/` | statements classified, and the guards on what runs (D29) |
+| `core/src/catalog/` | the catalog read from the Information Schema, and the definitions written of it (D33) |
 | `core/src/saved.rs`, `secrets.rs` | saved connections, and the keychain (D16, D28) |
 | `core/src/preferences.rs`, `store.rs` | settings and the layout, and Studio's files of format 1 (R-FMT-1) |
 | `core/tests/live/` | the live tests, their harness and server (D27) |
@@ -736,6 +739,42 @@ The review checklist:
   WCAG 2.2 AA (R-UI-2).
 - *Why:* which database a statement goes to is seen at a glance, and
   production by its red.
+
+#### D33. The catalog: the Information Schema, read as the tree opens
+
+- **The source:** the Information Schema's views alone, as the session's
+  user may see them, by queries that change nothing, over the
+  connection's own worker; each list at most 20,000 rows, a schema of
+  more saying so.
+- **Read as opened:** the schemas first, a schema's objects as it opens,
+  a table whole as it opens or is selected; kept in the window's store
+  until Refresh, or the connection ends.
+- **A table's columns:** their types as the server declares them, by a
+  description of `SELECT *` of the table, else as COLUMNS gives them; a
+  NOT NULL column's check is shown as NOT NULL, not as a check.
+- **The server's indexes:** an index whose name holds a period is a
+  key's, and one PARTITION_INDEXES names on a partition its table's;
+  neither is written by the table's definition.
+- **Definitions:** written by Studio of what it read, each name
+  qualified and delimited where Turborel's lexer would read it otherwise;
+  each kind made again of its definition by a live test.
+- **Favourites:** kept with the saved connection, at most 500.
+- *Why:* the Information Schema is the standard's description of a
+  database, so the explorer shows what a user may see and nothing else.
+
+#### D34. A file saved through the platform's dialog, by the backend
+
+- **Chosen:** `tauri-plugin-dialog` 2.8.4, Tauri's own; Apache-2.0 or
+  MIT; on `rfd` 0.17.2, MIT.
+- **Backend only:** the plug-in's commands are granted to no window: the
+  command `save_text_file` opens the dialog and writes the file the user
+  chose, so the webview reaches no file system (R-SEC-5).
+- **Bounds:** at most 64 MiB of text, a name of at most 255 characters
+  with no separator of a path.
+- **Readiness:** a stable 2.x release, of Tauri's own workspace of
+  plug-ins.
+- *Why:* the platform's dialog is the one a person knows, and choosing
+  the file is theirs.
 
 ---
 

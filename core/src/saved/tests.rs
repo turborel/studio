@@ -24,6 +24,7 @@ fn connection(name: &str) -> SavedConnection {
         colour: None,
         read_only: true,
         pinned: false,
+        favourites: Vec::new(),
     }
 }
 
@@ -98,6 +99,10 @@ fn bad_fields_are_refused() {
         SavedConnection { folder: vec![String::new()], ..connection("x") },
         SavedConnection { folder: vec!["f".into(); 9], ..connection("x") },
         SavedConnection { id: "unknown".into(), ..connection("x") },
+        SavedConnection {
+            favourites: vec![crate::catalog::model::ObjectRef { kind: "TABLE".into(), schema: String::new(), name: "T".into() }],
+            ..connection("x")
+        },
     ] {
         assert_eq!(saved.save(bad, PasswordChange::Keep).unwrap_err().sqlstate, "TB910");
     }

@@ -26,6 +26,17 @@
     "allow-load-settings",
     "allow-save-settings",
     "allow-load-layout",
-    "allow-save-layout"
+    "allow-save-layout",
+    "allow-catalog-schemas",
+    "allow-catalog-objects",
+    "allow-catalog-table",
+    "allow-catalog-routine",
+    "allow-catalog-type",
+    "allow-catalog-usage",
+    "allow-catalog-security",
+    "allow-catalog-dependencies",
+    "allow-catalog-search",
+    "allow-catalog-definition",
+    "allow-save-text-file"
   ]
 }

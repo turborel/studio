@@ -10,7 +10,7 @@
 /// Every command the application defines, as `src/commands.rs` registers
 /// them and `capabilities/main.json` grants them; the checks tool holds the
 /// three lists equal.
-const COMMANDS: [&str; 21] = [
+const COMMANDS: [&str; 32] = [
     "app_info",
     "open_connection",
     "close_connection",
@@ -32,6 +32,17 @@ const COMMANDS: [&str; 21] = [
     "save_settings",
     "load_layout",
     "save_layout",
+    "catalog_schemas",
+    "catalog_objects",
+    "catalog_table",
+    "catalog_routine",
+    "catalog_type",
+    "catalog_usage",
+    "catalog_security",
+    "catalog_dependencies",
+    "catalog_search",
+    "catalog_definition",
+    "save_text_file",
 ];
 
 /// The manifest every Windows program of the package is linked with.

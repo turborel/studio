@@ -230,3 +230,40 @@ fn a_saved_connection_that_cannot_connect_keeps_its_secret() {
     assert!(error["sqlstate"].as_str().unwrap().starts_with("08"), "{error}");
     assert!(!error.to_string().contains("ann's secret"));
 }
+
+/// [RULE] R-SEC-6: the catalog's commands refuse names out of bounds before
+/// they reach a server, and a connection not open.
+#[test]
+fn the_catalogs_commands_check_their_arguments() {
+    let (_app, window) = window();
+    let long = "x".repeat(300);
+    for (command, args) in [
+        ("catalog_objects", serde_json::json!({"connection": 7, "schema": ""})),
+        ("catalog_table", serde_json::json!({"connection": 7, "schema": "ANN", "name": "a\nb"})),
+        ("catalog_routine", serde_json::json!({"connection": 7, "schema": long, "specific": "F"})),
+        ("catalog_dependencies", serde_json::json!({"connection": 7, "schema": "ANN", "name": ""})),
+        ("catalog_search", serde_json::json!({"connection": 7, "text": ""})),
+        ("catalog_type", serde_json::json!({"connection": 7, "schema": "ANN", "name": ""})),
+        ("catalog_type", serde_json::json!({"connection": 7, "schema": "ANN", "name": "MONEY"})),
+        ("catalog_usage", serde_json::json!({"connection": 7, "schema": "ANN", "name": "", "of": "domain"})),
+        ("catalog_usage", serde_json::json!({"connection": 7, "schema": "ANN", "name": "S", "of": "sequence"})),
+        ("catalog_usage", serde_json::json!({"connection": 7, "schema": "ANN", "name": "D", "of": "domain"})),
+        ("catalog_schemas", serde_json::json!({"connection": 7})),
+        ("catalog_security", serde_json::json!({"connection": 7})),
+        ("catalog_definition", serde_json::json!({"connection": 7, "of": {"kind": "schema", "schema": "ANN"}})),
+    ] {
+        assert_eq!(refusal(&window, command, args)["sqlstate"], "TB910", "{command}");
+    }
+    let table = serde_json::json!({"connection": 7, "schema": "ANN", "name": "T", "of": "table"});
+    assert!(refusal(&window, "catalog_usage", table).is_string());
+}
+
+/// [RULE] R-SEC-5: the dialog plug-in's own commands are not the webview's:
+/// only the backend opens a dialog, and a name that is a path is refused.
+#[test]
+fn the_dialog_is_the_backends_alone() {
+    let (_app, window) = window();
+    assert!(get_ipc_response(&window, request(&window, "plugin:dialog|save", serde_json::json!({}))).is_err());
+    let error = refusal(&window, "save_text_file", serde_json::json!({"name": "../x.sql", "text": "SELECT 1"}));
+    assert_eq!(error["sqlstate"], "TB910");
+}

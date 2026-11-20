@@ -23,6 +23,7 @@
     reason = "a test program, whose failures are panics (R-TEST-4)"
 )]
 
+mod catalog;
 mod certs;
 mod connect;
 mod guards;
@@ -142,6 +143,13 @@ const TESTS: &[(&str, Test)] = &[
     ("a_read_only_connection_reads_alone", guards::a_read_only_connection_reads_alone),
     ("production_asks_before_a_write", guards::production_asks_before_a_write),
     ("a_drop_asks_first", guards::a_drop_asks_first),
+    ("the_explorer_reads_a_schema", catalog::the_explorer_reads_a_schema),
+    ("routines_and_users_are_read", catalog::routines_and_users_are_read),
+    ("dependencies_and_search", catalog::dependencies_and_search),
+    ("a_table_is_made_again_of_its_definition", catalog::a_table_is_made_again_of_its_definition),
+    ("partitions_and_index_options_are_read", catalog::partitions_and_index_options_are_read),
+    ("types_are_read_and_made_again", catalog::types_are_read_and_made_again),
+    ("privileges_and_roles_are_read", catalog::privileges_and_roles_are_read),
 ];
 
 fn main() -> ExitCode {

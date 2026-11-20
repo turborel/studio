@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-catalog-type"
+description = "Enables the catalog_type command without any pre-configured scope."
+commands.allow = ["catalog_type"]
+
+[[permission]]
+identifier = "deny-catalog-type"
+description = "Denies the catalog_type command without any pre-configured scope."
+commands.deny = ["catalog_type"]

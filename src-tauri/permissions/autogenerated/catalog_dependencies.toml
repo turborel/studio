@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-catalog-dependencies"
+description = "Enables the catalog_dependencies command without any pre-configured scope."
+commands.allow = ["catalog_dependencies"]
+
+[[permission]]
+identifier = "deny-catalog-dependencies"
+description = "Denies the catalog_dependencies command without any pre-configured scope."
+commands.deny = ["catalog_dependencies"]

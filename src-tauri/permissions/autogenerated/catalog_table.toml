@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-catalog-table"
+description = "Enables the catalog_table command without any pre-configured scope."
+commands.allow = ["catalog_table"]
+
+[[permission]]
+identifier = "deny-catalog-table"
+description = "Denies the catalog_table command without any pre-configured scope."
+commands.deny = ["catalog_table"]

@@ -193,7 +193,7 @@ impl ConnectionManager {
         }
         match self.ask(id, Request::Run { sql: sql.to_owned(), read_only: guards.read_only })? {
             Reply::Ran(ran) => Ok(RunAnswer::Ran(ran)),
-            Reply::Page(_) | Reply::Session(_) | Reply::Done => Err(unexpected()),
+            Reply::Rows(_) | Reply::Columns(_) | Reply::Page(_) | Reply::Session(_) | Reply::Done => Err(unexpected()),
         }
     }
 
@@ -206,7 +206,7 @@ impl ConnectionManager {
     pub fn rows(&self, id: ConnectionId, result: ResultId, (from, count): (u64, u32)) -> Result<Page> {
         match self.ask(id, Request::Rows { result, from, count })? {
             Reply::Page(page) => Ok(page),
-            Reply::Ran(_) | Reply::Session(_) | Reply::Done => Err(unexpected()),
+            Reply::Ran(_) | Reply::Rows(_) | Reply::Columns(_) | Reply::Session(_) | Reply::Done => Err(unexpected()),
         }
     }
 
@@ -235,6 +235,39 @@ impl ConnectionManager {
     /// SQLCODE -910 for an unknown connection.
     pub fn set_autocommit(&self, id: ConnectionId, on: bool) -> Result<SessionState> {
         session(self.ask(id, Request::Autocommit(on))?)
+    }
+
+    /// The rows of the catalog's query `sql` on connection `id`, its
+    /// parameters `params`, at most `cap` of them. The query is Studio's
+    /// own, a read of the Information Schema, so it passes no guard.
+    ///
+    /// # Errors
+    ///
+    /// SQLCODE -910 for an unknown connection; the server's.
+    pub fn catalog(
+        &self,
+        id: ConnectionId,
+        sql: &str,
+        (params, cap): (&[String], u32),
+    ) -> Result<Vec<Vec<crate::connections::cells::Cell>>> {
+        let request = Request::Catalog { sql: sql.to_owned(), params: params.to_vec(), cap };
+        match self.ask(id, request)? {
+            Reply::Rows(rows) => Ok(rows),
+            Reply::Ran(_) | Reply::Columns(_) | Reply::Page(_) | Reply::Session(_) | Reply::Done => Err(unexpected()),
+        }
+    }
+
+    /// The columns `sql` would give on connection `id`, as the server
+    /// declares them: prepared and let go, never run.
+    ///
+    /// # Errors
+    ///
+    /// SQLCODE -910 for an unknown connection; the server's.
+    pub fn describe(&self, id: ConnectionId, sql: &str) -> Result<Vec<crate::connections::cells::ColumnInfo>> {
+        match self.ask(id, Request::Describe(sql.to_owned()))? {
+            Reply::Columns(columns) => Ok(columns),
+            Reply::Ran(_) | Reply::Rows(_) | Reply::Page(_) | Reply::Session(_) | Reply::Done => Err(unexpected()),
+        }
     }
 
     /// Asks whether connection `id`'s server answers.
@@ -309,7 +342,7 @@ impl Drop for ConnectionManager {
 fn session(reply: Reply) -> Result<SessionState> {
     match reply {
         Reply::Session(session) => Ok(session),
-        Reply::Ran(_) | Reply::Page(_) | Reply::Done => Err(unexpected()),
+        Reply::Ran(_) | Reply::Rows(_) | Reply::Columns(_) | Reply::Page(_) | Reply::Done => Err(unexpected()),
     }
 }
 

@@ -3,7 +3,9 @@
 //! arguments to the backend, which validates them before it does anything
 //! (R-SEC-6).
 
+mod catalog;
 pub(crate) mod connections;
+mod files;
 mod preferences;
 mod saved;
 
@@ -41,6 +43,17 @@ pub(crate) fn handler<R: Runtime>() -> impl Fn(Invoke<R>) -> bool + Send + Sync 
         preferences::load_settings,
         preferences::save_settings,
         preferences::load_layout,
-        preferences::save_layout
+        preferences::save_layout,
+        catalog::catalog_schemas,
+        catalog::catalog_objects,
+        catalog::catalog_table,
+        catalog::catalog_routine,
+        catalog::catalog_type,
+        catalog::catalog_usage,
+        catalog::catalog_security,
+        catalog::catalog_dependencies,
+        catalog::catalog_search,
+        catalog::catalog_definition,
+        files::save_text_file
     ]
 }

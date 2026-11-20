@@ -8,6 +8,7 @@ use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
 
+use crate::catalog::model::ObjectRef;
 use crate::connections::spec::{ConnectionSpec, MAX_PASSWORD_BYTES};
 use crate::error::{Result, StudioError};
 use crate::secret::Secret;
@@ -24,6 +25,8 @@ pub const MAX_CONNECTIONS: usize = 1000;
 pub const MAX_NAME_CHARS: usize = 128;
 /// The deepest a folder may be.
 pub const MAX_FOLDER_DEPTH: usize = 8;
+/// The most favourite objects of a connection.
+pub const MAX_FAVOURITES: usize = 500;
 /// The most connections kept as recent.
 pub const MAX_RECENT: usize = 10;
 /// The prefix of a saved connection's key in the keychain.
@@ -67,6 +70,9 @@ pub struct SavedConnection {
     /// Whether it is pinned at the top of the explorer.
     #[serde(default)]
     pub pinned: bool,
+    /// Its favourite objects, pinned at the top of its catalog.
+    #[serde(default)]
+    pub favourites: Vec<ObjectRef>,
 }
 
 /// The file's document.
@@ -169,6 +175,14 @@ impl SavedConnection {
         }
         for folder in &self.folder {
             named("folder", folder)?;
+        }
+        if self.favourites.len() > MAX_FAVOURITES {
+            return Err(StudioError::misuse(format!("[DESIGN] a connection has at most {MAX_FAVOURITES} favourites")));
+        }
+        for favourite in &self.favourites {
+            named("favourite", &favourite.kind)?;
+            named("favourite", &favourite.schema)?;
+            named("favourite", &favourite.name)?;
         }
         if self.colour.as_deref().is_some_and(|c| !is_colour(c)) {
             return Err(StudioError::misuse("[DESIGN] a colour is written #RRGGBB"));

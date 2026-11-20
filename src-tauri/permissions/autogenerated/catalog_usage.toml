@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-catalog-usage"
+description = "Enables the catalog_usage command without any pre-configured scope."
+commands.allow = ["catalog_usage"]
+
+[[permission]]
+identifier = "deny-catalog-usage"
+description = "Denies the catalog_usage command without any pre-configured scope."
+commands.deny = ["catalog_usage"]

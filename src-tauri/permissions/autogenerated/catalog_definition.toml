@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-catalog-definition"
+description = "Enables the catalog_definition command without any pre-configured scope."
+commands.allow = ["catalog_definition"]
+
+[[permission]]
+identifier = "deny-catalog-definition"
+description = "Denies the catalog_definition command without any pre-configured scope."
+commands.deny = ["catalog_definition"]

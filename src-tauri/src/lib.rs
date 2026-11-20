@@ -68,7 +68,7 @@ pub(crate) fn manage<R: Runtime>(
 /// state and its commands, on any runtime, so the tests build it on
 /// Tauri's mock one.
 pub(crate) fn studio<R: Runtime>(builder: Builder<R>) -> Builder<R> {
-    builder.setup(setup).invoke_handler(commands::handler())
+    builder.plugin(tauri_plugin_dialog::init()).setup(setup).invoke_handler(commands::handler())
 }
 
 /// The application's configuration, assets and capabilities, made once in
