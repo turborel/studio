@@ -110,22 +110,22 @@ them.
 
 | ID | Feature | Studio's use | Status |
 |---|---|---|---|
-| S-CLIENT-1 | Connecting over TCP ([CLIENT Connecting]) | a connection's worker opens it | not yet |
-| S-CLIENT-2 | A Unix socket, or a named pipe on Windows ([CLIENT Connecting]) | a host that is a path | not yet |
-| S-CLIENT-3 | TLS by mode ([CLIENT TLS by mode]) | verify-full by default for every host but a local socket (S-IMPL-6) | not yet |
-| S-CLIENT-4 | SCRAM-SHA-256 and SCRAM-SHA-256-PLUS, and the key cache ([CLIENT The SCRAM key cache]) | a password proved by SCRAM, bound over TLS; one cache for the application | not yet |
-| S-CLIENT-5 | Password, certificate and trust ([CLIENT Connecting]) | as the settings say | not yet |
-| S-CLIENT-6 | Timeouts ([CLIENT Timeouts]) | the connect timeout of the settings; no read limit, as a statement runs as long as it must | not yet |
-| S-CLIENT-7 | The connection URI ([CLIENT The connection URI]) | pasted in the connection dialog | not yet |
-| S-CLIENT-8 | Settings, their layers and the environment ([CLIENT Where settings come from]) | a saved connection's settings, over the environment's | not yet |
-| S-CLIENT-9 | The service file ([CLIENT The service file]) | a connection by service | not yet |
-| S-CLIENT-10 | The password file ([CLIENT The password file]) | a password the keychain does not hold | not yet |
-| S-CLIENT-11 | Several servers and their roles ([CLIENT Several servers]) | hosts in order or at random, read-write or read-only | not yet |
-| S-CLIENT-12 | Cancel ([CLIENT Running statements]) | the toolbar's Cancel, through the canceller, from another thread | not yet |
-| S-CLIENT-13 | Ending a connection ([CLIENT Connecting]) | terminate on close; a lost connection reconnected on request | not yet |
-| S-CLIENT-14 | Prepared statements and cursors ([CLIENT Prepared statements]) | a query's rows a page at a time | not yet |
+| S-CLIENT-1 | Connecting over TCP ([CLIENT Connecting]) | a connection's worker opens it | done |
+| S-CLIENT-2 | A Unix socket, or a named pipe on Windows ([CLIENT Connecting]) | a host that is a path | done |
+| S-CLIENT-3 | TLS by mode ([CLIENT TLS by mode]) | verify-full by default for every host but a local socket (S-IMPL-6) | done |
+| S-CLIENT-4 | SCRAM-SHA-256 and SCRAM-SHA-256-PLUS, and the key cache ([CLIENT The SCRAM key cache]) | a password proved by SCRAM, bound over TLS; one cache for the application | done |
+| S-CLIENT-5 | Password, certificate and trust ([CLIENT Connecting]) | as the settings say | done |
+| S-CLIENT-6 | Timeouts ([CLIENT Timeouts]) | the connect timeout of the settings; no read limit, as a statement runs as long as it must | done |
+| S-CLIENT-7 | The connection URI ([CLIENT The connection URI]) | pasted in the connection dialog | done |
+| S-CLIENT-8 | Settings, their layers and the environment ([CLIENT Where settings come from]) | a saved connection's settings, over the environment's | done |
+| S-CLIENT-9 | The service file ([CLIENT The service file]) | a connection by service | done |
+| S-CLIENT-10 | The password file ([CLIENT The password file]) | a password the keychain does not hold | done |
+| S-CLIENT-11 | Several servers and their roles ([CLIENT Several servers]) | hosts in order or at random, read-write or read-only | done |
+| S-CLIENT-12 | Cancel ([CLIENT Running statements]) | the toolbar's Cancel, through the canceller, from another thread | done |
+| S-CLIENT-13 | Ending a connection ([CLIENT Connecting]) | terminate on close; a lost connection reconnected on request | done |
+| S-CLIENT-14 | Prepared statements and cursors ([CLIENT Prepared statements]) | a query's rows a page at a time | done |
 | S-CLIENT-15 | The splitter of statements ([CLIENT Controlling the session]) | a script split as the server splits it | not yet |
-| S-CLIENT-16 | Declared types ([CLIENT Prepared statements]) | each column's type as SQL writes it | not yet |
+| S-CLIENT-16 | Declared types ([CLIENT Prepared statements]) | each column's type as SQL writes it | done |
 | S-CLIENT-17 | Notices and conditions ([CLIENT What the server tells]) | the messages pane | not yet |
 | S-CLIENT-18 | The session's status and settings ([CLIENT What the server tells]) | the status bar: user, schema, transaction, read-only | not yet |
 | S-CLIENT-19 | Rows affected, generated values and server time ([CLIENT What the server tells]) | the messages pane and the status bar | not yet |
@@ -134,8 +134,8 @@ them.
 | S-CLIENT-22 | Copying ([CLIENT Copying and exporting]) | importing CSV | not yet |
 | S-CLIENT-23 | Exporting, CSV and native ([CLIENT Copying and exporting]) | the grid's export | not yet |
 | S-CLIENT-24 | Reading CSV ([CLIENT Importing]) | importing CSV | not yet |
-| S-CLIENT-25 | Ping and reset ([CLIENT Controlling the session]) | checking a connection, and resetting its session | not yet |
-| S-CLIENT-26 | What a connection asks for ([CLIENT What a connection asks for]) | the attribute `application`, Turborel Studio | not yet |
+| S-CLIENT-25 | Ping and reset ([CLIENT Controlling the session]) | checking a connection; a session is not reset | done |
+| S-CLIENT-26 | What a connection asks for ([CLIENT What a connection asks for]) | the attribute `application`, Turborel Studio | done |
 | S-CLIENT-27 | A connection's role ([CLIENT Several servers]) | the status bar's primary or replica | not yet |
 
 ## Capabilities
@@ -148,24 +148,24 @@ never sent.
 | ID | Capability | Studio's use | Status |
 |---|---|---|---|
 | S-CAP-1 | `notices` | the messages pane | not yet |
-| S-CAP-2 | `status` | the status bar | not yet |
-| S-CAP-3 | `diagnostics` | a failure's detail, hint and objects | not yet |
-| S-CAP-4 | `describe` | a statement's columns again after a change | not yet |
-| S-CAP-5 | `cursors` | several results of one statement open at once | not yet |
-| S-CAP-6 | `ping` | checking a connection | not yet |
-| S-CAP-7 | `reset` | resetting a session | not yet |
-| S-CAP-8 | `change-user` | not used | not yet |
-| S-CAP-9 | `query-attributes` | not used | not yet |
-| S-CAP-10 | `connection-attributes` | the attribute `application` | not yet |
-| S-CAP-11 | `multi-statement` | not used: a script is split and run a statement at a time (S-STMT-12) | not yet |
-| S-CAP-12 | `compression` | not asked for | not yet |
-| S-CAP-13 | `commit-position` | not used | not yet |
+| S-CAP-2 | `status` | the status bar | done |
+| S-CAP-3 | `diagnostics` | a failure's detail, hint and objects | done |
+| S-CAP-4 | `describe` | not used: a statement is prepared again rather than described | done |
+| S-CAP-5 | `cursors` | not used: each result has a statement of its own, and one cursor | done |
+| S-CAP-6 | `ping` | checking a connection | done |
+| S-CAP-7 | `reset` | not used | done |
+| S-CAP-8 | `change-user` | not used | done |
+| S-CAP-9 | `query-attributes` | not used | done |
+| S-CAP-10 | `connection-attributes` | the attribute `application` | done |
+| S-CAP-11 | `multi-statement` | not used: a script is split and run a statement at a time (S-STMT-12) | done |
+| S-CAP-12 | `compression` | not asked for | done |
+| S-CAP-13 | `commit-position` | not used | done |
 | S-CAP-14 | `copy` | importing CSV | not yet |
-| S-CAP-15 | `row-counts` | rows affected | not yet |
-| S-CAP-16 | `generated-values` | identity values generated | not yet |
+| S-CAP-15 | `row-counts` | rows affected | done |
+| S-CAP-16 | `generated-values` | identity values generated | done |
 | S-CAP-17 | `fetch-ends` | a cursor's transaction under autocommit | not yet |
-| S-CAP-18 | `conditions` | a statement's warnings | not yet |
-| S-CAP-19 | `declared-types` | columns' declared types | not yet |
+| S-CAP-18 | `conditions` | a statement's warnings | done |
+| S-CAP-19 | `declared-types` | columns' declared types | done |
 
 ## Files
 
@@ -200,19 +200,19 @@ makes them.
 
 | ID | Choice | Studio's | Status |
 |---|---|---|---|
-| S-IMPL-1 | The rows a cursor's fetch asks for | set in M1 | not yet |
+| S-IMPL-1 | The rows a cursor's fetch asks for | 500 rows, one page | done |
 | S-IMPL-2 | A worksheet's transactions: autocommit or not | set in M4 | not yet |
 | S-IMPL-3 | Connection statements in a worksheet | refused (S-STMT-11) | not yet |
 | S-IMPL-4 | How a script is split | as the server splits it (S-STMT-12) | not yet |
 | S-IMPL-5 | How a value is shown | as text the server's value gives, exact numbers never through a float | not yet |
-| S-IMPL-6 | TLS of a new connection | verify-full, but a local socket's | not yet |
-| S-IMPL-7 | The application's name, as the server is told it | Turborel Studio | not yet |
+| S-IMPL-6 | TLS of a new connection | verify-full, trusting the platform's authorities where the settings name none, below every layer that names a mode; a local socket uses no TLS | done |
+| S-IMPL-7 | The application's name, as the server is told it | Turborel Studio, unless the settings name another | done |
 
 ## Limits
 
 | ID | Limit | Studio's | Status |
 |---|---|---|---|
-| S-LIMIT-1 | The rows a result keeps in memory | set in M1 | not yet |
+| S-LIMIT-1 | The rows a result keeps in memory | 8 pages of 500 rows; the rest spooled to disk, sealed, at most 1 GiB a result | done |
 | S-LIMIT-2 | The text of a cell the grid draws | set in M5 | not yet |
 | S-LIMIT-3 | A large object's viewer reads at most | set in M5 | not yet |
 | S-LIMIT-4 | A worksheet's history | set in M4 | not yet |

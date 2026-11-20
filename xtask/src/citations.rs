@@ -154,12 +154,22 @@ fn test_problems(path: &str, line: usize, tags: &[Tag], known: &Known) -> Vec<St
     tags.iter().filter(|t| !known.knows(t)).map(|t| format!("{path}:{line}: {t:?} names nothing that exists (R-TRACE-2)")).collect()
 }
 
+/// The signature that marks a live test, a function of the live
+/// harness's own (`core/tests/live`), which runs no `#[test]`.
+const LIVE_TEST: &str = "(live: &Live)";
+
+/// Whether `line` begins a test: `#[test]`, or a live test's signature.
+fn is_test(line: &str) -> bool {
+    let line = line.trim();
+    line == "#[test]" || (line.starts_with("pub fn ") && line.contains(LIVE_TEST))
+}
+
 /// Each Rust test of `text`, by its line, with the tags of its doc comment.
 pub fn rust_tests(text: &str) -> Vec<(usize, Vec<Tag>)> {
     let lines: Vec<&str> = text.lines().collect();
     let mut tests = Vec::new();
     for (at, line) in lines.iter().enumerate() {
-        if line.trim() != "#[test]" {
+        if !is_test(line) {
             continue;
         }
         let comment = lines

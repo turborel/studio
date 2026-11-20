@@ -61,7 +61,8 @@ The live tests run against a server when `TURBOREL_TEST_SERVER` names
 one: a `turboreld` program's path, or `docker:` and an image, as
 `docker:ghcr.io/turborel/turborel:nightly`. The shared harness starts it
 on port 17440, with a data directory of its own under `.claude/`, and
-stops it. Without the variable, they are skipped.
+stops it. Without the variable, they are skipped; `cargo xtask coverage`
+counts them, so its floors are met with a server named.
 
 CI runs `cargo xtask verify` and a Tauri build on Linux, macOS and
 Windows, and the live tests, coverage and the supply chain on Linux

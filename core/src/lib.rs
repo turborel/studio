@@ -3,4 +3,12 @@
 //! layer of commands over this crate, so what it does is tested here,
 //! without a window, against a live `turboreld` where it needs one.
 
+pub mod connections;
+pub mod error;
+pub mod events;
+pub mod files;
+pub mod secret;
 pub mod version;
+
+#[cfg(test)]
+mod testing;

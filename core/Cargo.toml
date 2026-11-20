@@ -14,6 +14,18 @@ turborel.workspace = true
 turborel-protocol.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+aws-lc-rs.workspace = true
+
+[dev-dependencies]
+rcgen.workspace = true
 
 [lints]
 workspace = true
+
+# The live tests against a server (RULES.md R-TEST-7, R-TEST-8, D27): one
+# program of their own harness, which starts the server once, runs every
+# test, and stops it, so nothing is left running.
+[[test]]
+name = "live"
+path = "tests/live/main.rs"
+harness = false

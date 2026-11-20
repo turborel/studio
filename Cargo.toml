@@ -22,6 +22,11 @@ turborel-protocol = { git = "https://github.com/turborel/turborel", rev = "80527
 # The IPC's and the files' encoding (RULES.md D17).
 serde = { version = "=1.0.229", features = ["derive"] }
 serde_json = "=1.0.154"
+# The encryption of a result's spooled pages (RULES.md D25), the
+# aws-lc-rs rustls already builds on.
+aws-lc-rs = "=1.18.2"
+# The live tests' certificates (RULES.md D27), on aws-lc-rs, never ring.
+rcgen = { version = "=0.14.10", default-features = false, features = ["aws_lc_rs", "crypto", "pem"] }
 # The desktop shell (RULES.md D9).
 tauri = { version = "=2.12.7", features = [] }
 tauri-build = { version = "=2.7.6", features = [] }

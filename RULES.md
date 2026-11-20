@@ -63,6 +63,10 @@ Each is told in full in [§7](#7-the-decisions).
 | D21 | The icon set, made from the owner's icon by `cargo xtask icons` |
 | D22 | The webview's content security policy |
 | D23 | The supply chain: cargo deny and npm audit |
+| D24 | Each connection on a worker thread the manager holds |
+| D25 | A result read through its cursor, its pages spooled sealed |
+| D26 | Studio's defaults for a connection: TLS verified, its name told |
+| D27 | The live tests: one harness, one server, made as it starts |
 
 ---
 
@@ -72,6 +76,8 @@ Each is told in full in [§7](#7-the-decisions).
 |---|---|
 | `Cargo.toml` | the Rust workspace: the version (D5), the pinned Turborel commit (D10), every Rust dependency and the lints |
 | `core/` | `turborel-studio-core`, the backend: everything Studio does but draw, tested without a window (D1) |
+| `core/src/connections/` | the connection manager and its workers (D24), settings (D26), statements' outcomes, and results paged (D25) |
+| `core/tests/live/` | the live tests, their harness and server (D27) |
 | `src-tauri/` | `turborel-studio`, the application: the window, its capability and the commands, each a thin layer over `core` (D1, D9) |
 | `src-tauri/build.rs` | names each command, so each is a permission (R-SEC-5) |
 | `src-tauri/capabilities/` | what each window may call (R-SEC-5) |
@@ -560,6 +566,78 @@ The review checklist:
 - **ring:** never in the tree; TLS is rustls on aws-lc-rs, as Turborel's.
 - **Where:** `cargo xtask audit`, in CI.
 - *Why:* every library Studio ships is a library it answers for.
+
+#### D24. Each connection on a worker thread the manager holds
+
+- **Workers:** `ConnectionManager` starts one thread for each connection,
+  named `studio-connection-<n>`, which connects, then owns the connection
+  and answers its requests in turn, over a channel. `threads` lists them,
+  and closing a connection, or the manager, ends its thread.
+- **Commands:** each runs on Tauri's pool of blocking threads, so the
+  window never waits on a server; that pool is Tauri's runtime's, not
+  Studio's.
+- **Cancel:** through turborel-client's canceller, from the caller's
+  thread, while the worker waits on its statement.
+- **Lost:** a connection lost is told once, as the event `Lost`, and
+  takes no more until it is reconnected by the settings it was made by.
+- **Events:** notices and losses go to one hub, the backend's one stream
+  of events, which tells the webview, as the event `studio:event`, and
+  any other sink that listens, as a live session will.
+- *Why:* turborel-client is blocking, and a connection is one session
+  answering one request at a time; a thread of its own keeps each
+  session's order, and a named, held thread is one that ends (R-SAFE-5).
+
+#### D25. A result read through its cursor, its pages spooled sealed
+
+- **Cursor:** a statement that has columns is prepared, its cursor opened,
+  and read a page of 500 rows at a time as the grid asks; another is
+  executed; one the server cannot prepare (SQLSTATE 37000) is run
+  directly.
+- **Pages:** each page, as the server's text of each value, is appended
+  to a spool file as it comes; the latest 8 stay in memory, the rest are
+  read back from the file.
+- **Sealed:** each page is sealed by AES-256-GCM under a key made for the
+  result and held in memory alone; the file is its owner's alone, in the
+  application's cache, removed with the result, and any a Studio left
+  behind removed as it starts.
+- **Bound:** a spool holds at most 1 GiB; past it, a result is to be
+  exported, not browsed.
+- **Dependency:** `aws-lc-rs` 1.18.2, ISC and Apache-2.0, the
+  cryptography rustls already builds on; its makers' stable release.
+- *Why:* a result of any length is browsed with bounded memory
+  (R-SAFE-1), and its rows written to disk are of no use to anyone else
+  (R-SEC-2).
+
+#### D26. Studio's defaults for a connection: TLS verified, its name told
+
+- **TLS:** `verify-full` where no layer names a mode: given as the
+  environment's layer, below the program's settings and a service, so
+  each of those still names its own.
+- **Authorities:** the platform's are trusted where the settings name
+  none, so `verify-full` has authorities to verify by.
+- **Name:** the attribute `application` is `Turborel Studio`, unless the
+  settings name one.
+- **Layers:** otherwise every setting is turborel-client's, read as it
+  reads them: the URI, then the dialog's fields over it, then a service,
+  the environment and the client's defaults.
+- *Why:* TLS verified by default for every host but a local socket
+  (R-SEC-3), and an operator sees which sessions are Studio's.
+
+#### D27. The live tests: one harness, one server, made as it starts
+
+- **Harness:** `core/tests/live` is one test program with a harness of
+  its own: it starts the server once, runs each test, and stops the
+  server whatever fails, so nothing is left running.
+- **Server:** the one `TURBOREL_TEST_SERVER` names, a `turboreld` path,
+  or `docker:` and an image, as CI's `ghcr.io/turborel/turborel:nightly`;
+  on port 17440, its data under `.claude/live/<pid>`; with TLS, a
+  client authority, SERVER.TRUST_LOCAL on, a Unix socket on Unix, and an
+  owner of a password.
+- **Certificates:** made as it starts by `rcgen` 0.14.10 on aws-lc-rs,
+  MIT or Apache-2.0, its makers' stable release; none is committed.
+- **Unset:** with no server named, the live tests are skipped.
+- *Why:* every connection path is tested against a real server, the one
+  CI runs (R-TEST-8), and one harness serves every live test (R-TEST-7).
 
 ---
 

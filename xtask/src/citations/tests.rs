@@ -42,3 +42,11 @@ fn a_typescript_tests_citation_is_its_titles() {
 fn headings_are_read_outside_code() {
     assert_eq!(headings_of("# A\n```\n# not\n```\n## B\n"), ["A", "B"]);
 }
+
+/// [RULE] R-TRACE-1: a live test, a function of the live harness, cites
+/// in its doc comment as a `#[test]` does.
+#[test]
+fn a_live_tests_citation_is_its_doc_comments() {
+    let text = "/// [CLIENT Connecting] It connects.\npub fn connects(live: &Live) {}\n\npub fn helper(live: &Live) {}\n";
+    assert_eq!(rust_tests(text), [(2, vec![Tag::Client("Connecting".into())]), (4, vec![])]);
+}

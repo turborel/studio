@@ -7,23 +7,6 @@ become decisions in [RULES.md](RULES.md).
 
 Code never cites this file (R-DOC-5).
 
-## M1 Connections: the backend
-
-- The connection manager: each connection on a named worker thread of
-  its own, its requests and replies, cancel through turborel-client's
-  canceller, terminate and reconnect (S-CLIENT-12, S-CLIENT-13,
-  S-CLIENT-25).
-- Connecting by settings, a URI or a service file, with every TLS mode,
-  SCRAM and its key cache, several hosts and a password file
-  (S-CLIENT-1 to S-CLIENT-11, S-CLIENT-26, S-CLIENT-27, S-IMPL-6,
-  S-IMPL-7).
-- The IPC: commands, events on channels, and a query's rows paged
-  through a cursor, with declared types, notices, status and
-  diagnostics (S-CLIENT-14, S-CLIENT-16 to S-CLIENT-20, S-IMPL-1,
-  S-LIMIT-1).
-- The capabilities asked for and used (S-CAP-1 to S-CAP-19).
-- The shared live-server harness, with test certificates and SCRAM users.
-
 ## M2 Shell
 
 - Menus, the toolbar, the status bar, keyboard shortcuts, Studio's
@@ -33,6 +16,9 @@ Code never cites this file (R-DOC-5).
   keychain (S-FILE-2, S-SEC-1 to S-SEC-3).
 - Environments marked by colour; production's confirmation of writes;
   read-only connections (S-SEC-4, S-SEC-5).
+- The status bar of the session, as the server tells it: user, schema,
+  transaction, read-only, secure or not, primary or replica
+  (S-CLIENT-18, S-CLIENT-27).
 
 ## M3 Object Explorer
 
@@ -47,8 +33,11 @@ Code never cites this file (R-DOC-5).
 - Running the statement at the cursor, the selection or the script;
   cancel; history (S-STMT-1 to S-STMT-12, S-CLIENT-15, S-IMPL-2 to
   S-IMPL-4, S-LIMIT-4).
-- Notices and conditions; transaction state, commit and rollback;
-  destructive statements confirmed (S-SEC-6).
+- Notices and conditions in the messages pane, with each failure's
+  diagnostics, the rows changed, values generated and the server's time;
+  transaction state, commit and rollback; destructive statements
+  confirmed (S-CLIENT-17, S-CLIENT-19, S-CLIENT-20, S-CAP-1, S-CAP-17,
+  S-SEC-6).
 - A plan view of EXPLAIN.
 - Waiting on the server, shown as unavailable until Turborel has it: a
   debugger of SQL routines.

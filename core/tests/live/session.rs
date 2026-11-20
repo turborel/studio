@@ -1,0 +1,100 @@
+//! A connection's session: cancel, transactions, loss and reconnection,
+//! and the manager's workers (`[CLIENT Running statements]`).
+
+use turborel_studio_core::connections::manager::WORKER_PREFIX;
+use turborel_studio_core::connections::spec::ConnectionSpec;
+use turborel_studio_core::events::Event;
+
+use crate::connect::column;
+use crate::{Live, no_environment};
+
+/// A query that runs long enough to be cancelled.
+const LONG: &str =
+    "WITH RECURSIVE T(N) AS (VALUES (CAST(1 AS BIGINT)) UNION ALL SELECT N + 1 FROM T WHERE N < 1000000000) SELECT COUNT(*) FROM T";
+/// The SQLCODE of a statement cancelled.
+const CANCELLED: i32 = -920;
+/// How many times the test asks to cancel before it gives up.
+const CANCEL_TRIES: u32 = 600;
+
+/// [CLIENT Running statements] A statement running is cancelled from
+/// another thread through the canceller, and fails as cancelled.
+pub fn a_running_statement_is_cancelled(live: &Live) {
+    let (manager, _) = live.manager();
+    let id = live.owner(&manager);
+    let error = std::thread::scope(|scope| {
+        let running = scope.spawn(|| manager.run(id, LONG));
+        let mut tries = 0;
+        while !running.is_finished() && tries < CANCEL_TRIES {
+            manager.cancel(id).unwrap();
+            tries += 1;
+            std::thread::sleep(std::time::Duration::from_millis(50));
+        }
+        running.join().unwrap().unwrap_err()
+    });
+    assert_eq!(error.sqlcode, CANCELLED, "{error}");
+    assert_eq!(column(&manager, id, "VALUES (1)"), [Some("1".to_owned())]);
+    manager.close(id).unwrap();
+}
+
+/// [CLIENT Running statements] Without autocommit a change begins a
+/// transaction, which the session shows until ROLLBACK ends it; with it,
+/// each statement is its own.
+pub fn the_transaction_is_followed(live: &Live) {
+    let (manager, _) = live.manager();
+    let id = live.owner(&manager);
+    manager.set_autocommit(id, true).unwrap();
+    manager.run(id, "CREATE TABLE T1 (A INTEGER)").unwrap();
+    assert!(!manager.set_autocommit(id, false).unwrap().transaction.autocommit);
+    let ran = manager.run(id, "INSERT INTO T1 VALUES (1)").unwrap();
+    assert!(ran.session.transaction.active);
+    assert!(!manager.run(id, "ROLLBACK").unwrap().session.transaction.active);
+    manager.set_autocommit(id, true).unwrap();
+    assert_eq!(column(&manager, id, "SELECT COUNT(*) FROM T1"), [Some("0".to_owned())]);
+    manager.run(id, "DROP TABLE T1 CASCADE").unwrap();
+    manager.close(id).unwrap();
+}
+
+/// [CLIENT Connecting] [DOC sql/statements/end-connection.md DESCRIPTION]
+/// A connection the server ends is told lost, once, and connected again by
+/// the settings it was made by.
+pub fn a_lost_connection_is_told_and_reconnected(live: &Live) {
+    let (manager, events) = live.manager();
+    let operator = live.owner(&manager);
+    let uri = Some("turborel://localhost/?application_name=victim".to_owned());
+    let spec = ConnectionSpec { uri, ..live.spec() };
+    let victim = manager.open(&spec, Some(&live.password()), no_environment).unwrap().connection;
+    let ids = column(&manager, operator, "SELECT ID FROM INFORMATION_SCHEMA.CONNECTIONS WHERE APPLICATION = 'victim'");
+    let [Some(server_id)] = ids.as_slice() else { panic!("{ids:?}") };
+    manager.run(operator, &format!("END CONNECTION {server_id}")).unwrap();
+    let error = manager.run(victim, "VALUES (1)").unwrap_err();
+    assert!(error.ends_connection(), "{error}");
+    let lost: Vec<_> = events.take().into_iter().filter(|e| matches!(e, Event::Lost { connection, .. } if *connection == victim)).collect();
+    assert_eq!(lost.len(), 1);
+    assert!(manager.session(victim).unwrap().lost);
+    assert!(!manager.reconnect(victim).unwrap().lost);
+    assert_eq!(column(&manager, victim, "VALUES (1)"), [Some("1".to_owned())]);
+    manager.close(victim).unwrap();
+    manager.close(operator).unwrap();
+}
+
+/// [RULE] R-SAFE-5: each connection's worker is named and held by the
+/// manager, and none is left once the connections are closed.
+pub fn each_connection_has_a_named_worker(live: &Live) {
+    let (manager, _) = live.manager();
+    let (a, b) = (live.owner(&manager), live.owner(&manager));
+    let names: Vec<String> = manager.threads().into_iter().map(|t| t.name).collect();
+    assert_eq!(names, [format!("{WORKER_PREFIX}{a}"), format!("{WORKER_PREFIX}{b}")]);
+    manager.close(a).unwrap();
+    drop(manager);
+    let (manager, _) = live.manager();
+    assert_eq!(manager.threads(), []);
+}
+
+/// [CLIENT Controlling the session] Ping asks whether the server answers.
+pub fn ping_answers(live: &Live) {
+    let (manager, _) = live.manager();
+    let id = live.owner(&manager);
+    manager.ping(id).unwrap();
+    manager.close(id).unwrap();
+    assert_eq!(manager.ping(id).unwrap_err().sqlstate, "TB910");
+}

@@ -20,16 +20,17 @@ const MEASURED: [&str; 2] = ["core/src", "src-tauri/src"];
 /// Where the instrumented build and its profiles go.
 const TARGET: &str = "target/coverage";
 
-/// Measures both halves and holds each to its floors.
-pub fn coverage() -> Result<()> {
-    rust()?;
+/// Measures both halves and holds each to its floors; with `files`, the
+/// Rust crates' coverage of each file is shown too.
+pub fn coverage(files: bool) -> Result<()> {
+    rust(files)?;
     run(NPM, &["run", "--silent", "coverage"], &[])?;
     say("coverage: both halves are above their floors");
     Ok(())
 }
 
 /// The Rust crates' coverage, held to `FLOOR_LINES` and `FLOOR_REGIONS`.
-fn rust() -> Result<()> {
+fn rust(files: bool) -> Result<()> {
     let target = root().join(TARGET);
     let profiles = target.join("profiles");
     let _ = std::fs::remove_dir_all(&profiles); // None there is the same as none left.
@@ -50,6 +51,9 @@ fn rust() -> Result<()> {
         merge.push(path_text(&entry?.path()));
     }
     run(&path_text(&tools.join(tool("llvm-profdata"))), &merge.iter().map(String::as_str).collect::<Vec<_>>(), &[])?;
+    if files {
+        say(&report(&tools, &merged, &objects)?);
+    }
     let (lines, regions) = totals(&tools, &merged, &objects)?;
     say(&format!("==> Rust coverage: lines {lines:.2} % (floor {FLOOR_LINES}), regions {regions:.2} % (floor {FLOOR_REGIONS})"));
     if lines < FLOOR_LINES || regions < FLOOR_REGIONS {
@@ -75,15 +79,29 @@ fn test_objects(env: &[(&str, &str)]) -> Result<Vec<String>> {
         .collect())
 }
 
-/// The line and region percentages of the measured sources.
-fn totals(tools: &Path, merged: &Path, objects: &[String]) -> Result<(f64, f64)> {
-    let mut args = vec!["export".to_owned(), "-summary-only".to_owned(), format!("-instr-profile={}", path_text(merged))];
+/// llvm-cov's arguments of `command` over the measured sources.
+fn cov_args(command: &str, merged: &Path, objects: &[String]) -> Result<Vec<String>> {
+    let mut args = vec![command.to_owned(), format!("-instr-profile={}", path_text(merged))];
     // The first test executable is llvm-cov's positional binary, the rest
     // objects, then the sources measured.
     let Some((first, rest)) = objects.split_first() else { return fail("the instrumented build made no test executable") };
     args.push(first.clone());
     args.extend(rest.iter().map(|object| format!("-object={object}")));
     args.extend(MEASURED.iter().map(|dir| path_text(&root().join(dir))));
+    Ok(args)
+}
+
+/// The coverage of each measured file, as llvm-cov reports it.
+fn report(tools: &Path, merged: &Path, objects: &[String]) -> Result<String> {
+    let args = cov_args("report", merged, objects)?;
+    let (_, text) = output(&path_text(&tools.join(tool("llvm-cov"))), &args.iter().map(String::as_str).collect::<Vec<_>>())?;
+    Ok(text)
+}
+
+/// The line and region percentages of the measured sources.
+fn totals(tools: &Path, merged: &Path, objects: &[String]) -> Result<(f64, f64)> {
+    let mut args = cov_args("export", merged, objects)?;
+    args.insert(1, "-summary-only".to_owned());
     let (ok, text) = output(&path_text(&tools.join(tool("llvm-cov"))), &args.iter().map(String::as_str).collect::<Vec<_>>())?;
     if !ok {
         return fail(format!("llvm-cov export failed: {text}"));
