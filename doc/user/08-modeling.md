@@ -56,6 +56,8 @@ element tables.
 
 ![The same, in the dark theme](../images/er-diagram-dark.png)
 
+![The same diagram as Export as SVG writes it: the four tables of the demo shop, their columns, types and keys, and the foreign keys between them](../images/er-diagram.svg)
+
 Tables are laid out from left to right along their foreign keys; a table
 already placed keeps its place, and a table dragged keeps the place it is
 dropped at. A table's menu, by the secondary button, or Shift+F10 on the

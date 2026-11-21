@@ -61,8 +61,7 @@ Code never cites this file (R-DOC-5).
 - The nightly's trigger after verify on main, written and left off,
   turned on once its installers are seen to build on each platform; and
   macOS on Intel, once a runner of its own is there.
-- The manual's images: the ER diagram as SVG, Studio's own Export as
-  SVG, once the workflow `screenshots` takes it (RULES.md D60); and the
-  documentation site copying `doc/images/`, which is the site's to do.
+- The documentation site copying `doc/images/`, and rewriting an image's
+  link to where it copies it, which is the site's to do.
 - The full manual, every feature checked again against turborel-client
   and Turborel's manual at the pinned commit.
