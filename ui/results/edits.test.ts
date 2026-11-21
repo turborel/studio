@@ -123,6 +123,10 @@ describe("a result's rows edited", () => {
       { sql: 'INSERT INTO "ANN"."ITEMS" DEFAULT VALUES', values: [], one: false },
     ]);
     expect(editStatements(target, [], removeRows(NO_EDITS, [0], 1))[0]?.values).toEqual([null]);
+    // A number of 38 digits goes as the text it is, never through a float.
+    const wide = "12345678901234567890123456789012345678";
+    const widened = editStatements(target, [[wide, "Pen", "4", "2", "x"]], editCell(NO_EDITS, [3, 0], wide, 1));
+    expect(widened[0]?.values).toEqual([wide, wide]);
   });
 
   it("reads the one table a query reads, of the session's schema where it names none [DESIGN] D42", () => {

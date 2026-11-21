@@ -13,6 +13,9 @@ describe("the grid's drawing", () => {
   it("draws numbers to the right, a null muted, a long value cut, in Studio's colours [DESIGN] D13 D39", () => {
     const shown = (rows: (string | null)[][]) => ({ columns: COLUMNS, rows, editing: null, lobs: [] });
     expect(gridCell(shown([["1", null]]), [0, 0], COLOURS)).toMatchObject({ data: "1", contentAlign: "right" });
+    const wide = "-1234567890123456789012345678.0123456789";
+    const exact = { columns: [{ ...ID, typeWritten: "DECIMAL(38,10)" }], rows: [[wide]], editing: null, lobs: [] };
+    expect(gridCell(exact, [0, 0], COLOURS)).toMatchObject({ data: wide, displayData: wide, contentAlign: "right" });
     expect(gridCell(shown([["1", null]]), [1, 0], COLOURS)).toMatchObject({
       displayData: "NULL",
       themeOverride: { textDark: "#777777" },

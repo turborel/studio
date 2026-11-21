@@ -505,7 +505,7 @@ The review checklist:
   an embedded database is given (D59), `turborel-aes`, `turborel-lz4`
   and `turborel-simd`, from
   github.com/turborel/turborel at commit
-  `406f617b6288665b75b7b68ffec3fe632f09207d` of `main`; BSD-2-Clause
+  `25a44e16ab0791fbcd34e092549082c692183710` of `main`; BSD-2-Clause
   Plus Patent.
 - **Not crates.io:** the 0.0.0 crates published there are frozen and
   never used.
@@ -955,7 +955,9 @@ The review checklist:
 - **Plane, not map:** a map's tiles would be remote content (R-SEC-4),
   so spatial values are drawn on a plane alone.
 - **Status bar:** exact numbers summed as decimals, never through a float
-  (R-NUM-1); the average six digits past their scale.
+  (R-NUM-1), every one of Turborel's 38 digits kept; the average six
+  digits past their scale. Approximate numbers, alone or with exact ones,
+  summed as floats, each figure marked `≈` as approximate.
 - **Copy:** CSV as turborel-client's export writes it, tab-separated,
   JSON, Markdown and INSERT, each value a literal of its type.
 - **Export:** turborel-client's `export`, run by the worker, to the file

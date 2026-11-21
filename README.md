@@ -30,7 +30,8 @@ person who works with the database one window for it:
 - tabbed [SQL worksheets](doc/user/05-worksheets.md), each with its
   results and messages, completion, and a plan viewer;
 - a [results grid](doc/user/06-results.md) that reads a query's rows a
-  page at a time;
+  page at a time, and shows, edits, copies and sums exact numbers of
+  every one of their 38 digits;
 - [editing a table's rows](doc/user/07-editing-data.md), importing and
   exporting them, and dialogs that write DDL;
 - [schema diagrams and models](doc/user/08-modeling.md), designed

@@ -306,3 +306,32 @@ pub fn an_analyzed_change_is_rolled_back(scratch: &Scratch) {
     assert_eq!(column(&manager, id, "SELECT PRICE FROM OFFERS WHERE ID = 1"), [Some("10".to_owned())]);
     manager.close(id).unwrap();
 }
+
+/// The number of 38 digits, Turborel's most, of the round trips.
+const WIDE: &str = "12345678901234567890123456789012345678";
+
+/// [DESIGN] D59 [DOC sql/02-data-types.md Numbers] A number of 38 digits
+/// round-trips exactly through the grid, an edit by parameters and an
+/// export, never through a float.
+pub fn a_38_digit_number_round_trips(scratch: &Scratch) {
+    let (manager, _) = scratch.manager();
+    let id = connected(scratch, &manager);
+    run(&manager, id, "CREATE TABLE WIDE (ID INTEGER PRIMARY KEY, N NUMERIC(38,0), D DECIMAL(38,10))").unwrap();
+    let fraction = "1234567890123456789012345678.0123456789";
+    let values = [Some("1".to_owned()), Some(WIDE.to_owned()), Some(fraction.to_owned())];
+    let RunAnswer::Ran(_) = manager.run_with(id, ("INSERT INTO WIDE VALUES (?, ?, ?)", &values), false).unwrap() else { panic!("asked") };
+    let Outcome::Rows { page, columns, .. } = run(&manager, id, "SELECT N, D FROM WIDE").unwrap().outcome else { panic!("no rows") };
+    assert_eq!(page.rows, [[Some(WIDE.to_owned()), Some(fraction.to_owned())]]);
+    assert_eq!(columns[0].type_written, "NUMERIC(38,0)");
+    let edited = "-99999999999999999999999999999999999999";
+    let RunAnswer::Ran(_) =
+        manager.run_with(id, ("UPDATE WIDE SET N = ? WHERE ID = ?", &[Some(edited.to_owned()), Some("1".to_owned())]), false).unwrap()
+    else {
+        panic!("asked")
+    };
+    assert_eq!(column(&manager, id, "SELECT N FROM WIDE"), [Some(edited.to_owned())]);
+    let csv = scratch.path("wide").with_extension("csv");
+    assert_eq!(manager.export(id, "SELECT N, D FROM WIDE", (&csv, ExportFormat::Csv)).unwrap(), 1);
+    assert_eq!(std::fs::read_to_string(&csv).unwrap().lines().nth(1), Some(format!("{edited},{fraction}").as_str()));
+    manager.close(id).unwrap();
+}

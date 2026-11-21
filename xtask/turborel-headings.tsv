@@ -1,4 +1,4 @@
-# The headings of Turborel's manual at 406f617b6288665b75b7b68ffec3fe632f09207d, copied by `cargo xtask headings` (RULES.md D6).
+# The headings of Turborel's manual at 25a44e16ab0791fbcd34e092549082c692183710, copied by `cargo xtask headings` (RULES.md D6).
 appendix/g-table-options.md	Appendix G: Table Options *(extension)*
 client/02-library-connections.md	Connecting by settings
 client/02-library-connections.md	Where settings come from
@@ -39,6 +39,7 @@ operator/11-monitoring.md	Table and index statistics
 sql/01-lexical.md	Comments
 sql/01-lexical.md	Key words
 sql/02-data-types.md	Data Types
+sql/02-data-types.md	Numbers
 sql/03-names.md	Names and Qualification
 sql/04-expressions.md	String expressions
 sql/06-queries.md	Query Expressions

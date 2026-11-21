@@ -108,11 +108,18 @@ Count 2 of 2 · Sum 3 · Average 1.5 · Min 1 · Max 2
 ```
 
 Exact numbers, of INTEGER, DECIMAL and the other exact types, are summed
-exactly, every digit kept; their average has six digits more than the
-numbers have, rounded half away from zero, its trailing zeros let go.
-Approximate numbers, of REAL, DOUBLE PRECISION, FLOAT and DECFLOAT, and
-exact and approximate numbers together, are summed as floating-point
-numbers. Of values that are not numbers, the count alone is told.
+exactly, every digit kept, up to the 38 digits a DECIMAL may hold and
+past them; their average has six digits more than the numbers have,
+rounded half away from zero, its trailing zeros let go. Approximate
+numbers, of REAL, DOUBLE PRECISION, FLOAT and DECFLOAT, and exact and
+approximate numbers together, are summed as floating-point numbers,
+which may lose digits, so each figure is marked `≈`:
+
+```
+Count 2 of 2 · Sum ≈3.5 · Average ≈1.75 · Min ≈1.5 · Max ≈2
+```
+
+Of values that are not numbers, the count alone is told.
 
 ## The value viewer
 

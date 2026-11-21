@@ -330,3 +330,28 @@ pub fn every_type_is_shown_as_its_text(live: &Live) {
     }
     manager.close(id).unwrap();
 }
+
+/// [DOC sql/02-data-types.md Numbers] [DESIGN] D24: a number of 38 digits
+/// round-trips exactly through the grid, an edit by parameters and an
+/// export, never through a float.
+pub fn a_38_digit_number_round_trips(live: &Live) {
+    const WIDE: &str = "12345678901234567890123456789012345678";
+    let (manager, _) = live.manager();
+    let id = live.owner(&manager);
+    manager.set_autocommit(id, true).unwrap();
+    crate::run(&manager, id, "CREATE TABLE WIDE (ID INTEGER PRIMARY KEY, N NUMERIC(38,0))").unwrap();
+    let values = [Some("1".to_owned()), Some(WIDE.to_owned())];
+    let RunAnswer::Ran(_) = manager.run_with(id, ("INSERT INTO WIDE VALUES (?, ?)", &values), false).unwrap() else { panic!("asked") };
+    let Outcome::Rows { page, .. } = crate::run(&manager, id, "SELECT N FROM WIDE").unwrap().outcome else { panic!("no rows") };
+    assert_eq!(page.rows, [[Some(WIDE.to_owned())]]);
+    let edited = "-99999999999999999999999999999999999999";
+    let update = ("UPDATE WIDE SET N = ? WHERE ID = ?", &[Some(edited.to_owned()), Some("1".to_owned())][..]);
+    let RunAnswer::Ran(_) = manager.run_with(id, update, false).unwrap() else { panic!("asked") };
+    let dir = live.server.dir.join("exports");
+    std::fs::create_dir_all(&dir).unwrap();
+    let csv = dir.join("wide.csv");
+    assert_eq!(manager.export(id, "SELECT N FROM WIDE", (&csv, ExportFormat::Csv)).unwrap(), 1);
+    assert_eq!(std::fs::read_to_string(&csv).unwrap().lines().nth(1), Some(edited));
+    crate::run(&manager, id, "DROP TABLE WIDE CASCADE").unwrap();
+    manager.close(id).unwrap();
+}

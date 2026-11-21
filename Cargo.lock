@@ -5024,12 +5024,12 @@ checksum = "e421abadd41a4225275504ea4d6566923418b7f05506fbc9c0fe86ba7396114b"
 [[package]]
 name = "turborel"
 version = "0.0.0"
-source = "git+https://github.com/turborel/turborel?rev=406f617b6288665b75b7b68ffec3fe632f09207d#406f617b6288665b75b7b68ffec3fe632f09207d"
+source = "git+https://github.com/turborel/turborel?rev=25a44e16ab0791fbcd34e092549082c692183710#25a44e16ab0791fbcd34e092549082c692183710"
 
 [[package]]
 name = "turborel-aes"
 version = "0.0.0"
-source = "git+https://github.com/turborel/turborel?rev=406f617b6288665b75b7b68ffec3fe632f09207d#406f617b6288665b75b7b68ffec3fe632f09207d"
+source = "git+https://github.com/turborel/turborel?rev=25a44e16ab0791fbcd34e092549082c692183710#25a44e16ab0791fbcd34e092549082c692183710"
 dependencies = [
  "aws-lc-rs",
  "turborel",
@@ -5038,7 +5038,7 @@ dependencies = [
 [[package]]
 name = "turborel-client"
 version = "0.0.0"
-source = "git+https://github.com/turborel/turborel?rev=406f617b6288665b75b7b68ffec3fe632f09207d#406f617b6288665b75b7b68ffec3fe632f09207d"
+source = "git+https://github.com/turborel/turborel?rev=25a44e16ab0791fbcd34e092549082c692183710#25a44e16ab0791fbcd34e092549082c692183710"
 dependencies = [
  "rustls",
  "rustls-native-certs",
@@ -5049,7 +5049,7 @@ dependencies = [
 [[package]]
 name = "turborel-lz4"
 version = "0.0.0"
-source = "git+https://github.com/turborel/turborel?rev=406f617b6288665b75b7b68ffec3fe632f09207d#406f617b6288665b75b7b68ffec3fe632f09207d"
+source = "git+https://github.com/turborel/turborel?rev=25a44e16ab0791fbcd34e092549082c692183710#25a44e16ab0791fbcd34e092549082c692183710"
 dependencies = [
  "lz4_flex",
  "turborel",
@@ -5058,7 +5058,7 @@ dependencies = [
 [[package]]
 name = "turborel-protocol"
 version = "0.0.0"
-source = "git+https://github.com/turborel/turborel?rev=406f617b6288665b75b7b68ffec3fe632f09207d#406f617b6288665b75b7b68ffec3fe632f09207d"
+source = "git+https://github.com/turborel/turborel?rev=25a44e16ab0791fbcd34e092549082c692183710#25a44e16ab0791fbcd34e092549082c692183710"
 dependencies = [
  "aws-lc-rs",
  "turborel",
@@ -5067,7 +5067,7 @@ dependencies = [
 [[package]]
 name = "turborel-simd"
 version = "0.0.0"
-source = "git+https://github.com/turborel/turborel?rev=406f617b6288665b75b7b68ffec3fe632f09207d#406f617b6288665b75b7b68ffec3fe632f09207d"
+source = "git+https://github.com/turborel/turborel?rev=25a44e16ab0791fbcd34e092549082c692183710#25a44e16ab0791fbcd34e092549082c692183710"
 dependencies = [
  "turborel",
 ]

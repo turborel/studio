@@ -1,8 +1,9 @@
 /**
  * What the status bar tells of the cells selected (RULES.md D39): how
  * many hold a value, and, of numbers, their sum, average, least and
- * greatest. Exact numbers are summed exactly, as decimals, never through
- * a float (R-NUM-1); approximate ones as floats.
+ * greatest. Exact numbers, of up to 38 digits, are summed exactly, as
+ * decimals, never through a float (R-NUM-1); approximate ones as floats,
+ * and their figures are told as approximate.
  */
 import type { Cell, ColumnInfo } from "../ipc/connections";
 import { typeKind } from "./literals";
@@ -74,10 +75,15 @@ export interface Summary {
   readonly average: string | null;
   readonly minimum: string | null;
   readonly maximum: string | null;
+  /** Whether the figures were reached through floats, so may have lost digits. */
+  readonly approximate: boolean;
 }
 
+/** The figures a summary tells of numbers. */
+type Figures = Pick<Summary, "sum" | "average" | "minimum" | "maximum">;
+
 /** The figures of the exact numbers `values`. */
-function exact(values: readonly string[]): Pick<Summary, "sum" | "average" | "minimum" | "maximum"> | null {
+function exact(values: readonly string[]): Figures | null {
   const parsed = values.map(decimal);
   if (parsed.some((d) => d === null) || parsed.length === 0) {
     return null;
@@ -94,7 +100,7 @@ function exact(values: readonly string[]): Pick<Summary, "sum" | "average" | "mi
 }
 
 /** The figures of the approximate numbers `values`. */
-function approximate(values: readonly string[]): Pick<Summary, "sum" | "average" | "minimum" | "maximum"> | null {
+function approximate(values: readonly string[]): Figures | null {
   const numbers = values.map(Number);
   if (numbers.some(Number.isNaN) || numbers.length === 0) {
     return null;
@@ -113,12 +119,12 @@ export function summary(cells: readonly (readonly [Cell, ColumnInfo])[]): Summar
   const values = cells.filter((c): c is readonly [string, ColumnInfo] => c[0] !== null);
   const kinds = new Set(values.map(([, column]) => typeKind(column)));
   const texts = values.map(([text]) => text);
-  const figures =
-    kinds.size === 1 && kinds.has("exact")
-      ? exact(texts)
-      : [...kinds].every((k) => k === "exact" || k === "approximate") && kinds.size > 0
-        ? approximate(texts)
-        : null;
+  const exactly = kinds.size === 1 && kinds.has("exact");
+  const figures = exactly
+    ? exact(texts)
+    : [...kinds].every((k) => k === "exact" || k === "approximate") && kinds.size > 0
+      ? approximate(texts)
+      : null;
   return {
     cells: cells.length,
     count: values.length,
@@ -126,14 +132,21 @@ export function summary(cells: readonly (readonly [Cell, ColumnInfo])[]): Summar
     average: figures?.average ?? null,
     minimum: figures?.minimum ?? null,
     maximum: figures?.maximum ?? null,
+    approximate: figures !== null && !exactly,
   };
 }
 
-/** `s` as the status bar says it. */
+/** `s` as the status bar says it, each figure reached through floats marked ≈. */
 export function summaryText(s: Summary): string {
   const parts = [`Count ${String(s.count)} of ${String(s.cells)}`];
   if (s.sum !== null) {
-    parts.push(`Sum ${s.sum}`, `Average ${s.average ?? ""}`, `Min ${s.minimum ?? ""}`, `Max ${s.maximum ?? ""}`);
+    const about = s.approximate ? "≈" : "";
+    parts.push(
+      `Sum ${about}${s.sum}`,
+      `Average ${about}${s.average ?? ""}`,
+      `Min ${about}${s.minimum ?? ""}`,
+      `Max ${about}${s.maximum ?? ""}`,
+    );
   }
   return parts.join(" · ");
 }

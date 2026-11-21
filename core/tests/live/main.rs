@@ -146,6 +146,7 @@ const TESTS: &[(&str, Test)] = &[
     ("a_result_is_exported", statements::a_result_is_exported),
     ("a_cursor_ends_its_transaction_under_autocommit", statements::a_cursor_ends_its_transaction_under_autocommit),
     ("every_type_is_shown_as_its_text", statements::every_type_is_shown_as_its_text),
+    ("a_38_digit_number_round_trips", statements::a_38_digit_number_round_trips),
     ("rows_are_imported_from_a_file", data::rows_are_imported_from_a_file),
     ("the_table_dialogs_ddl_runs", data::the_table_dialogs_ddl_runs),
     ("a_comparisons_script_syncs_the_target", data::a_comparisons_script_syncs_the_target),

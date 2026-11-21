@@ -125,6 +125,7 @@ const TESTS: &[(&str, Test)] = &[
     ("read_only_runs_and_a_procedures_outputs", requests::read_only_runs_and_a_procedures_outputs),
     ("refusals_are_told_and_an_open_transaction_undone", requests::refusals_are_told_and_an_open_transaction_undone),
     ("an_analyzed_change_is_rolled_back", requests::an_analyzed_change_is_rolled_back),
+    ("a_38_digit_number_round_trips", requests::a_38_digit_number_round_trips),
 ];
 
 fn main() -> ExitCode {

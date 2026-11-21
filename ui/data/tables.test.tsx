@@ -68,6 +68,7 @@ describe("making a table", () => {
     type("Name", "DEPT");
     expect(screen.getByText("Column 1 needs a name and a type.")).toBeTruthy();
     type("Name of column 1", "ID");
+    type("Type of column 1", "NUMERIC(38,0)");
     fireEvent.click(screen.getByRole("checkbox", { name: "Column 1 is NOT NULL" }));
     choose("Key of column 1", "primary");
     fireEvent.click(screen.getByRole("button", { name: "Add Column" }));
@@ -91,7 +92,7 @@ describe("making a table", () => {
     fireEvent.click(screen.getByRole("button", { name: "Add Constraint" }));
     fireEvent.click(screen.getByRole("button", { name: "Remove constraint 3" }));
     expect(screen.getByLabelText("DDL").textContent).toBe(
-      "CREATE TABLE ANN.DEPT (\n    ID INTEGER NOT NULL PRIMARY KEY,\n    NAME VARCHAR(20) DEFAULT 'none' UNIQUE,\n" +
+      "CREATE TABLE ANN.DEPT (\n    ID NUMERIC(38,0) NOT NULL PRIMARY KEY,\n    NAME VARCHAR(20) DEFAULT 'none' UNIQUE,\n" +
         "    CHECK (ID > 0),\n    CONSTRAINT DEPT_SELF FOREIGN KEY (ID) REFERENCES ANN.DEPT (ID) ON DELETE CASCADE\n);",
     );
     await act(async () => {
@@ -144,7 +145,7 @@ describe("altering a table", () => {
       [
         "setDataType",
         () => {
-          type("Type", "BIGINT");
+          type("Type", "DECIMAL(38,10)");
         },
       ],
       [
@@ -179,6 +180,7 @@ describe("altering a table", () => {
     expect(script).toHaveLength(10);
     expect(script[0]).toBe("ALTER TABLE ANN.STAFF ADD COLUMN NOTE VARCHAR(10);");
     expect(script[1]).toMatch(/^ALTER TABLE ANN\.STAFF DROP COLUMN \S+ CASCADE;$/u);
+    expect(script.find((s) => s.includes("SET DATA TYPE"))).toMatch(/SET DATA TYPE DECIMAL\(38,10\);$/u);
     expect(script.at(-1)).toBe("ALTER TABLE ANN.STAFF RENAME TO PEOPLE;");
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: "Open in Worksheet" }));

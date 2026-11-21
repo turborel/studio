@@ -4,7 +4,7 @@ import type { Timing } from "../state/worksheets";
 import { decimal, decimalText, summary, summaryText } from "./aggregate";
 import { insertTable } from "./actions";
 import { compare } from "./compare";
-import { copied, csvField } from "./copy";
+import { COPY_FORMATS, copied, csvField } from "./copy";
 import { delimited, literal, numeric, typeKind } from "./literals";
 import { derivedNames, narrowed, nextSort, plain, sortable, valueCondition, wrapped } from "./requery";
 import { changeText, comparedTimings, timeOf } from "./runTimes";
@@ -157,6 +157,15 @@ describe("copying a result's cells", () => {
     );
   });
 
+  it("copies a number of 38 digits as its text in every format, never through a float [DESIGN] D39 [DOC sql/02-data-types.md Numbers]", () => {
+    const wide = "-1234567890123456789012345678.0123456789";
+    const of = { columns: [col("N", "DECIMAL(38,10)")], rows: [[wide]] };
+    for (const [format] of COPY_FORMATS) {
+      expect(copied(format, of, options)).toContain(wide);
+    }
+    expect(copied("json", of, options)).toContain(`"N": ${wide}`);
+  });
+
   it("writes a Markdown table, its bars escaped, and INSERT statements of literals [DESIGN] D39", () => {
     expect(copied("markdown", { columns: [col("A|B")], rows: [["x|y\nz"], [null]] }, options)).toBe(
       "| A\\|B |\n|---|\n| x\\|y z |\n| NULL |\n",
@@ -201,6 +210,7 @@ describe("what the status bar tells of the cells selected", () => {
       average: "4115226300411522629.76666667",
       minimum: "-1",
       maximum: "12345678901234567890.10",
+      approximate: false,
     });
     expect(
       summary([
@@ -222,13 +232,44 @@ describe("what the status bar tells of the cells selected", () => {
     ).toBe("3");
   });
 
+  it("sums numbers of 38 digits exactly, never through a float [DESIGN] D39 [DOC sql/02-data-types.md Numbers]", () => {
+    const wide = col("N", "NUMERIC(38,0)");
+    const largest = "99999999999999999999999999999999999999";
+    const s = summary([
+      [largest, wide],
+      ["1", wide],
+      [`-${largest}`, wide],
+    ]);
+    expect([s.sum, s.minimum, s.maximum]).toEqual(["1", `-${largest}`, largest]);
+    expect(
+      summary([
+        [largest, wide],
+        [largest, wide],
+      ]).sum,
+    ).toBe("199999999999999999999999999999999999998");
+    expect(
+      summary([
+        [`0.${"1".repeat(37)}`, col("D", "DECIMAL(38,37)")],
+        ["0.0000000000000000000000000000000000001", col("D", "DECIMAL(38,37)")],
+      ]).sum,
+    ).toBe(`0.${"1".repeat(36)}2`);
+  });
+
   it("sums approximate numbers as floats, and of other values counts alone [DESIGN] D39", () => {
     expect(
       summary([
         ["1.5E0", col("F", "DOUBLE PRECISION")],
         ["2", col("N")],
       ]),
-    ).toMatchObject({ sum: "3.5", average: "1.75", minimum: "1.5", maximum: "2" });
+    ).toMatchObject({ sum: "3.5", average: "1.75", minimum: "1.5", maximum: "2", approximate: true });
+    expect(
+      summaryText(
+        summary([
+          ["1.5E0", col("F", "DOUBLE PRECISION")],
+          ["2", col("N")],
+        ]),
+      ),
+    ).toBe("Count 2 of 2 · Sum ≈3.5 · Average ≈1.75 · Min ≈1.5 · Max ≈2");
     expect(
       summary([
         ["NaN", col("F", "REAL")],
@@ -240,7 +281,7 @@ describe("what the status bar tells of the cells selected", () => {
         ["a", col("S", "VARCHAR(4)")],
         [null, col("S", "VARCHAR(4)")],
       ]),
-    ).toMatchObject({ cells: 2, count: 1, sum: null });
+    ).toMatchObject({ cells: 2, count: 1, sum: null, approximate: false });
     expect(summary([[null, col("N")]]).sum).toBeNull();
     expect(summary([["x", col("N")]]).sum).toBeNull();
     expect(

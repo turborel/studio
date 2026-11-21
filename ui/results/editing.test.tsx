@@ -49,15 +49,26 @@ const ITEMS: TableDetail = {
   storage: null,
 };
 
-/** What a statement gave: the rows of ITEMS, or of a change, `affected` rows. */
-function gave(sql: string, affected: number, session: SessionState): Ran {
-  const rows = sql.startsWith("SELECT");
+/** The rows of ITEMS. */
+const ITEM_ROWS = [
+  ["1", "Pen"],
+  ["2", "Ink"],
+  ["3", "Nib"],
+];
+
+/** What a statement gave: the rows of `table`, or of a change, `affected` rows. */
+function gave(
+  sql: string,
+  affected: number,
+  session: SessionState,
+  [table, rows]: readonly [TableDetail, readonly (readonly string[])[]] = [ITEMS, ITEM_ROWS],
+): Ran {
   return {
-    outcome: rows
+    outcome: sql.startsWith("SELECT")
       ? {
           kind: "rows",
           result: 1,
-          columns: ITEMS.columns.map((c) => ({
+          columns: table.columns.map((c) => ({
             name: c.name,
             typeWritten: c.typeWritten,
             typeName: null,
@@ -65,12 +76,8 @@ function gave(sql: string, affected: number, session: SessionState): Ran {
           })),
           page: {
             from: 0,
-            rows: [
-              ["1", "Pen"],
-              ["2", "Ink"],
-              ["3", "Nib"],
-            ],
-            rowsRead: 3,
+            rows,
+            rowsRead: rows.length,
             complete: true,
             lobs: [],
           },
@@ -89,10 +96,13 @@ function gave(sql: string, affected: number, session: SessionState): Ran {
 }
 
 /** A worksheet that has run `sql` and shows its panes: the store, the worksheet, and the calls made. */
-async function edited(sql = "SELECT * FROM ITEMS", { affected = 1, session = SESSION, table = ITEMS } = {}) {
+async function edited(
+  sql = "SELECT * FROM ITEMS",
+  { affected = 1, session = SESSION, table = ITEMS, rows = ITEM_ROWS } = {},
+) {
   const asked = catalogBackend({
     catalog_table: () => table,
-    run_statement: (args) => ({ kind: "ran", answer: gave(String(args["sql"]), affected, session) }),
+    run_statement: (args) => ({ kind: "ran", answer: gave(String(args["sql"]), affected, session, [table, rows]) }),
     set_autocommit: (args) => ({
       ...session,
       transaction: { ...session.transaction, autocommit: args["on"] === true },
@@ -159,6 +169,21 @@ describe("editing a result's rows", () => {
     expect(asked.filter((a) => a.command === "judge_script").at(-1)?.args["sql"]).toContain("DELETE FROM");
     expect(lastRun(store, id).editing).toBeNull();
     expect(worksheetOf(store.current(), id)?.messages.some((m) => m.text === "Applied 4 statements.")).toBe(true);
+  });
+
+  it("shows a number of 38 digits as its text, and sends one edited as its text [DESIGN] D42 [DOC sql/02-data-types.md Numbers]", async () => {
+    const wide = "12345678901234567890123456789012345678";
+    const edit = "-99999999999999999999999999999999999999";
+    const amount = { ...must(ITEMS.columns[1]), name: "AMOUNT", typeWritten: "NUMERIC(38,0)" };
+    const table = { ...ITEMS, name: "WIDE", columns: [must(ITEMS.columns[0]), amount] };
+    const { asked } = await edited("SELECT * FROM WIDE", { table, rows: [["1", wide]] });
+    await click("Edit Rows");
+    expect(screen.getByRole("button", { name: "Cell 1,0" }).textContent).toBe(wide);
+    fireEvent.change(screen.getByLabelText("Edit 1,0"), { target: { value: edit } });
+    expect(screen.getByRole("button", { name: "Cell 1,0" }).textContent).toBe(edit);
+    await click("Apply Changes");
+    const update = asked.find((a) => a.command === "run_statement" && String(a.args["sql"]).startsWith("UPDATE"));
+    expect(must(update).args["values"]).toEqual([edit, "1"]);
   });
 
   it("rolls back where a row changed since it was read, under autocommit too, and keeps the edits [DESIGN] D42", async () => {
