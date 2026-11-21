@@ -1502,9 +1502,10 @@ The review checklist:
   the ER diagram, a context menu, the guard rails asking before a DROP,
   and Live Sessions. Each goes to `doc/images/`: a PNG of the window,
   compressed losslessly; a short GIF of what moves, of the `gif` crate,
-  MIT or Apache-2.0; the ER diagram also as SVG, Studio's own Export as
-  SVG taken from the page's call. A scene that fails is pictured beside
-  the images and the run fails.
+  MIT or Apache-2.0; the ER diagram also as SVG, written by Studio's own
+  Export as SVG, its file named in the platform's save dialog by keys
+  `xdotool` types. A scene that fails is pictured beside the images and
+  the run fails.
 - **Where it runs:** where tauri-driver runs, Linux under a display
   server: the workflow `screenshots` runs it as the window's code changes
   on main, or by hand, and keeps the images as an artifact, which a

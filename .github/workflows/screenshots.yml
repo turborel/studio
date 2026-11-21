@@ -39,8 +39,8 @@ jobs:
         with:
           node-version: "26"
           cache: npm
-      - name: Tauri's Linux packages, WebKit's WebDriver and a virtual display
-        run: sudo apt-get update && sudo apt-get install -y $LINUX_PACKAGES webkitgtk-webdriver xvfb fonts-dejavu-core
+      - name: Tauri's Linux packages, WebKit's WebDriver, a virtual display, and xdotool to name a file in the save dialog
+        run: sudo apt-get update && sudo apt-get install -y $LINUX_PACKAGES webkitgtk-webdriver xvfb xdotool fonts-dejavu-core
       - name: Install the pinned toolchain
         run: rustup toolchain install
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
