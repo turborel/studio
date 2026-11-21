@@ -44,14 +44,29 @@ pub fn audit() -> Result<()> {
     Ok(())
 }
 
-/// The crate ring is in no part of the tree (RULES.md R-SEC-8): TLS and
-/// its cryptography are rustls on aws-lc-rs, as Turborel's own.
-fn no_ring() -> Result<()> {
-    let (_, text) = output("cargo", &["tree", "--workspace", "--locked", "--target", "all", "-i", "ring"])?;
-    if text.lines().any(|line| line.starts_with("ring v")) {
-        return fail(format!("ring is in the tree:\n{text}"));
+/// The platforms Studio is built for, as `deny.toml`'s graph names them.
+fn targets() -> Result<Vec<String>> {
+    let deny = std::fs::read_to_string(command::root().join("deny.toml"))?;
+    let list = deny.split_once("targets = [").and_then(|(_, rest)| rest.split_once(']')).map(|(list, _)| list).unwrap_or_default();
+    let found: Vec<String> = list.split('"').skip(1).step_by(2).map(str::to_owned).collect();
+    if found.is_empty() {
+        return fail("deny.toml names no targets");
     }
-    say("==> no ring in the tree");
+    Ok(found)
+}
+
+/// The crate ring is in no part of the tree of any platform Studio is built
+/// for (RULES.md R-SEC-10, D23): TLS and its cryptography are rustls on
+/// aws-lc-rs, as Turborel's own. quinn's protocol crate names ring for
+/// `wasm32-unknown-unknown` alone, a target Studio is never built for.
+fn no_ring() -> Result<()> {
+    for target in targets()? {
+        let (_, text) = output("cargo", &["tree", "--workspace", "--locked", "--target", &target, "-i", "ring"])?;
+        if text.lines().any(|line| line.starts_with("ring v")) {
+            return fail(format!("ring is in the tree of {target}:\n{text}"));
+        }
+    }
+    say("==> no ring in the tree of any platform built");
     Ok(())
 }
 

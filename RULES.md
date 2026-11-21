@@ -263,7 +263,7 @@ The tools named by "the formatter", "the linters", "the type checker" and
 | R-SEC-7 | A production connection **shall** ask before a statement that writes, and one set read-only **shall** begin each transaction READ ONLY. | tests |
 | R-SEC-8 | A statement that destroys (DROP, TRUNCATE, and DELETE or UPDATE without WHERE) **shall** ask first, wherever it is run from. | tests |
 | R-SEC-9 | Studio **shall** touch the network only for the user's connections and, when turned on, the assistant's provider: no telemetry, analytics or updates. | review |
-| R-SEC-10 | The supply chain **shall** pass `cargo xtask audit`: cargo deny's advisories, licenses and sources, npm audit of the shipped packages, and no `ring` in the tree. | CI |
+| R-SEC-10 | The supply chain **shall** pass `cargo xtask audit`: cargo deny's advisories, licenses and sources, npm audit of the shipped packages, and no `ring` in the tree of any platform Studio is built for. | CI |
 | R-SEC-11 | A log **shall** never hold a secret or a row's values; a statement's text only when the user turns that on. | tests; review |
 | R-SEC-12 | A model **shall** be called from the Rust backend alone, with only what the user chose to send; no tool acts without the user, and what is read from the database is data to a model, never instructions. | tests; review |
 | R-SEC-13 | A provider's endpoint **shall** be HTTPS, but one on the loopback interface, which may be HTTP. | tests |
@@ -651,7 +651,9 @@ The review checklist:
   sources; crates come from crates.io, and Turborel's from its
   repository alone.
 - **npm:** `npm audit --omit=dev`, of the packages that ship.
-- **ring:** never in the tree; TLS is rustls on aws-lc-rs, as Turborel's.
+- **ring:** never in the tree of a platform Studio is built for, each of
+  `deny.toml`'s; TLS is rustls on aws-lc-rs, as Turborel's. quinn's
+  protocol crate names ring for `wasm32-unknown-unknown` alone (D56).
 - **Where:** `cargo xtask audit`, in CI.
 - *Why:* every library Studio ships is a library it answers for.
 
