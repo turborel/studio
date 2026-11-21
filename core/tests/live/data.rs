@@ -19,6 +19,7 @@ fn spec(path: &std::path::Path, fields: &[Option<&str>], (batch, skip): (u64, bo
         batch,
         skip,
         limit: None,
+        binary: Vec::new(),
     }
 }
 
@@ -226,6 +227,7 @@ pub fn json_records_are_imported(live: &Live) {
         batch,
         skip: false,
         limit: None,
+        binary: Vec::new(),
     };
     let ImportAnswer::Imported(done) = manager.import(id, spec(&json, Format::Json, 1000), false).unwrap() else { panic!("asked") };
     assert_eq!(done.rows, 2);
@@ -254,9 +256,12 @@ pub fn json_records_are_imported(live: &Live) {
     manager.close(id).unwrap();
 }
 
-/// [DESIGN] D65 D62: a schema's script with its rows as INSERTs, saved,
-/// its tables dropped, and run back by Run SQL File, gives the same rows,
-/// a 38-digit number among them, on a server.
+/// [DESIGN] D65 D62: a table's script with its rows as INSERTs, saved,
+/// the table dropped, and run back by Run SQL File, gives the same rows,
+/// a 38-digit number among them and a character large object past what
+/// a row holds inline, read whole by its locator, on a server; its
+/// identity column restarted past its rows, so a row inserted after
+/// collides with none.
 pub fn a_script_with_its_rows_runs_back(live: &Live) {
     use turborel_studio_core::catalog::Catalog;
     use turborel_studio_core::catalog::ddl::create;
@@ -265,15 +270,15 @@ pub fn a_script_with_its_rows_runs_back(live: &Live) {
     let (manager, _) = live.manager();
     let id = live.owner(&manager);
     manager.set_autocommit(id, true).unwrap();
-    run(&manager, id, "CREATE TABLE SCRIPTED (ID INTEGER PRIMARY KEY, N NUMERIC(38,0), NOTE VARCHAR(20), ON_DAY DATE)").unwrap();
-    run(
-        &manager,
-        id,
-        "INSERT INTO SCRIPTED VALUES (1, 12345678901234567890123456789012345678, 'it''s', DATE '2024-01-02'), (2, NULL, NULL, NULL)",
-    )
-    .unwrap();
+    run(&manager, id, "CREATE TABLE SCRIPTED (ID INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY, N NUMERIC(38,0), NOTE VARCHAR(20), ON_DAY DATE, BODY CLOB(1M))").unwrap();
+    run(&manager, id, "INSERT INTO SCRIPTED (N, NOTE, ON_DAY) VALUES (12345678901234567890123456789012345678, 'it''s', DATE '2024-01-02'), (NULL, NULL, NULL)").unwrap();
+    let body: String = (0..100_000).map(|n| char::from(b'a' + u8::try_from(n % 26).unwrap())).collect();
+    let RunAnswer::Ran(_) = manager.run_with(id, ("UPDATE SCRIPTED SET BODY = ? WHERE ID = 1", &[Some(body)]), true).unwrap() else {
+        panic!("asked")
+    };
     let rows = |manager: &turborel_studio_core::connections::manager::ConnectionManager| {
-        let Outcome::Rows { page, .. } = run(manager, id, "SELECT * FROM SCRIPTED ORDER BY ID").unwrap().outcome else { panic!("no rows") };
+        let sql = "SELECT ID, N, NOTE, ON_DAY, CHARACTER_LENGTH(BODY), SUBSTRING(BODY FROM 99990 FOR 10) FROM SCRIPTED ORDER BY ID";
+        let Outcome::Rows { page, .. } = run(manager, id, sql).unwrap().outcome else { panic!("no rows") };
         page.rows
     };
     let expected = rows(&manager);
@@ -285,11 +290,13 @@ pub fn a_script_with_its_rows_runs_back(live: &Live) {
     std::fs::write(&script, create(&detail)).unwrap();
     let done = manager.script_data(id, &[(schema, "SCRIPTED".to_owned())], DataScript::Inserts, &script).unwrap();
     assert_eq!(done.rows, 2);
+    assert!(std::fs::read_to_string(&script).unwrap().contains("RESTART WITH 3;"));
     run(&manager, id, "DROP TABLE SCRIPTED CASCADE").unwrap();
     let options = FileOptions { transactions: Transactions::Whole, stop_on_error: true };
     let FileAnswer::Ran { report } = manager.run_file(id, &script, options, true).unwrap() else { panic!("asked") };
     assert_eq!(report.ending, Ending::Finished, "{report:?}");
     assert_eq!(rows(&manager), expected);
+    run(&manager, id, "INSERT INTO SCRIPTED (NOTE) VALUES ('next')").unwrap();
     run(&manager, id, "DROP TABLE SCRIPTED CASCADE").unwrap();
     manager.close(id).unwrap();
 }

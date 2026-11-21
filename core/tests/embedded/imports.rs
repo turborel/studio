@@ -168,6 +168,7 @@ fn wide_spec(path: &Path, format: Format, fields: &[&str]) -> ImportSpec {
         batch: 1000,
         skip: false,
         limit: None,
+        binary: Vec::new(),
     }
 }
 

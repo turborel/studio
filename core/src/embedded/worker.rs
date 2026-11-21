@@ -175,9 +175,9 @@ impl EmbeddedWorker {
                 let session = self.session()?;
                 export(session, &sql, &mut file, format).map(Reply::Exported).map_err(|e| failed(session, e))
             }
-            Request::ScriptRows { sql, prefix, path } => {
+            Request::ScriptRows { sql, how, path, append } => {
                 let session = self.session()?;
-                script_rows(session, &sql, &prefix, &path).map(Reply::Exported).map_err(|e| failed(session, e))
+                script_rows(session, &sql, &how, (&path, append)).map(Reply::Exported).map_err(|e| failed(session, e))
             }
             Request::Import { spec, stop, tell } => {
                 let session = self.session()?;

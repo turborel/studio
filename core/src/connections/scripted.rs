@@ -4,16 +4,17 @@
 //! (`Value::to_literal`), a number every digit of it; a generated column
 //! left out, as INSERT takes none; an identity column GENERATED ALWAYS
 //! given its value by OVERRIDING SYSTEM VALUE
-//! ([DOC sql/statements/insert.md RULES]). A large object is written
-//! whole only if it came whole; one sent by its locator is refused, by
-//! its table, not written cut.
+//! ([DOC sql/statements/insert.md RULES]). A large object is read whole,
+//! by its locator if it came by one, and written as a character string
+//! or a binary string, one past `LITERAL_CHUNK` as such strings joined by
+//! `||`. The same rows may be written as CSV instead, a large object
+//! whole. After the rows, each identity column is restarted past them.
 
+use std::fmt::Write as _;
 use std::io::Write;
 
-use turborel::storage::Row;
 use turborel::value::Value;
-use turborel_client::Column;
-use turborel_client::connection::Sink;
+use turborel::value::lob::{Lob, LobKind};
 
 use crate::catalog::model::TableDetail;
 use crate::error::{Result, StudioError};
@@ -31,6 +32,8 @@ pub struct Scripted {
     pub query: String,
     /// `INSERT INTO <table> (<columns>) [OVERRIDING SYSTEM VALUE] VALUES `.
     pub prefix: String,
+    /// The columns, by name, as a CSV file's header names them.
+    pub columns: Vec<String>,
     /// The table, as SQL writes it, to tell it by.
     pub table: String,
 }
@@ -49,25 +52,114 @@ pub fn scripted(table: &TableDetail) -> Option<Scripted> {
     Some(Scripted {
         query: format!("SELECT {names} FROM {qualified}"),
         prefix: format!("INSERT INTO {qualified} ({names}){overriding} VALUES "),
+        columns: columns.iter().map(|c| c.name.clone()).collect(),
         table: qualified,
     })
+}
+
+/// The most characters, or octets, of a large object written as one
+/// string: a longer one is strings of so many joined by `||`, each within
+/// a string's longest ([DOC appendix/d-limits.md Limits]).
+pub const LITERAL_CHUNK: usize = 16_000;
+/// The longest large object scripted as a literal, in octets, so its
+/// INSERT stays within the longest statement Studio sends.
+pub const MAX_SCRIPTED_OCTETS: u64 = 8 * 1024 * 1024;
+
+/// `octets` in hexadecimal, upper case.
+fn hex(octets: &[u8]) -> String {
+    octets.iter().fold(String::new(), |mut hex, b| {
+        let _ = write!(hex, "{b:02X}"); // Writing to a String cannot fail.
+        hex
+    })
+}
+
+/// `bytes`, a large object's of `kind`, as a literal: a character string
+/// or a binary string, or, past `LITERAL_CHUNK`, such strings joined,
+/// the first cast to the large object's type.
+fn lob_literal(kind: LobKind, bytes: &[u8]) -> String {
+    let (parts, cast): (Vec<String>, &str) = match kind {
+        LobKind::Character => {
+            let text = String::from_utf8_lossy(bytes);
+            let chars: Vec<char> = text.chars().collect();
+            let parts = chars.chunks(LITERAL_CHUNK).map(|c| format!("'{}'", c.iter().collect::<String>().replace('\'', "''"))).collect();
+            (parts, "CLOB")
+        }
+        LobKind::Binary => {
+            let parts = bytes.chunks(LITERAL_CHUNK).map(|c| format!("X'{}'", hex(c))).collect();
+            (parts, "BLOB")
+        }
+    };
+    match parts.as_slice() {
+        [] => {
+            if kind == LobKind::Character {
+                "''".to_owned()
+            } else {
+                "X''".to_owned()
+            }
+        }
+        [one] => one.clone(),
+        [first, rest @ ..] => format!("CAST({first} AS {cast}) || {}", rest.join(" || ")),
+    }
 }
 
 /// `v` as a literal of an INSERT.
 ///
 /// # Errors
 ///
-/// SQLCODE -910 for a large object not held whole.
+/// SQLCODE -910 for a large object not held whole, or past
+/// `MAX_SCRIPTED_OCTETS`.
 pub fn literal(v: &Value) -> Result<String> {
-    if let Value::Lob(lob) = v
-        && lob.inline().is_none()
-    {
-        return Err(StudioError::misuse(format!(
-            "[DESIGN] a large object of {} octets came by its locator, and is not scripted: export the table's rows instead",
-            lob.octets()
-        )));
+    match v {
+        Value::Lob(lob) => {
+            let bytes = lob.inline().ok_or_else(|| StudioError::misuse("[DESIGN] a large object is scripted only once read whole"))?;
+            if lob.octets() > MAX_SCRIPTED_OCTETS {
+                return Err(StudioError::misuse(format!(
+                    "[DESIGN] a large object of {} octets is past the {MAX_SCRIPTED_OCTETS} an INSERT holds: script the rows as CSV files",
+                    lob.octets()
+                )));
+            }
+            Ok(lob_literal(lob.kind(), bytes))
+        }
+        other => Ok(other.to_literal()),
     }
-    Ok(v.to_literal())
+}
+
+/// `bytes`, the whole of a large object of `kind`, as a value held inline.
+pub fn whole(kind: LobKind, bytes: &[u8]) -> Value {
+    Value::Lob(match kind {
+        LobKind::Character => Lob::of_text(&String::from_utf8_lossy(bytes)),
+        LobKind::Binary => Lob::of_octets(bytes),
+    })
+}
+
+/// `field`, as CSV writes it [RFC 4180]: quoted where it must be.
+fn csv_field(field: &str) -> String {
+    let quoted = field.is_empty()
+        || field.contains([',', '"', '\n', '\r'])
+        || field.starts_with(char::is_whitespace)
+        || field.ends_with(char::is_whitespace);
+    if quoted { format!("\"{}\"", field.replace('"', "\"\"")) } else { field.to_owned() }
+}
+
+/// A CSV record of `fields`, ended by CR LF.
+pub fn csv_record(fields: impl Iterator<Item = String>) -> String {
+    let mut line = fields.collect::<Vec<_>>().join(",");
+    line.push_str("\r\n");
+    line
+}
+
+/// `v` as a CSV field: a null empty and unquoted, a large object whole.
+///
+/// # Errors
+///
+/// SQLCODE -910 for a large object not held whole.
+fn csv_value(v: &Value) -> Result<String> {
+    match v {
+        Value::Null => Ok(String::new()),
+        Value::Char(s) => Ok(csv_field(s)),
+        Value::Lob(lob) if lob.inline().is_none() => Err(StudioError::misuse("[DESIGN] a large object is written only once read whole")),
+        other => Ok(csv_field(&other.to_string())),
+    }
 }
 
 /// The INSERT of `row`, of `prefix`, ended by `;` and a line break.
@@ -80,6 +172,36 @@ pub fn insert(prefix: &str, row: &[Value]) -> Result<String> {
     Ok(format!("{prefix}({});\n", values.join(", ")))
 }
 
+/// The most octets of a large object read whole to be scripted.
+pub const MAX_WHOLE_OCTETS: u64 = 256 * 1024 * 1024;
+
+/// The file `path` rows are written to: the script, opened to have more
+/// written at its end, if `append`; else a file of its own, made anew.
+///
+/// # Errors
+///
+/// SQLCODE -910 if it cannot be opened or made.
+pub fn rows_file(path: &std::path::Path, append: bool) -> Result<std::fs::File> {
+    if append {
+        return appended(path);
+    }
+    std::fs::File::create(path).map_err(|e| StudioError::misuse(format!("[DESIGN] {}: {e}", path.display())))
+}
+
+/// Refuses a large object of `octets` past `MAX_WHOLE_OCTETS`.
+///
+/// # Errors
+///
+/// SQLCODE -910 of one past it.
+pub fn readable(octets: u64) -> Result<()> {
+    if octets > MAX_WHOLE_OCTETS {
+        return Err(StudioError::misuse(format!(
+            "[DESIGN] a large object of {octets} octets is past the {MAX_WHOLE_OCTETS} a script reads whole"
+        )));
+    }
+    Ok(())
+}
+
 /// The script at `path`, opened to have more written at its end.
 ///
 /// # Errors
@@ -89,33 +211,60 @@ pub fn appended(path: &std::path::Path) -> Result<std::fs::File> {
     std::fs::OpenOptions::new().append(true).open(path).map_err(|e| StudioError::misuse(format!("[DESIGN] {}: {e}", path.display())))
 }
 
-/// Where a query's rows go as INSERTs: a file, the first failure kept.
-pub struct InsertWriter<'a> {
+/// How a table's rows are written: as INSERTs, each begun as the prefix
+/// says, or as CSV records.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum RowsAs {
+    /// An INSERT a row, of this prefix.
+    Inserts(String),
+    /// A CSV record a row, after a header of these columns.
+    Csv(Vec<String>),
+}
+
+/// Where a query's rows go: a file, as INSERTs or CSV, the first failure kept.
+pub struct RowWriter<'a> {
     out: &'a mut dyn Write,
-    prefix: &'a str,
+    how: &'a RowsAs,
     /// The rows written.
     pub count: u64,
     /// The first failure, of a value or the file; the rest not written.
     pub failed: Option<StudioError>,
 }
 
-impl<'a> InsertWriter<'a> {
-    /// A writer of INSERTs of `prefix` to `out`.
-    pub fn new(out: &'a mut dyn Write, prefix: &'a str) -> InsertWriter<'a> {
-        InsertWriter { out, prefix, count: 0, failed: None }
+impl<'a> RowWriter<'a> {
+    /// A writer of rows to `out` as `how` says: a CSV file's header first.
+    pub fn new(out: &'a mut dyn Write, how: &'a RowsAs) -> RowWriter<'a> {
+        let mut writer = RowWriter { out, how, count: 0, failed: None };
+        if let RowsAs::Csv(columns) = how {
+            let header = csv_record(columns.iter().map(|c| csv_field(c)));
+            writer.write(Ok(header));
+        }
+        writer
     }
 
-    /// Writes `row`'s INSERT, unless a failure came first.
-    pub fn row(&mut self, row: &[Value]) {
+    /// Writes `text`, unless a failure came first.
+    fn write(&mut self, text: Result<String>) {
         if self.failed.is_some() {
             return;
         }
-        let written = insert(self.prefix, row).and_then(|text| {
-            self.out.write_all(text.as_bytes()).map_err(|e| StudioError::misuse(format!("[DESIGN] cannot write the script: {e}")))
+        let written = text.and_then(|text| {
+            self.out.write_all(text.as_bytes()).map_err(|e| StudioError::misuse(format!("[DESIGN] cannot write the rows: {e}")))
         });
-        match written {
-            Ok(()) => self.count = self.count.saturating_add(1),
-            Err(e) => self.failed = Some(e),
+        if let Err(e) = written {
+            self.failed = Some(e);
+        }
+    }
+
+    /// Writes `row`, unless a failure came first.
+    pub fn row(&mut self, row: &[Value]) {
+        let text = match self.how {
+            RowsAs::Inserts(prefix) => insert(prefix, row),
+            RowsAs::Csv(_) => row.iter().map(csv_value).collect::<Result<Vec<_>>>().map(|fields| csv_record(fields.into_iter())),
+        };
+        let before = self.failed.is_none();
+        self.write(text);
+        if before && self.failed.is_none() {
+            self.count = self.count.saturating_add(1);
         }
     }
 
@@ -127,21 +276,25 @@ impl<'a> InsertWriter<'a> {
     pub fn finish(self) -> Result<u64> {
         match self.failed {
             Some(e) => Err(e),
-            None => {
-                self.out.flush().map(|()| self.count).map_err(|e| StudioError::misuse(format!("[DESIGN] cannot write the script: {e}")))
-            }
+            None => self.out.flush().map(|()| self.count).map_err(|e| StudioError::misuse(format!("[DESIGN] cannot write the rows: {e}"))),
         }
     }
 }
 
-impl Sink for InsertWriter<'_> {
-    fn columns(&mut self, _: &[Column]) {}
+/// Whether `type_written` is a binary string's type, whose values a file
+/// writes in hexadecimal.
+pub fn is_binary(type_written: &str) -> bool {
+    let t = type_written.trim().to_ascii_uppercase();
+    ["BINARY", "VARBINARY", "BLOB"].iter().any(|b| t.starts_with(b))
+}
 
-    fn rows(&mut self, rows: &[Row]) {
-        for row in rows {
-            self.row(row);
-        }
-    }
+/// The value an identity column restarts with past its rows: the
+/// greatest of them plus its increment, or the least, of an increment
+/// below 0; none of no rows, or of a value or increment not an integer.
+pub fn restart_with(edge: Option<&str>, increment: &str) -> Option<i128> {
+    let edge: i128 = edge?.trim().parse().ok()?;
+    let increment: i128 = increment.trim().parse().ok()?;
+    edge.checked_add(increment)
 }
 
 #[cfg(test)]

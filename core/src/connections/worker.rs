@@ -59,8 +59,9 @@ pub(crate) enum Request {
     Value { result: ResultId, row: u64, column: usize },
     /// A query's rows written to a file as they come, as CSV or native.
     Export { sql: String, path: PathBuf, format: ExportFormat },
-    /// A query's rows appended to a script as INSERTs, each begun `prefix`.
-    ScriptRows { sql: String, prefix: String, path: PathBuf },
+    /// A query's rows, each large object read whole, written as `how`
+    /// says: appended to a script, or to a file of their own.
+    ScriptRows { sql: String, how: crate::connections::scripted::RowsAs, path: PathBuf, append: bool },
     /// A file's rows imported into a table, cancelled when `stop` is set,
     /// its progress told to `tell`.
     Import { spec: Box<ImportSpec>, stop: Arc<std::sync::atomic::AtomicBool>, tell: Teller },
@@ -205,7 +206,7 @@ impl Worker {
             Request::Describe(sql) => self.describe(&sql).map(Reply::Columns),
             Request::Value { result, row, column } => self.value(result, row, column).map(Reply::Value),
             Request::Export { sql, path, format } => self.export(&sql, &path, format).map(Reply::Exported),
-            Request::ScriptRows { sql, prefix, path } => self.script_rows(&sql, &prefix, &path).map(Reply::Exported),
+            Request::ScriptRows { sql, how, path, append } => self.script_rows(&sql, &how, (&path, append)).map(Reply::Exported),
             Request::Import { spec, stop, tell } => {
                 let watch = Watch { stop: &stop, tell: &*tell.0 };
                 run_import(self.connection()?, &spec, Some(&watch)).map(Reply::Imported)
@@ -403,15 +404,23 @@ impl Worker {
         connection.export(sql, &mut file, format).map_err(StudioError::from)
     }
 
-    /// Appends the rows of the query `sql` to the script at `path` as
-    /// INSERTs begun `prefix`, as they come: how many.
-    fn script_rows(&mut self, sql: &str, prefix: &str, path: &std::path::Path) -> Result<u64> {
-        let mut file = crate::connections::scripted::appended(path)?;
-        let mut writer = crate::connections::scripted::InsertWriter::new(&mut file, prefix);
-        match self.connection()?.query_into(sql, &mut writer)? {
-            turborel_client::connection::Streamed::Rows(_) => writer.finish(),
-            turborel_client::connection::Streamed::Done(_) => Err(StudioError::misuse("[DESIGN] a table's rows are read by a query")),
-        }
+    /// Writes the rows of the query `sql` to `path` as `how` says, a page
+    /// at a time through its cursor, each large object read whole by its
+    /// locator: how many.
+    fn script_rows(
+        &mut self,
+        sql: &str,
+        how: &crate::connections::scripted::RowsAs,
+        (path, append): (&std::path::Path, bool),
+    ) -> Result<u64> {
+        let mut file = crate::connections::scripted::rows_file(path, append)?;
+        let mut writer = crate::connections::scripted::RowWriter::new(&mut file, how);
+        let connection = self.connection()?;
+        let statement = connection.prepare(sql)?;
+        let read = written_whole(connection, &statement, &mut writer);
+        let _ = connection.deallocate(statement); // Let go; the rows' outcome is the one told.
+        read?;
+        writer.finish()
     }
 
     /// The types of `sql`'s dynamic parameters, in order, as SQL writes
@@ -442,4 +451,43 @@ impl Worker {
             _ => Ok(()),
         }
     }
+}
+
+/// The rows of `statement`'s cursor, each large object read whole, given
+/// `writer` a page at a time.
+fn written_whole(
+    connection: &mut Connected,
+    statement: &Statement,
+    writer: &mut crate::connections::scripted::RowWriter<'_>,
+) -> Result<()> {
+    let mut batch = connection.open_cursor(statement, &[], PAGE_ROWS)?;
+    loop {
+        for row in batch.rows {
+            let row = row.into_iter().map(|v| whole_value(connection, v)).collect::<Result<Vec<_>>>()?;
+            writer.row(&row);
+        }
+        if !batch.more {
+            return Ok(());
+        }
+        batch = connection.fetch(statement, PAGE_ROWS)?;
+    }
+}
+
+/// `v`, a large object by its locator read whole, held inline.
+fn whole_value(connection: &mut Connected, v: Value) -> Result<Value> {
+    let Value::Lob(lob) = &v else { return Ok(v) };
+    if lob.inline().is_some() {
+        return Ok(v);
+    }
+    crate::connections::scripted::readable(lob.octets())?;
+    let mut bytes = Vec::new();
+    while u64::try_from(bytes.len()).unwrap_or(u64::MAX) < lob.octets() {
+        let from = u64::try_from(bytes.len()).unwrap_or(u64::MAX);
+        let chunk = connection.read_lob(lob, (from, lob.octets().saturating_sub(from).min(CHUNK_BYTES)), false)?;
+        if chunk.is_empty() {
+            break;
+        }
+        bytes.extend(chunk);
+    }
+    Ok(crate::connections::scripted::whole(lob.kind(), &bytes))
 }

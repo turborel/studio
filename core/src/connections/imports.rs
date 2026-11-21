@@ -226,6 +226,10 @@ pub struct ImportSpec {
     /// The rows that may be skipped before the import stops; none for any.
     #[serde(default)]
     pub limit: Option<u64>,
+    /// Of each field kept, whether its column is of a binary type, whose
+    /// values a file writes in hexadecimal: found by the manager.
+    #[serde(skip)]
+    pub binary: Vec<bool>,
 }
 
 /// What an import did: the rows inserted and committed, those skipped,
@@ -300,6 +304,9 @@ pub(crate) struct Mapped<'a, S> {
     /// The rows skipped, and how many may be.
     rejected: (Arc<AtomicU64>, Option<u64>),
     told: Instant,
+    /// Of each field kept, whether its value is a binary string written
+    /// in hexadecimal.
+    binary: Vec<bool>,
 }
 
 impl<S: Source> Mapped<'_, S> {
@@ -344,7 +351,14 @@ impl<S: Source> Source for Mapped<'_, S> {
         self.tell(false);
         let Some(record) = self.inner.record()? else { return Ok(None) };
         self.records = self.records.saturating_add(1);
-        let values = self.keep.iter().map(|&at| record.values.get(at).cloned().unwrap_or(Value::Null)).collect();
+        let mut values: Vec<Value> = self.keep.iter().map(|&at| record.values.get(at).cloned().unwrap_or(Value::Null)).collect();
+        for (value, _) in values.iter_mut().zip(&self.binary).filter(|(_, binary)| **binary) {
+            if let Value::Char(hex) = value {
+                let octets = crate::connections::values::octets_of_hex(hex)
+                    .map_err(|e| SourceError { position: record.position, message: e.message })?;
+                *value = Value::Binary(turborel::value::Binary::new(octets));
+            }
+        }
         Ok(Some(Record { values, position: record.position }))
     }
 }
@@ -387,6 +401,7 @@ pub(crate) fn with_mapped<T>(
             records: 0,
             rejected: (Arc::clone(&rejected), spec.limit),
             told: Instant::now(),
+            binary: spec.binary.clone(),
         };
         let done = work(&mut mapped, &rejected);
         mapped.tell(true);

@@ -135,6 +135,7 @@ fn import_spec(file: &std::path::Path, fields: &[Option<&str>], (batch, skip): (
         batch,
         skip,
         limit: None,
+        binary: Vec::new(),
     }
 }
 

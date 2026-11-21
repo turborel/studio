@@ -82,6 +82,7 @@ fn mapped_of(inner: Fixed, keep: Vec<usize>, names: &[&str]) -> Mapped<'static, 
         records: 0,
         rejected: (Arc::new(AtomicU64::new(0)), None),
         told: Instant::now(),
+        binary: Vec::new(),
     }
 }
 

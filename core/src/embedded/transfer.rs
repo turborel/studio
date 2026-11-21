@@ -214,17 +214,34 @@ pub fn import(session: &Session, spec: &ImportSpec, watch: Option<&Watch<'_>>) -
     })
 }
 
-/// Appends the rows of the query `sql` on `session` to the script at
-/// `path` as INSERTs begun `prefix` (RULES.md D65), as they come: how many.
+/// Writes the rows of the query `sql` on `session` to `path` as `how`
+/// says (RULES.md D65), each large object read whole, as they come: how
+/// many.
 ///
 /// # Errors
 ///
-/// The query's; a value not scripted; the script's file.
-pub fn script_rows(session: &Session, sql: &str, prefix: &str, path: &std::path::Path) -> Result<u64> {
-    let mut file = crate::connections::scripted::appended(path)?;
-    let mut writer = crate::connections::scripted::InsertWriter::new(&mut file, prefix);
+/// The query's; a value not scripted; the file's.
+pub fn script_rows(
+    session: &Session,
+    sql: &str,
+    how: &crate::connections::scripted::RowsAs,
+    (path, append): (&std::path::Path, bool),
+) -> Result<u64> {
+    use crate::connections::scripted::{RowWriter, readable, rows_file, whole};
+    let mut file = rows_file(path, append)?;
+    let mut writer = RowWriter::new(&mut file, how);
     let mut cursor = session.open_cursor(sql)?;
     while let Some(row) = cursor.fetch()? {
+        let row = row
+            .into_iter()
+            .map(|v| match v {
+                Value::Lob(lob) if lob.inline().is_none() => {
+                    readable(lob.octets())?;
+                    Ok(whole(lob.kind(), &lob.reader().read(0, lob.octets())?))
+                }
+                other => Ok(other),
+            })
+            .collect::<Result<Vec<_>>>()?;
         writer.row(&row);
     }
     writer.finish()

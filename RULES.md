@@ -1636,6 +1636,9 @@ The review checklist:
   its column's, and flagged where it cannot fit or cast, a null for a
   column that takes none, a column chosen twice, or a column that takes
   no null and has no default left out.
+- **Binary columns:** a field going into a column of BINARY, VARBINARY
+  or BLOB, as the manager reads of the table, is read in hexadecimal, as
+  Studio writes binary values.
 - **Loading:** by copy in batches (D43); the event `import` tells the
   records read, the rows skipped and the bytes, or a sheet's rows, read
   of all, at most every 250 ms; **Cancel Import** stops between records,
@@ -1688,13 +1691,24 @@ The review checklist:
   VALUE for an identity column GENERATED ALWAYS. Run SQL File (D62)
   loads the script back.
 - **CSV:** a file of each table beside the script,
-  `<stem>.<schema>.<table>.csv`, written by turborel-client's export (D39),
-  which the import (D43, D63) and `turborel --import` load back by copy.
+  `<stem>.<schema>.<table>.csv`, which the import (D43, D63) loads back
+  by copy.
   Turborel has no SQL statement of a copy, so a script cannot load its
   own data files; they are loaded as imports.
-- **Not scripted, said:** a large object that came by its locator stops
-  the script, by its octets; an identity column's next value is not
-  moved past the rows loaded.
+- **Large objects:** the rows read through the cursor a page at a time
+  (not `query_into`), each large object read whole by its locator
+  (`read_lob` on a server, the session's reader embedded), at most 256
+  MiB; written as a string, past 16,000 characters or octets as strings
+  joined by `||`, the first cast to CLOB or BLOB; past 8 MiB, the
+  INSERTs refuse it, saying to script CSV. The CSV files are written the
+  same way, by Studio, not turborel-client's export, which writes a
+  locator's description; a binary value in hexadecimal, which the
+  import reads back into a binary column (D63).
+- **Identity columns:** after the rows, `ALTER TABLE ... ALTER COLUMN
+  ... RESTART WITH n` of each, n the greatest value plus the column's
+  increment (`INFORMATION_SCHEMA.COLUMNS.IDENTITY_INCREMENT`), or the
+  least of an increment below 0, as the catalog shows no generator's
+  next value; none of a table of no rows.
 - *Why:* a schema and its data as one portable `.sql`, loaded back by
   Studio's own Run SQL File, or as files any client imports.
 

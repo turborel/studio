@@ -474,6 +474,13 @@ impl ConnectionManager {
         {
             return Ok(ImportAnswer::Confirm(confirm));
         }
+        let mut spec = spec;
+        // A binary column's values are hexadecimal in a file, as Studio
+        // writes them; its type is read of the table, its value decoded.
+        let names: Vec<String> = spec.fields.iter().flatten().map(|n| format!("\"{}\"", n.replace('"', "\"\""))).collect();
+        if let Ok(columns) = self.describe(id, &format!("SELECT {} FROM {}", names.join(", "), spec.table)) {
+            spec.binary = columns.iter().map(|c| crate::connections::scripted::is_binary(&c.type_written)).collect();
+        }
         let stop = Arc::new(std::sync::atomic::AtomicBool::new(false));
         self.files().insert(id, Arc::clone(&stop));
         let events = Arc::clone(&self.events);
