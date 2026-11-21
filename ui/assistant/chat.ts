@@ -50,8 +50,16 @@ function changeChat(store: Store, change: (c: Chat) => Chat): void {
   store.update((now) => ({ ...now, chat: change(now.chat) }));
 }
 
-/** `items` with `event` of a turn added. */
+/** The most items a conversation keeps shown, the oldest let go. */
+export const MAX_CHAT_ITEMS = 500;
+
+/** `items` with `event` of a turn added, at most `MAX_CHAT_ITEMS`. */
 export function withEvent(items: readonly ChatItem[], event: TurnEvent): ChatItem[] {
+  return added(items, event).slice(-MAX_CHAT_ITEMS);
+}
+
+/** `items` with `event` of a turn added. */
+function added(items: readonly ChatItem[], event: TurnEvent): ChatItem[] {
   const last = items.at(-1);
   switch (event.kind) {
     case "text":

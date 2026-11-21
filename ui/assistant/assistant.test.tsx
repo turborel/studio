@@ -9,7 +9,7 @@ import { PromptDialog } from "../shell/PromptDialog";
 import { catalogBackend, must, opened, refused, settle, within } from "../test/catalog";
 import { AssistantPanel, standing } from "./AssistantPanel";
 import { AssistantSettingsDialog, entries } from "./AssistantSettings";
-import { ask, included, INCLUDED_ROWS, openDraft, withEvent } from "./chat";
+import { ask, included, INCLUDED_ROWS, MAX_CHAT_ITEMS, openDraft, withEvent } from "./chat";
 
 /** A verdict of a read, allowed. */
 const READ: Verdict = {
@@ -121,6 +121,15 @@ describe("the assistant's conversation", () => {
       { kind: "assistant", text: "Done" },
       { kind: "refused", category: "cyber", explanation: null },
     ]);
+  });
+
+  it("keeps the latest items of a long conversation alone [DESIGN] D55", () => {
+    let items = withEvent([], { kind: "toolBegun", name: "first" });
+    for (let i = 0; i < MAX_CHAT_ITEMS; i += 1) {
+      items = withEvent(items, { kind: "toolBegun", name: `call ${String(i)}` });
+    }
+    expect(items).toHaveLength(MAX_CHAT_ITEMS);
+    expect(items[0]).toEqual({ kind: "tool", name: "call 0", outcome: "running" });
   });
 
   it("takes its own conversation's events alone, and answers no to another's question [DESIGN] D55", async () => {
