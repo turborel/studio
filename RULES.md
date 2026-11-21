@@ -80,6 +80,7 @@ Each is told in full in [§7](#7-the-decisions).
 | D38 | A run's end notified by the platform, from the backend |
 | D39 | Results: paged in a canvas grid, sorted and filtered on the server, values read whole for their viewers |
 | D40 | Completion: of the place, from the parser's scope and the catalog's cache |
+| D41 | Data: values written as the grid shows them |
 
 ---
 
@@ -931,6 +932,18 @@ The review checklist:
   none.
 - *Why:* completion that knows the statement and the database, and is
   never slower than the typing.
+
+#### D41. Data: values written as the grid shows them
+
+- **Text:** a value given a parameter, by the worksheet's dialog or by the
+  grid, is text, cast to the parameter's type as CAST would cast it.
+- **Binary:** a binary string's or binary large object's value is written
+  in hexadecimal digits, in pairs, as the grid shows it.
+- **Large objects:** a value longer than 64 KiB, as long as a row holds,
+  is written to the server first by `create_lob`, a chunk of 256 KiB at a
+  time, and sent as its locator (`[CLIENT Large objects]`).
+- *Why:* what the grid shows can be written back as it is shown, and no
+  message carries more than a row holds.
 
 ---
 

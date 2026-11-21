@@ -9,6 +9,7 @@ use std::sync::Arc;
 use std::sync::mpsc::{Receiver, Sender};
 
 use turborel::value::Value;
+use turborel::value::lob::{Lob, LobKind};
 use turborel_client::Notice;
 use turborel_client::agent::Connected;
 use turborel_client::export::ExportFormat;
@@ -18,7 +19,7 @@ use crate::connections::cells::ColumnInfo;
 use crate::connections::outcome::{Outcome, Ran, ResultId, ServerTime};
 use crate::connections::pages::{PAGE_ROWS, Page, Pages};
 use crate::connections::session::SessionState;
-use crate::connections::values::ValueRead;
+use crate::connections::values::{CHUNK_BYTES, ValueRead, parameter_value};
 use crate::error::{DiagnosticsView, Result, StudioError};
 use crate::events::{ConnectionId, Event, EventSink};
 
@@ -108,7 +109,7 @@ pub(crate) struct Worker {
 ///
 /// SQLCODE -910 if they are not as many as its parameters; the cast's
 /// failure, as SQLSTATE 22018 of a value no number.
-fn bound(statement: &Statement, values: &[Option<String>]) -> Result<Vec<Value>> {
+fn bound(connection: &mut Connected, statement: &Statement, values: &[Option<String>]) -> Result<Vec<Value>> {
     let types = statement.parameters();
     if types.len() != values.len() {
         return Err(StudioError::misuse(format!(
@@ -117,12 +118,20 @@ fn bound(statement: &Statement, values: &[Option<String>]) -> Result<Vec<Value>>
             values.len()
         )));
     }
+    let mut write = |kind: LobKind, octets: &[u8]| -> Result<Lob> {
+        let mut writer = connection.create_lob(kind)?;
+        for chunk in octets.chunks(usize::try_from(CHUNK_BYTES).unwrap_or(usize::MAX)) {
+            std::io::Write::write_all(&mut writer, chunk)
+                .map_err(|e| StudioError::misuse(format!("[DESIGN] the value could not be written: {e}")))?;
+        }
+        writer.finish().map_err(StudioError::from)
+    };
     types
         .iter()
         .zip(values)
         .map(|(parameter, value)| match value {
             None => Ok(Value::Null),
-            Some(text) => turborel::value::cast(Value::Char(text.clone()), &parameter.clone().data_type()).map_err(StudioError::from),
+            Some(text) => parameter_value(&parameter.clone().data_type(), text, &mut write),
         })
         .collect()
 }
@@ -225,7 +234,7 @@ impl Worker {
         let _ = connection.take_conditions(); // Those of an earlier statement are not this one's.
         let (outcome, told) = match connection.prepare(sql) {
             Ok(statement) => {
-                let values = match bound(&statement, values) {
+                let values = match bound(connection, &statement, values) {
                     Ok(values) => values,
                     Err(failure) => {
                         let _ = self.connection()?.deallocate(statement); // Let go; the failure is the one told.
@@ -364,7 +373,7 @@ impl Worker {
         let mut bytes = Vec::new();
         while u64::try_from(bytes.len()).unwrap_or(u64::MAX) < wanted {
             let from = u64::try_from(bytes.len()).unwrap_or(u64::MAX);
-            let count = wanted.saturating_sub(from).min(crate::connections::values::CHUNK_BYTES);
+            let count = wanted.saturating_sub(from).min(CHUNK_BYTES);
             let chunk = connection.read_lob(lob, (from, count), false)?;
             if chunk.is_empty() {
                 break;

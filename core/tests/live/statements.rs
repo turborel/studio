@@ -125,14 +125,15 @@ pub fn a_cursor_fails_or_closes_early(live: &Live) {
 
 /// [DOC sql/statements/prepare.md DESCRIPTION] [DESIGN] D36: a statement's
 /// dynamic parameters are told by their types, and given values as text,
-/// each cast to its parameter's type, or null; a value of no number, or
-/// values not as many as the parameters, are refused.
+/// each cast to its parameter's type, a binary one's in hexadecimal
+/// (D41), or null; a value of no number, a binary one not in hexadecimal
+/// pairs, or values not as many as the parameters, are refused.
 pub fn parameters_are_given_values_as_text(live: &Live) {
     let (manager, _) = live.manager();
     let id = live.owner(&manager);
     manager.set_autocommit(id, true).unwrap();
-    crate::run(&manager, id, "CREATE TABLE BOUND (I INTEGER, S VARCHAR(10))").unwrap();
-    let insert = "INSERT INTO BOUND VALUES (?, ?)";
+    crate::run(&manager, id, "CREATE TABLE BOUND (I INTEGER, S VARCHAR(10), B VARBINARY(4))").unwrap();
+    let insert = "INSERT INTO BOUND (I, S) VALUES (?, ?)";
     // An INTEGER column's parameter is of its tag's type, an exact numeric
     // type of precision 10 and scale 0 ([CLIENT Prepared statements]).
     assert_eq!(manager.parameters(id, insert).unwrap(), ["NUMERIC(10,0)", "CHARACTER VARYING(10)"]);
@@ -145,6 +146,12 @@ pub fn parameters_are_given_values_as_text(live: &Live) {
     assert_eq!(page.rows, [[None]]);
     assert_eq!(manager.run_with(id, (query, &[Some("x".to_owned())]), false).unwrap_err().sqlstate, "22018");
     assert_eq!(manager.run_with(id, (query, &[]), false).unwrap_err().sqlstate, "TB910");
+    let binary = "UPDATE BOUND SET B = ? WHERE I = 42";
+    let RunAnswer::Ran(_) = manager.run_with(id, (binary, &[Some("deadBEEF".to_owned())]), false).unwrap() else { panic!("asked") };
+    let Outcome::Rows { page, .. } = crate::run(&manager, id, "SELECT B FROM BOUND").unwrap().outcome else { panic!("no rows") };
+    assert_eq!(page.rows, [[Some("DEADBEEF".to_owned())]]);
+    assert_eq!(manager.run_with(id, (binary, &[Some("DEADBEE".to_owned())]), false).unwrap_err().sqlstate, "22018");
+    assert_eq!(manager.run_with(id, (binary, &[Some("ZZ".to_owned())]), false).unwrap_err().sqlstate, "22018");
     assert!(manager.judge(id, "DROP TABLE BOUND CASCADE").unwrap().is_some());
     assert!(manager.judge(id, query).unwrap().is_none());
     crate::run(&manager, id, "DROP TABLE BOUND CASCADE").unwrap();
@@ -177,7 +184,7 @@ pub fn a_plan_is_explained_and_analyzed(live: &Live) {
     manager.close(id).unwrap();
 }
 
-/// [CLIENT Large objects] [DESIGN] D39: a large object past what a row
+/// [CLIENT Large objects] [DESIGN] D39 D41: a large object past what a row
 /// holds whole is shown by what it is, and read whole for a viewer, a
 /// character one as its text, a binary one in Base64, in a transaction or,
 /// of autocommit, while its result is open; one that came whole is
@@ -189,8 +196,12 @@ pub fn a_large_object_is_read_whole(live: &Live) {
     crate::run(&manager, id, "CREATE TABLE DOCS (ID INTEGER, BODY CLOB(1M), SCAN BLOB(1M))").unwrap();
     manager.set_autocommit(id, false).unwrap();
     let text = "abc".repeat(30_000);
-    let insert = format!("INSERT INTO DOCS VALUES (1, ?, X'{}')", "78".repeat(70_000));
-    let RunAnswer::Ran(_) = manager.run_with(id, (&insert, &[Some(text.clone())]), false).unwrap() else { panic!("asked") };
+    // Each value longer than a row holds is written by create_lob, a binary
+    // one given in hexadecimal, as the grid shows it.
+    let insert = "INSERT INTO DOCS VALUES (1, ?, ?)";
+    let values = [Some(text.clone()), Some("78".repeat(70_000))];
+    let RunAnswer::Ran(_) = manager.run_with(id, (insert, &values), false).unwrap() else { panic!("asked") };
+    assert_eq!(manager.run_with(id, (insert, &[Some("x".to_owned()), Some("7".to_owned())]), false).unwrap_err().sqlstate, "22018");
     crate::run(&manager, id, "INSERT INTO DOCS VALUES (2, 'short', NULL)").unwrap();
     crate::run(&manager, id, "COMMIT").unwrap();
     let Outcome::Rows { result, page, .. } = crate::run(&manager, id, "SELECT BODY, SCAN FROM DOCS ORDER BY ID").unwrap().outcome else {

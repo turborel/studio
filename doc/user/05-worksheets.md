@@ -166,7 +166,11 @@ The values given last are offered again. A script's variables, and their
 values, are also shown under the worksheet's toolbar, where a value is
 changed in place. A parameter's value is cast to its parameter's type:
 one that is no number, of a number's parameter, fails with SQLSTATE
-22018.
+22018. A binary string's value, or a binary large object's, is written
+in hexadecimal digits, as the grid shows it, `DEADBEEF`; digits not in
+pairs fail with SQLSTATE 22018. A large object's value longer than
+64 KiB is written to the server first, a piece at a time, and sent as
+its locator.
 
 ## Results and messages
 
