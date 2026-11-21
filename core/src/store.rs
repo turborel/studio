@@ -176,7 +176,7 @@ mod tests {
             assert_eq!(read::<Doc>(&path, 1024).unwrap(), None);
             assert!(!path.exists());
         }
-        assert!(super::told("store/aside/doc.json did not fit"));
+        assert!(super::told(&format!("{} did not fit", path.display())));
         assert!(super::told("of format Some(2)"));
         assert!(super::told("invalid type: integer `7`"));
         let aside =
