@@ -27,6 +27,8 @@ pub const CONTROL: &str = "\u{E009}";
 pub const ENTER: &str = "\u{E007}";
 /// The key WebDriver names Escape by.
 pub const ESCAPE: &str = "\u{E00C}";
+/// The key WebDriver names Backspace by.
+pub const BACKSPACE: &str = "\u{E003}";
 /// The key WebDriver names Shift by.
 pub const SHIFT: &str = "\u{E008}";
 
