@@ -85,6 +85,7 @@ Each is told in full in [§7](#7-the-decisions).
 | D43 | Imports and exports of a table, through the backend |
 | D44 | Tables made and altered by dialogs that write their DDL |
 | D45 | Rows compared by the target's key, synced by a script |
+| D49 | A window that never goes blank: failures shown and logged, files that do not fit set aside, a smoke test of the real window |
 
 ---
 
@@ -100,6 +101,8 @@ Each is told in full in [§7](#7-the-decisions).
 | `core/src/worksheet/` | scripts split, the history, the worksheets and queries kept, and the files a worksheet may use (D36) |
 | `core/src/saved.rs`, `secrets.rs` | saved connections, and the keychain (D16, D28) |
 | `core/src/preferences.rs`, `store.rs` | settings and the layout, and Studio's files of format 1 (R-FMT-1) |
+| `core/src/failures.rs` | the window's failures' log (D49) |
+| `xtask/smoke/earlier/` | an earlier build's app data, for the smoke test of the real window (D49) |
 | `core/tests/live/` | the live tests, their harness and server (D27) |
 | `src-tauri/` | `turborel-studio`, the application: the window, its capability and the commands, each a thin layer over `core` (D1, D9) |
 | `src-tauri/build.rs` | names each command, so each is a permission (R-SEC-5) |
@@ -608,7 +611,11 @@ The review checklist:
   grid inject, and Tauri is told not to add nonces to it
   (`dangerousDisableAssetCspModification`), which would disable that.
   Scripts keep Tauri's hashes and nothing inline.
-- **Prototypes:** frozen (`freezePrototype`).
+- **Prototypes:** `Object.prototype` frozen by the window's entry once
+  every module has run, not by Tauri's `freezePrototype` before any has:
+  d3, which React Flow reads (D15), sets `constructor` on objects of that
+  prototype as its modules run, which a prototype frozen before refuses,
+  so the window ran no module at all and stayed blank (D49).
 - *Why:* no remote content and no eval (R-SEC-4); inline styles cannot
   run code.
 
@@ -1016,6 +1023,33 @@ The review checklist:
   opened in a worksheet of the target's connection, never run by the
   comparison.
 - *Why:* two tables made the same by statements read before they run.
+
+#### D49. A window that never goes blank
+
+- **Shown:** a failure in drawing the window shows a panel in its place,
+  of its details, with Copy Details, Reset Layout and Reload; one of a
+  script or a promise is told in the error banner.
+- **Logged:** each is kept in `failures.log`, in Studio's configuration,
+  its owner's alone, a line a failure, its lines joined, at most 16,384
+  characters, the log begun again past 1 MiB, the old kept beside it. The
+  window holds no secret, so the log holds none.
+- **Set aside:** a file of Studio's that does not fit, too long, not JSON
+  of its shape, of another format, or of a setting out of its bounds, is
+  renamed beside itself, `.set-aside-` and the instant after its name, and
+  read as none; the window tells it until dismissed. A part of the
+  window's state that cannot be loaded leaves the others loaded.
+- **Plug-ins:** the dialog and notification plug-ins are added without
+  the scripts they give the webview, which is granted none of their
+  commands; the notification plug-in's asked, as the page loaded, whether
+  notifications are permitted, and was refused (R-SEC-5).
+- **Smoke test:** `cargo xtask smoke` launches the built application under
+  tauri-driver 2.1.0 and WebKit's WebDriver, on Linux under a virtual
+  display, from no app data and from an earlier build's, and holds that
+  its toolbar and explorer are drawn, no failure panel shown and none
+  logged, and the file that does not fit told.
+- *Why:* a window blank and silent, as d3 under a prototype frozen before
+  it ran made it (D22), tells its user nothing; this one tells them, and
+  the tests see what they see.
 
 ---
 

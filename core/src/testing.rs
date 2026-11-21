@@ -19,3 +19,14 @@ pub(crate) fn manual_json(page: &str, heading: &str) -> String {
     let block = after.split_once("```json\n").unwrap().1;
     block.split_once("```").unwrap().0.to_owned()
 }
+
+/// The app data an earlier build left, as `cargo xtask smoke` copies it,
+/// copied into a scratch folder of its own, `name`.
+pub(crate) fn earlier_app_data(name: &str) -> PathBuf {
+    let dir = scratch(name);
+    let from = Path::new(env!("CARGO_MANIFEST_DIR")).join("..").join("xtask").join("smoke").join("earlier");
+    for entry in std::fs::read_dir(from).unwrap().flatten() {
+        std::fs::copy(entry.path(), dir.join(entry.file_name())).unwrap();
+    }
+    dir
+}

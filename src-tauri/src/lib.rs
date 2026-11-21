@@ -4,6 +4,7 @@
 
 mod commands;
 pub mod menu;
+mod plugins;
 mod state;
 
 use std::path::PathBuf;
@@ -66,6 +67,7 @@ pub(crate) fn manage<R: Runtime>(
         history: Arc::new(History::new(&folders.config)),
         kept: Kept::new(&folders.config),
         files: Arc::new(Files::new(&folders.config)),
+        failures: Arc::new(turborel_studio_core::failures::Failures::new(&folders.config)),
     });
     Ok(())
 }
@@ -74,7 +76,11 @@ pub(crate) fn manage<R: Runtime>(
 /// state and its commands, on any runtime, so the tests build it on
 /// Tauri's mock one.
 pub(crate) fn studio<R: Runtime>(builder: Builder<R>) -> Builder<R> {
-    builder.plugin(tauri_plugin_dialog::init()).plugin(tauri_plugin_notification::init()).setup(setup).invoke_handler(commands::handler())
+    builder
+        .plugin(plugins::BackendOnly(tauri_plugin_dialog::init()))
+        .plugin(plugins::BackendOnly(tauri_plugin_notification::init()))
+        .setup(setup)
+        .invoke_handler(commands::handler())
 }
 
 /// The application's configuration, assets and capabilities, made once in

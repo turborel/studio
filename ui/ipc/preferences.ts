@@ -70,3 +70,18 @@ export function loadLayout(): Promise<unknown> {
 export function saveLayout(dock: unknown): Promise<null> {
   return invoke<null>("save_layout", { dock });
 }
+
+/** Forgets the dock's layout, so the window is laid out afresh as it loads again. */
+export function forgetLayout(): Promise<null> {
+  return invoke<null>("forget_layout");
+}
+
+/** What was told of Studio's files set aside since last asked: each a file that did not fit, and why. */
+export function setAsideNotices(): Promise<string[]> {
+  return invoke<string[]>("set_aside_notices");
+}
+
+/** Keeps a failure the window did not handle in the failures' log. */
+export function logFailure(text: string): Promise<null> {
+  return invoke<null>("log_failure", { text });
+}

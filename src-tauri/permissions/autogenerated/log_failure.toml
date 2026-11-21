@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-log-failure"
+description = "Enables the log_failure command without any pre-configured scope."
+commands.allow = ["log_failure"]
+
+[[permission]]
+identifier = "deny-log-failure"
+description = "Denies the log_failure command without any pre-configured scope."
+commands.deny = ["log_failure"]

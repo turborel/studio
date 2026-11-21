@@ -38,7 +38,7 @@
         "worker-src": "'none'"
       },
       "dangerousDisableAssetCspModification": ["style-src"],
-      "freezePrototype": true,
+      "freezePrototype": false,
       "capabilities": ["main"]
     }
   },

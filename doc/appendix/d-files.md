@@ -20,7 +20,20 @@ so a crash leaves the old file or the new. None holds a password.
 | `history.json` | the configuration | the history of what ran |
 | `queries.json` | the configuration | the favourite queries |
 | `projects.json` | the configuration | the project folders |
+| `failures.log` | the configuration | the failures the window did not handle, a line each |
 | `turborel-studio-*` | the cache, `results` | a result's pages, sealed, while it is open |
+
+A file of Studio's that does not fit, as one an earlier build wrote of
+another shape, too long, not JSON, of another format version, or of a
+setting out of its bounds, is set aside: renamed beside itself, with
+`.set-aside-` and the instant after its name, so it is kept to be read,
+and Studio starts without it. The window says so until the notice is
+dismissed.
+
+`failures.log` is no JSON document: each line is the second it was
+written, since 1970, then what the window told of a failure, its lines
+joined, at most 16,384 characters. Past 1 MiB it is begun again, the
+old kept as `failures.log.old`. It holds no secret.
 
 The configuration's folder is, on macOS,
 `~/Library/Application Support/com.turborel.studio`; on Linux,

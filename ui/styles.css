@@ -512,3 +512,31 @@ button:disabled .icon {
   gap: 4px;
   margin-bottom: 4px;
 }
+
+.notice-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 4px 8px;
+  background: var(--surface-raised);
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+
+.notice-banner ul {
+  margin: 0;
+  padding-left: 16px;
+}
+
+.failure-panel {
+  padding: 24px;
+  color: var(--text, #1b1415);
+  background: var(--background, #ffffff);
+  height: 100vh;
+  overflow: auto;
+}
+
+.failure-panel pre {
+  white-space: pre-wrap;
+  font-size: 12px;
+}

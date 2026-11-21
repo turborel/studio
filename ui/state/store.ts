@@ -73,6 +73,8 @@ export interface StudioState {
   readonly projects: readonly string[];
   /** What the status bar tells of the result's cells selected, if any are. */
   readonly cellSummary: string | null;
+  /** What Studio tells of its files set aside, until each is dismissed. */
+  readonly notices: readonly string[];
 }
 
 /** The state before anything is loaded. */
@@ -93,6 +95,7 @@ export const INITIAL: StudioState = {
   queries: [],
   projects: [],
   cellSummary: null,
+  notices: [],
 };
 
 /** The store of a window: its state, and who reads it. */

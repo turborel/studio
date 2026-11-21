@@ -7,6 +7,7 @@ pub mod catalog;
 pub mod connections;
 pub mod error;
 pub mod events;
+pub mod failures;
 pub mod files;
 pub mod guard;
 pub mod preferences;

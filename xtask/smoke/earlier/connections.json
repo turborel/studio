@@ -1,0 +1,35 @@
+{
+  "format": 1,
+  "connections": [
+    {
+      "id": "0b4c5e8a1d2f4e6a9c3b7d1e5f2a8c40",
+      "name": "local",
+      "folder": [],
+      "spec": {
+        "uri": null,
+        "host": "127.0.0.1",
+        "port": null,
+        "user": "ann",
+        "tlsMode": null,
+        "channelBinding": null,
+        "connectTimeout": null,
+        "service": null,
+        "serviceFile": null,
+        "passfile": null,
+        "target": null,
+        "loadBalance": null,
+        "tlsRoots": null,
+        "tlsSystemRoots": null,
+        "tlsCertificate": null,
+        "tlsKey": null,
+        "serverName": null
+      },
+      "environment": "development",
+      "colour": null,
+      "readOnly": false,
+      "pinned": false,
+      "favourites": []
+    }
+  ],
+  "recent": []
+}

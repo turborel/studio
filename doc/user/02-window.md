@@ -134,3 +134,17 @@ every command and its key.
 
 Every dialog keeps the focus within it: Tab and Shift+Tab move between
 its fields, and Escape closes it.
+
+## When the window fails
+
+Should the window fail as it is drawn, a panel takes its place, saying
+what failed: **Copy Details** copies them, **Reset Layout and Reload**
+lays the dock out afresh and loads the window again, and **Reload** loads
+it again as it was. A failure of something running in the window is told
+in the error banner under the toolbar. Either is kept in `failures.log`
+([Appendix D](../appendix/d-files.md)).
+
+A file of Studio's that does not fit, as one an earlier build wrote of
+another shape, is set aside, and Studio starts without it; a notice under
+the toolbar names the file, where it was kept and why, until
+**Dismiss**.

@@ -18,7 +18,7 @@ import {
 } from "../ipc/connections";
 import type { StudioEvent } from "../ipc/events";
 import { listQueries, projectFolders, sqlWords } from "../ipc/worksheet";
-import { loadSettings, saveSettings, type Settings } from "../ipc/preferences";
+import { loadSettings, saveSettings, setAsideNotices, type Settings } from "../ipc/preferences";
 import {
   deleteSavedConnection,
   keychainStatus,
@@ -46,7 +46,7 @@ async function attempt<T>(store: Store, work: () => Promise<T>): Promise<T | und
       : {
           sqlcode: -910,
           sqlstate: "TB910",
-          message: String(thrown),
+          message: thrown instanceof Error ? thrown.message : String(thrown),
           rule: null,
           position: null,
           active: false,
@@ -59,17 +59,38 @@ async function attempt<T>(store: Store, work: () => Promise<T>): Promise<T | und
 
 /** Loads the settings, the saved connections, the keychain's status, Turborel's reserved words, the favourite queries and the project folders. */
 export async function loadAll(store: Store): Promise<void> {
-  await attempt(store, async () => {
-    const [settings, saved, keychain, reservedWords, queries, projects] = await Promise.all([
-      loadSettings(),
-      listSavedConnections(),
-      keychainStatus(),
-      sqlWords(),
-      listQueries(),
-      projectFolders(),
-    ]);
-    store.update((now) => ({ ...now, settings, saved, keychain, reservedWords, queries, projects }));
-  });
+  const [settings, saved, keychain, reservedWords, queries, projects] = await Promise.allSettled([
+    loadSettings(),
+    listSavedConnections(),
+    keychainStatus(),
+    sqlWords(),
+    listQueries(),
+    projectFolders(),
+  ]);
+  // Each part that came is kept, so one that did not leaves the others (D49).
+  const kept = <T>(r: PromiseSettledResult<T>, or: T): T => (r.status === "fulfilled" ? r.value : or);
+  store.update((now) => ({
+    ...now,
+    settings: kept(settings, now.settings),
+    saved: kept(saved, now.saved),
+    keychain: kept(keychain, now.keychain),
+    reservedWords: kept(reservedWords, now.reservedWords),
+    queries: kept(queries, now.queries),
+    projects: kept(projects, now.projects),
+  }));
+  const failed = [settings, saved, keychain, reservedWords, queries, projects].find((r) => r.status === "rejected");
+  if (failed !== undefined) {
+    await attempt(store, () => Promise.reject(failed.reason as Error));
+  }
+  await tellSetAside(store);
+}
+
+/** Tells the files Studio set aside, as they did not fit, each once. */
+export async function tellSetAside(store: Store): Promise<void> {
+  const notices = await setAsideNotices().catch(() => []);
+  if (notices.length > 0) {
+    store.update((now) => ({ ...now, notices: [...now.notices, ...notices] }));
+  }
 }
 
 /** Loads the saved connections again. */

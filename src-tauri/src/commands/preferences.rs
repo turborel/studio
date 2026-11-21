@@ -39,3 +39,26 @@ pub(crate) fn load_layout(studio: State<'_, Studio>) -> Result<Option<serde_json
 pub(crate) fn save_layout(studio: State<'_, Studio>, dock: serde_json::Value) -> Result<()> {
     Layout::save(&studio.config, dock)
 }
+
+/// Forgets the dock's layout, so the window is laid out afresh as it loads
+/// again (RULES.md D49).
+#[tauri::command]
+#[allow(clippy::needless_pass_by_value, reason = "Tauri gives a command its state by value")]
+pub(crate) fn forget_layout(studio: State<'_, Studio>) -> Result<()> {
+    Layout::forget(&studio.config)
+}
+
+/// What was told of Studio's files set aside since last asked, each once
+/// (RULES.md D49).
+#[tauri::command]
+pub(crate) fn set_aside_notices() -> Vec<String> {
+    turborel_studio_core::store::set_aside_notices()
+}
+
+/// Keeps `text`, a failure the window did not handle, in the failures' log
+/// (RULES.md D49).
+#[tauri::command]
+#[allow(clippy::needless_pass_by_value, reason = "Tauri gives a command its state by value")]
+pub(crate) fn log_failure(studio: State<'_, Studio>, text: String) -> Result<()> {
+    studio.failures.log(&text)
+}

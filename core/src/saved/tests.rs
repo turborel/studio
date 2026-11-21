@@ -120,3 +120,13 @@ fn the_manuals_example_is_read() {
     assert_eq!(list.connections[0].connection.favourites[0].name, "ORDERS");
     assert_eq!(list.recent.len(), 1);
 }
+
+/// [DESIGN] D49: the saved connections an earlier build left are read.
+#[test]
+fn an_earlier_builds_connections_are_read() {
+    let dir = crate::testing::earlier_app_data("saved/earlier");
+    let saved = SavedConnections::new(dir.join("connections.json"), Arc::new(MemorySecrets::default()));
+    let list = saved.list().unwrap();
+    assert_eq!(list.connections.len(), 1);
+    assert!(dir.join("connections.json").exists());
+}

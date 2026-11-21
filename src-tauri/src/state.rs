@@ -45,6 +45,8 @@ pub struct Studio {
     pub kept: Kept,
     /// The files worksheets may read and write.
     pub files: Arc<Files>,
+    /// The window's failures' log.
+    pub failures: Arc<turborel_studio_core::failures::Failures>,
 }
 
 /// Tells the backend's events to the webview.

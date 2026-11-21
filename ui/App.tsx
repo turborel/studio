@@ -14,7 +14,7 @@ import { ConnectionDialog } from "./shell/ConnectionDialog";
 import { CommandPalette } from "./shell/CommandPalette";
 import { Dock, resetLayout } from "./shell/Dock";
 import { tint } from "./shell/environment";
-import { ErrorBanner } from "./shell/ErrorBanner";
+import { ErrorBanner, NoticeBanner } from "./shell/ErrorBanner";
 import { AboutDialog, ShortcutsDialog } from "./shell/HelpDialogs";
 import { SettingsDialog } from "./shell/SettingsDialog";
 import { StatusBar } from "./shell/StatusBar";
@@ -162,6 +162,7 @@ function Window({ store }: { readonly store: Store }) {
     <div className={colour === null ? "app" : "app app-tinted"} style={style}>
       <Toolbar context={context} />
       <ErrorBanner />
+      <NoticeBanner />
       <main className="dock">
         <Dock theme={theme} onApi={(api) => (dock.current = api)} />
       </main>

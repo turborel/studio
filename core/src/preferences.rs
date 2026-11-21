@@ -164,9 +164,13 @@ impl Settings {
     ///
     /// The file's, or a setting out of its bounds.
     pub fn load(dir: &Path) -> Result<Settings> {
-        let settings = store::read(&dir.join(SETTINGS_FILE), MAX_SETTINGS_BYTES)?.unwrap_or_default();
-        Settings::validate(&settings)?;
-        Ok(settings)
+        let path = dir.join(SETTINGS_FILE);
+        let settings: Settings = store::read(&path, MAX_SETTINGS_BYTES)?.unwrap_or_default();
+        match Settings::validate(&settings) {
+            Ok(()) => Ok(settings),
+            // A setting out of its bounds, as an earlier build's, sets the file aside (D49).
+            Err(e) => store::set_aside(&path, &e.message).map(|()| Settings::default()),
+        }
     }
 
     /// Writes the settings to `dir`'s file.
@@ -198,6 +202,18 @@ impl Layout {
     /// The file's.
     pub fn load(dir: &Path) -> Result<Option<Layout>> {
         store::read(&dir.join(LAYOUT_FILE), MAX_LAYOUT_BYTES)
+    }
+
+    /// Forgets `dir`'s layout, so the dock is laid out afresh.
+    ///
+    /// # Errors
+    ///
+    /// SQLCODE -910 if the file is there and cannot be removed.
+    pub fn forget(dir: &Path) -> Result<()> {
+        match std::fs::remove_file(dir.join(LAYOUT_FILE)) {
+            Err(e) if e.kind() != std::io::ErrorKind::NotFound => Err(StudioError::misuse(format!("[DESIGN] the layout: {e}"))),
+            Ok(()) | Err(_) => Ok(()),
+        }
     }
 
     /// Writes `dock` as `dir`'s layout.
@@ -233,7 +249,8 @@ mod tests {
         assert_eq!(Settings::load(&dir).unwrap(), settings);
     }
 
-    /// [RULE] R-SEC-6: a setting outside its bounds is refused, saved or read.
+    /// [RULE] R-SEC-6 [DESIGN] D49: a setting outside its bounds is refused
+    /// as it is saved; read, its file is set aside, and the defaults read.
     #[test]
     fn settings_out_of_bounds_are_refused() {
         let dir = crate::testing::scratch("preferences/bounds");
@@ -244,7 +261,12 @@ mod tests {
         assert!(Settings { format_line_width: 241, ..Settings::default() }.save(&dir).is_err());
         assert!(Settings { notify_after_seconds: 3601, ..Settings::default() }.save(&dir).is_err());
         std::fs::write(dir.join(super::SETTINGS_FILE), br#"{"format":1,"theme":"dark","zoomPercent":400,"editorFontFamily":"","editorFontPoints":13,"keyBindings":{},"reconnectOnWake":true}"#).unwrap();
-        assert!(Settings::load(&dir).is_err());
+        assert_eq!(Settings::load(&dir).unwrap(), Settings::default());
+        assert!(!dir.join(super::SETTINGS_FILE).exists());
+        Layout::save(&dir, serde_json::json!({"grid": {}})).unwrap();
+        Layout::forget(&dir).unwrap();
+        Layout::forget(&dir).unwrap();
+        assert!(Layout::load(&dir).unwrap().is_none());
     }
 
     /// [RULE] R-FMT-2 [STUDIO settings.json] [STUDIO layout.json]: the
@@ -267,5 +289,15 @@ mod tests {
         Layout::save(&dir, dock.clone()).unwrap();
         assert_eq!(Layout::load(&dir).unwrap().unwrap().dock, dock);
         assert!(Layout::save(&dir, serde_json::json!("x".repeat(2 * 1024 * 1024))).is_err());
+    }
+
+    /// [DESIGN] D49: the settings and layout an earlier build left are read,
+    /// each setting it did not know taking its default.
+    #[test]
+    fn an_earlier_builds_files_are_read() {
+        let dir = crate::testing::earlier_app_data("preferences/earlier");
+        assert_eq!(Settings::load(&dir).unwrap(), Settings::default());
+        assert!(Layout::load(&dir).unwrap().is_some());
+        assert!(dir.join(super::SETTINGS_FILE).exists());
     }
 }

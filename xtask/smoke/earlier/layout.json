@@ -1,0 +1,23 @@
+{
+  "format": 1,
+  "dock": {
+    "activeGroup": "2",
+    "grid": {
+      "height": 800,
+      "orientation": "HORIZONTAL",
+      "root": {
+        "data": [
+          { "data": { "activeView": "explorer", "id": "2", "views": ["explorer"] }, "size": 640, "type": "leaf" },
+          { "data": { "activeView": "welcome", "id": "1", "views": ["welcome"] }, "size": 640, "type": "leaf" }
+        ],
+        "size": 800,
+        "type": "branch"
+      },
+      "width": 1280
+    },
+    "panels": {
+      "explorer": { "contentComponent": "explorer", "id": "explorer", "title": "Explorer" },
+      "welcome": { "contentComponent": "welcome", "id": "welcome", "title": "Start" }
+    }
+  }
+}

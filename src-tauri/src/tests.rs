@@ -156,6 +156,21 @@ fn a_file_chosen_is_previewed() {
     );
 }
 
+/// [DESIGN] D49: a failure the window tells is kept in the failures' log,
+/// the notices of files set aside are told, and the layout is forgotten.
+#[test]
+fn failures_are_kept_and_the_layout_forgotten() {
+    use tauri::Manager;
+    let (app, window) = window();
+    assert_eq!(answer(&window, "log_failure", serde_json::json!({"text": "TypeError: x"})), serde_json::Value::Null);
+    let log = app.state::<crate::state::Studio>().failures.path().to_owned();
+    assert!(std::fs::read_to_string(log).unwrap().ends_with(" TypeError: x\n"));
+    assert!(answer(&window, "set_aside_notices", serde_json::json!({})).is_array());
+    assert_eq!(answer(&window, "save_layout", serde_json::json!({"dock": {"grid": {}}})), serde_json::Value::Null);
+    assert_eq!(answer(&window, "forget_layout", serde_json::json!({})), serde_json::Value::Null);
+    assert_eq!(answer(&window, "load_layout", serde_json::json!({})), serde_json::Value::Null);
+}
+
 /// [DESIGN] D30: the menus' items are Studio's commands, each named once,
 /// and the platform's own items are not told to the webview.
 #[test]

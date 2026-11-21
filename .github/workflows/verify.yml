@@ -66,6 +66,17 @@ jobs:
       - name: The application builds
         timeout-minutes: 60
         run: npm exec -- tauri build --debug --no-bundle
+      # The real window, launched by tauri-driver under WebDriver on a
+      # virtual display, drawn with no failure, of no app data and of an
+      # earlier build's (RULES.md D49). tauri-driver and WebKit's WebDriver
+      # run on Linux alone.
+      - name: The window draws
+        if: runner.os == 'Linux'
+        timeout-minutes: 20
+        run: |
+          sudo apt-get install -y webkit2gtk-driver xvfb
+          cargo install tauri-driver --version 2.1.0 --locked
+          xvfb-run -a cargo xtask smoke target/debug/turborel-studio
 
   coverage:
     runs-on: ubuntu-latest

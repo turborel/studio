@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-set-aside-notices"
+description = "Enables the set_aside_notices command without any pre-configured scope."
+commands.allow = ["set_aside_notices"]
+
+[[permission]]
+identifier = "deny-set-aside-notices"
+description = "Denies the set_aside_notices command without any pre-configured scope."
+commands.deny = ["set_aside_notices"]

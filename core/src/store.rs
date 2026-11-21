@@ -1,8 +1,10 @@
-//! Studio's own files (RULES.md R-FMT-1, R-SEC-2, R-SAFE-3): each a JSON
-//! document of format version 1, read with its size bounded and its version
-//! checked, and written whole to a file its owner's alone, through a file
-//! beside it renamed into place, so a crash leaves the old file or the new,
-//! never a part.
+//! Studio's own files (RULES.md R-FMT-1, R-SEC-2, R-SAFE-3, D49): each a
+//! JSON document of format version 1, read with its size bounded and its
+//! version checked, and written whole to a file its owner's alone, through a
+//! file beside it renamed into place, so a crash leaves the old file or the
+//! new, never a part. A file that does not fit, as one an earlier build
+//! wrote, is set aside beside itself, told, and read as none, so Studio
+//! starts clean of it.
 
 use std::fs::OpenOptions;
 use std::io::{Read, Write};
@@ -26,13 +28,50 @@ fn failed(path: &Path, what: &dyn std::fmt::Display) -> StudioError {
     StudioError::misuse(format!("[DESIGN] {}: {what}", path.display()))
 }
 
-/// The document of the file `path`, if there is one: at most `max` bytes,
-/// of format version 1.
+/// The suffix of a file set aside, before the instant it was, in
+/// nanoseconds since 1970.
+const SET_ASIDE: &str = ".set-aside-";
+
+/// What was told of the files set aside, until the window reads it.
+static TOLD: std::sync::Mutex<Vec<String>> = std::sync::Mutex::new(Vec::new());
+
+/// Whether a notice holds `text`, for the tests, which run together.
+#[cfg(test)]
+fn told(text: &str) -> bool {
+    TOLD.lock().is_ok_and(|t| t.iter().any(|n| n.contains(text)))
+}
+
+/// What was told of the files set aside since it was last read, each once.
+pub fn set_aside_notices() -> Vec<String> {
+    TOLD.lock().map(|mut told| std::mem::take(&mut *told)).unwrap_or_default()
+}
+
+/// Sets the file `path` aside, as `why` says it does not fit: renamed
+/// beside itself, the instant it was set aside its suffix, and told.
 ///
 /// # Errors
 ///
-/// SQLCODE -910 if it cannot be read, is longer than `max`, is not JSON of
-/// its shape, or is of another format version.
+/// SQLCODE -910 if it cannot be renamed.
+pub fn set_aside(path: &Path, why: &str) -> Result<()> {
+    let second = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_nanos()).unwrap_or_default();
+    let mut aside = path.as_os_str().to_owned();
+    aside.push(format!("{SET_ASIDE}{second}"));
+    let aside = std::path::PathBuf::from(aside);
+    std::fs::rename(path, &aside).map_err(|e| failed(path, &e))?;
+    let notice = format!("{} did not fit, so Studio set it aside as {} and started without it: {why}", path.display(), aside.display());
+    if let Ok(mut told) = TOLD.lock() {
+        told.push(notice);
+    }
+    Ok(())
+}
+
+/// The document of the file `path`, if there is one: at most `max` bytes,
+/// of format version 1. A file that does not fit, too long, not JSON of
+/// its shape, or of another format version, is set aside and read as none.
+///
+/// # Errors
+///
+/// SQLCODE -910 if it cannot be read, or set aside.
 pub fn read<T: DeserializeOwned>(path: &Path, max: u64) -> Result<Option<T>> {
     let file = match std::fs::File::open(path) {
         Ok(file) => file,
@@ -41,15 +80,24 @@ pub fn read<T: DeserializeOwned>(path: &Path, max: u64) -> Result<Option<T>> {
     };
     let mut bytes = Vec::new();
     file.take(max.saturating_add(1)).read_to_end(&mut bytes).map_err(|e| failed(path, &e))?;
-    if u64::try_from(bytes.len()).unwrap_or(u64::MAX) > max {
-        return Err(failed(path, &format!("longer than {max} bytes")));
+    match fitting(&bytes, max) {
+        Ok(document) => Ok(Some(document)),
+        Err(why) => set_aside(path, &why).map(|()| None),
     }
-    let json: serde_json::Value = serde_json::from_slice(&bytes).map_err(|e| failed(path, &e))?;
+}
+
+/// The document of `bytes`, if they fit: at most `max` of them, JSON of
+/// its shape, of format version 1; else why not.
+fn fitting<T: DeserializeOwned>(bytes: &[u8], max: u64) -> std::result::Result<T, String> {
+    if u64::try_from(bytes.len()).unwrap_or(u64::MAX) > max {
+        return Err(format!("longer than {max} bytes"));
+    }
+    let json: serde_json::Value = serde_json::from_slice(bytes).map_err(|e| e.to_string())?;
     let format = json.get(FORMAT_KEY).and_then(serde_json::Value::as_u64);
     if format != Some(u64::from(FORMAT)) {
-        return Err(failed(path, &format!("of format {format:?}, where Studio reads format {FORMAT} alone")));
+        return Err(format!("of format {format:?}, where Studio reads format {FORMAT} alone"));
     }
-    serde_json::from_value(json).map(Some).map_err(|e| failed(path, &e))
+    serde_json::from_value(json).map_err(|e| e.to_string())
 }
 
 /// Writes `document` to `path`, its owner's alone, whole or not at all.
@@ -116,18 +164,25 @@ mod tests {
         }
     }
 
-    /// [RULE] R-FMT-1: a document of another format version is refused,
-    /// saying so.
+    /// [RULE] R-FMT-1 [DESIGN] D49: a document of another format version,
+    /// not JSON, or not of its shape, is set aside, told once, and read as
+    /// none; the next read finds no file.
     #[test]
-    fn another_format_is_refused() {
-        let path = crate::testing::scratch("store/format").join("doc.json");
-        std::fs::write(&path, br#"{"format": 2, "name": "ann"}"#).unwrap();
-        let error = read::<Doc>(&path, 1024).unwrap_err();
-        assert!(error.message.contains("format Some(2)"), "{error}");
-        std::fs::write(&path, br#"{"name": "ann"}"#).unwrap();
-        assert!(read::<Doc>(&path, 1024).is_err());
+    fn a_file_that_does_not_fit_is_set_aside() {
+        let dir = crate::testing::scratch("store/aside");
+        let path = dir.join("doc.json");
+        for bad in [&br#"{"format": 2, "name": "ann"}"#[..], b"{ not json", br#"{"format": 1, "name": 7}"#] {
+            std::fs::write(&path, bad).unwrap();
+            assert_eq!(read::<Doc>(&path, 1024).unwrap(), None);
+            assert!(!path.exists());
+        }
+        assert!(super::told("store/aside/doc.json did not fit"));
+        assert!(super::told("of format Some(2)"));
+        assert!(super::told("invalid type: integer `7`"));
+        let aside =
+            std::fs::read_dir(&dir).unwrap().filter(|e| e.as_ref().unwrap().file_name().to_string_lossy().contains(".set-aside-")).count();
+        assert_eq!(aside, 3);
     }
-
     /// [RULE] R-ERR-1: a file that cannot be read or written is Studio's
     /// error, naming it.
     #[test]
@@ -137,15 +192,16 @@ mod tests {
         let missing = dir.join("no-such-folder").join("doc.json");
         assert_eq!(write(&missing, &Doc { format: FORMAT, name: "ann".into() }).unwrap_err().sqlstate, "TB910");
         std::fs::write(dir.join("bad.json"), b"{ not json").unwrap();
-        assert!(read::<Doc>(&dir.join("bad.json"), 1024).is_err());
+        assert_eq!(read::<Doc>(&dir.join("bad.json"), 1024).unwrap(), None);
     }
 
-    /// [RULE] R-SAFE-3: a file longer than its bound is refused before it is
-    /// parsed.
+    /// [RULE] R-SAFE-3: a file longer than its bound is set aside before
+    /// it is parsed.
     #[test]
-    fn a_file_past_its_bound_is_refused() {
+    fn a_file_past_its_bound_is_set_aside() {
         let path = crate::testing::scratch("store/bound").join("doc.json");
         std::fs::write(&path, format!(r#"{{"format": 1, "name": "{}"}}"#, "a".repeat(100))).unwrap();
-        assert!(read::<Doc>(&path, 64).unwrap_err().message.contains("longer than 64 bytes"));
+        assert_eq!(read::<Doc>(&path, 64).unwrap(), None);
+        assert!(super::told("longer than 64 bytes"));
     }
 }
