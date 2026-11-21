@@ -140,6 +140,14 @@ it; stop only the processes you started, and wait on their IDs alone.
 
 ## Documents
 
+**Never leave the README stale** (R-DOC-9). A commit that changes what
+Studio does, needs or supports, whether a feature, a mode, a
+requirement, building and installing, or its status, updates README.md
+in that same commit, with the pages of the manual it touches. Before
+each push, read the README against what the commit changed. The checks
+tool refuses a chapter of the User's Guide the README's feature list
+does not link.
+
 A finished feature updates these in the same change:
 
 - RULES.md, if it made a decision, including the row in §1's table;
@@ -150,8 +158,10 @@ A finished feature updates these in the same change:
   and example run: each page keeps its `# Title` and its
   `[Contents](README.md)` line, links to this repository's files are
   relative, links to Turborel's manual are GitHub addresses,
-  `user/01-installing.md` keeps its name, and `doc/` holds no images;
-- README.md, if what Studio is or needs changes.
+  `user/01-installing.md` keeps its name, and `doc/` holds no file but
+  its pages and the images of `doc/images/` (RULES.md D60);
+- README.md, whenever what Studio does, needs or supports changes
+  (R-DOC-9).
 
 ## Commits
 

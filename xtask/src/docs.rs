@@ -27,6 +27,7 @@ pub fn check_manual(paths: &[String]) -> Result<()> {
         problems.extend(link_problems(path, &text));
         problems.extend(image_problems(path, &text, &mut linked));
     }
+    problems.extend(readme_problems(&std::fs::read_to_string(root().join("README.md"))?, paths));
     for image in paths.iter().filter(|p| p.starts_with(IMAGES)) {
         if !linked.iter().any(|l| l == image) {
             problems.push(format!("{image}: no page links the image (R-DOC-7)"));
@@ -96,6 +97,26 @@ pub fn links(text: &str) -> Vec<String> {
     }
     found.retain(|l| !l.starts_with("http://") && !l.starts_with("https://") && !l.starts_with("mailto:"));
     found
+}
+
+/// The User's Guide's chapters of what Studio does, each a feature the
+/// README's list links: those after Installing and The Window.
+const FEATURE_CHAPTERS: &str = "doc/user/";
+/// The chapters of the User's Guide that are of no one feature.
+const NOT_FEATURES: [&str; 3] = ["01-installing.md", "02-window.md", "README.md"];
+
+/// What the README, `readme`, does not say of what Studio does: each
+/// chapter of the User's Guide of a feature, among `paths`, its feature
+/// list links (R-DOC-9), so a feature that comes without the README
+/// following it is refused.
+pub fn readme_problems(readme: &str, paths: &[String]) -> Vec<String> {
+    paths
+        .iter()
+        .filter_map(|p| p.strip_prefix(FEATURE_CHAPTERS))
+        .filter(|name| !name.contains('/') && ext_is(name, "md") && !NOT_FEATURES.contains(name))
+        .filter(|name| !readme.contains(&format!("](doc/user/{name})")))
+        .map(|name| format!("README.md: its feature list links not doc/user/{name}, the chapter of a feature (R-DOC-9)"))
+        .collect()
 }
 
 /// The folder of the manual's images (RULES.md D60).

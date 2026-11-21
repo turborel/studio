@@ -22,20 +22,29 @@ and an embedded database, in a folder or in memory, opened in Studio's
 own process through the `turborel` crate's embedded library. It gives a
 person who works with the database one window for it:
 
-- server connections, and embedded databases opened, made new, or made
-  in memory as a scratch database that is never saved;
-- a Connections and Object Explorer tree of the catalog;
-- tabbed SQL worksheets, each with its results and messages;
-- a results grid that reads a query's rows a page at a time;
-- editing a table's rows, and dialogs that write DDL;
-- schema diagrams, models designed offline and compared with a live
-  schema, and schema compare;
-- an analyzer of indexes and plans;
-- an assistant, off until the user turns it on;
-- live sessions, a workspace shared with others as it is worked in;
-- a monitor of the server or the database: its sessions, what each runs
-  and waits on, the statements run and the tables' and indexes' sizes
-  and use, its settings, plug-ins, users and replication.
+- [server connections, and embedded databases](doc/user/03-connections.md)
+  opened, made new, or made in memory as a scratch database that is
+  never saved;
+- a [Connections and Object Explorer](doc/user/04-explorer.md) tree of
+  the catalog;
+- tabbed [SQL worksheets](doc/user/05-worksheets.md), each with its
+  results and messages, completion, and a plan viewer;
+- a [results grid](doc/user/06-results.md) that reads a query's rows a
+  page at a time;
+- [editing a table's rows](doc/user/07-editing-data.md), importing and
+  exporting them, and dialogs that write DDL;
+- [schema diagrams and models](doc/user/08-modeling.md), designed
+  offline and compared with a live schema, and schema compare;
+- an [analyzer](doc/user/09-analyzer.md) of indexes, plans and
+  statements, and reports;
+- an [assistant](doc/user/10-assistant.md), off until the user turns it
+  on;
+- [live sessions](doc/user/11-live-sessions.md), a workspace shared with
+  others as it is worked in;
+- a [monitor](doc/user/12-administration.md) of the server or the
+  database: its sessions, what each runs and waits on, the statements
+  run and the tables' and indexes' sizes and use, its settings, plug-ins,
+  users and replication.
 
 It runs on Linux, macOS and Windows, built with Tauri: a Rust backend
 over turborel-client and the `turborel` crate, and a front end in

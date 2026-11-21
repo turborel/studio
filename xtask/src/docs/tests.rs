@@ -1,6 +1,6 @@
 //! The manual's checks, against pages made for each case.
 
-use super::{anchors, image_problems, images, links, page_problems, slug};
+use super::{anchors, image_problems, images, links, page_problems, readme_problems, slug};
 
 /// [RULE] R-DOC-7: a chapter opens with its title, then its Contents line.
 #[test]
@@ -55,4 +55,16 @@ fn anchors_are_githubs() {
     assert_eq!(slug("The Object Explorer's tree"), "the-object-explorers-tree");
     assert_eq!(slug("D5. The version"), "d5-the-version");
     assert_eq!(anchors("# A b\ntext\n## C, d\n"), ["a-b", "c-d"]);
+}
+
+/// [RULE] R-DOC-9: the README's feature list links each chapter of a
+/// feature, so a feature cannot come without the README saying so.
+#[test]
+fn the_readme_links_each_features_chapter() {
+    let paths: Vec<String> =
+        ["doc/user/01-installing.md", "doc/user/02-window.md", "doc/user/03-a.md", "doc/user/04-b.md", "doc/user/README.md"]
+            .map(str::to_owned)
+            .to_vec();
+    assert_eq!(readme_problems("- [A](doc/user/03-a.md)", &paths).len(), 1);
+    assert_eq!(readme_problems("- [A](doc/user/03-a.md)\n- [B](doc/user/04-b.md)", &paths), Vec::<String>::new());
 }

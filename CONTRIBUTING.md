@@ -100,7 +100,16 @@ repository: a chapter begins with its `# Title` and a line
 `[Contents](README.md)`, links between its pages and to this
 repository's other files are relative links, a link to Turborel's
 manual is its GitHub address, `user/01-installing.md` keeps its name,
-`doc/` holds no images, and each volume's README.md lists its chapters.
+`doc/` holds no file but its pages and the images of `doc/images/`
+(RULES.md D60), and each volume's README.md lists its chapters.
+
+Never leave the README stale (R-DOC-9). A commit that changes what
+Studio does, needs or supports, whether a feature, a mode, a
+requirement, building and installing, or its status, updates README.md
+in that same commit. Read the README against your change before you
+push. The README's feature list links the chapter of the User's Guide of
+each feature, and `cargo xtask verify` refuses a chapter it does not
+link.
 
 Some rules deserve a reminder.
 
