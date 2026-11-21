@@ -91,6 +91,8 @@
     "allow-save-binary-file",
     "allow-open-model-file",
     "allow-choose-import-file",
+    "allow-import-formats",
+    "allow-detect-import",
     "allow-preview-import",
     "allow-import-rows",
     "allow-cancel-import",

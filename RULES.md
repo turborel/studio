@@ -107,6 +107,7 @@ Each is told in full in [§7](#7-the-decisions).
 | D65 | A generated script with its data: INSERTs Run SQL File loads back, or CSV files the import loads back |
 | D66 | Invitation links: Studio's scheme, a link of the invitation alone, the join dialog filled in, never joined unasked |
 | D67 | Session records: what was shared, kept by the presenter alone, sealed if asked, replayed and summed up for a ticket |
+| D68 | Import formats as plug-ins: detect, choices, records and types behind one interface |
 | D69 | Keyboard schemes: Studio's own keys, or the function keys', a key bound apart on top |
 
 ---
@@ -1784,6 +1785,31 @@ The review checklist:
 - *Why:* a session that replaced SQL pasted into a chat or a ticket
   should leave what was found on the presenter's machine, and only
   what the viewers saw.
+
+#### D68. Import formats as plug-ins: detect, choices, records and types behind one interface
+
+- **The interface** (`core/src/connections/imports/format.rs`,
+  `ImportFormat`): a format's name, label and extensions; what of a
+  reading it takes (a header, a delimiter and null, sheets); `detect`,
+  how surely a file's first 8 KiB are of it, by what they hold and by
+  its name; `choices`, as a workbook's sheets; `records`, its records as
+  turborel-client's `Source`, a record at a time, with their total of
+  bytes or records; and `infer`, the shared inference (D63) unless it
+  says otherwise.
+- **Around it, the same for every format:** the preview and the sample,
+  the types inferred, the fields' columns and casts, the progress, the
+  cancel and the error policy (`with_source`, `Mapped`, D63). The window
+  reads the formats of the backend (`import_formats`), and a file's
+  format as its plug-ins find it (`detect_import`); the platform's
+  dialog offers every format's extensions.
+- **The formats:** CSV and tab-separated text (`delimited.rs`), JSON as
+  an array or an object a line (`json.rs`), and an Excel sheet
+  (`xlsx.rs`). Parquet waits (TODO.md), one more plug-in when it comes.
+- **Adding one:** a module implementing the interface, a variant of
+  `Format`, a line of `formats()`, its tests; CONTRIBUTING.md says how.
+- *Why:* a new format is an addition of its own, and the wizard's care,
+  the bounded memory, the progress and the error policy, is had by every
+  format without being written again.
 
 #### D69. Keyboard schemes: Studio's own keys, or the function keys', a key bound apart on top
 

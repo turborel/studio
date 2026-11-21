@@ -37,7 +37,7 @@ person who works with the database one window for it:
   every one of their 38 digits;
 - [editing a table's rows](doc/user/07-editing-data.md), importing
   them from CSV, JSON or Excel into a table or a new one typed from the
-  file, exporting them, dialogs that write DDL, and a schema's script
+  file, each format a plug-in its file is found by, exporting them, dialogs that write DDL, and a schema's script
   with its data, as INSERTs or CSV files;
 - [schema diagrams and models](doc/user/08-modeling.md), designed
   offline or imported of a DDL script, and compared with a live schema,

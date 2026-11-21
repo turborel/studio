@@ -1,6 +1,7 @@
 /**
- * The import wizard (RULES.md D43, D63): a CSV, tab-separated, JSON or
- * Excel file chosen in the platform's dialog, previewed as it is read;
+ * The import wizard (RULES.md D43, D63, D68): a file of any format the
+ * backend's plug-ins read, chosen in the platform's dialog, its format
+ * found, previewed as it is read;
  * into an existing table, each field taken into a column or skipped, its
  * cast shown and a conflict flagged; or into a new table, each field's
  * column named and typed as inferred, the CREATE TABLE shown and run
@@ -14,6 +15,9 @@ import { type Confirm, runStatement } from "../ipc/connections";
 import {
   cancelImport,
   chooseImportFile,
+  detectImport,
+  type FormatInfo,
+  importFormats,
   type ImportProgress,
   type ImportReport,
   importRows,
@@ -66,6 +70,8 @@ interface ImportState {
   readonly progress: ImportProgress | null;
   readonly report: ImportReport | null;
   readonly told: string;
+  /** The formats, the backend's plug-ins. */
+  readonly formats: readonly FormatInfo[];
 }
 
 /** The wizard's state as it opens. */
@@ -83,6 +89,7 @@ const FIRST: ImportState = {
   progress: null,
   report: null,
   told: "",
+  formats: [],
 };
 
 /** The columns of `of`, read from the catalog. */
@@ -207,6 +214,14 @@ function useImport(target: ImportTarget, columns: readonly Column[]) {
   };
   const connection = connectionOf(target);
   useProgress(connection, setState);
+  useEffect(() => {
+    importFormats().then(
+      (formats) => {
+        setState((s) => ({ ...s, formats }));
+      },
+      () => undefined,
+    );
+  }, []);
   const read = (path: string, reading: Reading) => readFile({ path, reading }, state.table, columns, change);
   const create = (confirmed: boolean) => createTable(store, target, state, confirmed, change);
   const run = async (step: Step, confirmed: boolean) => {
@@ -348,7 +363,11 @@ function FileChoice(props: ReturnType<typeof useImport>) {
   const choose = async () => {
     const path = await chooseImportFile();
     if (path !== null) {
-      await read(path, state.reading);
+      // The file's format, as its plug-in finds it, else the one chosen.
+      const found = await detectImport(path).catch(() => null);
+      const reading = { ...state.reading, format: found ?? state.reading.format, sheet: null };
+      change({ reading });
+      await read(path, reading);
     }
   };
   return (
@@ -360,6 +379,7 @@ function FileChoice(props: ReturnType<typeof useImport>) {
         <span className="hint">{state.path ?? "No file chosen."}</span>
       </p>
       <ReadingChoices
+        formats={state.formats}
         reading={state.reading}
         sheets={state.preview?.sheets ?? null}
         onReading={(r) => {

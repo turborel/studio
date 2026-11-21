@@ -14,6 +14,11 @@ use calamine::{Cell, DataRef, Reader, Xlsx, XlsxCellReader, open_workbook};
 use turborel::value::Value;
 use turborel_client::import::{Heading, Position, Record, Source, SourceError};
 
+use std::sync::Arc;
+use std::sync::atomic::AtomicU64;
+
+use crate::connections::imports::format::{ImportFormat, Takes, Total, named};
+use crate::connections::imports::{Format, Reading};
 use crate::error::{Result, StudioError};
 
 /// The most columns of a sheet, as Excel has.
@@ -181,5 +186,52 @@ impl Source for SheetRecords<'_> {
 
     fn record(&mut self) -> std::result::Result<Option<Record>, SourceError> {
         Ok(self.row()?.map(|(values, row)| Record { values, position: Position { record: self.rows, line: Some(u64::from(row)) } }))
+    }
+}
+
+/// An Excel workbook's sheet as a format of the import wizard (RULES.md D68).
+pub struct XlsxFormat;
+
+/// An Excel workbook.
+pub static XLSX: XlsxFormat = XlsxFormat;
+
+impl ImportFormat for XlsxFormat {
+    fn id(&self) -> Format {
+        Format::Xlsx
+    }
+
+    fn label(&self) -> &'static str {
+        "Excel workbook"
+    }
+
+    fn extensions(&self) -> &'static [&'static str] {
+        &["xlsx"]
+    }
+
+    fn takes(&self) -> Takes {
+        Takes { header: true, delimited: false, sheets: true }
+    }
+
+    /// A zip's signature first, `PK`, its workbook's; by name too of `.xlsx`.
+    fn detect(&self, path: &Path, first: &[u8]) -> u8 {
+        let by_content = u8::from(first.starts_with(b"PK\x03\x04"));
+        if named(path, self.extensions()) { by_content.saturating_add(2) } else { by_content }
+    }
+
+    fn choices(&self, path: &Path) -> Result<Option<Vec<String>>> {
+        sheet_names(path).map(Some)
+    }
+
+    fn records(
+        &self,
+        path: &Path,
+        reading: &Reading,
+        _: &Arc<AtomicU64>,
+        work: &mut dyn FnMut(&mut dyn Source, Total) -> Result<()>,
+    ) -> Result<()> {
+        let mut book = workbook(path)?;
+        let mut source = SheetRecords::new(cells(&mut book, reading.sheet.as_deref())?, reading.header);
+        let rows = source.dimensions_rows();
+        work(&mut source, Total::Records(rows))
     }
 }

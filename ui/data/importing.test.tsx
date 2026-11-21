@@ -126,6 +126,7 @@ describe("importing into a new table", () => {
     });
     const store = await opened();
     within(store, <DataDialog task={{ kind: "importNew", connection: 1, schema: "ANN" }} />);
+    await settle();
     fireEvent.change(screen.getByRole("combobox", { name: "Format" }), { target: { value: "xlsx" } });
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: "Choose File…" }));
@@ -258,5 +259,25 @@ describe("importing into a new table", () => {
       fireEvent.click(screen.getByRole("checkbox", { name: `Make a column of field ${String(n)}` }));
     }
     expect(screen.getByRole("list", { name: "Problems" }).textContent).toContain("Make a column of a field.");
+  });
+
+  it("reads a file by the format its plug-in finds, offering only what that format takes [DESIGN] D68", async () => {
+    const asked = catalogBackend({
+      choose_import_file: () => "/data/events.jsonl",
+      detect_import: () => "ndjson",
+      preview_import: () => ({ ...BOOK, sheets: null }),
+    });
+    const store = await opened();
+    within(store, <DataDialog task={{ kind: "importNew", connection: 1, schema: "ANN" }} />);
+    await settle();
+    expect(screen.getByRole("checkbox", { name: "First record names the fields" })).toBeTruthy();
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Choose File…" }));
+      await settle();
+    });
+    expect(screen.getByRole<HTMLSelectElement>("combobox", { name: "Format" }).value).toBe("ndjson");
+    expect(asked.find((a) => a.command === "preview_import")?.args["reading"]).toMatchObject({ format: "ndjson" });
+    expect(screen.queryByRole("checkbox", { name: "First record names the fields" })).toBeNull();
+    expect(screen.queryByRole("textbox", { name: "Delimiter" })).toBeNull();
   });
 });

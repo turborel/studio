@@ -13,7 +13,8 @@ use std::sync::Arc;
 
 use tauri::{AppHandle, Runtime, State};
 use tauri_plugin_dialog::DialogExt;
-use turborel_studio_core::connections::imports::{ImportSpec, Preview, Reading, preview};
+use turborel_studio_core::connections::imports::format::{FormatInfo, detect, offered};
+use turborel_studio_core::connections::imports::{Format, ImportSpec, Preview, Reading, preview};
 use turborel_studio_core::connections::manager::ImportAnswer;
 use turborel_studio_core::connections::manager::ddlmodel::DdlModel;
 use turborel_studio_core::connections::manager::scripts::{DataScript, ScriptedData};
@@ -26,9 +27,9 @@ use turborel_studio_core::worksheet::sqlfile::Scan;
 use crate::commands::connections::blocking;
 use crate::state::Studio;
 
-/// The extensions of the files offered for import, and their filter's name.
-const IMPORT_FILES: (&str, [&str; 7]) =
-    ("CSV, tab-separated text, JSON and Excel", ["csv", "tsv", "txt", "json", "ndjson", "jsonl", "xlsx"]);
+/// The name of the filter of the files offered for import, each format's
+/// extensions in it (RULES.md D68).
+const IMPORT_FILES: &str = "Files Studio imports";
 
 /// The extensions of the files Run SQL File offers, and their filter's name.
 const SQL_FILES: (&str, [&str; 1]) = ("SQL scripts", ["sql"]);
@@ -46,13 +47,31 @@ async fn off_the_window<T: Send + 'static>(work: impl FnOnce() -> Result<T> + Se
 pub(crate) async fn choose_import_file<R: Runtime>(app: AppHandle<R>, studio: State<'_, Studio>) -> Result<Option<String>> {
     let files = Arc::clone(&studio.files);
     off_the_window(move || {
-        let (label, extensions) = IMPORT_FILES;
-        let Some(path) = app.dialog().file().add_filter(label, &extensions).blocking_pick_file() else { return Ok(None) };
+        let mut extensions: Vec<&str> = Vec::new();
+        for e in offered().iter().flat_map(|f| f.extensions.iter().copied()) {
+            if !extensions.contains(&e) {
+                extensions.push(e);
+            }
+        }
+        let Some(path) = app.dialog().file().add_filter(IMPORT_FILES, &extensions).blocking_pick_file() else { return Ok(None) };
         let path = path.into_path().map_err(|e| StudioError::misuse(format!("[DESIGN] the path chosen is not a file's: {e}")))?;
         files.choose(&path)?;
         Ok(Some(path.display().to_string()))
     })
     .await
+}
+
+/// The formats of the import wizard, each a plug-in (RULES.md D68).
+#[tauri::command]
+pub(crate) fn import_formats() -> Vec<FormatInfo> {
+    offered()
+}
+
+/// The format `path`, a file chosen, is most surely of, if any.
+#[tauri::command]
+pub(crate) async fn detect_import(studio: State<'_, Studio>, path: String) -> Result<Option<Format>> {
+    let path = studio.files.chosen(&PathBuf::from(path))?;
+    off_the_window(move || detect(&path)).await
 }
 
 /// The first records of `path`, a file chosen, read as `reading` says.

@@ -89,8 +89,11 @@ the query is run again, to show the rows as they are.
 ## Importing
 
 **Import…** opens the platform's dialog to choose a file, a `.csv`,
-`.tsv`, `.txt`, `.json`, `.ndjson`, `.jsonl` or `.xlsx` file, and shows
-its first 20 records as it is read:
+`.tsv`, `.tab`, `.txt`, `.json`, `.ndjson`, `.jsonl` or `.xlsx` file. Its
+format is found by its name and what it begins with: a `.txt` of tabs is
+tab-separated, of commas CSV; a workbook is found by what it begins
+with whatever its name. The dialog shows its first 20 records as it is
+read:
 
 - **Format**: **CSV**, its fields between commas and quoted as they
   need; **Tab-separated**, its fields between tabs and never quoted;

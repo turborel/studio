@@ -7,6 +7,30 @@ import { mockIPC } from "@tauri-apps/api/mocks";
 import type { SessionState } from "../ipc/connections";
 import { DEFAULT_SETTINGS } from "../ipc/preferences";
 
+/** The import formats, as the backend's plug-ins offer them (RULES.md D68). */
+export const IMPORT_FORMATS = [
+  { id: "csv", label: "CSV", extensions: ["csv", "txt"], takes: { header: true, delimited: true, sheets: false } },
+  {
+    id: "tsv",
+    label: "Tab-separated",
+    extensions: ["tsv", "tab", "txt"],
+    takes: { header: true, delimited: true, sheets: false },
+  },
+  { id: "json", label: "JSON array", extensions: ["json"], takes: { header: false, delimited: false, sheets: false } },
+  {
+    id: "ndjson",
+    label: "JSON, an object a line",
+    extensions: ["ndjson", "jsonl"],
+    takes: { header: false, delimited: false, sheets: false },
+  },
+  {
+    id: "xlsx",
+    label: "Excel workbook",
+    extensions: ["xlsx"],
+    takes: { header: true, delimited: false, sheets: true },
+  },
+];
+
 /** A command asked of the backend, and its arguments. */
 export interface Asked {
   readonly command: string;
@@ -51,6 +75,8 @@ const DEFAULTS: Record<string, Handler> = {
   judge_script: () => null,
   set_aside_notices: () => [],
   list_reports: () => ({ builtIn: [], own: [] }),
+  import_formats: () => IMPORT_FORMATS,
+  detect_import: () => null,
 };
 
 /** Mocks the backend with `handlers` over the defaults, and gives the calls made. */

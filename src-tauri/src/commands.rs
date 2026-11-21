@@ -115,6 +115,8 @@ pub(crate) fn handler<R: Runtime>() -> impl Fn(Invoke<R>) -> bool + Send + Sync 
         files::save_binary_file,
         files::open_model_file,
         data::choose_import_file,
+        data::import_formats,
+        data::detect_import,
         data::preview_import,
         data::import_rows,
         data::cancel_import,

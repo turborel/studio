@@ -150,6 +150,8 @@ fn a_file_chosen_is_previewed() {
     app.state::<crate::state::Studio>().files.choose(&path).unwrap();
     let reading = serde_json::json!({"format": "csv", "header": true, "delimiter": null, "null": null});
     let shown = answer(&window, "preview_import", serde_json::json!({"path": path.display().to_string(), "reading": reading}));
+    assert_eq!(answer(&window, "detect_import", serde_json::json!({"path": path.display().to_string()})), "csv");
+    assert_eq!(answer(&window, "import_formats", serde_json::json!({})).as_array().map(Vec::len), Some(5));
     let inferred = serde_json::json!([{"typeWritten": "INTEGER", "nulls": false}, {"typeWritten": "VARCHAR(10)", "nulls": false}]);
     assert_eq!(shown, serde_json::json!({"headings": ["ID", "NAME"], "records": [["1", "Ada"]], "inferred": inferred, "sheets": null}));
     let spec = serde_json::json!({"path": path.display().to_string(), "reading": reading, "table": "T", "fields": ["ID", null], "batch": 1, "skip": false});
@@ -404,6 +406,7 @@ fn sql_files_not_chosen_are_refused() {
     let (_app, window) = window();
     let elsewhere = std::env::temp_dir().join("studio-not-chosen.sql").display().to_string();
     assert_eq!(refusal(&window, "scan_sql_file", serde_json::json!({"connection": 7, "path": elsewhere}))["sqlstate"], "TB910");
+    assert_eq!(refusal(&window, "detect_import", serde_json::json!({"path": elsewhere}))["sqlstate"], "TB910");
     let options = serde_json::json!({"transactions": {"kind": "every", "every": 100}, "stopOnError": true});
     let run = serde_json::json!({"connection": 7, "path": elsewhere, "options": options, "confirmed": true});
     assert_eq!(refusal(&window, "run_sql_file", run)["sqlstate"], "TB910");

@@ -8,12 +8,19 @@
 use std::collections::VecDeque;
 use std::fmt;
 use std::io::{BufRead, Read};
+use std::path::Path;
+use std::sync::Arc;
+use std::sync::atomic::AtomicU64;
 
 use serde::Deserialize;
 use serde::de::{MapAccess, Visitor};
 use serde_json::value::RawValue;
 use turborel::value::Value;
 use turborel_client::import::{Heading, Position, Record, Source, SourceError};
+
+use crate::connections::imports::format::{ImportFormat, Takes, Total, first_byte, named};
+use crate::connections::imports::{Format, Reading, opened};
+use crate::error::Result as StudioResult;
 
 /// The objects whose keys name the fields.
 pub const KEYED_BY: usize = 100;
@@ -228,6 +235,67 @@ impl<R: BufRead> Source for JsonRecords<R> {
             }
         }
         Ok(Some(Record { values, position }))
+    }
+}
+
+/// JSON as a format of the import wizard (RULES.md D68): one array of
+/// objects, or one object a line.
+pub struct JsonFormat {
+    layout: Layout,
+}
+
+/// One JSON array of objects.
+pub static JSON: JsonFormat = JsonFormat { layout: Layout::Array };
+/// One JSON object a line.
+pub static NDJSON: JsonFormat = JsonFormat { layout: Layout::Lines };
+
+impl ImportFormat for JsonFormat {
+    fn id(&self) -> Format {
+        match self.layout {
+            Layout::Array => Format::Json,
+            Layout::Lines => Format::Ndjson,
+        }
+    }
+
+    fn label(&self) -> &'static str {
+        match self.layout {
+            Layout::Array => "JSON array",
+            Layout::Lines => "JSON, an object a line",
+        }
+    }
+
+    fn extensions(&self) -> &'static [&'static str] {
+        match self.layout {
+            Layout::Array => &["json"],
+            Layout::Lines => &["ndjson", "jsonl"],
+        }
+    }
+
+    fn takes(&self) -> Takes {
+        Takes { header: false, delimited: false, sheets: false }
+    }
+
+    /// Of an array, `[` first; of objects a line, `{` first; by name too
+    /// of its own extensions.
+    fn detect(&self, path: &Path, first: &[u8]) -> u8 {
+        let begins = match self.layout {
+            Layout::Array => b'[',
+            Layout::Lines => b'{',
+        };
+        let by_content = u8::from(first_byte(first) == Some(begins));
+        if named(path, self.extensions()) { by_content.saturating_add(2) } else { by_content }
+    }
+
+    fn records(
+        &self,
+        path: &Path,
+        _: &Reading,
+        read: &Arc<AtomicU64>,
+        work: &mut dyn FnMut(&mut dyn Source, Total) -> StudioResult<()>,
+    ) -> StudioResult<()> {
+        let size = std::fs::metadata(path).map_or(0, |m| m.len());
+        let mut source = JsonRecords::new(opened(path, Arc::clone(read))?, self.layout);
+        work(&mut source, Total::Bytes(size))
     }
 }
 

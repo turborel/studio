@@ -66,6 +66,24 @@ export interface ImportProgress {
 export type ImportAnswer =
   { readonly kind: "imported"; readonly answer: ImportReport } | { readonly kind: "confirm"; readonly answer: Confirm };
 
+/** A format of the import wizard, a plug-in of the backend's (RULES.md D68): its name, label, extensions, and what of a reading it takes. */
+export interface FormatInfo {
+  readonly id: ImportFormat;
+  readonly label: string;
+  readonly extensions: readonly string[];
+  readonly takes: { readonly header: boolean; readonly delimited: boolean; readonly sheets: boolean };
+}
+
+/** The formats of the import wizard. */
+export function importFormats(): Promise<FormatInfo[]> {
+  return invoke<FormatInfo[]>("import_formats");
+}
+
+/** The format `path`, a file chosen, is most surely of, or null. */
+export function detectImport(path: string): Promise<ImportFormat | null> {
+  return invoke<ImportFormat | null>("detect_import", { path });
+}
+
 /** Asks which file to import: its path, or null if the user cancelled. */
 export function chooseImportFile(): Promise<string | null> {
   return invoke<string | null>("choose_import_file");

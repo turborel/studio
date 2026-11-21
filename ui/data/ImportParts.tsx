@@ -1,23 +1,14 @@
 /**
- * The parts of the import wizard (RULES.md D43, D63): how the file is
- * read, the fields and their columns with each cast and conflict shown,
+ * The parts of the import wizard (RULES.md D43, D63, D68): how the file
+ * is read, as its format's plug-in takes it, the fields and their columns with each cast and conflict shown,
  * a new table's columns, the error policy, and the import's progress and
  * report.
  */
 import type { ReactNode } from "react";
 import type { Column } from "../ipc/catalog";
-import type { ImportFormat, ImportProgress, ImportReport, Preview, Reading } from "../ipc/data";
+import type { FormatInfo, ImportProgress, ImportReport, Preview, Reading } from "../ipc/data";
 import { castNote, type NewColumn, type Policy } from "./importing";
 import { TYPE_CHOICES } from "./typeChoices";
-
-/** The formats, as the wizard names them. */
-const FORMATS: readonly (readonly [ImportFormat, string])[] = [
-  ["csv", "CSV"],
-  ["tsv", "Tab-separated"],
-  ["json", "JSON array"],
-  ["ndjson", "JSON, an object a line"],
-  ["xlsx", "Excel workbook"],
-];
 
 /** A labelled text input of a reading, empty for none. */
 function TextChoice(props: {
@@ -42,8 +33,9 @@ function TextChoice(props: {
   );
 }
 
-/** The format, and the choices of a delimited file or a workbook. */
+/** The format, of the backend's plug-ins, and the choices of a delimited file or a workbook. */
 function FormatChoices(props: {
+  readonly formats: readonly FormatInfo[];
   readonly reading: Reading;
   readonly sheets: readonly string[] | null;
   readonly onReading: (r: Reading) => void;
@@ -56,18 +48,18 @@ function FormatChoices(props: {
         <select
           value={reading.format}
           onChange={(e) => {
-            const format = FORMATS.find(([f]) => f === e.target.value)?.[0] ?? "csv";
+            const format = props.formats.find((f) => f.id === e.target.value)?.id ?? reading.format;
             onReading({ ...reading, format, sheet: null });
           }}
         >
-          {FORMATS.map(([f, name]) => (
-            <option key={f} value={f}>
-              {name}
+          {props.formats.map((f) => (
+            <option key={f.id} value={f.id}>
+              {f.label}
             </option>
           ))}
         </select>
       </label>
-      {reading.format === "xlsx" && props.sheets !== null && (
+      {props.sheets !== null && (
         <label>
           Sheet{" "}
           <select
@@ -86,19 +78,21 @@ function FormatChoices(props: {
   );
 }
 
-/** The choices of how a file is read: its format, its header, and a delimited file's delimiter and null. */
+/** The choices of how a file is read, as its format takes them: its format, its header, and a delimited file's delimiter and null. */
 export function ReadingChoices(props: {
+  readonly formats: readonly FormatInfo[];
   readonly reading: Reading;
   readonly sheets: readonly string[] | null;
   readonly onReading: (r: Reading) => void;
 }) {
   const { reading, onReading } = props;
-  const delimited = reading.format === "csv" || reading.format === "tsv";
+  const takes = props.formats.find((f) => f.id === reading.format)?.takes;
+  const delimited = takes?.delimited === true;
   return (
     <fieldset className="import-reading">
       <legend>How the file is read</legend>
-      <FormatChoices reading={reading} sheets={props.sheets} onReading={onReading} />
-      {(delimited || reading.format === "xlsx") && (
+      <FormatChoices formats={props.formats} reading={reading} sheets={props.sheets} onReading={onReading} />
+      {takes?.header === true && (
         <label>
           <input
             type="checkbox"

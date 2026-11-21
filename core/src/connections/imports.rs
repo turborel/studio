@@ -1,12 +1,15 @@
 //! Rows imported from a file (`[CLIENT Importing]`, RULES.md D43, D63):
 //! CSV or tab-separated text, JSON, as an array of objects or an object a
-//! line, or an Excel sheet; the file previewed, its first records as the
+//! line, or an Excel sheet, each a plug-in of one interface (D68:
+//! `format`); the file previewed, its first records as the
 //! grid shows them, and each field's type inferred for a new table; each
 //! field taken into the column the user chose, or skipped; and the rows
 //! inserted by turborel-client's `import`, which copies where the server
 //! grants it, a batch committed at a time, its progress told and a cancel
 //! heard between records.
 
+pub mod delimited;
+pub mod format;
 pub mod infer;
 pub mod json;
 pub mod xlsx;
@@ -21,10 +24,11 @@ use std::time::{Duration, Instant};
 use serde::{Deserialize, Serialize};
 use turborel::value::Value;
 use turborel_client::agent::Connected;
-use turborel_client::import::{Delimited, Dialect, Import, Rejected, import};
+use turborel_client::import::{Dialect, Import, Rejected, import};
 use turborel_client::import::{Heading, Position, Record, Source, SourceError};
 
 use crate::connections::cells::{Cell, cell};
+use crate::connections::imports::format::{Total, format_of};
 use crate::connections::imports::infer::Inferred;
 use crate::error::{Result, StudioError};
 
@@ -33,8 +37,8 @@ pub const PREVIEW_RECORDS: usize = 20;
 /// The rows skipped an import tells of, at most.
 pub const MAX_TOLD: usize = 100;
 
-/// How a file's fields are written.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+/// How a file's fields are written: its format, a plug-in (D68).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum Format {
     /// Fields between commas, quoted as they need [RFC 4180].
@@ -76,10 +80,7 @@ impl Reading {
     /// SQLCODE -910 for a delimiter that is not one ASCII character, not a
     /// quote or a line break.
     pub fn dialect(&self) -> Result<Dialect> {
-        let base = match self.format {
-            Format::Tsv => Dialect::tsv(),
-            Format::Csv | Format::Json | Format::Ndjson | Format::Xlsx => Dialect::csv(),
-        };
+        let base = if self.format == Format::Tsv { Dialect::tsv() } else { Dialect::csv() };
         let base = if self.header { base.with_header() } else { base };
         let base = match &self.null {
             Some(null) => base.with_null(null),
@@ -112,7 +113,7 @@ fn told(e: &SourceError) -> StudioError {
 }
 
 /// The file at `path`, opened, its bytes read counted in `read`.
-fn opened(path: &Path, read: Arc<AtomicU64>) -> Result<BufReader<Counted>> {
+pub(crate) fn opened(path: &Path, read: Arc<AtomicU64>) -> Result<BufReader<Counted>> {
     let file = File::open(path).map_err(|e| StudioError::misuse(format!("[DESIGN] {}: {e}", path.display())))?;
     Ok(BufReader::new(Counted { file, read }))
 }
@@ -132,7 +133,7 @@ impl Read for Counted {
 }
 
 /// A source whose type is known only as a file is opened.
-pub(crate) struct Any<'a>(&'a mut dyn Source);
+pub(crate) struct Any<'a>(pub(crate) &'a mut dyn Source);
 
 impl Source for Any<'_> {
     fn headings(&mut self) -> std::result::Result<Option<Vec<Heading>>, SourceError> {
@@ -145,8 +146,8 @@ impl Source for Any<'_> {
 }
 
 /// Runs `work` with the records of the file at `path`, read as `reading`
-/// says, its bytes read counted in `read`, or its rows of a sheet, and
-/// how many there are in all: bytes, or a sheet's rows.
+/// says by its format's plug-in (D68), its bytes read counted in `read`,
+/// and how many there are in all.
 ///
 /// # Errors
 ///
@@ -156,26 +157,17 @@ pub(crate) fn with_source<T>(
     path: &Path,
     reading: &Reading,
     read: &Arc<AtomicU64>,
-    work: impl FnOnce(Any<'_>, u64) -> Result<T>,
+    work: impl FnOnce(Any<'_>, Total) -> Result<T>,
 ) -> Result<T> {
-    let size = std::fs::metadata(path).map_or(0, |m| m.len());
-    match reading.format {
-        Format::Csv | Format::Tsv => {
-            let mut source = Delimited::new(opened(path, Arc::clone(read))?, reading.dialect()?);
-            work(Any(&mut source), size)
+    let mut work = Some(work);
+    let mut out = None;
+    format_of(reading.format).records(path, reading, read, &mut |source, total| {
+        if let Some(work) = work.take() {
+            out = Some(work(Any(source), total)?);
         }
-        Format::Json | Format::Ndjson => {
-            let layout = if reading.format == Format::Json { json::Layout::Array } else { json::Layout::Lines };
-            let mut source = json::JsonRecords::new(opened(path, Arc::clone(read))?, layout);
-            work(Any(&mut source), size)
-        }
-        Format::Xlsx => {
-            let mut book = xlsx::workbook(path)?;
-            let mut source = xlsx::SheetRecords::new(xlsx::cells(&mut book, reading.sheet.as_deref())?, reading.header);
-            let rows = source.dimensions_rows();
-            work(Any(&mut source), rows)
-        }
-    }
+        Ok(())
+    })?;
+    out.ok_or_else(|| StudioError::misuse("[DESIGN] a format gave no records to read"))
 }
 
 /// The first `PREVIEW_RECORDS` records of the file at `path`, read as
@@ -186,7 +178,8 @@ pub(crate) fn with_source<T>(
 ///
 /// SQLCODE -910 if the file cannot be read, or a record of it.
 pub fn preview(path: &Path, reading: &Reading) -> Result<Preview> {
-    let sheets = if reading.format == Format::Xlsx { Some(xlsx::sheet_names(path)?) } else { None };
+    let format = format_of(reading.format);
+    let sheets = format.choices(path)?;
     let read = Arc::new(AtomicU64::new(0));
     let (headings, sample) = with_source(path, reading, &read, |mut source, _| {
         let headings: Option<Vec<String>> = source.headings().map_err(|e| told(&e))?.map(|h| h.into_iter().map(|h| h.name).collect());
@@ -200,7 +193,7 @@ pub fn preview(path: &Path, reading: &Reading) -> Result<Preview> {
         Ok((headings, sample))
     })?;
     let width = headings.as_ref().map_or_else(|| sample.iter().map(Vec::len).max().unwrap_or(0), Vec::len);
-    let inferred = infer::infer(&sample, width);
+    let inferred = format.infer(&sample, width);
     let records = sample.into_iter().take(PREVIEW_RECORDS).collect();
     Ok(Preview { headings, records, inferred, sheets })
 }
@@ -390,7 +383,10 @@ pub(crate) fn with_mapped<T>(
     let read = Arc::new(AtomicU64::new(0));
     let rejected = Arc::new(AtomicU64::new(0));
     with_source(&spec.path, &spec.reading, &read, |inner, total| {
-        let counted = if spec.reading.format == Format::Xlsx { Arc::new(AtomicU64::new(0)) } else { Arc::clone(&read) };
+        let (counted, total) = match total {
+            Total::Bytes(bytes) => (Arc::clone(&read), bytes),
+            Total::Records(records) => (Arc::new(AtomicU64::new(0)), records),
+        };
         let mut mapped = Mapped {
             inner,
             keep,

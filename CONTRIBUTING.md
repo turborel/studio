@@ -148,6 +148,39 @@ A change to the assistant says what it sends, and shows that the user
 sees it before it goes, and that no tool acts without the user
 (R-SEC-12).
 
+## Adding an import format
+
+The import wizard reads each format through a plug-in, one
+`ImportFormat` (RULES.md D68, `core/src/connections/imports/format.rs`).
+The preview, the sample, the inferred types, the progress, the cancel
+and the error policy are the wizard's, the same for every format, so a
+format brings only what is its own:
+
+1. A module beside the others in `core/src/connections/imports/`, as
+   `delimited.rs`, `json.rs` or `xlsx.rs`, implementing `ImportFormat`:
+   - `id`, `label` and `extensions`: its name, as a reading names it,
+     as the wizard shows it, and its files';
+   - `takes`: whether it reads a header, a delimiter and a null, or a
+     workbook's sheets;
+   - `detect`: how surely a file's first 8 KiB are of it, 0 not, 1 by
+     what they hold, 2 by the file's name too;
+   - `choices`, if a file holds parts to choose among, as sheets;
+   - `records`: the file's records as turborel-client's `Source`, a
+     record at a time, so memory holds a record whatever the file's
+     size, and their total, of bytes counted as they are read, or of
+     records;
+   - `infer`, only if the shared inference does not fit its values.
+2. A variant of `Format`, in `imports.rs`, of its name.
+3. A line of `formats()`, in `format.rs`, where the wizard offers it.
+4. Its tests: its records read, its failures told by their place, and
+   a file of it detected; an import of it on an embedded database in
+   `core/tests/embedded/imports.rs`.
+5. A crate it needs, if any, recorded as a decision in RULES.md
+   (R-DEP-1), and the import section of `doc/user/07-editing-data.md`.
+
+The platform's dialog, the wizard's format list and the choices it
+offers come from the plug-ins, so the window needs no change.
+
 ## The artwork
 
 The logo, `artwork/studio-logo.svg`, and its form of white text for
