@@ -28,6 +28,8 @@
     "allow-live-audit",
     "allow-clear-live-audit",
     "allow-take-live-link",
+    "allow-live-records",
+    "allow-read-live-record",
     "allow-assistant-settings",
     "allow-save-assistant-settings",
     "allow-set-assistant-key",

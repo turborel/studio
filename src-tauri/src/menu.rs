@@ -113,6 +113,7 @@ pub const MENUS: [(&str, &[Item]); 7] = [
             Some(("live.leave", "Leave Session")),
             None,
             Some(("live.open", "Live Session")),
+            Some(("live.records", "Session Records…")),
             Some(("live.settings", "Live Sessions Settings…")),
         ],
     ),

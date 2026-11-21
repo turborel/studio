@@ -159,6 +159,26 @@ function SharedTabs() {
   );
 }
 
+/** A choice of the session, ticked or not. */
+function ChoiceTick(props: {
+  readonly label: string;
+  readonly checked: boolean;
+  readonly onChange: (on: boolean) => void;
+}) {
+  return (
+    <label className="check">
+      <input
+        type="checkbox"
+        checked={props.checked}
+        onChange={(e) => {
+          props.onChange(e.target.checked);
+        }}
+      />
+      <span>{props.label}</span>
+    </label>
+  );
+}
+
 /** The session's choices, within the settings where they are locked. */
 function Choices({ choices }: { readonly choices: SessionChoices }) {
   const store = useStore();
@@ -186,26 +206,27 @@ function Choices({ choices }: { readonly choices: SessionChoices }) {
           }}
         />
       </label>
-      <label className="check">
-        <input
-          type="checkbox"
-          checked={choices.copy}
-          onChange={(e) => {
-            choose({ ...choices, copy: e.target.checked });
-          }}
-        />
-        <span>Viewers may copy</span>
-      </label>
-      <label className="check">
-        <input
-          type="checkbox"
-          checked={choices.productionValues}
-          onChange={(e) => {
-            choose({ ...choices, productionValues: e.target.checked });
-          }}
-        />
-        <span>Share production&apos;s values</span>
-      </label>
+      <ChoiceTick
+        label="Viewers may copy"
+        checked={choices.copy}
+        onChange={(on) => {
+          choose({ ...choices, copy: on });
+        }}
+      />
+      <ChoiceTick
+        label="Share production's values"
+        checked={choices.productionValues}
+        onChange={(on) => {
+          choose({ ...choices, productionValues: on });
+        }}
+      />
+      <ChoiceTick
+        label="Record this session, on this machine"
+        checked={choices.record}
+        onChange={(on) => {
+          choose({ ...choices, record: on });
+        }}
+      />
     </fieldset>
   );
 }
@@ -269,6 +290,11 @@ function Hosting({ hosted }: { readonly hosted: HostedView }) {
       </section>
       <SharedTabs />
       <Choices key={JSON.stringify(hosted.choices)} choices={hosted.choices} />
+      {hosted.record !== null && (
+        <p className="hint" role="status">
+          Recording, on this machine alone, to {hosted.record}.
+        </p>
+      )}
       <Suggestions />
       {hosted.presenter !== null && <SharedView canSuggest={false} />}
       <button type="button" className="danger" onClick={() => void endSession(store)}>

@@ -2,8 +2,8 @@
 //! 1, each choice of a safe default: whether sessions are on, what each
 //! environment shares, the rows a result shares and the columns masked,
 //! whether viewers may copy, whether Suggest may be granted, how many
-//! viewers, how long an invitation lasts, how a host is reached, and
-//! whether a session may widen them.
+//! viewers, how long an invitation lasts, how a host is reached, whether
+//! a session may widen them, and whether sessions are recorded (D67).
 
 use std::path::{Path, PathBuf};
 
@@ -95,6 +95,25 @@ impl Default for Connectivity {
     }
 }
 
+/// What a presenter's sessions keep of themselves (RULES.md D67).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields, default)]
+pub struct Records {
+    /// Whether a session may be recorded: off, with the settings locked,
+    /// none is.
+    pub allowed: bool,
+    /// Whether a session is recorded from its start.
+    pub by_default: bool,
+    /// Whether a record is sealed under a key kept in the keychain.
+    pub sealed: bool,
+}
+
+impl Default for Records {
+    fn default() -> Records {
+        Records { allowed: true, by_default: false, sealed: false }
+    }
+}
+
 /// Live Sessions' settings.
 #[expect(clippy::struct_excessive_bools, reason = "a settings file's switches, each a choice its page shows apart")]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -124,6 +143,8 @@ pub struct LiveSettings {
     pub connectivity: Connectivity,
     /// Whether a session may not widen these settings.
     pub locked: bool,
+    /// What sessions keep of themselves.
+    pub records: Records,
 }
 
 impl Default for LiveSettings {
@@ -141,6 +162,7 @@ impl Default for LiveSettings {
             invite_minutes: 10,
             connectivity: Connectivity::default(),
             locked: false,
+            records: Records::default(),
         }
     }
 }
@@ -194,7 +216,8 @@ impl LiveSettings {
         !self.locked
             || (wider.row_limit <= self.row_limit
                 && (!wider.copy || self.allow_copy)
-                && (!wider.production_values || self.environments.production.values))
+                && (!wider.production_values || self.environments.production.values)
+                && (!wider.record || self.records.allowed))
     }
 }
 
@@ -208,6 +231,9 @@ pub struct SessionChoices {
     pub copy: bool,
     /// Whether production's values are shared.
     pub production_values: bool,
+    /// Whether the session is recorded, on the presenter's machine alone.
+    #[serde(default)]
+    pub record: bool,
 }
 
 impl SessionChoices {
@@ -217,6 +243,7 @@ impl SessionChoices {
             row_limit: settings.row_limit,
             copy: settings.allow_copy,
             production_values: settings.environments.production.values,
+            record: settings.records.allowed && settings.records.by_default,
         }
     }
 }

@@ -519,6 +519,16 @@ export const COMMANDS: readonly Command[] = [
     run: ({ store }) => leave(store),
   },
   {
+    id: "live.records",
+    icon: "history",
+    title: "Session Records…",
+    category: "Live",
+    enabled: always,
+    run: ({ store }) => {
+      show(store, { kind: "liveRecords" });
+    },
+  },
+  {
     id: "live.settings",
     icon: "settings",
     title: "Live Sessions Settings…",

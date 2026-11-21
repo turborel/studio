@@ -11,6 +11,7 @@ use tauri::State;
 use turborel_studio_core::error::{Result, StudioError};
 use turborel_studio_core::live::audit::LiveEntry;
 use turborel_studio_core::live::link::LinkOpened;
+use turborel_studio_core::live::record::{RecordInfo, RecordRead};
 use turborel_studio_core::live::service::{InviteView, LiveService, Status};
 use turborel_studio_core::live::settings::{LiveSettings, SessionChoices};
 use turborel_studio_core::live::share::WorkspaceIn;
@@ -144,4 +145,16 @@ pub(crate) async fn clear_live_audit(studio: State<'_, Studio>) -> Result<()> {
 #[tauri::command]
 pub(crate) async fn take_live_link(studio: State<'_, Studio>) -> Result<Option<LinkOpened>> {
     Ok(studio.link.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take())
+}
+
+/// The records of sessions kept on this machine, the latest first (RULES.md D67).
+#[tauri::command]
+pub(crate) async fn live_records(studio: State<'_, Studio>) -> Result<Vec<RecordInfo>> {
+    off(&studio, LiveService::records).await
+}
+
+/// The record at `path`, one this Studio kept, read back.
+#[tauri::command]
+pub(crate) async fn read_live_record(studio: State<'_, Studio>, path: String) -> Result<RecordRead> {
+    off(&studio, move |live| live.record(std::path::Path::new(&path))).await
 }

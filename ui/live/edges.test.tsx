@@ -17,7 +17,8 @@ const RELAYED: HostedView = {
   relay: "relay.example:4433",
   participants: [],
   presenter: 9,
-  choices: { rowLimit: 100, copy: true, productionValues: false },
+  choices: { rowLimit: 100, copy: true, productionValues: false, record: false },
+  record: null,
 };
 
 /** A worksheet tab of EXPLAIN ANALYZE's plan, a column of no name, a null, and no selection. */

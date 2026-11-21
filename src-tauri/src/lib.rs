@@ -67,8 +67,9 @@ pub(crate) fn manage<R: Runtime>(
     hub.listen(Arc::new(WebviewEvents(app.handle().clone())));
     let connections = Arc::new(ConnectionManager::new(folders.results.clone(), hub.clone()));
     let saved = Arc::new(SavedConnections::new(folders.config.join(SAVED_FILE), Arc::clone(&secrets)));
-    let assistant = Arc::new(Service::new(&folders.config, (Arc::clone(&saved), secrets), Arc::clone(&connections), hub.clone()));
-    let live = Arc::new(LiveService::new(&folders.config, Arc::clone(&connections), hub)?);
+    let assistant =
+        Arc::new(Service::new(&folders.config, (Arc::clone(&saved), Arc::clone(&secrets)), Arc::clone(&connections), hub.clone()));
+    let live = Arc::new(LiveService::new(&folders.config, (Arc::clone(&connections), secrets), hub)?);
     app.manage(Studio {
         connections,
         saved,

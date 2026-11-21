@@ -23,7 +23,8 @@ const HOSTED: HostedView = {
   relay: null,
   participants: [BOB],
   presenter: null,
-  choices: { rowLimit: 100, copy: false, productionValues: false },
+  choices: { rowLimit: 100, copy: false, productionValues: false, record: false },
+  record: null,
 };
 
 /** A workspace shown of a worksheet, a diagram and findings. */
@@ -295,11 +296,19 @@ describe("the Live Session panel", () => {
     fireEvent.change(screen.getByRole("spinbutton", { name: "Rows of a result shared" }), { target: { value: "5" } });
     fireEvent.blur(screen.getByRole("spinbutton", { name: "Rows of a result shared" }));
     fireEvent.click(screen.getByRole("checkbox", { name: "Share production's values" }));
+    fireEvent.click(screen.getByRole("checkbox", { name: "Record this session, on this machine" }));
     await settle();
+    expect(asked.filter((a) => a.command === "live_choose").map((a) => a.args["choices"])).toContainEqual({
+      rowLimit: 100,
+      copy: false,
+      productionValues: false,
+      record: true,
+    });
     expect(asked.filter((a) => a.command === "live_choose").map((a) => a.args["choices"])).toContainEqual({
       rowLimit: 5,
       copy: false,
       productionValues: false,
+      record: false,
     });
     const sheet = openWorksheet(store, "SELECT 1");
     act(() => {

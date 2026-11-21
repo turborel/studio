@@ -54,7 +54,8 @@ fn studio_of(
     std::fs::create_dir_all(&dir).unwrap();
     let events = Arc::new(KeptEvents::default());
     let sink: Arc<dyn EventSink> = events.clone();
-    let service = LiveService::new(&dir, Arc::clone(manager), sink).unwrap();
+    let secrets: Arc<dyn turborel_studio_core::secrets::SecretStore> = Arc::new(turborel_studio_core::secrets::MemorySecrets::default());
+    let service = LiveService::new(&dir, (Arc::clone(manager), secrets), sink).unwrap();
     service.settings.keep(&LiveSettings { name: name.into(), connectivity: connectivity.clone(), ..LiveSettings::default() }).unwrap();
     (service, events)
 }

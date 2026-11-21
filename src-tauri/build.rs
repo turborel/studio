@@ -10,7 +10,7 @@
 /// Every command the application defines, as `src/commands.rs` registers
 /// them and `capabilities/main.json` grants them; the checks tool holds the
 /// three lists equal.
-const COMMANDS: [&str; 117] = [
+const COMMANDS: [&str; 119] = [
     "app_info",
     "admin_view",
     "admin_act",
@@ -33,6 +33,8 @@ const COMMANDS: [&str; 117] = [
     "live_audit",
     "clear_live_audit",
     "take_live_link",
+    "live_records",
+    "read_live_record",
     "assistant_settings",
     "save_assistant_settings",
     "set_assistant_key",

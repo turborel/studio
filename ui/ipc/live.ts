@@ -30,6 +30,8 @@ export interface SessionChoices {
   readonly rowLimit: number;
   readonly copy: boolean;
   readonly productionValues: boolean;
+  /** Whether the session is recorded, on this machine alone (RULES.md D67). */
+  readonly record: boolean;
 }
 
 /** The session hosted. */
@@ -41,6 +43,8 @@ export interface HostedView {
   readonly participants: readonly Participant[];
   readonly presenter: number | null;
   readonly choices: SessionChoices;
+  /** The record kept of the session, by its file, if it is recorded. */
+  readonly record: string | null;
 }
 
 /** The session joined. */
@@ -113,6 +117,8 @@ export interface LiveSettings {
     readonly relayFingerprint: string;
   };
   readonly locked: boolean;
+  /** What sessions keep of themselves (RULES.md D67). */
+  readonly records: { readonly allowed: boolean; readonly byDefault: boolean; readonly sealed: boolean };
 }
 
 /** A tab's kind. */
@@ -306,4 +312,45 @@ export function liveAudit(): Promise<LiveEntry[]> {
 /** Forgets Live Sessions' log. */
 export function clearLiveAudit(): Promise<null> {
   return invoke<null>("clear_live_audit");
+}
+
+/** A record's head: its format, the session, who presented, when it began, and whether it is sealed. */
+export interface RecordHead {
+  readonly format: string;
+  readonly version: number;
+  readonly session: string;
+  readonly presenter: string;
+  readonly started: number;
+  readonly sealed: boolean;
+}
+
+/** A record kept on this machine. */
+export interface RecordInfo {
+  readonly path: string;
+  readonly head: RecordHead;
+  readonly bytes: number;
+}
+
+/** An entry of a record, each of when, in milliseconds since 1970. */
+export type RecordEntry =
+  | { readonly kind: "shared"; readonly at: number; readonly by: string | null; readonly state: SharedWorkspace }
+  | { readonly kind: "suggested"; readonly at: number; readonly by: string; readonly tab: string; readonly sql: string }
+  | { readonly kind: "joined"; readonly at: number; readonly by: string }
+  | { readonly kind: "left"; readonly at: number; readonly by: string }
+  | { readonly kind: "ended"; readonly at: number };
+
+/** A record read back. */
+export interface RecordRead {
+  readonly head: RecordHead;
+  readonly entries: readonly RecordEntry[];
+}
+
+/** The records kept on this machine, the latest first. */
+export function liveRecords(): Promise<RecordInfo[]> {
+  return invoke<RecordInfo[]>("live_records");
+}
+
+/** The record at `path`, read back. */
+export function readLiveRecord(path: string): Promise<RecordRead> {
+  return invoke<RecordRead>("read_live_record", { path });
 }

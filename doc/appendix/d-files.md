@@ -26,6 +26,7 @@ so a crash leaves the old file or the new. None holds a password.
 | `assistant-audit.jsonl` | the configuration | the assistant's log, an entry a line |
 | `live-sessions.json` | the configuration | Live Sessions' settings |
 | `live-sessions-audit.jsonl` | the configuration | Live Sessions' log, an entry a line |
+| `live-records/session-*.jsonl` | the configuration | a session's record, kept by its presenter, an entry a line |
 | `failures.log` | the configuration | the failures the window did not handle, a line each |
 | `turborel-studio-*` | the cache, `results` | a result's pages, sealed, while it is open |
 
@@ -334,8 +335,11 @@ the columns whose values are masked, `maskedColumns`, at most 500;
 whether viewers may copy, `allowCopy`; whether a viewer may be granted
 Suggest, `allowSuggest`; the most viewers, `maxViewers`, from 1 to 64;
 an invitation's minutes, `inviteMinutes`, from 1 to 60; how a presenter
-is reached, `connectivity`; and whether a session may widen these,
-`locked` false, or not.
+is reached, `connectivity`; whether a session may widen these,
+`locked` false, or not; and what sessions keep of themselves,
+`records`: whether a session may be recorded, `allowed`, whether each
+is recorded from its start, `byDefault`, and whether a record is sealed
+under a key kept in the keychain, `sealed`.
 
 ```json
 {
@@ -361,7 +365,8 @@ is reached, `connectivity`; and whether a session may widen these,
     "relayAddress": "",
     "relayFingerprint": ""
   },
-  "locked": false
+  "locked": false,
+  "records": { "allowed": true, "byDefault": false, "sealed": false }
 }
 ```
 
@@ -377,6 +382,26 @@ secret.
 ```json
 {"format":1,"time":1795046400,"what":"admitted","who":"Bob","detail":null}
 ```
+
+## live-records
+
+A session's record ([Live Sessions](../user/11-live-sessions.md#records)),
+in `live-records`, a file a session, `session-` and the instant it began
+and the start of the session's identifier, its owner's alone. Its first
+line is its head, of format version 1: the session, the presenter, when
+it began in milliseconds since 1970, and whether it is sealed:
+
+```json
+{"format":"turborel-studio-live-record","version":1,"session":"0f0f…","presenter":"Ann","started":1795046400000,"sealed":false}
+```
+
+Each line after is an entry: a workspace as it was shared, `shared`,
+with who presented it if a viewer did; a viewer's suggestion,
+`suggested`; a viewer who came or went, `joined` and `left`; and its
+end, `ended`. Each holds what was sent and nothing more, its masks and
+row limit applied. A sealed record's entries are each sealed with
+AES-256-GCM under the key the keychain keeps as `live-records-key`, in
+base64 of the URL's alphabet: a nonce, then the entry and its tag.
 
 ## A model's file
 

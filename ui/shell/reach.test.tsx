@@ -64,6 +64,7 @@ describe("keyboard and reader reach", () => {
         inviteMinutes: 1,
         connectivity: { direct: true, port: 0, advertise: [], relay: false, relayAddress: "", relayFingerprint: "" },
         locked: false,
+        records: { allowed: true, byDefault: false, sealed: false },
       }),
       admin_view: () => ({ columns: ["ID", "STATE"], rows: [["1", "RUNNING"]], absent: false }),
     });
@@ -81,7 +82,8 @@ describe("keyboard and reader reach", () => {
               { id: 1, name: "Bob", role: "viewer", grants: { copy: false, suggest: false }, hand: false },
             ],
             presenter: null,
-            choices: { rowLimit: 1, copy: false, productionValues: false },
+            choices: { rowLimit: 1, copy: false, productionValues: false, record: false },
+            record: null,
           },
           joined: null,
         },

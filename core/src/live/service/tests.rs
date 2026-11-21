@@ -19,7 +19,8 @@ fn studio(name: &str, settings: &LiveSettings) -> (LiveService, Arc<KeptEvents>)
     let dir = crate::testing::scratch(&format!("live/service-{name}"));
     let events = Arc::new(KeptEvents::default());
     let manager = Arc::new(ConnectionManager::new(dir.join("spool"), events.clone()));
-    let service = LiveService::new(&dir, manager, events.clone()).unwrap();
+    let secrets: Arc<dyn crate::secrets::SecretStore> = Arc::new(crate::secrets::MemorySecrets::default());
+    let service = LiveService::new(&dir, (manager, secrets), events.clone()).unwrap();
     service.settings.keep(&LiveSettings { name: name.into(), ..settings.clone() }).unwrap();
     (service, events)
 }
@@ -203,4 +204,84 @@ fn two_studios_meet_through_a_relay() {
     });
     assert!(!relay.passed().windows(10).any(|w| w == b"QZX-marker"));
     host.end().unwrap();
+}
+
+/// [DESIGN] D67: a session recorded keeps exactly what was shared, its
+/// masks and row limit applied, a guest's suggestion and coming in turn,
+/// on the presenter's machine; its guest keeps nothing; recording chosen
+/// off ends the record, and settings locked with recording not allowed
+/// refuse it.
+#[test]
+fn a_recorded_session_keeps_only_what_was_shared() {
+    use crate::live::record::{Entry, list, read};
+    use crate::live::settings::Records;
+    use crate::live::share::{Column, Results};
+    let settings = LiveSettings {
+        masked_columns: vec!["SALARY".into()],
+        row_limit: 1,
+        records: Records { by_default: true, ..Records::default() },
+        ..loopback()
+    };
+    let (host, host_events) = studio("Ivy", &settings);
+    let (guest, guest_events) = studio("Jo", &loopback());
+    let hosted = host.present().unwrap().hosted.unwrap();
+    let path = hosted.record.clone().unwrap();
+    let invite = host.invite().unwrap();
+    guest.join(&invite.link).unwrap();
+    let id = admit(&host, &host_events, &guest_events);
+    let mut shared = workspace("SELECT NAME, SALARY FROM STAFF");
+    let column = |name: &str| Column { name: Some(name.into()), type_name: "VARCHAR(9)".into(), masked: false };
+    let rows = vec![vec![Some("Ada".into()), Some("100".into())], vec![Some("Bo".into()), Some("200".into())]];
+    shared.tabs[0].results = Some(Results { columns: vec![column("NAME"), column("SALARY")], rows, cut: false });
+    host.publish(shared).unwrap();
+    host.grant_suggest(id, true).unwrap();
+    let mut seen = Vec::new();
+    wait(&guest_events, &mut seen, |e| {
+        matches!(e, Event::LiveGuest { event: GuestEvent::Role { grants, .. } } if grants.suggest).then_some(())
+    });
+    guest.suggest("w1", "SELECT 1").unwrap();
+    let mut at_host = Vec::new();
+    wait(&host_events, &mut at_host, |e| matches!(e, Event::LiveHost { event: HostEvent::Suggested { .. } }).then_some(()));
+    host.choose(SessionChoices { record: false, ..hosted.choices }).unwrap();
+    assert_eq!(host.status().unwrap().hosted.unwrap().record, None);
+    let kept = read(std::path::Path::new(&path), None).unwrap();
+    let state = kept.entries.iter().find_map(|e| if let Entry::Shared { state, .. } = e { Some(state.clone()) } else { None }).unwrap();
+    let results = &state["tabs"][0]["results"];
+    assert_eq!(results["rows"], serde_json::json!([["Ada", null]]));
+    assert_eq!((results["cut"].as_bool(), results["columns"][1]["masked"].as_bool()), (Some(true), Some(true)));
+    assert!(kept.entries.iter().any(|e| matches!(e, Entry::Joined { by, .. } if by == "Jo")));
+    assert!(kept.entries.iter().any(|e| matches!(e, Entry::Suggested { by, sql, .. } if by == "Jo" && sql == "SELECT 1")));
+    assert!(matches!(kept.entries.last(), Some(Entry::Ended { .. })));
+    let guest_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../target/test-scratch/live/service-Jo")
+        .join(crate::live::record::RECORDS_DIR);
+    assert_eq!(list(&guest_dir).unwrap(), []);
+    guest.leave().unwrap();
+    host.end().unwrap();
+    let locked = LiveSettings { locked: true, records: Records { allowed: false, by_default: false, sealed: false }, ..loopback() };
+    let (refusing, _) = studio("Kai", &locked);
+    let choices = refusing.present().unwrap().hosted.unwrap().choices;
+    assert!(refusing.choose(SessionChoices { record: true, ..choices }).unwrap_err().message.contains("locked"));
+    refusing.end().unwrap();
+}
+
+/// [DESIGN] D67: a record sealed is listed and read back through the
+/// keychain's key; a file not among this Studio's records is not read.
+#[test]
+fn a_sealed_record_is_listed_and_read_back() {
+    use crate::live::settings::Records;
+    let settings = LiveSettings { records: Records { allowed: true, by_default: true, sealed: true }, ..loopback() };
+    let (host, _) = studio("Lou", &settings);
+    host.present().unwrap();
+    host.publish(workspace("SELECT 'kept'")).unwrap();
+    host.end().unwrap();
+    let records = host.records().unwrap();
+    assert_eq!(records.len(), 1);
+    assert!(records[0].head.sealed);
+    let read = host.record(std::path::Path::new(&records[0].path)).unwrap();
+    assert!(read.entries.iter().any(|e| serde_json::to_string(e).unwrap().contains("kept")));
+    let elsewhere = std::env::temp_dir().join("studio-not-a-record.jsonl");
+    std::fs::write(&elsewhere, "{}").unwrap();
+    assert!(host.record(&elsewhere).unwrap_err().message.contains("only a record this Studio kept"));
+    assert!(host.record(std::path::Path::new("/no/such/record.jsonl")).is_err());
 }

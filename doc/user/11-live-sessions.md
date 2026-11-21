@@ -163,6 +163,60 @@ What you are shown is held in memory alone: it is never saved, and is
 let go as the session ends, as you leave, are removed, or the
 presenter can no longer be reached.
 
+## Records
+
+A presenter may keep a record of a session, on this machine alone:
+**Record this session, on this machine**, among the session's choices
+in the panel, or **Record each session from its start** in the
+settings. While it records, the panel says where. The record holds what
+was shared and nothing more: each workspace as the viewers saw it, its
+queries, plans, results and messages, the masked columns of no value and
+the rows cut as the session's limit cut them, with when each was shared
+and by whom; each suggestion, with who made it; and who came and went.
+Where the presenter only points, nothing is kept. Viewers never get a
+record; a summary reaches them only if the presenter sends it.
+
+A record is a file of the user's alone, in the configuration's
+`live-records` folder ([Files](../appendix/d-files.md#live-records)).
+**Seal records with a key kept in the keychain** seals each entry under
+a key Studio makes and keeps in the keychain, so the file holds no text
+of what was shared; a sealed record is read only on a machine whose
+keychain holds that key. A record unsealed holds the results' values as
+they were shown: keep it as you keep them. **A session may be
+recorded**, off with the settings locked, records no session.
+
+**Live > Session Records…** lists the records kept, the latest first.
+Opening one shows its timeline, each moment by its time: a workspace
+shared, a suggestion, someone coming or going. **Previous** and **Next**
+step through it, **Find in the record** keeps the moments whose SQL,
+messages or plans hold a text, and the moment chosen is shown as the
+viewers saw it, a tab at a time. **Open in Worksheet** opens a tab's SQL,
+or a suggestion, in a worksheet; **Compare the plan with** shows a tab's
+plan at this moment and another, line by line, the lines that differ
+marked.
+
+**Summary for a Ticket…** writes a summary of the moments picked, each
+workspace shared and each suggestion at first: each worksheet's SQL,
+the first 12 lines of its plan, its result, the first 20 rows, a masked
+column written `masked`; the suggestions; and the conclusions written
+under **Conclusions**. A production tab's result is written of its
+columns alone unless **Production's result values** is ticked, which it
+is not at first. **Format** chooses Markdown or HTML, the preview shows
+exactly what is written, and **Save Summary…** saves it where the
+platform's dialog chooses:
+
+```
+# Live Session of Ann
+
+## At 09:02:00
+
+### Dev (development)
+
+| NAME | SALARY |
+|---|---|
+| Ada | masked |
+```
+
 ## How it is kept safe
 
 - **Encryption:** a session is carried by QUIC, its TLS 1.3 made with a

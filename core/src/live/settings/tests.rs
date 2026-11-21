@@ -47,7 +47,7 @@ fn the_bounds_are_checked() {
 #[test]
 fn locked_settings_are_not_widened() {
     let open = LiveSettings::default();
-    let wide = SessionChoices { row_limit: 5000, copy: true, production_values: true };
+    let wide = SessionChoices { row_limit: 5000, copy: true, production_values: true, record: true };
     assert!(open.allows(&wide));
     let locked = LiveSettings { locked: true, ..open };
     assert!(!locked.allows(&wide));
@@ -55,6 +55,23 @@ fn locked_settings_are_not_widened() {
     assert!(locked.allows(&SessionChoices { row_limit: 10, ..SessionChoices::of(&locked) }));
     assert!(!locked.allows(&SessionChoices { copy: true, ..SessionChoices::of(&locked) }));
     assert!(!locked.allows(&SessionChoices { production_values: true, ..SessionChoices::of(&locked) }));
+}
+
+/// [DESIGN] D67: a session is recorded only if chosen, off at first; one
+/// recorded from its start where the settings say; and never, locked with
+/// recording not allowed.
+#[test]
+fn recording_is_off_and_may_be_locked_off() {
+    use super::Records;
+    let open = LiveSettings::default();
+    assert!(!SessionChoices::of(&open).record);
+    let by_default = LiveSettings { records: Records { by_default: true, ..Records::default() }, ..open.clone() };
+    assert!(SessionChoices::of(&by_default).record);
+    let recording = SessionChoices { record: true, ..SessionChoices::of(&open) };
+    let off = LiveSettings { locked: true, records: Records { allowed: false, by_default: true, sealed: false }, ..open.clone() };
+    assert!(!SessionChoices::of(&off).record);
+    assert!(!off.allows(&recording));
+    assert!(LiveSettings { locked: true, ..open }.allows(&recording));
 }
 
 /// [DESIGN] D56: the settings are kept and read back; out of bounds, not kept.

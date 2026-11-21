@@ -34,6 +34,7 @@ import { SaveReportDialog } from "./analyzer/Reports";
 import { PromptDialog } from "./shell/PromptDialog";
 import { AssistantSettingsDialog } from "./assistant/AssistantSettings";
 import { JoinDialog, LiveSettingsDialog } from "./live/LiveDialogs";
+import { RecordsDialog } from "./live/RecordsDialog";
 import { takeLink } from "./live/live";
 import { SecurityDialog } from "./admin/SecurityDialog";
 import { useLiveSync } from "./live/sync";
@@ -141,6 +142,8 @@ function Dialogs({ context }: { readonly context: CommandContext }) {
       return <FoldersDialog />;
     case "favourite":
       return <FavouriteDialog sql={dialog.sql} />;
+    case "liveRecords":
+      return <RecordsDialog />;
     default:
       return <TaskDialogs dialog={dialog ?? null} />;
   }

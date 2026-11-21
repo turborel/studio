@@ -106,6 +106,7 @@ Each is told in full in [§7](#7-the-decisions).
 | D64 | A DDL script imported into a model: run in an in-memory database of its own, read back, what is not a table's listed |
 | D65 | A generated script with its data: INSERTs Run SQL File loads back, or CSV files the import loads back |
 | D66 | Invitation links: Studio's scheme, a link of the invitation alone, the join dialog filled in, never joined unasked |
+| D67 | Session records: what was shared, kept by the presenter alone, sealed if asked, replayed and summed up for a ticket |
 
 ---
 
@@ -1729,6 +1730,42 @@ The review checklist:
   Join takes a code or a link.
 - *Why:* a session asked for in a chat or a ticket is joined by a click,
   and a click must never join, nor carry anything but how to ask to.
+
+#### D67. Session records: what was shared, kept by the presenter alone, sealed if asked, replayed and summed up for a ticket
+
+- **What is kept** (`core/src/live/record.rs`): off at first. Where the
+  session's choice `record` is on, the hosting Studio keeps each
+  workspace as `share` (D56) sent it, its masks and row limit applied,
+  only as its tabs change, not where the presenter points; a workspace a
+  viewer presented, with who; each suggestion, viewer admitted and gone;
+  and the end. Kept as it is sent, never read again of the window, so a
+  record holds what was shared and never more. The joining Studio keeps
+  nothing.
+- **The file:** `live-records/session-<instant>-<id>.jsonl` of the
+  configuration, its owner's alone (0600 where the platform has it), a
+  head line of format 1 (`turborel-studio-live-record`), then an entry a
+  line. Sealed, if the settings say, each entry with AES-256-GCM of
+  aws-lc-rs under a 32-byte key made once and kept in the keychain as
+  `live-records-key`, a random nonce each, the session's identifier as
+  associated data. Read back at most 256 MiB and 100,000 entries; a
+  sealed one of no key or another is refused, saying so; only a file
+  among this Studio's records is read (`LiveService::record`).
+- **Settings** (`live-sessions.json`, format 1): `records.allowed`,
+  `records.byDefault`, `records.sealed`. Locked settings refuse a
+  session recorded if `allowed` is off: the lock an administrator sets.
+- **The replay:** **Live > Session Records…**: the records listed, one
+  read as a timeline to step through and search, each moment shown by
+  the guest's view (`TabContent`), a query or suggestion opened in a
+  worksheet, a tab's plans compared line by line between two moments.
+- **The summary for a ticket** (`ui/live/summary.ts`): Markdown or HTML
+  of the moments the presenter picks, each worksheet's SQL, its plan's
+  first 12 lines, its result's first 20 rows, a masked column written
+  `masked`; a production tab's values left out unless asked; the
+  suggestions and the conclusions; previewed exactly as it is saved
+  where the platform's dialog chooses.
+- *Why:* a session that replaced SQL pasted into a chat or a ticket
+  should leave what was found on the presenter's machine, and only
+  what the viewers saw.
 ---
 
 ## 8. References

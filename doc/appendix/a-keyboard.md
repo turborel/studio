@@ -75,6 +75,7 @@ are bound.
 | Share Worksheet in Live Session | Live | | |
 | End Session | Live | | |
 | Leave Session | Live | | |
+| Session Records… | Live | | |
 | Live Sessions Settings… | Live | | |
 | Reset Layout | View | | |
 | About Turborel Studio | Help | | |

@@ -52,6 +52,8 @@ pub(crate) fn handler<R: Runtime>() -> impl Fn(Invoke<R>) -> bool + Send + Sync 
         live::live_audit,
         live::clear_live_audit,
         live::take_live_link,
+        live::live_records,
+        live::read_live_record,
         assistant::assistant_settings,
         assistant::save_assistant_settings,
         assistant::set_assistant_key,

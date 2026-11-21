@@ -284,6 +284,41 @@ function AllowedPart({ s, set }: { readonly s: LiveSettings; readonly set: (s: L
   );
 }
 
+/** What sessions keep of themselves, on this machine alone (RULES.md D67). */
+function RecordsPart({ s, set }: { readonly s: LiveSettings; readonly set: (s: LiveSettings) => void }) {
+  const records = s.records;
+  return (
+    <fieldset>
+      <legend>Records</legend>
+      <Tick
+        label="A session may be recorded"
+        checked={records.allowed}
+        onChange={(allowed) => {
+          set({ ...s, records: { ...records, allowed } });
+        }}
+      />
+      <Tick
+        label="Record each session from its start"
+        checked={records.byDefault}
+        onChange={(byDefault) => {
+          set({ ...s, records: { ...records, byDefault } });
+        }}
+      />
+      <Tick
+        label="Seal records with a key kept in the keychain"
+        checked={records.sealed}
+        onChange={(sealed) => {
+          set({ ...s, records: { ...records, sealed } });
+        }}
+      />
+      <p className="hint">
+        A record holds what was shared, as viewers saw it: queries, plans, results and messages. It stays on this
+        machine; viewers never get it. Locked, with recording not allowed, no session is recorded.
+      </p>
+    </fieldset>
+  );
+}
+
 /** What sessions share and allow. */
 function SharingPart({ s, set }: { readonly s: LiveSettings; readonly set: (s: LiveSettings) => void }) {
   return (
@@ -413,6 +448,7 @@ export function LiveSettingsDialog() {
           <EnvironmentsPart s={s} set={set} />
           <SharingPart s={s} set={set} />
           <ConnectivityPart s={s} set={set} />
+          <RecordsPart s={s} set={set} />
         </>
       )}
       <LogPart />

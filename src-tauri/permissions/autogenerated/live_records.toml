@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-live-records"
+description = "Enables the live_records command without any pre-configured scope."
+commands.allow = ["live_records"]
+
+[[permission]]
+identifier = "deny-live-records"
+description = "Denies the live_records command without any pre-configured scope."
+commands.deny = ["live_records"]

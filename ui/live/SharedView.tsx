@@ -186,7 +186,7 @@ function SharedFindings({ document }: { readonly document: unknown }) {
 }
 
 /** Tab `tab`'s content. */
-function TabContent({ tab, canSuggest }: { readonly tab: SharedTab; readonly canSuggest: boolean }): ReactNode {
+export function TabContent({ tab, canSuggest }: { readonly tab: SharedTab; readonly canSuggest: boolean }): ReactNode {
   switch (tab.kind) {
     case "worksheet":
       return <SharedWorksheet tab={tab} canSuggest={canSuggest} />;

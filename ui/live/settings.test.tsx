@@ -20,7 +20,8 @@ const HOSTED: HostedView = {
   relay: null,
   participants: [BOB],
   presenter: null,
-  choices: { rowLimit: 100, copy: false, productionValues: false },
+  choices: { rowLimit: 100, copy: false, productionValues: false, record: false },
+  record: null,
 };
 
 /** The settings as first read. */
@@ -41,6 +42,7 @@ const SETTINGS: LiveSettings = {
   inviteMinutes: 10,
   connectivity: { direct: true, port: 0, advertise: [], relay: false, relayAddress: "", relayFingerprint: "" },
   locked: false,
+  records: { allowed: true, byDefault: false, sealed: false },
 };
 
 /** Sets the status to `status`. */
@@ -101,10 +103,14 @@ describe("Live Sessions' settings", () => {
     fireEvent.click(screen.getByRole("button", { name: "Clear the Log" }));
     await settle();
     expect(screen.getByText("Nothing is logged.")).toBeTruthy();
+    fireEvent.click(screen.getByRole("checkbox", { name: "Record each session from its start" }));
+    fireEvent.click(screen.getByRole("checkbox", { name: "Seal records with a key kept in the keychain" }));
+    fireEvent.click(screen.getByRole("checkbox", { name: "A session may be recorded" }));
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
     await settle();
     expect(asked.find((a) => a.command === "save_live_settings")?.args["settings"]).toEqual({
       ...SETTINGS,
+      records: { allowed: false, byDefault: true, sealed: true },
       enabled: false,
       name: "Ann",
       environments: {

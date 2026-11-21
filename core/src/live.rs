@@ -1,11 +1,13 @@
 //! Live Sessions in Studio's backend (RULES.md D56): the settings, the
 //! workspace a presenter shares, filtered as they say before it leaves,
 //! the log, and the sessions themselves, hosted or joined, on a runtime of
-//! their own; and an invitation's link opened (D66). The network's part is
+//! their own; an invitation's link opened (D66); and a session's record,
+//! kept on the presenter's machine alone (D67). The network's part is
 //! `turborel-studio-live`'s.
 
 pub mod audit;
 pub mod link;
+pub mod record;
 pub mod service;
 pub mod settings;
 pub mod share;

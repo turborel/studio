@@ -47,7 +47,9 @@ person who works with the database one window for it:
 - an [assistant](doc/user/10-assistant.md), off until the user turns it
   on;
 - [live sessions](doc/user/11-live-sessions.md), a workspace shared with
-  others as it is worked in, joined by an invitation's code or a link;
+  others as it is worked in, joined by an invitation's code or a link,
+  and recorded on the presenter's machine if asked, replayed and
+  summed up for a ticket;
 - a [monitor](doc/user/12-administration.md) of the server or the
   database: its sessions, what each runs and waits on, the statements
   run and the tables' and indexes' sizes and use, its settings, plug-ins,

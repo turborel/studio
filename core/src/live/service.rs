@@ -2,11 +2,12 @@
 //! or the one it joined, at most one of either, on a runtime of its own
 //! whose threads are named `studio-live`. What happens is told the window
 //! as the events `liveHost` and `liveGuest`, and logged; what is shared is
-//! filtered by `share` before it leaves.
+//! filtered by `share` before it leaves, and, where the presenter records
+//! the session, kept by `record` as it was sent (D67).
 
 use std::future::Future;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr, UdpSocket};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 use std::time::Duration;
@@ -21,8 +22,10 @@ use crate::connections::manager::ConnectionManager;
 use crate::error::{Result, StudioError};
 use crate::events::{Event, EventSink};
 use crate::live::audit::{Audit, LiveEntry, audit};
+use crate::live::record::{RECORDS_DIR, Recorder};
 use crate::live::settings::{LiveSettings, SessionChoices, Settings};
 use crate::live::share::{WorkspaceIn, read_shared, shared};
+use crate::secrets::SecretStore;
 
 /// How long the runtime goes on as the service stops, so the end is told.
 const FAREWELL: Duration = Duration::from_millis(500);
@@ -69,6 +72,8 @@ pub struct HostedView {
     pub presenter: Option<u64>,
     /// The session's choices.
     pub choices: SessionChoices,
+    /// The record kept of it, by its file, if it is recorded (D67).
+    pub record: Option<String>,
 }
 
 /// What the window is told of the session joined.
@@ -116,6 +121,12 @@ pub struct LiveService {
     events: Arc<dyn EventSink>,
     hosted: Mutex<Option<Hosted>>,
     joined: JoinedSlot,
+    /// The record kept of the session hosted, if it is recorded (D67).
+    recording: Arc<Mutex<Option<Recorder>>>,
+    /// The folder of the records.
+    records: PathBuf,
+    /// The keychain, of the records' key.
+    secrets: Arc<dyn SecretStore>,
 }
 
 /// A failure of the session, as Studio's error.
@@ -137,12 +148,16 @@ pub fn found_addresses() -> Vec<IpAddr> {
 
 impl LiveService {
     /// Live Sessions of `dir`'s files, sharing connections of `manager`,
-    /// telling `events`.
+    /// a record's key kept in `secrets`, telling `events`.
     ///
     /// # Errors
     ///
     /// SQLCODE -910 if the runtime cannot be made.
-    pub fn new(dir: &Path, manager: Arc<ConnectionManager>, events: Arc<dyn EventSink>) -> Result<LiveService> {
+    pub fn new(
+        dir: &Path,
+        (manager, secrets): (Arc<ConnectionManager>, Arc<dyn SecretStore>),
+        events: Arc<dyn EventSink>,
+    ) -> Result<LiveService> {
         let runtime = tokio::runtime::Builder::new_multi_thread()
             .worker_threads(THREADS)
             .thread_name("studio-live")
@@ -157,6 +172,9 @@ impl LiveService {
             events,
             hosted: Mutex::new(None),
             joined: Arc::new(Mutex::new(None)),
+            recording: Arc::new(Mutex::new(None)),
+            records: dir.join(RECORDS_DIR),
+            secrets,
         })
     }
 
@@ -213,8 +231,9 @@ impl LiveService {
 
     /// What the host's user is told, and the log, of each event.
     fn on_host(&self) -> Arc<dyn Fn(HostEvent) + Send + Sync> {
-        let (events, audit) = (Arc::clone(&self.events), Arc::clone(&self.audit));
+        let (events, audit, recording) = (Arc::clone(&self.events), Arc::clone(&self.audit), Arc::clone(&self.recording));
         Arc::new(move |event: HostEvent| {
+            recording::recorded(&recording, &event);
             let entry = match &event {
                 HostEvent::Asked { name, .. } => Some(LiveEntry::of("asked", Some(name), None)),
                 HostEvent::Joined { name, .. } => Some(LiveEntry::of("admitted", Some(name), None)),
@@ -249,6 +268,14 @@ impl LiveService {
         let on = self.on_host();
         let host = self.wait(Host::start(LiveService::options(&settings), on))?.map_err(misuse)?;
         let choices = SessionChoices::of(&settings);
+        let session = host.session().to_owned();
+        if choices.record
+            && let Err(e) = self.start_recording(&settings, &session)
+        {
+            let _entered = self.runtime.enter();
+            host.end();
+            return Err(e);
+        }
         *self.hosted() = Some(Hosted { host, settings, choices });
         self.log("started", None, None);
         self.status()
@@ -349,14 +376,20 @@ impl LiveService {
         if !(1..=10_000).contains(&choices.row_limit) {
             return Err(misuse("the rows shared are from 1 to 10000"));
         }
-        self.with_host(|h| {
+        let (settings, session, was) = self.with_host(|h| {
             if !h.settings.allows(&choices) {
                 return Err(misuse("the settings are locked: a session may not widen them"));
             }
+            let was = h.choices.record;
             h.choices = choices;
             h.host.allow_copy(choices.copy);
-            Ok(())
+            Ok((h.settings.clone(), h.host.session().to_owned(), was))
         })?;
+        match (was, choices.record) {
+            (false, true) => self.start_recording(&settings, &session)?,
+            (true, false) => self.stop_recording(),
+            _ => {}
+        }
         self.log("choices", None, Some(&serde_json::to_string(&choices).unwrap_or_default()));
         Ok(())
     }
@@ -371,6 +404,9 @@ impl LiveService {
         let environment_of = |c: u64| self.manager.environment(c).ok();
         if let Some(h) = self.hosted().as_ref() {
             let state = shared(workspace, (&h.settings, &h.choices), environment_of)?;
+            if let Some(recorder) = self.recording().as_mut() {
+                let _ = recorder.shared(&state, None); // A record that cannot be written lets the session go on.
+            }
             h.host.publish(state);
             return Ok(());
         }
@@ -392,6 +428,7 @@ impl LiveService {
         let hosted = self.hosted().take().ok_or_else(|| misuse("no session is hosted"))?;
         hosted.host.end();
         drop(hosted);
+        self.stop_recording();
         self.log("ended", None, None);
         Ok(())
     }
@@ -520,6 +557,7 @@ impl LiveService {
                 participants: h.host.participants(),
                 presenter: h.host.presenter(),
                 choices: h.choices,
+                record: self.recording().as_ref().map(|r| r.path().display().to_string()),
             }
         });
         let joined = self.joined().as_ref().map(|j| JoinedView { code: j.guest.code.clone(), role: j.role, grants: j.grants });
@@ -545,5 +583,6 @@ impl Drop for LiveService {
     }
 }
 
+mod recording;
 #[cfg(test)]
 mod tests;
