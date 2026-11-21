@@ -33,8 +33,9 @@ person who works with the database one window for it:
 - an analyzer of indexes and plans;
 - an assistant, off until the user turns it on;
 - live sessions, a workspace shared with others as it is worked in;
-- a monitor of the server or the database, its sessions, settings,
-  plug-ins, users and replication.
+- a monitor of the server or the database: its sessions, what each runs
+  and waits on, the statements run and the tables' and indexes' sizes
+  and use, its settings, plug-ins, users and replication.
 
 It runs on Linux, macOS and Windows, built with Tauri: a Rust backend
 over turborel-client and the `turborel` crate, and a front end in

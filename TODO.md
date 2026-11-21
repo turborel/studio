@@ -52,17 +52,17 @@ Code never cites this file (R-DOC-5).
 
 ## M12 Polish and the security audit
 
-- Accessibility and keyboard reach; large results and long sessions.
-- Keyboard schemes; tab colours.
+- Keyboard schemes: sets of key bindings to choose among, beside each
+  command's own key, which Settings already rebinds.
 - The keychain checked by hand on Windows and Linux, as on macOS, by the
   test STUDIO_TEST_KEYCHAIN runs.
-- The security review of the whole application, each finding fixed or
-  written here.
-- Unsigned installers: `.dmg`, `.msi`, `.AppImage` and `.deb`. Signing
-  and notarization wait for the owner's certificates.
-- The nightly: a workflow, as Turborel's, that builds the installers after
-  verify passes on main and replaces the one `nightly` pre-release, its
-  files at fixed names with SHA-256 sums; Installing then tells how to
-  open an unsigned build and check the sums, and the README points to it.
-- The full manual, every feature checked against turborel-client and
-  Turborel's manual.
+- Signing and notarization of the installers, once the owner's
+  certificates exist; until then they are unsigned.
+- The nightly's trigger after verify on main, written and left off,
+  turned on once its installers are seen to build on each platform; and
+  macOS on Intel, once a runner of its own is there.
+- The manual's images: the first made by the workflow `screenshots`
+  committed under `doc/images/`, and each chapter linking its own
+  (RULES.md D60).
+- The full manual, every feature checked again against turborel-client
+  and Turborel's manual at the pinned commit.
