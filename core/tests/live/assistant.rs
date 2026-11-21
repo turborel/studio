@@ -63,6 +63,10 @@ fn catalog_tools(tools: &SessionTools<'_>, yes: &Window) {
     assert!(call("describe_table", &[("schema", "ANN"), ("table", "AS_STAFF")]).content.contains("CHARACTER VARYING"));
     assert_eq!(call("describe_table", &[("schema", "ANN"), ("table", "AS_SECRETS")]).outcome, "blocked: HIDDEN");
     assert!(call("explain", &[("sql", "SELECT NAME FROM ANN.AS_STAFF")]).content.contains("-- physical:"));
+    // EXPLAIN ANALYZE runs its statement: the tool runs plain EXPLAIN alone.
+    let analyzed = call("explain", &[("sql", "ANALYZE DELETE FROM ANN.AS_STAFF WHERE ID = 1")]);
+    assert_eq!(analyzed.outcome, "blocked: EXPLAIN-ONLY");
+    assert!(call("run_query", &[("sql", "EXPLAIN ANALYZE DELETE FROM ANN.AS_STAFF WHERE ID = 1")]).outcome.starts_with("blocked"));
     assert!(call("analyzer_findings", &[("schema", "ANN")]).content.starts_with('['));
 }
 

@@ -103,7 +103,7 @@ before it runs:
 | `list_schemas` | names the schemas | Explain only |
 | `list_tables` | names a schema's tables and views | Explain only |
 | `describe_table` | describes a table: its columns, constraints and indexes | Explain only |
-| `explain` | runs EXPLAIN of a query, and is told its plan | Explain only |
+| `explain` | runs EXPLAIN of a query, and is told its plan; never EXPLAIN ANALYZE, which runs its statement, refused as `EXPLAIN-ONLY` | Explain only |
 | `analyzer_findings` | is told a schema's findings ([The Analyzer](09-analyzer.md)) | Explain only |
 | `run_query` | runs a query, once the user approves it, and is told its rows | Read |
 | `propose_sql` | drafts SQL into a worksheet for the user, never running it | Explain only, of a query; Propose changes, of any other statement |

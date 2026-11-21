@@ -768,7 +768,10 @@ The review checklist:
   unclassified. A script is as strict as its strictest statement.
 - **Fail closed:** what does not parse, dynamic SQL, CALL, compound
   statements and EXECUTE GQL are unclassified, the strictest. A query
-  that holds a data change delta table writes rows.
+  that holds a data change delta table writes rows. EXPLAIN ANALYZE of
+  an INSERT, UPDATE, DELETE or MERGE runs it for real, so it is
+  classified as that change, what it destroys and its floor with it; the
+  assistant's explain tool writes plain EXPLAIN of a query alone.
 - **Destroys:** every DROP, TRUNCATE, and DELETE or UPDATE without WHERE.
 - **The guards:** a statement that destroys, or one unclassified, asks
   first on every connection; a production connection asks before one

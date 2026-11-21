@@ -25,6 +25,9 @@ use crate::saved::Environment;
 use crate::saved::SavedConnection;
 use crate::secret::Secret;
 
+/// The word after EXPLAIN that makes it run its statement.
+const ANALYZE: &str = "ANALYZE";
+
 /// Opens the assistant's own connection of saved connection `saved`: as
 /// its user, proving `password`, or as `login`, proving its password,
 /// where the policy names one; each transaction begun READ ONLY, each
@@ -176,6 +179,14 @@ impl SessionTools<'_> {
 
     /// EXPLAIN of `sql`, as its plan's text.
     fn explain(&self, sql: &str) -> Result<ToolOutcome> {
+        // EXPLAIN ANALYZE runs its statement, a data change's for real: the
+        // tool writes plain EXPLAIN alone, of a query.
+        if sql.split_whitespace().next().is_some_and(|w| w.eq_ignore_ascii_case(ANALYZE)) {
+            return Ok(refused(
+                "The explain tool runs EXPLAIN alone, never EXPLAIN ANALYZE, which runs its statement.".to_owned(),
+                "blocked: EXPLAIN-ONLY",
+            ));
+        }
         let verdict = self.verdict(Use::Explain, sql);
         if !verdict.allowed {
             return Ok(stopped(&verdict));

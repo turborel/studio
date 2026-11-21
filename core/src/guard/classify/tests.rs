@@ -60,6 +60,11 @@ const CLASSES: &[(&str, Class)] = &[
     ("EXPLAIN ANALYZE (SELECT ID FROM PARTS) FETCH FIRST 3 ROWS ONLY", Class::Read),
     ("EXPLAIN ANALYZE SELECT * FROM FINAL TABLE (INSERT INTO STAFF (NAME) VALUES ('A'))", Class::WriteRows),
     ("EXPLAIN DELETE FROM STAFF", Class::Unclassified),
+    ("EXPLAIN ANALYZE INSERT INTO STAFF (NAME) VALUES ('Ada')", Class::WriteRows),
+    ("explain analyze update staff set name = 'B' where id = 1", Class::WriteRows),
+    ("EXPLAIN ANALYZE DELETE FROM STAFF WHERE ID = 1", Class::WriteRows),
+    ("EXPLAIN ANALYZE MERGE INTO STAFF S USING (VALUES (1)) AS V(ID) ON S.ID = V.ID WHEN MATCHED THEN DELETE", Class::WriteRows),
+    ("EXPLAIN\n  -- runs it for real\n  ANALYZE UPDATE OFFERS SET PRICE = PRICE + 1 WHERE PRICE <= 50", Class::WriteRows),
     ("EXPLAIN ANALYZE", Class::Unclassified),
     ("EXPLAIN", Class::Unclassified),
     ("SELECT NAME FROM STAFF WHERE ID = ?", Class::Read),
@@ -69,7 +74,8 @@ const CLASSES: &[(&str, Class)] = &[
 
 /// [RULE] R-SEC-8 [DESIGN] D29 [DOC sql/statements/explain.md EXPLAIN ANALYZE]: each
 /// statement of the corpus has its class, EXPLAIN and EXPLAIN ANALYZE of a
-/// query its query's.
+/// query its query's, EXPLAIN ANALYZE of a data change the change's, as it
+/// runs the change for real.
 #[test]
 fn each_statement_has_its_class() {
     for (sql, class) in CLASSES {
@@ -92,6 +98,8 @@ const DESTROYS: &[(&str, &str)] = &[
     ("DROP DOMAIN MONEY RESTRICT", "DROP DOMAIN"),
     ("DROP SEQUENCE S RESTRICT", "DROP SEQUENCE"),
     ("DROP EXTENSION EXAMPLE", "DROP EXTENSION"),
+    ("EXPLAIN ANALYZE DELETE FROM STAFF", "DELETE of every row of STAFF, with no WHERE"),
+    ("explain analyze update staff set name = 'x'", "UPDATE of every row of STAFF, with no WHERE"),
 ];
 
 /// [RULE] R-SEC-8: every DROP, TRUNCATE, and DELETE or UPDATE without WHERE
@@ -113,6 +121,8 @@ const FLOOR: &[&str] = &[
     "TRUNCATE TABLE STAFF",
     "DELETE FROM STAFF",
     "UPDATE STAFF SET NAME = 'x'",
+    "EXPLAIN ANALYZE DELETE FROM STAFF",
+    "EXPLAIN ANALYZE UPDATE STAFF SET NAME = 'x'",
     "CREATE USER BOB PASSWORD 'x'",
     "DROP USER BOB",
     "GRANT SELECT ON STAFF TO BOB",

@@ -67,6 +67,20 @@ fn levels_allow_what_they_say() {
     assert_eq!(floored.confirm.as_deref(), Some("STAFF"));
 }
 
+/// [DESIGN] D55 [DESIGN] D29: EXPLAIN ANALYZE of a data change runs it for
+/// real, so the assistant judges it a write, never a read, and one that
+/// destroys is held to the floor.
+#[test]
+fn explain_analyze_of_a_change_is_a_write() {
+    for analyzed in ["EXPLAIN ANALYZE UPDATE ANN.STAFF SET PAY = 1 WHERE ID = 2", "EXPLAIN ANALYZE DELETE FROM ANN.STAFF"] {
+        let v = judge(&at(Level::ProposeChanges), Environment::Development, (Use::Run, None), analyzed);
+        assert_eq!((v.allowed, v.class), (false, Class::WriteRows), "{analyzed}");
+    }
+    let floored =
+        judge(&at(Level::ProposeChanges), Environment::Development, (Use::Propose, None), "EXPLAIN ANALYZE DELETE FROM ANN.STAFF");
+    assert!(floored.blocked);
+}
+
 /// [DESIGN] D55: lists of classes and objects allow and deny, and a hidden
 /// schema or table is never named to the assistant, even of the session's
 /// schema written alone.

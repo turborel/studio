@@ -104,6 +104,9 @@ pub fn classify(text: &str) -> Classified {
     // input cuts short ([DOC sql/01-lexical.md Comments]).
     let ended = format!("{text}\n");
     let text = ended;
+    if let Some(analyzed) = analyzed_change(&text) {
+        return Classified { text: unclassified.text, ..analyzed };
+    }
     if let Some(class) = explained(&text).or_else(|| query(&text)) {
         return Classified { class, ..unclassified };
     }
@@ -152,6 +155,29 @@ fn explained(text: &str) -> Option<Class> {
         _ => None,
     };
     analyzed.or_else(|| after(second).and_then(query))
+}
+
+/// The statement `EXPLAIN ANALYZE <data change statement>` runs, classified
+/// as itself, if `text` is one ([DOC sql/statements/explain.md EXPLAIN
+/// ANALYZE of a data change]): EXPLAIN ANALYZE runs an INSERT, a searched
+/// UPDATE or DELETE, or a MERGE for real, so it is judged as that data
+/// change, a write, never a read, what it destroys and its floor with it.
+fn analyzed_change(text: &str) -> Option<Classified> {
+    const EXPLAIN: &str = "EXPLAIN";
+    const ANALYZE: &str = "ANALYZE";
+    let tokens = lex(text).ok()?;
+    let [first, second, third, ..] = tokens.as_slice() else {
+        return None;
+    };
+    if first.tok != Tok::Identifier(EXPLAIN.to_owned()) || second.tok != Tok::Identifier(ANALYZE.to_owned()) {
+        return None;
+    }
+    let rest = text.get(third.start..)?;
+    if query(rest).is_some() {
+        return None;
+    }
+    let change = classify(rest);
+    (change.class == Class::WriteRows).then_some(change)
 }
 
 /// Whether the words of `text` include a statement that changes rows, as a
