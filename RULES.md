@@ -1214,6 +1214,10 @@ The review checklist:
 - **Flow:** React Flow and dagre (D15), bottom to top, lines as thick as
   the logarithm of their rows, heat as a share of the time in the
   second series colour (D52); collapse, search, zoom and fit.
+- **Kinds:** each operator's kind of its name, with an icon of its own: a
+  scan, an index scan, a join, a range join (`RangeJoin`, `LeftRangeJoin`,
+  its note `sorted on … within … , pruned by …` read for the details), a
+  sort, an aggregate, a limit, a part in parallel, a filter, a projection.
 - **Tree-table:** sortable by estimate, actual, loops, probes and time.
 - **Compare:** two tree-tables side by side, operators matched by name
   and detail, their figures aside.

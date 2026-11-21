@@ -21,6 +21,7 @@ import { placed } from "./flow";
 import type { Plan, PlanNode, Stage } from "./plan";
 import { PlanGraph, nodeFigures } from "./PlanGraph";
 import { PlanTable } from "./PlanTable";
+import { rangeOf } from "./kinds";
 import { type PlanSummary, type PlanWarning, summarize } from "./summary";
 
 /** How a stage is drawn. */
@@ -101,6 +102,32 @@ function Warning({ warning, id }: { readonly warning: PlanWarning; readonly id: 
   );
 }
 
+/** What a range join searches by, of `node` if it is one. */
+function RangeDetails({ node }: { readonly node: PlanNode }) {
+  const range = rangeOf(node);
+  if (range === null) {
+    return null;
+  }
+  return (
+    <>
+      <dt>Sorted on</dt>
+      <dd>{range.sorted}</dd>
+      {range.within.length > 0 && (
+        <>
+          <dt>Grouped by</dt>
+          <dd>{range.within.join(", ")}</dd>
+        </>
+      )}
+      {range.pruned !== null && (
+        <>
+          <dt>Pruned by</dt>
+          <dd>{range.pruned}</dd>
+        </>
+      )}
+    </>
+  );
+}
+
 /** Every detail of operator `node`: its name, what it reads and is of, its notes and figures, and its line. */
 function Details({ node, onClose }: { readonly node: PlanNode; readonly onClose: () => void }) {
   return (
@@ -123,6 +150,7 @@ function Details({ node, onClose }: { readonly node: PlanNode; readonly onClose:
             <dd>{String(node.degree)}</dd>
           </>
         )}
+        <RangeDetails node={node} />
         <dt>Notes</dt>
         <dd>{node.notes.length === 0 ? "none" : node.notes.join("; ")}</dd>
         <dt>Line</dt>

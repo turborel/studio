@@ -14,6 +14,7 @@ import { ArrowsSplitIcon } from "@phosphor-icons/react/dist/csr/ArrowsSplit";
 import { ScissorsIcon } from "@phosphor-icons/react/dist/csr/Scissors";
 import { ArrowsMergeIcon } from "@phosphor-icons/react/dist/csr/ArrowsMerge";
 import { TreeViewIcon } from "@phosphor-icons/react/dist/csr/TreeView";
+import { ArrowsInLineHorizontalIcon } from "@phosphor-icons/react/dist/csr/ArrowsInLineHorizontal";
 import { ChatsCircleIcon } from "@phosphor-icons/react/dist/csr/ChatsCircle";
 import { WrenchIcon } from "@phosphor-icons/react/dist/csr/Wrench";
 import { PlayIcon } from "@phosphor-icons/react/dist/csr/Play";
@@ -199,6 +200,7 @@ const ICONS = {
   parallel: [ArrowsSplitIcon, "plain"],
   limit: [ScissorsIcon, "plain"],
   join: [ArrowsMergeIcon, "plain"],
+  rangeJoin: [ArrowsInLineHorizontalIcon, "plain"],
   tree: [TreeViewIcon, "plain"],
   assistant: [ChatsCircleIcon, "plain"],
   tool: [WrenchIcon, "plain"],

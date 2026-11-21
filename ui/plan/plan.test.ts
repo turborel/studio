@@ -1,4 +1,5 @@
 import { misestimated, operators, parsePlan } from "./plan";
+import { kindOf, rangeOf } from "./kinds";
 
 /** The lines of a plan as EXPLAIN gives them, one row each, the result's left margin taken off. */
 function lines(text: string): string[] {
@@ -6,6 +7,53 @@ function lines(text: string): string[] {
 }
 
 describe("a plan", () => {
+  it("reads a band join as a range join, of its condition and what it is sorted on [DOC sql/statements/explain.md EXAMPLES]", () => {
+    const plan = parsePlan(
+      lines(` -- bound:
+ Project S.REGION, P.NAME
+   Filter S.CUSTOMER >= (P.ID - 2) AND S.CUSTOMER <= (P.ID + 2)
+     Product
+       Scan ANN.PARTS
+       Scan ANN.SALES
+ -- rules: none
+ -- optimized:
+ Project S.REGION, P.NAME
+   Filter S.CUSTOMER >= (P.ID - 2) AND S.CUSTOMER <= (P.ID + 2)
+     Product
+       Scan ANN.PARTS
+       Scan ANN.SALES
+ -- physical:
+ Project S.REGION, P.NAME
+   RangeJoin S.CUSTOMER >= (P.ID - 2) AND S.CUSTOMER <= (P.ID + 2)  (sorted on S.CUSTOMER)
+     SeqScan ANN.PARTS  (rows=1000, cost=1000.0)
+     SeqScan ANN.SALES  (rows=4, cost=3.7)`),
+    );
+    const join = plan.stages[2]?.roots[0]?.children[0];
+    expect(join?.operator).toBe("RangeJoin");
+    expect(join?.detail).toBe("S.CUSTOMER >= (P.ID - 2) AND S.CUSTOMER <= (P.ID + 2)");
+    expect(join?.children.map((c) => c.detail)).toEqual(["ANN.PARTS", "ANN.SALES"]);
+    if (join === undefined) {
+      throw new Error("no join");
+    }
+    expect(kindOf(join)).toBe("rangeJoin");
+    expect(rangeOf(join)).toEqual({ sorted: "S.CUSTOMER", within: [], pruned: null });
+    expect(rangeOf(join.children[0] ?? join)).toBeNull();
+  });
+
+  it("reads a range join's groups and pruning, and a left range join [DOC sql/statements/explain.md DESCRIPTION]", () => {
+    const [left] =
+      parsePlan([
+        "-- physical:",
+        "LeftRangeJoin A.T < B.T AND A.K = B.K  (sorted on B.T within B.K within B.R, pruned by B.U)  (est. rows=10)",
+      ]).stages[0]?.roots ?? [];
+    if (left === undefined) {
+      throw new Error("no join");
+    }
+    expect(kindOf(left)).toBe("rangeJoin");
+    expect(left.estimated).toBe(10);
+    expect(rangeOf(left)).toEqual({ sorted: "B.T", within: ["B.K", "B.R"], pruned: "B.U" });
+  });
+
   it("is read into its stages and their trees [DOC sql/statements/explain.md EXAMPLES]", () => {
     const plan = parsePlan(
       lines(` -- bound:

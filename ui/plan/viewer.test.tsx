@@ -291,6 +291,28 @@ describe("the plan viewer", () => {
     expect(screen.getByRole("complementary", { name: "Operator" }).textContent).toContain("Cost3.7");
   });
 
+  it("shows a range join's icon, and what it is sorted on, grouped and pruned by in its details [DOC sql/statements/explain.md DESCRIPTION]", async () => {
+    catalogBackend({ catalog_table: () => refused() });
+    const store = await opened();
+    const id = openWorksheet(store, "SELECT 1");
+    const ranged = parsePlan([
+      "-- physical:",
+      "LeftRangeJoin A.T < B.T AND A.K = B.K  (sorted on B.T within B.K, pruned by B.U)  (est. rows=10)",
+      "  SeqScan ANN.A  (rows=5)",
+      "  SeqScan ANN.B  (rows=9)",
+    ]);
+    within(store, <PlanViewer id={id} plans={[ranged]} />);
+    await settle();
+    fireEvent.click(screen.getByRole("radio", { name: "Tree-Table" }));
+    fireEvent.click(screen.getAllByRole("row")[1] ?? document.body);
+    const details = screen.getByRole("complementary", { name: "Operator" }).textContent;
+    expect(details).toContain("Sorted onB.T");
+    expect(details).toContain("Grouped byB.K");
+    expect(details).toContain("Pruned byB.U");
+    fireEvent.click(screen.getAllByRole("row")[2] ?? document.body);
+    expect(screen.getByRole("complementary", { name: "Operator" }).textContent).not.toContain("Sorted on");
+  });
+
   it("has Explain and Explain Analyze of the registry, and compares only when asked where no what-if ran [DESIGN] D54", async () => {
     catalogBackend({ catalog_table: () => refused() });
     const store = await opened();

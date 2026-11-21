@@ -252,7 +252,11 @@ Below are a tab of each stage, physical first, then optimized and bound,
 
 A click on an operator shows every detail of it beside the plan: what it
 is of, its figures, its cost and degree, its notes, and the line it came
-of. A line EXPLAIN gives that the viewer does not know is shown as an
+of. A range join, `RangeJoin` or `LeftRangeJoin`, has an icon of its own,
+and its details say what its right operand is sorted on, the equalities
+that group those rows, and the comparison it is pruned by
+([EXPLAIN](https://github.com/turborel/turborel/blob/main/doc/sql/statements/explain.md)).
+A line EXPLAIN gives that the viewer does not know is shown as an
 operator of its first word.
 
 **Compare with the plan before** shows the plan explained before beside
