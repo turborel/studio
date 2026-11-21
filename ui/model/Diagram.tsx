@@ -7,9 +7,11 @@
 import {
   Background,
   Controls,
+  Handle,
   type Node,
   type NodeProps,
   ReactFlow,
+  Position,
   ReactFlowProvider,
   useReactFlow,
 } from "@xyflow/react";
@@ -30,6 +32,8 @@ export function TableNode({ data }: NodeProps) {
       className={selected ? "model-table model-selected" : "model-table"}
       style={{ width: BOX_WIDTH, height: boxHeight(table) }}
     >
+      <Handle type="target" position={Position.Left} isConnectable={false} className="flow-handle" />
+      <Handle type="source" position={Position.Right} isConnectable={false} className="flow-handle" />
       <div className="model-table-name">{tableKey(table)}</div>
       <ul>
         {table.columns.map((c) => (

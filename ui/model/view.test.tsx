@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
-import type { NodeProps } from "@xyflow/react";
+import { type NodeProps, ReactFlowProvider } from "@xyflow/react";
 import type { TableDetail } from "../ipc/catalog";
 import { catalogBackend, opened, refused, settle, STAFF, within } from "../test/catalog";
 import type { Store } from "../state/store";
@@ -291,7 +291,11 @@ describe("a diagram's parts", () => {
       draggable: true,
     };
     const node = props as unknown as NodeProps;
-    render(<TableNode {...node} data={{ table: modelTable(STAFF), selected: true }} />);
+    render(
+      <ReactFlowProvider>
+        <TableNode {...node} data={{ table: modelTable(STAFF), selected: true }} />
+      </ReactFlowProvider>,
+    );
     expect(screen.getByText("ANN.STAFF").parentElement?.className).toBe("model-table model-selected");
     render(<SchemaNode {...node} data={{ schema: "ANN" }} />);
     expect(screen.getByText("ANN").className).toBe("model-schema");

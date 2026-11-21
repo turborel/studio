@@ -74,3 +74,8 @@
   overflow: auto;
   font-size: 12px;
 }
+
+/* The ends a diagram's lines are drawn to, of its tables and a plan's operators: unseen. */
+.flow-handle {
+  opacity: 0;
+}
