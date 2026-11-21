@@ -1,5 +1,5 @@
 import { misestimated, operators, parsePlan } from "./plan";
-import { kindOf, rangeOf } from "./kinds";
+import { groupingOf, kindOf, rangeOf } from "./kinds";
 import { ownTime } from "./summary";
 
 /** The lines of a plan as EXPLAIN gives them, one row each, the result's left margin taken off. */
@@ -172,5 +172,54 @@ describe("an operator's own time", () => {
     ]);
     const join = plan.stages[0]?.roots[0];
     expect(join === undefined ? null : ownTime(join)).toBe(0.725);
+  });
+});
+
+describe("a streamed grouping", () => {
+  it("is an aggregate grouped a group at a time, of the manual's example [DOC sql/statements/explain.md EXAMPLES]", () => {
+    const plan = parsePlan(
+      `-- bound:
+Limit fetch 3
+  Sort PARTS.NAME
+    Project PARTS.NAME, COUNT(*)
+      Aggregate group by [PARTS.NAME] computing [COUNT(*)]
+        Scan ANN.PARTS
+-- rules: none
+-- optimized:
+Limit fetch 3
+  Sort PARTS.NAME
+    Project PARTS.NAME, COUNT(*)
+      Aggregate group by [PARTS.NAME] computing [COUNT(*)]
+        Scan ANN.PARTS
+-- physical:
+Limit fetch 3
+  Project PARTS.NAME, COUNT(*)
+    Aggregate streamed group by [PARTS.NAME] computing [COUNT(*)]
+      Sort PARTS.NAME
+        SeqScan ANN.PARTS  (rows=1000, cost=900.0)`.split("\n"),
+    );
+    const physical = plan.stages.find((s) => s.name === "physical");
+    const aggregate = physical?.roots[0]?.children[0]?.children[0];
+    expect(aggregate?.operator).toBe("Aggregate");
+    expect(aggregate === undefined ? null : kindOf(aggregate)).toBe("aggregate");
+    expect(aggregate === undefined ? null : groupingOf(aggregate)).toEqual({
+      streamed: true,
+      keys: ["PARTS.NAME"],
+      computing: ["COUNT(*)"],
+    });
+    const bound = plan.stages[0]?.roots[0]?.children[0]?.children[0]?.children[0];
+    expect(bound === undefined ? null : groupingOf(bound)?.streamed).toBe(false);
+    const sort = aggregate?.children[0];
+    expect(sort === undefined ? null : groupingOf(sort)).toBeNull();
+  });
+
+  it("splits its lists at the commas between their items alone [DESIGN] D54", () => {
+    const [node] =
+      parsePlan(["-- physical:", "Aggregate computing [SUM(A), COALESCE(MAX(B), 0)]", ""]).stages[0]?.roots ?? [];
+    expect(node === undefined ? null : groupingOf(node)).toEqual({
+      streamed: false,
+      keys: [],
+      computing: ["SUM(A)", "COALESCE(MAX(B), 0)"],
+    });
   });
 });

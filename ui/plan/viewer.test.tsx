@@ -291,6 +291,30 @@ describe("the plan viewer", () => {
     expect(screen.getByRole("complementary", { name: "Operator" }).textContent).toContain("Cost3.7");
   });
 
+  it("tells a streamed grouping, its keys and what it computes, in an aggregate's details [DOC sql/statements/explain.md EXAMPLES]", async () => {
+    catalogBackend({ catalog_table: () => refused() });
+    const store = await opened();
+    const id = openWorksheet(store, "SELECT 1");
+    const grouped = parsePlan([
+      "-- physical:",
+      "Aggregate streamed group by [PARTS.NAME] computing [COUNT(*)]",
+      "  Aggregate group by [PARTS.ID] computing [MAX(PARTS.NAME)]",
+      "    SeqScan ANN.PARTS  (rows=1000, cost=900.0)",
+    ]);
+    within(store, <PlanViewer id={id} plans={[grouped]} />);
+    await settle();
+    fireEvent.click(screen.getByRole("radio", { name: "Tree-Table" }));
+    fireEvent.click(screen.getAllByRole("row")[1] ?? document.body);
+    const streamed = screen.getByRole("complementary", { name: "Operator" }).textContent;
+    expect(streamed).toContain("GroupingStreamed: a group made at a time");
+    expect(streamed).toContain("Grouped byPARTS.NAME");
+    expect(streamed).toContain("ComputingCOUNT(*)");
+    fireEvent.click(screen.getAllByRole("row")[2] ?? document.body);
+    expect(screen.getByRole("complementary", { name: "Operator" }).textContent).toContain(
+      "GroupingOf its input in any order",
+    );
+  });
+
   it("shows a range join's icon, and what it is sorted on, grouped and pruned by in its details [DOC sql/statements/explain.md DESCRIPTION]", async () => {
     catalogBackend({ catalog_table: () => refused() });
     const store = await opened();

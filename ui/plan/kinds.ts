@@ -4,7 +4,10 @@
  * a limit, a part run in parallel, a filter, a projection or another; and
  * its icon. A range join's search is read of its note: the value its right
  * operand is sorted on, the equalities that group those rows, and the one
- * more comparison it is pruned by (Turborel's `sql/statements/explain.md`).
+ * more comparison it is pruned by; an aggregate's grouping of its line:
+ * its keys, what it computes, and whether it is streamed, a group made at
+ * a time over rows in the order of its keys (Turborel's
+ * `sql/statements/explain.md`).
  */
 import type { IconName } from "../icons/Icon";
 import type { PlanNode } from "./plan";
@@ -67,6 +70,49 @@ export interface RangeSearch {
   readonly sorted: string;
   readonly within: readonly string[];
   readonly pruned: string | null;
+}
+
+/** How an aggregate groups: whether streamed, its keys, and what it computes. */
+export interface Grouping {
+  readonly streamed: boolean;
+  readonly keys: readonly string[];
+  readonly computing: readonly string[];
+}
+
+/** The list `[a, b]` written after `word` in `detail`, its items split at the commas between them. */
+function listAfter(detail: string, word: string): string[] {
+  const at = detail.indexOf(`${word} [`);
+  if (at < 0) {
+    return [];
+  }
+  let depth = 0;
+  let item = "";
+  const items: string[] = [];
+  for (const c of detail.slice(at + word.length + 2)) {
+    if (c === "]" && depth === 0) {
+      break;
+    }
+    depth += c === "(" || c === "[" ? 1 : c === ")" || c === "]" ? -1 : 0;
+    if (c === "," && depth === 0) {
+      items.push(item.trim());
+      item = "";
+    } else {
+      item += c;
+    }
+  }
+  return [...items, item.trim()].filter((i) => i !== "");
+}
+
+/** The grouping of aggregate `node`, of `[streamed] group by [...] computing [...]`; none of another operator. */
+export function groupingOf(node: PlanNode): Grouping | null {
+  if (kindOf(node) !== "aggregate" || !/^(?:streamed )?(?:group by|computing) \[/u.test(node.detail)) {
+    return null;
+  }
+  return {
+    streamed: node.detail.startsWith("streamed "),
+    keys: listAfter(node.detail, "group by"),
+    computing: listAfter(node.detail, "computing"),
+  };
 }
 
 /** The search of range join `node`, of its note `sorted on …`; none of another operator. */

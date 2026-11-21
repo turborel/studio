@@ -21,7 +21,7 @@ import { placed } from "./flow";
 import type { Plan, PlanNode, Stage } from "./plan";
 import { PlanGraph, nodeFigures } from "./PlanGraph";
 import { PlanTable } from "./PlanTable";
-import { rangeOf } from "./kinds";
+import { groupingOf, rangeOf } from "./kinds";
 import { type PlanSummary, type PlanWarning, summarize } from "./summary";
 
 /** How a stage is drawn. */
@@ -128,6 +128,36 @@ function RangeDetails({ node }: { readonly node: PlanNode }) {
   );
 }
 
+/** How aggregate `node` groups: streamed or not, by which keys, computing what. */
+function GroupingDetails({ node }: { readonly node: PlanNode }) {
+  const grouping = groupingOf(node);
+  if (grouping === null) {
+    return null;
+  }
+  return (
+    <>
+      <dt>Grouping</dt>
+      <dd>
+        {grouping.streamed
+          ? "Streamed: a group made at a time, over its input in the order of its keys"
+          : "Of its input in any order"}
+      </dd>
+      {grouping.keys.length > 0 && (
+        <>
+          <dt>Grouped by</dt>
+          <dd>{grouping.keys.join(", ")}</dd>
+        </>
+      )}
+      {grouping.computing.length > 0 && (
+        <>
+          <dt>Computing</dt>
+          <dd>{grouping.computing.join(", ")}</dd>
+        </>
+      )}
+    </>
+  );
+}
+
 /** Every detail of operator `node`: its name, what it reads and is of, its notes and figures, and its line. */
 function Details({ node, onClose }: { readonly node: PlanNode; readonly onClose: () => void }) {
   return (
@@ -151,6 +181,7 @@ function Details({ node, onClose }: { readonly node: PlanNode; readonly onClose:
           </>
         )}
         <RangeDetails node={node} />
+        <GroupingDetails node={node} />
         <dt>Notes</dt>
         <dd>{node.notes.length === 0 ? "none" : node.notes.join("; ")}</dd>
         <dt>Line</dt>
