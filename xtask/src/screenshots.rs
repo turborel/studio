@@ -122,6 +122,7 @@ impl Scene<'_> {
         let script = format!(
             "const r = document.querySelector('{selector}').getBoundingClientRect(); const d = window.devicePixelRatio; return [r.left * d, r.top * d, r.width * d, r.height * d].map(Math.round);"
         );
+        self.session.wait_for(selector)?;
         let got = self.session.script(&script)?;
         let n = |i: usize| got.get(i).and_then(serde_json::Value::as_u64).and_then(|v| u32::try_from(v).ok()).unwrap_or(0);
         Ok((n(0), n(1), n(2), n(3)))
@@ -177,9 +178,15 @@ impl Scene<'_> {
     /// Focuses the editor of the worksheet shown, marked for the driver
     /// to type into: of several worksheets, the one drawn.
     fn focus_editor(&self) -> Result<()> {
-        self.session.script(
-            "document.getElementById('studio-editor')?.removeAttribute('id'); const e = [...document.querySelectorAll('.worksheet-body .cm-content')].find((e) => e.offsetParent !== null); if (!e) throw new Error('no worksheet is shown'); e.id = 'studio-editor'; e.focus();",
-        )?;
+        let script = "document.getElementById('studio-editor')?.removeAttribute('id'); const e = [...document.querySelectorAll('.worksheet-body .cm-content')].find((e) => e.offsetParent !== null); if (e) { e.id = 'studio-editor'; e.focus(); } return e !== undefined;";
+        // The window may still be laying out the worksheet the last scene left.
+        let start = std::time::Instant::now();
+        while !self.session.script(script)?.as_bool().unwrap_or(false) {
+            if start.elapsed() > crate::webdriver::DRAWN_WITHIN {
+                return fail("no worksheet is shown");
+            }
+            std::thread::sleep(SETTLE);
+        }
         // Focused by the page already; a click, where one lands, puts the cursor too.
         let _ = self.session.click("#studio-editor");
         Ok(())
