@@ -1,4 +1,4 @@
-# The headings of Turborel's manual at 7189b102f79059f5d587d025a6efcc8d63b843e9, copied by `cargo xtask headings` (RULES.md D6).
+# The headings of Turborel's manual at ba8c845f27f24b736572e8aaf462b0adade9be29, copied by `cargo xtask headings` (RULES.md D6).
 README.md	The Turborel Documentation Set
 README.md	The volumes
 README.md	Conventions
@@ -351,6 +351,11 @@ operator/10-backups.md	The archive of the log
 operator/10-backups.md	Recovery to a point in time
 operator/10-backups.md	The backup history
 operator/10-backups.md	Adding a target
+operator/11-monitoring.md	Monitoring *(extension)*
+operator/11-monitoring.md	Who sees what
+operator/11-monitoring.md	What each session does
+operator/11-monitoring.md	Statement statistics
+operator/11-monitoring.md	Table and index statistics
 operator/README.md	Volume III: Operator's Guide
 operator/README.md	Contents
 sql/01-lexical.md	Lexical Elements

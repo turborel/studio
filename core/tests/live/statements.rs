@@ -307,7 +307,8 @@ pub fn every_type_is_shown_as_its_text(live: &Live) {
     let Outcome::Rows { page, columns, .. } = crate::run(&manager, id, &sql).unwrap().outcome else { panic!("no rows") };
     let shown: Vec<&str> = page.rows[0].iter().map(|c| c.as_deref().unwrap_or("NULL")).collect();
     assert_eq!(shown, cases.iter().map(|(_, text)| *text).collect::<Vec<_>>());
-    assert_eq!(columns[3].type_written, "NUMERIC(5,2)");
+    // VALUES keeps the type its one value was declared of.
+    assert_eq!(columns[3].type_written, "DECIMAL(5,2)");
     manager.set_autocommit(id, true).unwrap();
     for ddl in [
         "CREATE TYPE SHOWN_MONEY AS DECIMAL(10,2)",

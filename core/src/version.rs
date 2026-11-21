@@ -10,7 +10,7 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 /// The commit of Turborel's main that `turborel-client` is pinned to
 /// (RULES.md D10). The workspace's `Cargo.toml` names the same commit, as a
 /// test holds it to.
-pub const TURBOREL_COMMIT: &str = "7189b102f79059f5d587d025a6efcc8d63b843e9";
+pub const TURBOREL_COMMIT: &str = "ba8c845f27f24b736572e8aaf462b0adade9be29";
 
 /// What the application tells of itself, as the About box shows it.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
