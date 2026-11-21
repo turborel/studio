@@ -373,6 +373,9 @@ export function told(store: Store, event: StudioEvent): void {
     assistantTold(store, event.conversation, event.event);
   } else if (event.kind === "assistantAsks") {
     assistantAsked(store, event.conversation, event.id, event.question);
+  } else if (event.kind === "liveLink") {
+    // A link opens the join dialog filled in; nothing joins until Join.
+    store.update((now) => ({ ...now, dialog: { kind: "liveJoin", opened: event.opened } }));
   } else if (event.kind === "quitAsked") {
     void quitAsked(store);
   } else if (event.kind === "sqlFile" || event.kind === "import") {

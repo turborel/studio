@@ -47,6 +47,18 @@ reach you; no password. An invitation admits one person, once, and
 expires after the minutes the settings give, 10 at first; make one for
 each viewer.
 
+**Copy Invite Link** copies the same invitation as a link, which pastes
+into any chat or ticket and opens Studio when clicked:
+
+```
+turborel-studio://join?code=eyJ2ZXJzaW9uIjoxLC...
+```
+
+The link holds the invitation and nothing else: it tells how to ask to
+join, which the presenter must still admit, and no SQL, data, password
+or setting. It expires with the invitation, and admits one person, once,
+as the code does.
+
 ### Admitting
 
 A viewer who joins by an invitation asks to be admitted: the panel
@@ -121,7 +133,15 @@ for everyone.
 ## Joining
 
 **Join…**, on the toolbar or in the **Live** menu, asks for the
-invitation. Paste it and click **Join**. Studio reaches the presenter
+invitation. Paste its code or its link and click **Join**.
+
+Clicking an invitation's link opens Studio, starting it if it is not
+running, at the same dialog, filled in. Above the invitation it shows
+what the link holds: the session, the presenter's fingerprint, the
+addresses and relay it is reached at, and until when. Nothing joins
+until you click **Join**. A link of an invitation expired, of no
+invitation, or that carries anything more than one, is refused, saying
+why, and **Join** stays off until an invitation is pasted. Studio reaches the presenter
 directly at each address the invitation names in turn, then through its
 relay, and accepts only the certificate whose fingerprint the
 invitation names. While you wait, the panel shows the safety code: read

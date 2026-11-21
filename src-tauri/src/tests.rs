@@ -411,3 +411,16 @@ fn sql_files_not_chosen_are_refused() {
     assert_eq!(refusal(&window, "ddl_model", serde_json::json!({"path": elsewhere, "schema": "S"}))["sqlstate"], "TB910");
     assert_eq!(refusal(&window, "cancel_import", serde_json::json!({"connection": 7}))["sqlstate"], "TB910");
 }
+
+/// [DESIGN] D66: a link the platform opens Studio by is read and kept
+/// until the window takes it, once; a link of no invitation is refused,
+/// saying why.
+#[test]
+fn a_link_opened_waits_for_the_window() {
+    let (app, window) = window();
+    crate::links::taken_in(app.handle(), "turborel-studio://join?code=nothing");
+    let taken = answer(&window, "take_live_link", serde_json::json!({}));
+    assert_eq!(taken["kind"], "refused");
+    assert!(taken["why"].as_str().unwrap().contains("not an invitation"), "{taken}");
+    assert_eq!(answer(&window, "take_live_link", serde_json::json!({})), serde_json::Value::Null);
+}

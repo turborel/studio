@@ -10,6 +10,7 @@ use std::sync::Arc;
 use tauri::State;
 use turborel_studio_core::error::{Result, StudioError};
 use turborel_studio_core::live::audit::LiveEntry;
+use turborel_studio_core::live::link::LinkOpened;
 use turborel_studio_core::live::service::{InviteView, LiveService, Status};
 use turborel_studio_core::live::settings::{LiveSettings, SessionChoices};
 use turborel_studio_core::live::share::WorkspaceIn;
@@ -136,4 +137,11 @@ pub(crate) async fn live_audit(studio: State<'_, Studio>) -> Result<Vec<LiveEntr
 #[tauri::command]
 pub(crate) async fn clear_live_audit(studio: State<'_, Studio>) -> Result<()> {
     off(&studio, |s| s.audit.clear()).await
+}
+
+/// The invitation's link the platform last opened Studio by, taken, if one
+/// is waiting (RULES.md D66).
+#[tauri::command]
+pub(crate) async fn take_live_link(studio: State<'_, Studio>) -> Result<Option<LinkOpened>> {
+    Ok(studio.link.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take())
 }

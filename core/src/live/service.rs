@@ -99,6 +99,8 @@ pub struct Status {
 pub struct InviteView {
     /// Its code.
     pub code: String,
+    /// Its link, which opens Studio's join dialog filled in (RULES.md D66).
+    pub link: String,
     /// When it expires, in seconds since 1970.
     pub expires: u64,
 }
@@ -263,7 +265,7 @@ impl LiveService {
         let invite = host.invite();
         drop(hosted);
         self.log("invited", None, None);
-        Ok(InviteView { code: invite.code(), expires: invite.expires })
+        Ok(InviteView { code: invite.code(), link: invite.link(), expires: invite.expires })
     }
 
     /// Runs `act` on the session hosted.
@@ -432,7 +434,8 @@ impl LiveService {
         if self.hosted().is_some() || self.joined().is_some() {
             return Err(misuse("a session is hosted or joined already: end it first"));
         }
-        let invite = Invite::read(code).map_err(misuse)?;
+        let code = code.trim();
+        let invite = if code.starts_with("turborel-studio:") { Invite::read_link(code) } else { Invite::read(code) }.map_err(misuse)?;
         let over = Arc::new(AtomicBool::new(false));
         let on = self.on_guest(Arc::clone(&over));
         let name = settings.name.clone();

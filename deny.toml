@@ -38,8 +38,10 @@ confidence-threshold = 0.9
 # MIT and Apache-2.0 first (R-DEP-2); the others are those of crates the
 # toolkits pull in, each permissive: BSD-3-Clause, ISC, Zlib, Unicode's
 # data license, and MPL-2.0, a file-level copyleft whose files are used
-# unchanged. Turborel's own crates are BSD-2-Clause-Patent. A license no
-# crate has is not listed.
+# unchanged; and CC0-1.0, a dedication to the public domain, of
+# tiny-keccak, which the deep-link plug-in's reader of Linux's desktop
+# files builds with (RULES.md D66). Turborel's own crates are
+# BSD-2-Clause-Patent. A license no crate has is not listed.
 allow = [
     "MIT",
     "Apache-2.0",
@@ -50,6 +52,7 @@ allow = [
     "Zlib",
     "Unicode-3.0",
     "MPL-2.0",
+    "CC0-1.0",
 ]
 
 [bans]

@@ -48,6 +48,9 @@ function Invitation() {
           </p>
           <button type="button" onClick={() => void navigator.clipboard.writeText(made.code)}>
             Copy Invitation
+          </button>{" "}
+          <button type="button" onClick={() => void navigator.clipboard.writeText(made.link)}>
+            Copy Invite Link
           </button>
         </div>
       )}

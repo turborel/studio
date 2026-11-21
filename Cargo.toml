@@ -67,6 +67,10 @@ tauri-build = { version = "=2.7.6", features = [] }
 # The native file dialog, called from Rust alone (RULES.md D34).
 tauri-plugin-dialog = "=2.8.4"
 tauri-plugin-notification = "=2.8.0"
+# Invitation links (RULES.md D66): Studio's scheme registered, and a link
+# opened while Studio runs handed to it, not to a second window.
+tauri-plugin-deep-link = "=2.6.3"
+tauri-plugin-single-instance = { version = "=2.5.5", features = ["deep-link"] }
 
 [workspace.lints.rust]
 unsafe_code = "forbid"                                    # R-SAFE-2

@@ -105,6 +105,7 @@ Each is told in full in [§7](#7-the-decisions).
 | D63 | The import wizard: CSV, JSON and Excel, into a table or a new one typed from a sample, watched and cancelled |
 | D64 | A DDL script imported into a model: run in an in-memory database of its own, read back, what is not a table's listed |
 | D65 | A generated script with its data: INSERTs Run SQL File loads back, or CSV files the import loads back |
+| D66 | Invitation links: Studio's scheme, a link of the invitation alone, the join dialog filled in, never joined unasked |
 
 ---
 
@@ -1695,6 +1696,39 @@ The review checklist:
   moved past the rows loaded.
 - *Why:* a schema and its data as one portable `.sql`, loaded back by
   Studio's own Run SQL File, or as files any client imports.
+
+#### D66. Invitation links: Studio's scheme, a link of the invitation alone, the join dialog filled in, never joined unasked
+
+- **The link:** `turborel-studio://join?code=` and the invitation's code
+  without its `turborel-live:` (D56), the same one-use, short-lived
+  invitation; **Copy Invite Link** beside **Copy Invitation**. Read back
+  only of that scheme and action and its one parameter: a link of
+  another parameter, a fragment, or anything more is refused, so no link
+  carries SQL, data or settings; an expired invitation is refused as its
+  code is (`Invite::read_link`).
+- **Opened:** `tauri-plugin-deep-link` 2.6.3, the Tauri project's own,
+  MIT or Apache-2.0, stable and supported with Tauri 2, registers the
+  scheme: macOS by the bundle's property list, Windows and Linux by the
+  installer, and as Studio starts where it can. `tauri-plugin-single-
+  instance` 2.5.5, also Tauri's own, of its `deep-link` feature, hands a
+  link opened while Studio runs to the running Studio, whose window
+  comes forward, rather than a second one starting; without a session
+  bus on Linux it lets Studio start as before. The deep-link plug-in is
+  added without its script (`BackendOnly`, D38); the webview is granted
+  none of its commands. Its reader of Linux's desktop files brings
+  `tiny-keccak`, CC0-1.0, a dedication to the public domain, which
+  `deny.toml` allows for it.
+- **The window:** the backend reads each link (`live::link::opened`),
+  keeps the last until the window takes it (`take_live_link`, as a link
+  may start Studio before its page loads), and tells it (`liveLink`).
+  The join dialog opens filled in, and shows what the link holds: the
+  session, the presenter's fingerprint, the addresses and relay, and the
+  expiry. Nothing joins until the user presses **Join**; the presenter
+  admits, and both compare the safety code, as before (D56). A link
+  refused is shown with why, Join off until an invitation is pasted.
+  Join takes a code or a link.
+- *Why:* a session asked for in a chat or a ticket is joined by a click,
+  and a click must never join, nor carry anything but how to ask to.
 ---
 
 ## 8. References

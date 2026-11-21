@@ -34,6 +34,7 @@ import { SaveReportDialog } from "./analyzer/Reports";
 import { PromptDialog } from "./shell/PromptDialog";
 import { AssistantSettingsDialog } from "./assistant/AssistantSettings";
 import { JoinDialog, LiveSettingsDialog } from "./live/LiveDialogs";
+import { takeLink } from "./live/live";
 import { SecurityDialog } from "./admin/SecurityDialog";
 import { useLiveSync } from "./live/sync";
 import { showPanel } from "./shell/layout";
@@ -68,6 +69,7 @@ function useWiring(context: CommandContext): void {
   const keyBindings = useStudio((s) => s.settings.keyBindings);
   useEffect(() => {
     void loadAll(store);
+    void takeLink(store);
     void restoreWorksheets(store);
     const keeping = keepAsChanged(store);
     const events = onStudioEvent((event) => {
@@ -164,7 +166,7 @@ function TaskDialogs({ dialog }: { readonly dialog: Dialog | null }) {
     case "liveSettings":
       return <LiveSettingsDialog />;
     case "liveJoin":
-      return <JoinDialog />;
+      return <JoinDialog opened={dialog.opened} />;
     case "security":
       return <SecurityDialog connection={dialog.connection} form={dialog.form} />;
     case "embedded":

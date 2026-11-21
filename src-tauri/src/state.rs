@@ -54,6 +54,9 @@ pub struct Studio {
     /// When the window was last asked how to end open transactions as the
     /// user quit, if it was (RULES.md D59).
     pub quit_asked: std::sync::Mutex<Option<std::time::Instant>>,
+    /// The invitation's link the platform last opened Studio by, until the
+    /// window takes it, as it may before its page has loaded (RULES.md D66).
+    pub link: std::sync::Mutex<Option<turborel_studio_core::live::link::LinkOpened>>,
 }
 
 /// Tells the backend's events to the webview.

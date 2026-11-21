@@ -235,7 +235,11 @@ describe("the Live Session panel", () => {
     const asked = catalogBackend({
       live_present: () => ({ hosted, joined: null }),
       live_status: () => ({ hosted, joined: null }),
-      live_invite: () => ({ code: "turborel-live:abc", expires: 1_900_000_000 }),
+      live_invite: () => ({
+        code: "turborel-live:abc",
+        link: "turborel-studio://join?code=abc",
+        expires: 1_900_000_000,
+      }),
       live_hand_over: (args) => {
         hosted = {
           ...hosted,
@@ -260,7 +264,8 @@ describe("the Live Session panel", () => {
     await settle();
     expect(screen.getByRole("textbox", { name: "Invitation code" })).toHaveProperty("value", "turborel-live:abc");
     fireEvent.click(screen.getByRole("button", { name: "Copy Invitation" }));
-    expect(copied).toEqual(["turborel-live:abc"]);
+    fireEvent.click(screen.getByRole("button", { name: "Copy Invite Link" }));
+    expect(copied).toEqual(["turborel-live:abc", "turborel-studio://join?code=abc"]);
     act(() => {
       told(store, { kind: "liveHost", event: { kind: "asked", id: 3, name: "Cy", code: "123 456" } });
       told(store, { kind: "liveHost", event: { kind: "asked", id: 4, name: "Dee", code: "654 321" } });
@@ -353,7 +358,7 @@ describe("the Live Session panel", () => {
           : { hosted: null, joined: { code: "1", role: "viewer", grants: { copy: false, suggest: false } } },
     });
     const store = await opened();
-    within(store, <JoinDialog />);
+    within(store, <JoinDialog opened={null} />);
     fireEvent.change(screen.getByRole("textbox", { name: "Invitation" }), { target: { value: "turborel-live:x" } });
     fireEvent.click(screen.getByRole("button", { name: "Join" }));
     await settle();

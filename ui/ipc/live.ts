@@ -59,7 +59,28 @@ export interface LiveStatus {
 /** An invitation. */
 export interface InviteView {
   readonly code: string;
+  /** Its link, which opens Studio's join dialog filled in (RULES.md D66). */
+  readonly link: string;
   readonly expires: number;
+}
+
+/** What an invitation's link holds, as the join dialog shows it. */
+export interface LinkView {
+  readonly link: string;
+  readonly session: string;
+  readonly fingerprint: string;
+  readonly direct: readonly string[];
+  readonly relay: string | null;
+  readonly expires: number;
+}
+
+/** What a link the platform opened Studio by came to: what it holds, or why it is refused. */
+export type LinkOpened =
+  { readonly kind: "invitation"; readonly link: LinkView } | { readonly kind: "refused"; readonly why: string };
+
+/** The link the platform last opened Studio by, taken, if one is waiting. */
+export function takeLiveLink(): Promise<LinkOpened | null> {
+  return invoke<LinkOpened | null>("take_live_link");
 }
 
 /** A connection's environment. */

@@ -86,12 +86,12 @@ describe("keyboard and reader reach", () => {
           joined: null,
         },
         asking: [{ id: 2, name: "Cy", code: "123 456" }],
-        invite: { code: "turborel-live:x", expires: 0 },
+        invite: { code: "turborel-live:x", link: "turborel-studio://join?code=x", expires: 0 },
       }));
     });
     const views: ReactNode[] = [
       <LivePanel key="live" />,
-      <JoinDialog key="join" />,
+      <JoinDialog key="join" opened={null} />,
       <LiveSettingsDialog key="live-settings" />,
       <AssistantPanel key="assistant" />,
       <AssistantSettingsDialog key="assistant-settings" />,

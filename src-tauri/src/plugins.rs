@@ -1,5 +1,5 @@
 //! The platform's plug-ins Studio uses from its backend alone (RULES.md
-//! R-SEC-5, D38): each added without the script it would give the webview,
+//! R-SEC-5, D38, D66): each added without the script it would give the webview,
 //! as the webview is granted none of their commands. The notification
 //! plug-in's script asks, as the page loads, whether notifications are
 //! permitted, a command the capability refuses.
@@ -8,10 +8,11 @@ use tauri::plugin::{Plugin, TauriPlugin};
 use tauri::webview::PageLoadPayload;
 use tauri::{AppHandle, RunEvent, Runtime, Url, Webview, Window};
 
-/// A plug-in, all of it but the script it gives each webview.
-pub(crate) struct BackendOnly<R: Runtime>(pub(crate) TauriPlugin<R>);
+/// A plug-in, all of it but the script it gives each webview, of its
+/// configuration `C`.
+pub(crate) struct BackendOnly<R: Runtime, C: serde::de::DeserializeOwned = ()>(pub(crate) TauriPlugin<R, C>);
 
-impl<R: Runtime> Plugin<R> for BackendOnly<R> {
+impl<R: Runtime, C: serde::de::DeserializeOwned> Plugin<R> for BackendOnly<R, C> {
     fn name(&self) -> &'static str {
         self.0.name()
     }
@@ -68,5 +69,8 @@ mod tests {
         assert!(wrapped.initialization_script().is_none());
         let dialog = BackendOnly::<MockRuntime>(tauri_plugin_dialog::init());
         assert!(dialog.initialization_script().is_none());
+        let links = BackendOnly::<MockRuntime, _>(tauri_plugin_deep_link::init());
+        assert_eq!(links.name(), "deep-link");
+        assert!(links.initialization_script().is_none());
     }
 }

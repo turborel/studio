@@ -27,6 +27,7 @@
     "allow-live-leave",
     "allow-live-audit",
     "allow-clear-live-audit",
+    "allow-take-live-link",
     "allow-assistant-settings",
     "allow-save-assistant-settings",
     "allow-set-assistant-key",

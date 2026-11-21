@@ -1,12 +1,13 @@
 /**
- * Live Sessions' dialogs (RULES.md D56): Join, of an invitation's code;
+ * Live Sessions' dialogs (RULES.md D56, D66): Join, of an invitation's
+ * code or link, a link opened shown for what it holds;
  * and the settings, on one page: on or off, the name others see, what
  * each environment shares, rows and masked columns, copying and Suggest,
  * viewers and invitations, how a presenter is reached, and the lock; and
  * the log, viewed and cleared.
  */
 import { useEffect, useState } from "react";
-import type { EnvironmentName, LiveEntry, LiveSettings } from "../ipc/live";
+import type { EnvironmentName, LinkOpened, LinkView, LiveEntry, LiveSettings } from "../ipc/live";
 import { clearLiveAudit, liveAudit, liveSettings, saveLiveSettings } from "../ipc/live";
 import { show } from "../state/actions";
 import { useStore } from "../state/store";
@@ -14,11 +15,37 @@ import { Modal } from "../shell/Modal";
 import { entries } from "../assistant/AssistantSettings";
 import { join, said } from "./live";
 
-/** The Join dialog: an invitation's code, pasted. */
-export function JoinDialog() {
+/** What an invitation's link holds, shown before Join: the session, the presenter's fingerprint, where it is reached, and until when. */
+function LinkHolds({ link }: { readonly link: LinkView }) {
+  return (
+    <section aria-label="What the link holds">
+      <p>The link holds an invitation, and nothing else:</p>
+      <dl>
+        <dt>Session</dt>
+        <dd>
+          <code>{link.session}</code>
+        </dd>
+        <dt>The presenter's fingerprint</dt>
+        <dd>
+          <code>{link.fingerprint}</code>
+        </dd>
+        <dt>Reached at</dt>
+        <dd>{[...link.direct, ...(link.relay === null ? [] : [`relay ${link.relay}`])].join(", ")}</dd>
+        <dt>Until</dt>
+        <dd>{new Date(link.expires * 1000).toLocaleTimeString()}</dd>
+      </dl>
+      <p className="hint">
+        Nothing joins until you press Join; the presenter then admits you, and you compare the safety code.
+      </p>
+    </section>
+  );
+}
+
+/** The Join dialog: an invitation's code or link, pasted, or a link the platform opened Studio by, shown. */
+export function JoinDialog({ opened }: { readonly opened?: LinkOpened | null | undefined }) {
   const store = useStore();
-  const [code, setCode] = useState("");
-  const [told, setTold] = useState("");
+  const [code, setCode] = useState(opened?.kind === "invitation" ? opened.link.link : "");
+  const [told, setTold] = useState(opened?.kind === "refused" ? `The link is refused: ${opened.why}.` : "");
   const close = () => {
     show(store, null);
   };
@@ -37,6 +64,7 @@ export function JoinDialog() {
           });
         }}
       >
+        {opened?.kind === "invitation" && <LinkHolds link={opened.link} />}
         <label className="field">
           <span>Invitation</span>
           <textarea

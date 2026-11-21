@@ -90,6 +90,12 @@ pub enum Event {
         /// What happened.
         event: turborel_studio_live::guest::GuestEvent,
     },
+    /// An invitation's link the platform opened Studio by (RULES.md D66).
+    #[serde(rename_all = "camelCase")]
+    LiveLink {
+        /// What it holds, or why it is refused.
+        opened: crate::live::link::LinkOpened,
+    },
     /// The user asked to quit: the window asks how each open transaction
     /// ends, then quits (RULES.md D59).
     QuitAsked,

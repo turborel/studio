@@ -3,6 +3,7 @@
 //! layer over `turborel_studio_core`, where the work is done and tested.
 
 mod commands;
+mod links;
 pub mod menu;
 mod plugins;
 mod state;
@@ -80,6 +81,7 @@ pub(crate) fn manage<R: Runtime>(
         files: Arc::new(Files::new(&folders.config)),
         failures: Arc::new(turborel_studio_core::failures::Failures::new(&folders.config)),
         quit_asked: std::sync::Mutex::new(None),
+        link: std::sync::Mutex::new(None),
     });
     Ok(())
 }
@@ -143,7 +145,13 @@ fn quitting<R: Runtime>(app: &AppHandle<R>, event: RunEvent) {
 ///
 /// Tauri's, if the application cannot be built or its window made.
 pub fn run() -> Result<(), tauri::Error> {
-    let app = studio(Builder::default()).build(context())?;
+    // A second Studio started by a link hands it to the first and ends
+    // (RULES.md D66); the first's window comes forward.
+    let builder = Builder::default()
+        .plugin(tauri_plugin_single_instance::init(|app, _, _| links::forward(app)))
+        .plugin(plugins::BackendOnly(tauri_plugin_deep_link::init()));
+    let app = studio(builder).build(context())?;
+    links::listen(app.handle());
     app.run(quitting);
     Ok(())
 }

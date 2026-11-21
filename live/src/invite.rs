@@ -1,7 +1,9 @@
 //! An invitation (RULES.md D56): one use, a short life, of the session's
 //! identifier, the host's fingerprint, a secret, and the addresses to reach
 //! the host by, directly or through a relay. Its code is its JSON in
-//! base64 of the URL's alphabet, after `turborel-live:`.
+//! base64 of the URL's alphabet, after `turborel-live:`; its link
+//! (D66), the same base64 after `turborel-studio://join?code=`, and
+//! nothing else.
 
 use std::fmt::Write as _;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -14,6 +16,9 @@ use crate::error::{Result, refused};
 
 /// What every code begins with.
 pub const PREFIX: &str = "turborel-live:";
+/// What every link begins with: the scheme Studio registers, and its one
+/// parameter.
+pub const LINK_PREFIX: &str = "turborel-studio://join?code=";
 /// The invitation's format.
 pub const VERSION: u32 = 1;
 /// The longest code read, in bytes.
@@ -80,6 +85,33 @@ impl Invite {
         format!("{PREFIX}{}", base64::encode(serde_json::to_string(self).unwrap_or_default().as_bytes()))
     }
 
+    /// The invitation's link, which opens Studio's join dialog filled in.
+    pub fn link(&self) -> String {
+        format!("{LINK_PREFIX}{}", self.code().trim_start_matches(PREFIX))
+    }
+
+    /// The invitation of `link`, checked as `read` checks a code: a link
+    /// of Studio's scheme to join, of the one parameter `code` and nothing
+    /// more, so no link carries SQL, data or settings.
+    ///
+    /// # Errors
+    ///
+    /// Of a link that is not an invitation's, or carries more, or of an
+    /// invitation `read` refuses.
+    pub fn read_link(link: &str) -> Result<Invite> {
+        let link = link.trim();
+        if link.len() > MAX_CODE_BYTES.saturating_add(LINK_PREFIX.len()) {
+            return Err(refused("the invitation is too long"));
+        }
+        let Some(body) = link.strip_prefix(LINK_PREFIX) else {
+            return Err(refused("this is not a Studio invitation's link: it begins turborel-studio://join?code="));
+        };
+        if body.contains(['&', '#', '?', '=', '/']) {
+            return Err(refused("the link carries more than its invitation, and is refused"));
+        }
+        Invite::read(body)
+    }
+
     /// The invitation of `code`, checked: of this format, unexpired, of a
     /// fingerprint, and of no more than eight addresses.
     ///
@@ -119,7 +151,7 @@ impl Invite {
 
 #[cfg(test)]
 mod tests {
-    use super::{Invite, PREFIX, RelaySpec, VERSION, hex, now, random};
+    use super::{Invite, LINK_PREFIX, PREFIX, RelaySpec, VERSION, hex, now, random};
     use crate::base64;
 
     /// An invitation of `expires`.
@@ -153,5 +185,29 @@ mod tests {
         assert!(Invite::read(&Invite { direct: vec![], relay: None, ..made.clone() }.code()).unwrap_err().0.contains("no address"));
         assert!(Invite::read(&Invite { fingerprint: "AB".into(), ..made }.code()).is_err());
         assert_eq!(hex(&[0, 255]), "00ff");
+    }
+
+    /// [DESIGN] D66: a link is the code's base64 after Studio's scheme,
+    /// read back whole; one of another scheme or action, of another
+    /// parameter, a fragment, or a parameter more, is refused, and one
+    /// expired as its code is.
+    #[test]
+    fn a_link_is_read_back_and_carries_nothing_more() {
+        let made = invite(now().saturating_add(600));
+        let link = made.link();
+        assert!(link.starts_with(LINK_PREFIX));
+        assert!(!link.contains(PREFIX));
+        assert_eq!(Invite::read_link(&format!(" {link}\n")).unwrap(), made);
+        for bad in [
+            link.replace("turborel-studio://", "https://"),
+            link.replace("join?", "run?"),
+            link.replace("code=", "sql="),
+            format!("{link}&sql=DROP%20TABLE%20T"),
+            format!("{link}#more"),
+        ] {
+            assert!(Invite::read_link(&bad).is_err(), "{bad}");
+        }
+        assert!(Invite::read_link(&invite(now().saturating_sub(1)).link()).unwrap_err().0.contains("expired"));
+        assert!(Invite::read_link(&format!("{LINK_PREFIX}{}", "A".repeat(5000))).unwrap_err().0.contains("too long"));
     }
 }

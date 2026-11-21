@@ -4,6 +4,7 @@
  * and read in React through `useStudio`, so each component renders again
  * when what it reads changes.
  */
+import type { LinkOpened } from "../ipc/live";
 import type { ModelDoc } from "../model/models";
 import type { DataTask } from "../data/tasks";
 import { createContext, useContext, useSyncExternalStore } from "react";
@@ -86,7 +87,11 @@ export type Dialog =
   | { readonly kind: "assistantSettings" }
   | { readonly kind: "liveSettings" }
   | { readonly kind: "security"; readonly connection: number; readonly form: SecurityForm }
-  | { readonly kind: "liveJoin" }
+  | {
+      readonly kind: "liveJoin";
+      /** The invitation's link the platform opened Studio by, if it opened it so (RULES.md D66). */
+      readonly opened?: LinkOpened;
+    }
   | {
       readonly kind: "prompt";
       readonly title: string;

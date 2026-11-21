@@ -25,6 +25,7 @@ import {
   liveHandOver,
   liveInvite,
   liveJoin,
+  takeLiveLink,
   liveLeave,
   livePresent,
   liveRemove,
@@ -401,4 +402,12 @@ export function workspaceOf(now: StudioState): WorkspaceIn {
   const showing =
     [now.activeWorksheet, now.activeModel].find((a) => a !== null && tabs.some((t) => t.id === a)) ?? null;
   return { tabs, active: showing, pointer: now.live.pointer };
+}
+
+/** Opens the join dialog of the link the platform started Studio by, if one waits (RULES.md D66). */
+export async function takeLink(store: Store): Promise<void> {
+  const opened = await takeLiveLink().catch(() => null);
+  if (opened !== null) {
+    store.update((now) => ({ ...now, dialog: { kind: "liveJoin", opened } }));
+  }
 }
