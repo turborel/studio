@@ -134,7 +134,7 @@ impl Scene<'_> {
             self.session.click("[role=\"toolbar\"][aria-label=\"Toolbar\"] button[aria-label=\"New Worksheet\"]")?;
             self.session.wait_for(".worksheet-body .cm-content")?;
         }
-        self.session.click(".worksheet-body .cm-content")?;
+        self.focus_editor()?;
         self.session.press(&[CONTROL], &["a"])?;
         self.session.press(&[], &[BACKSPACE])
     }
@@ -147,18 +147,45 @@ impl Scene<'_> {
     }
 
     /// Clicks, as a person does, the element `selector` finds whose text
-    /// holds `text`: marked for the driver to find.
+    /// holds `text`, once the window draws it: marked for the driver to find.
     fn click_text(&self, selector: &str, text: &str) -> Result<()> {
         let script = format!(
-            "document.getElementById('studio-target')?.removeAttribute('id'); const e = [...document.querySelectorAll('{selector}')].find((e) => e.textContent.includes('{text}')); if (!e) throw new Error('no {selector} of {text}'); e.id = 'studio-target';"
+            "document.getElementById('studio-target')?.removeAttribute('id'); const e = [...document.querySelectorAll('{selector}')].find((e) => e.textContent.includes('{text}')); if (e) {{ e.id = 'studio-target'; }} return e !== undefined;"
         );
-        self.session.script(&script)?;
+        let start = std::time::Instant::now();
+        while !self.session.script(&script)?.as_bool().unwrap_or(false) {
+            if start.elapsed() > crate::webdriver::DRAWN_WITHIN {
+                return fail(format!("the window drew no {selector} of {text}"));
+            }
+            std::thread::sleep(SETTLE);
+        }
         self.session.click("#studio-target")
+    }
+
+    /// A new worksheet, its editor focused, apart from the one the other scenes share.
+    fn new_worksheet(&self) -> Result<()> {
+        let before = self.session.script("return document.querySelectorAll('.worksheet-body .cm-content').length")?;
+        self.session.click("[role=\"toolbar\"][aria-label=\"Toolbar\"] button[aria-label=\"New Worksheet\"]")?;
+        std::thread::sleep(SETTLE);
+        let after = self.session.script("return document.querySelectorAll('.worksheet-body .cm-content').length")?;
+        if after == before {
+            self.session.wait_for(".worksheet-body .cm-content")?;
+        }
+        self.focus_editor()
+    }
+
+    /// Focuses the editor of the worksheet shown, marked for the driver
+    /// to type into: of several worksheets, the one drawn.
+    fn focus_editor(&self) -> Result<()> {
+        self.session.script(
+            "document.getElementById('studio-editor')?.removeAttribute('id'); const e = [...document.querySelectorAll('.worksheet-body .cm-content')].find((e) => e.offsetParent !== null); if (!e) throw new Error('no worksheet is shown'); e.id = 'studio-editor';",
+        )?;
+        self.session.click("#studio-editor")
     }
 
     /// Types `text` into the worksheet's editor.
     fn write(&self, text: &str) -> Result<()> {
-        self.session.type_into(".worksheet-body .cm-content", text)
+        self.session.type_into("#studio-editor", text)
     }
 }
 
@@ -221,7 +248,7 @@ fn menu_scene(scene: &Scene<'_>) -> Result<()> {
 
 /// The guard rails: a DROP asked about before it runs.
 fn guard_scene(scene: &Scene<'_>) -> Result<()> {
-    scene.worksheet()?;
+    scene.new_worksheet()?;
     scene.write("DROP TABLE ORDER_LINES CASCADE")?;
     scene.tool("Run Statement")?;
     scene.session.wait_for("[role=\"dialog\"]")?;
@@ -236,7 +263,6 @@ fn diagram_scene(scene: &Scene<'_>) -> Result<()> {
     scene.session.script("window.studioRow('DEMO')?.click()")?;
     scene.session.wait_for("[aria-label=\"Schema actions\"]")?;
     scene.click_text("[aria-label=\"Schema actions\"] button", "Open Model")?;
-    std::thread::sleep(SETTLE);
     // The model opens in a tab of its own, which is shown.
     scene.click_text(".dock-tab", "DEMO")?;
     scene.session.wait_for(".react-flow__node")?;
