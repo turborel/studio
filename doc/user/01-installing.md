@@ -75,7 +75,7 @@ Check a file against `SHA256SUMS`, in the folder of both:
 
 ### Opening an unsigned build
 
-The installers are not signed until the owner's certificates are, so
+The installers are not signed until the maintainers' certificates are, so
 each system asks before it opens one:
 
 - **macOS:** open the `.dmg` and drag Turborel Studio to Applications.

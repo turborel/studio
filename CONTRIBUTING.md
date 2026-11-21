@@ -114,7 +114,7 @@ link.
 Some rules deserve a reminder.
 
 - No dependency is added without a decision in RULES.md (R-DEP-1), and
-  no setting without asking the owner first (R-SAFE-6).
+  no setting without asking the maintainers first (R-SAFE-6).
 - Every thread is started by the connection manager or the application's
   task holder, and named (R-SAFE-5).
 - Performance claims cite measurements, with the numbers and their
@@ -156,13 +156,13 @@ the copper ribbon spiral of its icon, beside the wordmark TURBOREL
 STUDIO set in EB Garamond ExtraBold (800), under the SIL Open Font
 License, and outlined to paths. The font itself is not committed.
 
-The icon is the owner's vector artwork, `artwork/studio-icon.svg`: the
+The icon is Studio's vector artwork, `artwork/studio-icon.svg`: the
 spiral on a white superellipse tile, 824 on a 1024 grid, with a faint
 hairline edge and a transparent margin, the one source for every
 platform (RULES.md D21). Beside it, `artwork/studio-icon.png` is the
 same rendered at 2048 pixels. To change it:
 
-1. Replace both files with the owner's new ones, as they are: never
+1. Replace both files with the new artwork, as it is given: never
    redrawn, cropped or recoloured here.
 2. Run `cargo xtask icons`. It runs Tauri's CLI on the SVG, which
    writes `src-tauri/icons` (`.icns`, `.ico` and the PNG sizes), and

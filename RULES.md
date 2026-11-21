@@ -60,7 +60,7 @@ Each is told in full in [§7](#7-the-decisions).
 | D18 | The front end's tools: Vite, TypeScript, ESLint, Prettier and Vitest |
 | D19 | The checks tool is Rust, in `xtask/` |
 | D20 | Two themes, their accent the icon's copper |
-| D21 | The icon set, made from the owner's icon by `cargo xtask icons` |
+| D21 | The icon set, made from Studio's icon by `cargo xtask icons` |
 | D22 | The webview's content security policy |
 | D23 | The supply chain: cargo deny and npm audit |
 | D24 | Each connection on a worker thread the manager holds |
@@ -259,7 +259,7 @@ The tools named by "the formatter", "the linters", "the type checker" and
 | R-SAFE-3 | A length or count read from a file Studio opens **shall** be bounded before anything is held for it. | tests; review |
 | R-SAFE-4 | No module-level mutable state: what lasts belongs to an object the application made, such as the connection manager. | review |
 | R-SAFE-5 | Every thread **shall** be started by the connection manager or the application's task holder, named for what it does, and listed by it; none is started ad hoc, and a closed connection leaves none behind. | tests; review |
-| R-SAFE-6 | A setting **shall** be named after what it controls, never generically; a new setting is raised with the owner first. | review |
+| R-SAFE-6 | A setting **shall** be named after what it controls, never generically; a new setting is raised with the maintainers first. | review |
 
 ### R-SEC: security
 
@@ -361,7 +361,7 @@ The tools named by "the formatter", "the linters", "the type checker" and
 | R-PROC-4 | A threshold change **shall** change RULES.md and the configuration that holds it together. | review |
 | R-PROC-5 | Project automation **shall** be a `cargo xtask` command, never a shell script; npm scripts only call tools, and the git hook only hands over to the checks tool. | review |
 | R-PROC-6 | CI's actions **shall** be pinned by their full commit SHA, with the version in a comment. | review |
-| R-PROC-7 | A release **shall** be published only as VERSIONING.md says, by the owner (D5). | review |
+| R-PROC-7 | A release **shall** be published only as VERSIONING.md says, by the maintainers (D5). | review |
 | R-PROC-8 | No commit, file or pull request **shall** carry AI or agent attribution, a DCO or a `Signed-off-by:`; contributors own their code. | review |
 
 The review checklist:
@@ -442,7 +442,7 @@ The review checklist:
   alpha, written once in the workspace's `Cargo.toml`;
   `package.json` and `tauri.conf.json` are held to it by a test.
 - **Tags:** exactly the server's release tag.
-- **Publishing:** nothing until the owner says (VERSIONING.md).
+- **Publishing:** nothing until the maintainers publish a release (VERSIONING.md).
 - *Why:* one number tells a user which server a Studio is made for.
 
 #### D6. Tests and code cite Turborel's documents by their headings
@@ -636,9 +636,9 @@ The review checklist:
 - *Why:* the copper is Studio's mark; its steps keep the accent legible
   as a fill under text and as text or a ring on either background.
 
-#### D21. The icon set, made from the owner's icon by `cargo xtask icons`
+#### D21. The icon set, made from Studio's icon by `cargo xtask icons`
 
-- **Source:** `artwork/studio-icon.svg`, the owner's vector artwork,
+- **Source:** `artwork/studio-icon.svg`, Studio's vector artwork,
   kept unchanged: a copper ribbon spiral on a white superellipse tile,
   824 on a 1024 grid, with a faint hairline edge and a transparent
   margin, so one file serves every platform; `artwork/studio-icon.png`
@@ -647,7 +647,7 @@ The review checklist:
   `src-tauri/icons`, and removes the CLI's mobile folders; Studio is
   built for the desktop alone.
 - *Why:* the icon set is made again by one command anyone can run, from
-  the one file the owner keeps.
+  the one file kept of it.
 
 #### D22. The webview's content security policy
 
@@ -1010,8 +1010,8 @@ The review checklist:
   rebound; CodeMirror's tab-focus mode lets Escape, then Tab, leave the
   editor.
 - *Why:* completion that knows the statement and the database, and is
-  never slower than the typing; the arrows to choose and Tab to take, as
-  the owner asked, without trapping the keyboard.
+  never slower than the typing; the arrows to choose and Tab to take,
+  without trapping the keyboard.
 
 #### D41. Data: values written as the grid shows them
 
@@ -1240,9 +1240,9 @@ The review checklist:
   is another.
 - **The webview's own menu:** left out but in fields of text.
 - **Hidden columns:** drawn of no width; still copied and exported.
-- *Why:* the owner asked for right-click everywhere and one-click
-  worksheets; one registry keeps the menus, the palette and the menu bar
-  the same.
+- *Why:* right-click everywhere and one-click worksheets make common
+  actions one step; one registry keeps the menus, the palette and the
+  menu bar the same.
 
 #### D54. The plan viewer: a summary, a flow, a tree-table, the stages, the raw text last
 
@@ -1285,8 +1285,8 @@ The review checklist:
 - **Tree-table:** sortable by estimate, actual, loops, probes and time.
 - **Compare:** two tree-tables side by side, operators matched by name
   and detail, their figures aside.
-- *Why:* the owner found the raw plan too raw; a plan read at a glance,
-  its raw text a tab away.
+- *Why:* the raw plan is too raw to read; a plan read at a glance, its
+  raw text a tab away.
 
 #### D55. The assistant: off until turned on, called by the backend, its guard rails in code and the database
 
@@ -1345,14 +1345,14 @@ The review checklist:
   value.
 - **Tests:** a mock model, a local HTTP server on a thread named
   `studio-mock-model` speaking both wire formats; no test calls a real
-  model nor needs a key. A check against the real API, for the owner,
-  is in TODO.md.
+  model nor needs a key. A check against the real API, for a maintainer
+  with a key, is in TODO.md.
 - **Dependency:** `reqwest` 0.13.5, MIT and Apache-2.0, without its
   default features, of `rustls` and `blocking`: rustls on aws-lc-rs, no
   ring (D23); the HTTP client of the Rust ecosystem, of its makers'
   stable release line.
-- *Why:* the owner asked for an assistant that is clear and safe: one
-  that can never, for example, drop a database. What it may do is
+- *Why:* an assistant must be clear and safe: one that can never, for
+  example, drop a database. What it may do is
   decided by Studio and the database, never by what a model is told,
   so no answer, nor text it reads, talks its way past it.
 
@@ -1378,7 +1378,7 @@ The review checklist:
   `tokio-rustls` 0.26.6; `tokio` 1.54.1, the runtime quinn and Tauri
   share. quinn claims no 1.0: its makers' README tells of 30 releases
   since 2018, tested on Linux, macOS and Windows on stable Rust; it is
-  the QUIC the owner named. Frames are JSON, each its length first, at
+  the QUIC this design names. Frames are JSON, each its length first, at
   most 16 MiB.
 - **Identity:** a certificate made by `rcgen` for each session as it
   starts, its key in memory alone; a guest accepts the certificate of
@@ -1415,9 +1415,9 @@ The review checklist:
   Studios' services, directly and through a relay; and, live, a shared
   worksheet of a connection to the server in which no setting nor
   secret of the connection appears, nor in the bytes the relay passed.
-- *Why:* the owner asked that a presenter show their Studio to others,
-  securely, with nothing copied and pasted; what leaves is decided by
-  the backend, and no relay, nor anyone who is not admitted, reads it.
+- *Why:* a presenter shows their Studio to others, securely, with
+  nothing copied and pasted; what leaves is decided by the backend, and
+  no relay, nor anyone who is not admitted, reads it.
 
 #### D57. Administration: the server read of its own views, each act written by the backend and run through the guards
 
@@ -1462,14 +1462,14 @@ The review checklist:
   commit of Studio and of turborel-client; a build never replaces one of
   a later commit. A started build finishes; of those waiting, the newest
   alone is kept.
-- **Unsigned:** until the owner's certificates exist;
+- **Unsigned:** until the maintainers' signing certificates exist;
   `doc/user/01-installing.md` says how to open an unsigned build and how
   to check its sums.
 - **By hand:** its trigger after verify on main is written and left off,
   to be turned on once the installers are seen to build on each
   platform; until then, `workflow_dispatch` alone. macOS on Intel waits
   for a runner of its own.
-- *Why:* the owner asked for a nightly, as main has.
+- *Why:* a build of each platform's to try every night, as main has.
 
 #### D59. Embedded databases: a second backend behind the connection manager, opened apart from made, never against a lock
 
@@ -1512,8 +1512,8 @@ The review checklist:
   its folder, its keys directory's path and its checksum key's name,
   never a key. A database this build's engine cannot open is told so,
   naming the engine's commit.
-- *Why:* Turborel runs as a server and as an embedded library; the owner
-  asked for Studio to open both (2026-11-21).
+- *Why:* Turborel runs as a server and as an embedded library, and
+  Studio opens both.
 
 #### D60. The manual's images: made by the checks tool of the real window and a demo database, never by hand
 
@@ -1536,8 +1536,8 @@ The review checklist:
 - **Kept current:** the images are made again as the window changes;
   the manual's check refuses an image no page links, a link to an image
   that is not there, and an image of no alt text (R-DOC-7).
-- *Why:* the owner asked for pictures in the manual, made of the real
-  window and nothing personal, so they are the same each time and can be
+- *Why:* the manual shows pictures, made of the real window and nothing
+  personal, so they are the same each time and can be
   made again whenever the window changes.
 
 #### D61. Explain Analyze of a data change: said to change data, rolled back to a savepoint unless kept
@@ -1624,8 +1624,7 @@ The review checklist:
   README says it reads files "simple enough" and promises no more; it
   follows semantic versioning, keeps a changelog and an MSRV, and is
   released monthly. Taken for its one use, reading a sheet the user
-  chose, its failures told as the file's. The owner approved it on
-  2026-11-21.
+  chose, its failures told as the file's. Approved on 2026-11-21.
   `zip` 9.8.1, deflate alone, writes the tests' workbooks.
 - **Parquet** waits: no crate fits as yet (TODO.md).
 - **A new table:** each field's type inferred from the first 1000
@@ -1736,7 +1735,7 @@ The review checklist:
   added without its script (`BackendOnly`, D38); the webview is granted
   none of its commands. Its reader of Linux's desktop files brings
   `tiny-keccak`, CC0-1.0, a dedication to the public domain, which
-  `deny.toml` allows for it, as the owner approved on 2026-11-21.
+  `deny.toml` allows for it, approved on 2026-11-21.
 - **The window:** the backend reads each link (`live::link::opened`),
   keeps the last until the window takes it (`take_live_link`, as a link
   may start Studio before its page loads), and tells it (`liveLink`).

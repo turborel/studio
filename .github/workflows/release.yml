@@ -1,7 +1,7 @@
 # Builds Studio's installers, run only by hand (VERSIONING.md, Publishing):
 # a .dmg on macOS, an .msi on Windows, an .AppImage and a .deb on Linux,
 # unsigned, kept as the run's artifacts. It publishes nothing. Signing,
-# notarization and publishing wait for the owner: the steps that tag and
+# notarization and publishing wait for the maintainers: the steps that tag and
 # publish are written below and left disabled.
 name: release
 
@@ -51,10 +51,10 @@ jobs:
             target/release/bundle/deb/*.deb
           if-no-files-found: error
 
-      # Publishing, disabled: the owner enables these once installers are
-      # to be released (VERSIONING.md, Publishing), by signing them with
-      # the owner's certificates, removing each `if: false`, and giving
+      # Publishing, disabled: a maintainer enables these once installers
+      # are to be released (VERSIONING.md, Publishing), by signing them
+      # with the maintainers' certificates, removing each `if: false`, and giving
       # the job `contents: write`.
       - name: Tag and publish the release
         if: false
-        run: echo "The owner enables publishing."
+        run: echo "A maintainer enables publishing."

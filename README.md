@@ -86,8 +86,8 @@ what is open.
 
 ## Building
 
-No build is published yet. Studio's installers are made only once the
-owner says, with Turborel's release ([VERSIONING.md](VERSIONING.md)).
+No build is published yet. Studio's installers are published only with
+a release of Turborel's ([VERSIONING.md](VERSIONING.md)).
 Until then, build it from source, as
 [Installing](doc/user/01-installing.md) says: Rust (the toolchain
 `rust-toolchain.toml` names), Node.js 24 or later, and the platform's

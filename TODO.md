@@ -16,8 +16,8 @@ Code never cites this file (R-DOC-5).
 
 - Parquet files imported, once a crate fits R-DEP-2: the Apache Arrow
   project's `parquet` crate, Apache-2.0, is the one of note, and it
-  brings the Arrow crates and a codec of each compression with it; the
-  owner decides whether that weight is taken.
+  brings the Arrow crates and a codec of each compression with it; a
+  plug-in of the import formats (D68) once that weight is taken.
 
 ## M8 Analyzer
 
@@ -28,7 +28,7 @@ Code never cites this file (R-DOC-5).
 
 ## M9 Assistant
 
-- A check against the real API, for the owner to run with a key, as no
+- A check against the real API, for a maintainer to run with a key, as no
   test calls a real model:
   1. Build Studio, open a saved connection of a development database
      that holds a table or two, and **View > Assistant Settings…**: turn
@@ -51,7 +51,7 @@ Code never cites this file (R-DOC-5).
 
 ## M10 Live Sessions
 
-- A check across machines, for the owner: two computers on one network,
+- A check across machines, for a maintainer: two computers on one network,
   one presenting and one joining directly; then both through a
   `studio-relay` on a third, reached by its address and fingerprint.
 
@@ -61,8 +61,8 @@ Code never cites this file (R-DOC-5).
   command's own key, which Settings already rebinds.
 - The keychain checked by hand on Windows and Linux, as on macOS, by the
   test STUDIO_TEST_KEYCHAIN runs.
-- Signing and notarization of the installers, once the owner's
-  certificates exist; until then they are unsigned.
+- Signing and notarization of the installers, once the maintainers'
+  signing certificates exist; until then they are unsigned.
 - The nightly's trigger after verify on main, written and left off,
   turned on once its installers are seen to build on each platform; and
   macOS on Intel, once a runner of its own is there.

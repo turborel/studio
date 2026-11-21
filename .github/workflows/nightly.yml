@@ -4,7 +4,7 @@
 # with their SHA-256 sums (doc/user/01-installing.md). The toolchain comes
 # from rust-toolchain.toml.
 #
-# It runs by hand alone until the owner turns on its trigger below, once
+# It runs by hand alone until a maintainer turns on its trigger below, once
 # the installers are seen to build on every platform (TODO.md, M12).
 name: nightly
 

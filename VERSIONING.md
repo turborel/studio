@@ -61,10 +61,11 @@ version 1, asking for the capabilities that commit's client asks for.
 
 ## Publishing
 
-Nothing is published, and no release is tagged, until the owner says.
+Nothing is published, and no release is tagged, until the maintainers
+publish a release.
 Until then, build Studio from source, as [README.md](README.md) says.
 
-A release is published by the owner alone, from a clean checkout of a
+A release is published by the maintainers alone, from a clean checkout of a
 pushed commit that has passed `cargo xtask verify` and
 `cargo xtask coverage` in CI on every platform:
 
@@ -74,7 +75,7 @@ pushed commit that has passed `cargo xtask verify` and
 2. Run the workflow **release** by hand, on that commit. It builds the
    installers, `.dmg`, `.msi`, `.AppImage` and `.deb`, unsigned, and
    keeps them as the run's artifacts. It publishes nothing.
-3. Signing and notarization wait for the owner's certificates. The
-   workflow's last step, which tags the release and publishes it, is
-   written but disabled until the owner enables it. Every installer
+3. Signing and notarization wait for the maintainers' signing
+   certificates. The workflow's last step, which tags the release and
+   publishes it, is written but disabled until a maintainer enables it. Every installer
    carries `LICENSE`.

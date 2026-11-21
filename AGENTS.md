@@ -90,7 +90,7 @@ its code at that commit when its pages are silent.
   during the alpha (R-FMT-1).
 - **Threads are named and held** by the connection manager or the task
   holder, none started ad hoc. Settings are named for what they
-  control, and a new one is raised with the owner first (R-SAFE-5,
+  control, and a new one is raised with the maintainers first (R-SAFE-5,
   R-SAFE-6).
 
 ## Rules that are broken most often
