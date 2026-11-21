@@ -199,6 +199,10 @@ function RelayPart({
           put({ relayFingerprint });
         }}
       />
+      <p className="hint">
+        A relay is a studio-relay you host yourself, on a machine you and your viewers reach; Turborel runs none.
+        Without one, viewers reach you directly.
+      </p>
     </>
   );
 }

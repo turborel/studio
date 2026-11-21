@@ -29,8 +29,8 @@ characters. Sessions are on unless the settings turn them off
 **Present**, on the toolbar or in the **Live** menu, starts a session
 and shows the **Live Session** panel, beside Details. The session can be
 reached directly, by viewers on your network or who can reach your
-address, and, where the settings name one, through a relay
-([Relays](#relays)). The panel names the session, the start of its
+address, and, where the settings name one, through a relay you host
+([Relays](#relays)); Turborel runs none. The panel names the session, the start of its
 certificate's fingerprint, and the addresses it is reached at.
 
 ![Live Sessions in the light theme: a session presented by Demo presenter, its invitation and participants in the Live Session panel](../images/live-session-light.png)
@@ -234,8 +234,10 @@ platform's dialog chooses:
 ## Relays
 
 A viewer who cannot reach the presenter directly reaches them through a
-relay, `studio-relay`, a small program of this repository that anyone
-may run. It keeps no accounts, and holds its sessions in memory alone.
+relay, `studio-relay`, a small program of this repository that you host
+yourself, on a machine both of you can reach. Turborel runs no relay of
+its own: a session is reached directly, or through a relay you run. It
+keeps no accounts, and holds its sessions in memory alone.
 
 ```
 cargo build --release --bin studio-relay
@@ -256,7 +258,8 @@ studio-relay: fingerprint AC:46:D7:A5:18:67:8A:7B:C5:19:67:8C:F2:86:50:84:47:F1:
 
 In the settings, tick **Through a relay**, and give the relay's address,
 `host:port`, and the fingerprint it prints. Invitations then name the
-relay, and viewers reach you through it. No relay is set at first.
+relay, and viewers reach you through it. No relay is set at first, and
+Studio names none: the address is always that of a relay you host.
 
 ## The settings
 

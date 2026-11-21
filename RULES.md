@@ -1398,8 +1398,11 @@ The review checklist:
 - **Relay:** `studio-relay`, no accounts, sessions in memory, the first
   host of an identifier holding it while its connection lasts; limits
   of sessions and guests; its certificate made at start or kept by
-  `--identity`, pinned by the fingerprint the settings name. No public
-  relay is set: whether one is run is the owner's decision.
+  `--identity`, pinned by the fingerprint the settings name. Turborel
+  runs no relay: a session is reached directly, or through a
+  `studio-relay` its user hosts, and no relay's address is set or named
+  anywhere in Studio, so no one's sessions pass a machine they did not
+  choose.
 - **Settings and log:** `live-sessions.json`, format 1, every choice of a
   safe default (production shares SQL and schema alone; no copying;
   direct only), and a lock so a session never widens them;

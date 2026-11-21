@@ -1,7 +1,7 @@
-//! `studio-relay` (RULES.md D56): Turborel Studio's relay for Live
-//! Sessions, which pairs a guest with its session's host and passes the
-//! bytes of their own TLS session, which it cannot read. It has no
-//! accounts and keeps its sessions in memory alone.
+//! `studio-relay` (RULES.md D56): the relay for Live Sessions a user
+//! hosts, as Turborel runs none, which pairs a guest with its session's
+//! host and passes the bytes of their own TLS session, which it cannot
+//! read. It has no accounts and keeps its sessions in memory alone.
 //!
 //! ```text
 //! studio-relay [--listen ADDRESS] [--identity DIRECTORY] [--sessions N] [--guests N]
