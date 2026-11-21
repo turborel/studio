@@ -253,3 +253,43 @@ pub fn json_records_are_imported(live: &Live) {
     let RunAnswer::Ran(_) = manager.run(id, "DROP TABLE JSONED CASCADE", true).unwrap() else { panic!("asked") };
     manager.close(id).unwrap();
 }
+
+/// [DESIGN] D65 D62: a schema's script with its rows as INSERTs, saved,
+/// its tables dropped, and run back by Run SQL File, gives the same rows,
+/// a 38-digit number among them, on a server.
+pub fn a_script_with_its_rows_runs_back(live: &Live) {
+    use turborel_studio_core::catalog::Catalog;
+    use turborel_studio_core::catalog::ddl::create;
+    use turborel_studio_core::connections::manager::scripts::DataScript;
+    use turborel_studio_core::connections::manager::sqlfile::{Ending, FileAnswer, FileOptions, Transactions};
+    let (manager, _) = live.manager();
+    let id = live.owner(&manager);
+    manager.set_autocommit(id, true).unwrap();
+    run(&manager, id, "CREATE TABLE SCRIPTED (ID INTEGER PRIMARY KEY, N NUMERIC(38,0), NOTE VARCHAR(20), ON_DAY DATE)").unwrap();
+    run(
+        &manager,
+        id,
+        "INSERT INTO SCRIPTED VALUES (1, 12345678901234567890123456789012345678, 'it''s', DATE '2024-01-02'), (2, NULL, NULL, NULL)",
+    )
+    .unwrap();
+    let rows = |manager: &turborel_studio_core::connections::manager::ConnectionManager| {
+        let Outcome::Rows { page, .. } = run(manager, id, "SELECT * FROM SCRIPTED ORDER BY ID").unwrap().outcome else { panic!("no rows") };
+        page.rows
+    };
+    let expected = rows(&manager);
+    let schema = manager.session(id).unwrap().schema.unwrap();
+    let detail = Catalog::of(&manager, id).table(&schema, "SCRIPTED").unwrap();
+    let dir = live.server.dir.join("scripts");
+    std::fs::create_dir_all(&dir).unwrap();
+    let script = dir.join("scripted.sql");
+    std::fs::write(&script, create(&detail)).unwrap();
+    let done = manager.script_data(id, &[(schema, "SCRIPTED".to_owned())], DataScript::Inserts, &script).unwrap();
+    assert_eq!(done.rows, 2);
+    run(&manager, id, "DROP TABLE SCRIPTED CASCADE").unwrap();
+    let options = FileOptions { transactions: Transactions::Whole, stop_on_error: true };
+    let FileAnswer::Ran { report } = manager.run_file(id, &script, options, true).unwrap() else { panic!("asked") };
+    assert_eq!(report.ending, Ending::Finished, "{report:?}");
+    assert_eq!(rows(&manager), expected);
+    run(&manager, id, "DROP TABLE SCRIPTED CASCADE").unwrap();
+    manager.close(id).unwrap();
+}

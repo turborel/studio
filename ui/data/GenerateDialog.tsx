@@ -1,11 +1,14 @@
 /**
- * A script generated of a schema's objects chosen (RULES.md D44): each
- * object's definition, as the explorer's definition writes it, the
+ * A script generated of a schema's objects chosen (RULES.md D44, D65):
+ * each object's definition, as the explorer's definition writes it, the
  * types, domains and sequences first, then the base tables, the views
- * and the routines, opened in a worksheet of the connection.
+ * and the routines, opened in a worksheet of the connection; or saved to
+ * a file, with the rows of its tables as INSERTs at its end, or as a CSV
+ * file of each table beside it.
  */
 import { useEffect, useState } from "react";
 import { catalogDefinition, catalogObjects, type DefinitionOf, type SchemaObjects } from "../ipc/catalog";
+import { type DataScript, saveGeneratedScript, type SavedScript } from "../ipc/data";
 import { useStore } from "../state/store";
 import { Modal } from "../shell/Modal";
 import { openDdl } from "./ddlActions";
@@ -109,26 +112,90 @@ function ObjectList(props: {
   );
 }
 
+/** The choice of the data a script carries: none, INSERTs, or CSV files. */
+function DataChoice(props: { readonly data: DataScript | null; readonly onData: (d: DataScript | null) => void }) {
+  const choices: readonly (readonly [DataScript | null, string])[] = [
+    [null, "No data"],
+    ["inserts", "The tables' rows as INSERT statements"],
+    ["csv", "The tables' rows as a CSV file of each, beside the script"],
+  ];
+  return (
+    <fieldset>
+      <legend>Data</legend>
+      {choices.map(([d, label]) => (
+        <label key={label}>
+          <input
+            type="radio"
+            name="data"
+            checked={props.data === d}
+            onChange={() => {
+              props.onData(d);
+            }}
+          />{" "}
+          {label}
+        </label>
+      ))}
+    </fieldset>
+  );
+}
+
+/** What a script saved came to, as the dialog tells it. */
+export function savedText(saved: SavedScript): string {
+  if (saved.data === null) {
+    return `Saved as ${saved.path}.`;
+  }
+  const n = saved.data.files.length;
+  const files = n === 0 ? "" : `, and ${String(n)} CSV file${n === 1 ? "" : "s"} beside it`;
+  return `Saved as ${saved.path}, with ${String(saved.data.rows)} rows${files}.`;
+}
+
+/** The base tables of `chosen`, each its schema and name. */
+function chosenTables(chosen: readonly Scripted[]): (readonly [string, string])[] {
+  return chosen.flatMap((c) =>
+    c.of.kind === "table" && c.label.startsWith("Table ") ? [[c.of.schema, c.of.name] as const] : [],
+  );
+}
+
+/** The script of `picked` objects: opened in a worksheet, or saved with the data `data` says; and what was told. */
+function useScript(connection: number, schema: string, picked: () => readonly Scripted[]) {
+  const store = useStore();
+  const [told, setTold] = useState("");
+  const [data, setData] = useState<DataScript | null>(null);
+  const failed = (thrown: unknown) => {
+    setTold(
+      typeof thrown === "object" && thrown !== null && "message" in thrown ? String(thrown.message) : String(thrown),
+    );
+  };
+  const open = async () => {
+    try {
+      const script = await generatedScript(connection, picked());
+      await openDdl(store, connection, { sql: script, title: `${schema} script` }, false);
+    } catch (thrown: unknown) {
+      failed(thrown);
+    }
+  };
+  const save = async () => {
+    try {
+      setTold("Writing the script…");
+      const script = await generatedScript(connection, picked());
+      const saved = await saveGeneratedScript(connection, { schema, script, tables: chosenTables(picked()), data });
+      setTold(saved === null ? "" : savedText(saved));
+    } catch (thrown: unknown) {
+      failed(thrown);
+    }
+  };
+  return { told, data, setData, open, save };
+}
+
 /** The dialog that generates a script of schema `schema`'s objects chosen. */
 export function GenerateDialog({ connection, schema }: { readonly connection: number; readonly schema: string }) {
   const store = useStore();
   const { objects, chosen, setChosen } = useObjects(connection, schema);
-  const [told, setTold] = useState("");
+  const { told, data, setData, open, save } = useScript(connection, schema, () =>
+    (objects ?? []).filter((_, i) => chosen.has(i)),
+  );
   const close = () => {
     store.update((now) => ({ ...now, dialog: null }));
-  };
-  const open = async () => {
-    try {
-      const script = await generatedScript(
-        connection,
-        (objects ?? []).filter((_, i) => chosen.has(i)),
-      );
-      await openDdl(store, connection, { sql: script, title: `${schema} script` }, false);
-    } catch (thrown: unknown) {
-      setTold(
-        typeof thrown === "object" && thrown !== null && "message" in thrown ? String(thrown.message) : String(thrown),
-      );
-    }
   };
   const all = (objects ?? []).map((_, i) => i);
   return (
@@ -138,7 +205,10 @@ export function GenerateDialog({ connection, schema }: { readonly connection: nu
       ) : (
         <ObjectList objects={objects} chosen={chosen} onChosen={setChosen} />
       )}
-      {told !== "" && <p className="error">{told}</p>}
+      <DataChoice data={data} onData={setData} />
+      {told !== "" && (
+        <p className={told.startsWith("Saved") || told.startsWith("Writing") ? "hint" : "error"}>{told}</p>
+      )}
       <div className="dialog-buttons">
         <button
           type="button"
@@ -151,8 +221,11 @@ export function GenerateDialog({ connection, schema }: { readonly connection: nu
         <button type="button" onClick={close}>
           Cancel
         </button>
-        <button type="button" disabled={chosen.size === 0} onClick={() => void open()}>
+        <button type="button" disabled={chosen.size === 0 || data !== null} onClick={() => void open()}>
           Open in Worksheet
+        </button>
+        <button type="button" disabled={chosen.size === 0} onClick={() => void save()}>
+          Save Script…
         </button>
       </div>
     </Modal>

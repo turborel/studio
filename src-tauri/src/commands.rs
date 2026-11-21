@@ -121,6 +121,7 @@ pub(crate) fn handler<R: Runtime>() -> impl Fn(Invoke<R>) -> bool + Send + Sync 
         data::cancel_sql_file,
         data::save_sql_file_log,
         data::ddl_model,
+        data::save_generated_script,
         files::notify_finished,
         worksheet::sql_words,
         worksheet::split_script,

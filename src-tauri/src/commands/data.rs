@@ -16,6 +16,7 @@ use tauri_plugin_dialog::DialogExt;
 use turborel_studio_core::connections::imports::{ImportSpec, Preview, Reading, preview};
 use turborel_studio_core::connections::manager::ImportAnswer;
 use turborel_studio_core::connections::manager::ddlmodel::DdlModel;
+use turborel_studio_core::connections::manager::scripts::{DataScript, ScriptedData};
 use turborel_studio_core::connections::manager::sqlfile::{FileAnswer, FileOptions, FileReport, log_text};
 use turborel_studio_core::error::{Result, StudioError};
 use turborel_studio_core::events::ConnectionId;
@@ -159,4 +160,57 @@ pub(crate) async fn save_sql_file_log<R: Runtime>(
 pub(crate) async fn ddl_model(studio: State<'_, Studio>, path: String, schema: String) -> Result<DdlModel> {
     let path = studio.files.chosen(&PathBuf::from(path))?;
     blocking(&studio, move |m| m.ddl_model(&path, &schema)).await
+}
+
+/// What a script saved came to: where, and its data's rows and files.
+#[derive(Debug, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct SavedScript {
+    /// The script's path.
+    path: String,
+    /// Its data, if it carries any.
+    data: Option<ScriptedData>,
+}
+
+/// A generated script to save: its schema, its definitions, the tables
+/// whose rows it carries, each its schema and name, and how, if it does.
+#[derive(Debug, serde::Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub(crate) struct GeneratedScript {
+    schema: String,
+    script: String,
+    tables: Vec<(String, String)>,
+    data: Option<DataScript>,
+}
+
+/// Saves `request`'s script, the definitions of its schema's objects
+/// chosen on `connection`, where the platform's dialog chooses, with the
+/// rows of its tables as it says, if it says (RULES.md D65): where, or
+/// none if the user cancelled.
+#[tauri::command]
+pub(crate) async fn save_generated_script<R: Runtime>(
+    app: AppHandle<R>,
+    studio: State<'_, Studio>,
+    connection: ConnectionId,
+    request: GeneratedScript,
+) -> Result<Option<SavedScript>> {
+    let GeneratedScript { schema, script, tables, data } = request;
+    let files = Arc::clone(&studio.files);
+    let chosen = off_the_window(move || {
+        let Some(chosen) =
+            app.dialog().file().add_filter("SQL scripts", &["sql"]).set_file_name(format!("{schema}.sql")).blocking_save_file()
+        else {
+            return Ok(None);
+        };
+        let path = chosen.into_path().map_err(|e| StudioError::misuse(format!("[DESIGN] the path chosen is not a file's: {e}")))?;
+        std::fs::write(&path, script).map_err(|e| StudioError::misuse(format!("[DESIGN] cannot write {}: {e}", path.display())))?;
+        files.choose(&path)?;
+        Ok(Some(path))
+    })
+    .await?;
+    let Some(path) = chosen else { return Ok(None) };
+    let shown = path.display().to_string();
+    let Some(how) = data else { return Ok(Some(SavedScript { path: shown, data: None })) };
+    let scripted = blocking(&studio, move |m| m.script_data(connection, &tables, how, &path)).await?;
+    Ok(Some(SavedScript { path: shown, data: Some(scripted) }))
 }

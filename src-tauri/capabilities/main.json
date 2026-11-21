@@ -97,6 +97,7 @@
     "allow-cancel-sql-file",
     "allow-save-sql-file-log",
     "allow-ddl-model",
+    "allow-save-generated-script",
     "allow-notify-finished",
     "allow-sql-words",
     "allow-split-script",

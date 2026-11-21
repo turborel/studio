@@ -59,6 +59,8 @@ pub(crate) enum Request {
     Value { result: ResultId, row: u64, column: usize },
     /// A query's rows written to a file as they come, as CSV or native.
     Export { sql: String, path: PathBuf, format: ExportFormat },
+    /// A query's rows appended to a script as INSERTs, each begun `prefix`.
+    ScriptRows { sql: String, prefix: String, path: PathBuf },
     /// A file's rows imported into a table, cancelled when `stop` is set,
     /// its progress told to `tell`.
     Import { spec: Box<ImportSpec>, stop: Arc<std::sync::atomic::AtomicBool>, tell: Teller },
@@ -203,6 +205,7 @@ impl Worker {
             Request::Describe(sql) => self.describe(&sql).map(Reply::Columns),
             Request::Value { result, row, column } => self.value(result, row, column).map(Reply::Value),
             Request::Export { sql, path, format } => self.export(&sql, &path, format).map(Reply::Exported),
+            Request::ScriptRows { sql, prefix, path } => self.script_rows(&sql, &prefix, &path).map(Reply::Exported),
             Request::Import { spec, stop, tell } => {
                 let watch = Watch { stop: &stop, tell: &*tell.0 };
                 run_import(self.connection()?, &spec, Some(&watch)).map(Reply::Imported)
@@ -398,6 +401,17 @@ impl Worker {
         let mut file = std::fs::File::create(path).map_err(|e| StudioError::misuse(format!("[DESIGN] {}: {e}", path.display())))?;
         let connection = self.connection()?;
         connection.export(sql, &mut file, format).map_err(StudioError::from)
+    }
+
+    /// Appends the rows of the query `sql` to the script at `path` as
+    /// INSERTs begun `prefix`, as they come: how many.
+    fn script_rows(&mut self, sql: &str, prefix: &str, path: &std::path::Path) -> Result<u64> {
+        let mut file = crate::connections::scripted::appended(path)?;
+        let mut writer = crate::connections::scripted::InsertWriter::new(&mut file, prefix);
+        match self.connection()?.query_into(sql, &mut writer)? {
+            turborel_client::connection::Streamed::Rows(_) => writer.finish(),
+            turborel_client::connection::Streamed::Done(_) => Err(StudioError::misuse("[DESIGN] a table's rows are read by a query")),
+        }
     }
 
     /// The types of `sql`'s dynamic parameters, in order, as SQL writes

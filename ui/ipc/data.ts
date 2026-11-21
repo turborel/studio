@@ -149,6 +149,28 @@ export type FileAnswer =
   | { readonly kind: "ran"; readonly report: FileReport }
   | { readonly kind: "confirm"; readonly confirm: Confirm; readonly scan: Scan };
 
+/** How a generated script carries its tables' rows: as INSERTs at its end, or a CSV file of each table beside it. */
+export type DataScript = "inserts" | "csv";
+
+/** What a script saved came to: where, and its data's rows and files. */
+export interface SavedScript {
+  readonly path: string;
+  readonly data: { readonly rows: number; readonly files: readonly string[] } | null;
+}
+
+/** Saves `script` of `schema` on `connection` where the platform's dialog chooses, with the rows of `tables` as `data` says: where, or null. */
+export function saveGeneratedScript(
+  connection: number,
+  request: {
+    readonly schema: string;
+    readonly script: string;
+    readonly tables: readonly (readonly [string, string])[];
+    readonly data: DataScript | null;
+  },
+): Promise<SavedScript | null> {
+  return invoke<SavedScript | null>("save_generated_script", { connection, request });
+}
+
 /** Cancels the import running on `connection`. */
 export function cancelImport(connection: number): Promise<void> {
   return invoke<undefined>("cancel_import", { connection });

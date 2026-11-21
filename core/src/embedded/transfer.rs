@@ -213,3 +213,19 @@ pub fn import(session: &Session, spec: &ImportSpec, watch: Option<&Watch<'_>>) -
         Ok(ImportReport { rows: run.committed, rejected: run.rejected, skipped: run.skipped, cancelled: false, rolled_back: 0 })
     })
 }
+
+/// Appends the rows of the query `sql` on `session` to the script at
+/// `path` as INSERTs begun `prefix` (RULES.md D65), as they come: how many.
+///
+/// # Errors
+///
+/// The query's; a value not scripted; the script's file.
+pub fn script_rows(session: &Session, sql: &str, prefix: &str, path: &std::path::Path) -> Result<u64> {
+    let mut file = crate::connections::scripted::appended(path)?;
+    let mut writer = crate::connections::scripted::InsertWriter::new(&mut file, prefix);
+    let mut cursor = session.open_cursor(sql)?;
+    while let Some(row) = cursor.fetch()? {
+        writer.row(&row);
+    }
+    writer.finish()
+}

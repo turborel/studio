@@ -32,6 +32,7 @@ mod imports;
 mod models;
 mod opening;
 mod requests;
+mod scripts;
 
 use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::path::{Path, PathBuf};
@@ -131,6 +132,7 @@ const TESTS: &[(&str, Test)] = &[
     ("a_38_digit_number_round_trips", requests::a_38_digit_number_round_trips),
     ("a_sheet_is_read_by_rows", imports::a_sheet_is_read_by_rows),
     ("a_ddl_script_becomes_a_model", models::a_ddl_script_becomes_a_model),
+    ("a_script_with_its_data_round_trips", scripts::a_script_with_its_data_round_trips),
     ("each_format_is_imported", imports::each_format_is_imported),
     ("an_import_is_limited_and_cancelled", imports::an_import_is_limited_and_cancelled),
     ("a_file_runs_by_its_transactions_and_error_policy", files::a_file_runs_by_its_transactions_and_error_policy),

@@ -7,6 +7,7 @@ pub mod imports;
 pub mod manager;
 pub mod outcome;
 pub mod pages;
+pub mod scripted;
 pub mod session;
 pub mod spec;
 pub mod spool;

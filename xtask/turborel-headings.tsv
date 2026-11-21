@@ -67,6 +67,7 @@ sql/statements/explain.md	EXPLAIN ANALYZE
 sql/statements/explain.md	EXPLAIN ANALYZE of a data change
 sql/statements/explain.md	EXAMPLES
 sql/statements/grant.md	SYNOPSIS
+sql/statements/insert.md	RULES
 sql/statements/prepare.md	DESCRIPTION
 sql/statements/select.md	SYNOPSIS
 sql/statements/set-transaction.md	DESCRIPTION

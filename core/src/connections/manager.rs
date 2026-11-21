@@ -569,4 +569,5 @@ fn unexpected() -> StudioError {
 pub mod ddlmodel;
 mod embedded;
 mod ending;
+pub mod scripts;
 pub mod sqlfile;

@@ -28,7 +28,7 @@ use crate::connections::values::{CHUNK_BYTES, ValueRead, parameter_value};
 use crate::connections::worker::{Job, Reply, Request};
 use crate::embedded::Embedded;
 use crate::embedded::lobs::placed_row;
-use crate::embedded::transfer::{export, import};
+use crate::embedded::transfer::{export, import, script_rows};
 use crate::error::{Result, StudioError};
 
 /// The SQLSTATE of a statement that cannot be prepared, run directly instead.
@@ -174,6 +174,10 @@ impl EmbeddedWorker {
                     std::fs::File::create(&path).map_err(|e| StudioError::misuse(format!("[DESIGN] {}: {e}", path.display())))?;
                 let session = self.session()?;
                 export(session, &sql, &mut file, format).map(Reply::Exported).map_err(|e| failed(session, e))
+            }
+            Request::ScriptRows { sql, prefix, path } => {
+                let session = self.session()?;
+                script_rows(session, &sql, &prefix, &path).map(Reply::Exported).map_err(|e| failed(session, e))
             }
             Request::Import { spec, stop, tell } => {
                 let session = self.session()?;

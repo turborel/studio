@@ -104,6 +104,7 @@ Each is told in full in [§7](#7-the-decisions).
 | D62 | Run SQL File: a file streamed, scanned and judged whole, run by its options, never by the assistant |
 | D63 | The import wizard: CSV, JSON and Excel, into a table or a new one typed from a sample, watched and cancelled |
 | D64 | A DDL script imported into a model: run in an in-memory database of its own, read back, what is not a table's listed |
+| D65 | A generated script with its data: INSERTs Run SQL File loads back, or CSV files the import loads back |
 
 ---
 
@@ -1669,6 +1670,31 @@ The review checklist:
   is Studio's, closed as the model is read, or as the import fails.
 - *Why:* a schema kept as a script should be drawn and compared as a
   live one is, and a reading of its own would drift from Turborel's.
+
+#### D65. A generated script with its data: INSERTs Run SQL File loads back, or CSV files the import loads back
+
+- **What:** **Generate Script…** (D44) saves its script to a file the
+  platform's dialog chooses, with the rows of its base tables chosen if
+  asked; the worksheet takes the definitions alone.
+- **INSERTs** (`core/src/connections/scripted.rs`): after the
+  definitions, a heading comment and an INSERT a row of each table, the
+  tables ordered by their foreign keys (`ddl::ordered`); the rows read
+  by a query of the columns an INSERT takes and streamed to the file as
+  they come, by turborel-client's `query_into` on a server, a cursor on
+  an embedded session; each value Turborel's own literal
+  (`Value::to_literal`); a generated column left out; OVERRIDING SYSTEM
+  VALUE for an identity column GENERATED ALWAYS. Run SQL File (D62)
+  loads the script back.
+- **CSV:** a file of each table beside the script,
+  `<stem>.<schema>.<table>.csv`, written by turborel-client's export (D39),
+  which the import (D43, D63) and `turborel --import` load back by copy.
+  Turborel has no SQL statement of a copy, so a script cannot load its
+  own data files; they are loaded as imports.
+- **Not scripted, said:** a large object that came by its locator stops
+  the script, by its octets; an identity column's next value is not
+  moved past the rows loaded.
+- *Why:* a schema and its data as one portable `.sql`, loaded back by
+  Studio's own Run SQL File, or as files any client imports.
 ---
 
 ## 8. References
