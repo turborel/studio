@@ -359,8 +359,10 @@ fn theme_scenes(application: &Path, (theme, ports): (&str, (u16, u16)), (homes, 
     let driver = Driver::start(&home, ports)?;
     let session = driver.session(application)?;
     session.size(WINDOW)?;
-    session.wait_for("[role=\"toolbar\"]")?;
-    session.click(&format!("button[aria-label=\"Connect to {DEMO_NAME}\"]"))?;
+    // The saved connections are read after the toolbar is drawn.
+    let connect = format!("button[aria-label=\"Connect to {DEMO_NAME}\"]");
+    session.wait_for(&connect)?;
+    session.click(&connect)?;
     session.wait_for("[role=\"tree\"][aria-label=\"Catalog\"] [role=\"treeitem\"]")?;
     let scene = Scene { session: &session, theme, out };
     let mut failed = Vec::new();
