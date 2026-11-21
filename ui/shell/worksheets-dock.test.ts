@@ -90,6 +90,24 @@ describe("the dock's worksheets", () => {
   });
 });
 
+describe("the dock's worksheets and models together", () => {
+  it("keep a model shown as the store changes, a worksheet shown only as it becomes the active one [DESIGN] D46", () => {
+    const store = new Store();
+    const { dock } = fakeDock();
+    const a = openWorksheet(store, "VALUES (1)", "A");
+    const stopSheets = syncWorksheets(dock as unknown as DockviewApi, store);
+    const stopModels = syncModels(dock as unknown as DockviewApi, store);
+    const model = openModel(store, emptyModel("Shop"));
+    expect(dock.activePanel?.id).toBe(MODEL_PANEL + model);
+    changeWorksheet(store, a, (w) => ({ ...w, text: "VALUES (2)" }));
+    expect(dock.activePanel?.id).toBe(MODEL_PANEL + model);
+    const b = openWorksheet(store, "", "B");
+    expect(dock.activePanel?.id).toBe(WORKSHEET_PANEL + b);
+    stopModels();
+    stopSheets();
+  });
+});
+
 describe("the dock's models", () => {
   it("are a panel each, titled, shown when active, and closed with the model or by its tab [DESIGN] D46", () => {
     const store = new Store();

@@ -149,9 +149,23 @@ export function tabTitle(w: WorksheetState): string {
   return `${w.title}${w.modified ? " •" : ""}${w.pinned ? " (pinned)" : ""}`;
 }
 
-/** Keeps `api`'s worksheet panels as `store`'s worksheets are: each opened, titled, shown when active, and closed: what stops it. */
+/** Shows worksheet `id`'s panel of `api`, if it is not shown. */
+function showWorksheet(api: DockviewApi, id: string | null): void {
+  const shown = id === null ? undefined : api.getPanel(WORKSHEET_PANEL + id);
+  if (shown !== undefined && api.activePanel?.id !== shown.id) {
+    shown.api.setActive();
+  }
+}
+
+/**
+ * Keeps `api`'s worksheet panels as `store`'s worksheets are: each opened,
+ * titled, shown as it becomes the active one and no more, so another panel
+ * shown since, as a model's, stays shown as the store changes, and closed:
+ * what stops it.
+ */
 export function syncWorksheets(api: DockviewApi, store: Store): () => void {
   let closing = false;
+  let shownBefore: string | null = null;
   const sync = () => {
     const now = store.current();
     const ids = new Set(now.worksheets.map((w) => WORKSHEET_PANEL + w.id));
@@ -176,9 +190,9 @@ export function syncWorksheets(api: DockviewApi, store: Store): () => void {
         panel.api.setTitle(tabTitle(w));
       }
     }
-    const shown = now.activeWorksheet === null ? undefined : api.getPanel(WORKSHEET_PANEL + now.activeWorksheet);
-    if (shown !== undefined && api.activePanel?.id !== shown.id) {
-      shown.api.setActive();
+    if (now.activeWorksheet !== shownBefore) {
+      shownBefore = now.activeWorksheet;
+      showWorksheet(api, shownBefore);
     }
   };
   const removed = api.onDidRemovePanel((panel) => {
