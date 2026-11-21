@@ -10,13 +10,24 @@ use std::io::{BufRead, BufReader, Read, Write};
 use std::net::TcpStream;
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
+use std::sync::atomic::{AtomicU16, Ordering};
 use std::time::{Duration, Instant};
 
 use crate::command::{root, say};
 use crate::error::{Error, Result, fail};
 
-/// The port tauri-driver listens on.
-const DRIVER: &str = "127.0.0.1:4444";
+/// The ports of each scenario's tauri-driver and of the platform's
+/// WebDriver it starts: each scenario its own, as a WebDriver outlives
+/// the tauri-driver that started it, and would launch the next
+/// scenario's application of its own app data.
+const PORTS: [(u16, u16); 2] = [(4444, 4445), (4454, 4455)];
+/// The port of the scenario's tauri-driver.
+static PORT: AtomicU16 = AtomicU16::new(4444);
+
+/// The address of the scenario's tauri-driver.
+fn address() -> String {
+    format!("127.0.0.1:{}", PORT.load(Ordering::Relaxed))
+}
 /// How long the window has to draw.
 const DRAWN_WITHIN: Duration = Duration::from_secs(60);
 /// The application's identifier, its folders' name.
@@ -24,10 +35,11 @@ const IDENTIFIER: &str = "com.turborel.studio";
 
 /// A request to the driver: its answer's status and JSON.
 fn request(method: &str, path: &str, body: Option<&serde_json::Value>) -> Result<(u16, serde_json::Value)> {
-    let mut stream = TcpStream::connect(DRIVER).map_err(|e| Error(format!("tauri-driver: {e}")))?;
+    let driver = address();
+    let mut stream = TcpStream::connect(&driver).map_err(|e| Error(format!("tauri-driver: {e}")))?;
     let body = body.map(serde_json::Value::to_string).unwrap_or_default();
     let head = format!(
-        "{method} {path} HTTP/1.1\r\nHost: {DRIVER}\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
+        "{method} {path} HTTP/1.1\r\nHost: {driver}\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
         body.len()
     );
     stream.write_all(head.as_bytes()).and_then(|()| stream.write_all(body.as_bytes())).map_err(|e| Error(format!("tauri-driver: {e}")))?;
@@ -113,9 +125,11 @@ impl Drop for Driver {
     }
 }
 
-/// Starts tauri-driver of `home`, and waits for it to listen.
-fn driver(home: &Path) -> Result<Driver> {
+/// Starts tauri-driver of `home` on `ports`, and waits for it to listen.
+fn driver(home: &Path, (port, native): (u16, u16)) -> Result<Driver> {
+    PORT.store(port, Ordering::Relaxed);
     let child = Command::new("tauri-driver")
+        .args(["--port", &port.to_string(), "--native-port", &native.to_string()])
         .env("HOME", home)
         .env_remove("XDG_CONFIG_HOME")
         .env_remove("XDG_CACHE_HOME")
@@ -125,7 +139,7 @@ fn driver(home: &Path) -> Result<Driver> {
         .map_err(|e| Error(format!("cannot run tauri-driver: {e}")))?;
     let started = Driver(child);
     let start = Instant::now();
-    while TcpStream::connect(DRIVER).is_err() {
+    while TcpStream::connect(address()).is_err() {
         if start.elapsed() > Duration::from_secs(20) {
             return fail("tauri-driver did not listen");
         }
@@ -141,8 +155,8 @@ fn config(home: &Path) -> PathBuf {
 
 /// Runs the application of `home`: its window drawn, no failure shown or
 /// logged, and, if `told` is some, a notice that holds it.
-fn scenario(application: &Path, home: &Path, told: Option<&str>) -> Result<()> {
-    let _driver = driver(home)?;
+fn scenario(application: &Path, (home, ports): (&Path, (u16, u16)), told: Option<&str>) -> Result<()> {
+    let _driver = driver(home, ports)?;
     let capabilities = serde_json::json!({"capabilities": {"alwaysMatch": {"tauri:options": {"application": application}}}});
     let (code, answer) = request("POST", "/session", Some(&capabilities))?;
     let session = answer.pointer("/value/sessionId").and_then(serde_json::Value::as_str).map(str::to_owned);
@@ -192,11 +206,12 @@ pub fn smoke(application: Option<&str>) -> Result<()> {
     let empty = homes.join("empty");
     std::fs::create_dir_all(&empty).map_err(|e| Error(format!("{}: {e}", empty.display())))?;
     say("==> smoke: from no app data");
-    scenario(&application, &empty, None)?;
+    let [first, second] = PORTS;
+    scenario(&application, (&empty, first), None)?;
     let before = homes.join("earlier");
     earlier(&before)?;
     say("==> smoke: from an earlier build's app data");
-    scenario(&application, &before, Some("queries.json did not fit"))?;
+    scenario(&application, (&before, second), Some("queries.json did not fit"))?;
     say("smoke: the window drew, and logged no failure");
     Ok(())
 }
