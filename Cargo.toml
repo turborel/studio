@@ -16,9 +16,9 @@ publish = false
 [workspace.dependencies]
 # Turborel's own client library, at a pinned commit of Turborel's main
 # (RULES.md D10). The crates.io 0.0.0 crates are frozen and never used.
-turborel-client = { git = "https://github.com/turborel/turborel", rev = "3df14c1621d8063f12452a6c189017e34b8e9fd9", features = ["tls", "scram", "system-roots"] }
-turborel = { git = "https://github.com/turborel/turborel", rev = "3df14c1621d8063f12452a6c189017e34b8e9fd9" }
-turborel-protocol = { git = "https://github.com/turborel/turborel", rev = "3df14c1621d8063f12452a6c189017e34b8e9fd9" }
+turborel-client = { git = "https://github.com/turborel/turborel", rev = "7189b102f79059f5d587d025a6efcc8d63b843e9", features = ["tls", "scram", "system-roots"] }
+turborel = { git = "https://github.com/turborel/turborel", rev = "7189b102f79059f5d587d025a6efcc8d63b843e9" }
+turborel-protocol = { git = "https://github.com/turborel/turborel", rev = "7189b102f79059f5d587d025a6efcc8d63b843e9" }
 # The IPC's and the files' encoding (RULES.md D17).
 serde = { version = "=1.0.229", features = ["derive"] }
 serde_json = "=1.0.154"

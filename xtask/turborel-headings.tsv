@@ -1,4 +1,4 @@
-# The headings of Turborel's manual at 3df14c1621d8063f12452a6c189017e34b8e9fd9, copied by `cargo xtask headings` (RULES.md D6).
+# The headings of Turborel's manual at 7189b102f79059f5d587d025a6efcc8d63b843e9, copied by `cargo xtask headings` (RULES.md D6).
 README.md	The Turborel Documentation Set
 README.md	The volumes
 README.md	Conventions
@@ -331,6 +331,7 @@ operator/07-encryption.md	Table encodings
 operator/07-encryption.md	Retiring a key
 operator/07-encryption.md	The files' formats
 operator/07-encryption.md	Checksums
+operator/07-encryption.md	Hash functions
 operator/08-diagnostics.md	Diagnostics
 operator/08-diagnostics.md	The event log
 operator/08-diagnostics.md	Levels

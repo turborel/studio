@@ -821,7 +821,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d045de693cb712d0b22c6a64be5b953f67b3ce00ab5ad3dd5d8b441886ab8e1a"
 dependencies = [
  "quote",
- "syn 3.0.10",
+ "syn 2.0.119",
 ]
 
 [[package]]
@@ -3317,7 +3317,7 @@ dependencies = [
  "once_cell",
  "socket2",
  "tracing",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -3627,7 +3627,7 @@ dependencies = [
  "security-framework",
  "security-framework-sys",
  "webpki-root-certs",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -4648,7 +4648,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
 dependencies = [
  "fastrand",
- "getrandom 0.4.3",
+ "getrandom 0.3.4",
  "once_cell",
  "rustix",
  "windows-sys 0.61.2",
@@ -4989,12 +4989,12 @@ checksum = "e421abadd41a4225275504ea4d6566923418b7f05506fbc9c0fe86ba7396114b"
 [[package]]
 name = "turborel"
 version = "0.0.0"
-source = "git+https://github.com/turborel/turborel?rev=3df14c1621d8063f12452a6c189017e34b8e9fd9#3df14c1621d8063f12452a6c189017e34b8e9fd9"
+source = "git+https://github.com/turborel/turborel?rev=7189b102f79059f5d587d025a6efcc8d63b843e9#7189b102f79059f5d587d025a6efcc8d63b843e9"
 
 [[package]]
 name = "turborel-client"
 version = "0.0.0"
-source = "git+https://github.com/turborel/turborel?rev=3df14c1621d8063f12452a6c189017e34b8e9fd9#3df14c1621d8063f12452a6c189017e34b8e9fd9"
+source = "git+https://github.com/turborel/turborel?rev=7189b102f79059f5d587d025a6efcc8d63b843e9#7189b102f79059f5d587d025a6efcc8d63b843e9"
 dependencies = [
  "rustls",
  "rustls-native-certs",
@@ -5005,7 +5005,7 @@ dependencies = [
 [[package]]
 name = "turborel-protocol"
 version = "0.0.0"
-source = "git+https://github.com/turborel/turborel?rev=3df14c1621d8063f12452a6c189017e34b8e9fd9#3df14c1621d8063f12452a6c189017e34b8e9fd9"
+source = "git+https://github.com/turborel/turborel?rev=7189b102f79059f5d587d025a6efcc8d63b843e9#7189b102f79059f5d587d025a6efcc8d63b843e9"
 dependencies = [
  "aws-lc-rs",
  "turborel",

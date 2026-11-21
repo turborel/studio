@@ -484,7 +484,7 @@ The review checklist:
 - **Chosen:** `turborel-client` (features `tls`, `scram`,
   `system-roots`), `turborel` and `turborel-protocol`, from
   github.com/turborel/turborel at commit
-  `3df14c1621d8063f12452a6c189017e34b8e9fd9` of `main`; BSD-2-Clause
+  `7189b102f79059f5d587d025a6efcc8d63b843e9` of `main`; BSD-2-Clause
   Plus Patent.
 - **Not crates.io:** the 0.0.0 crates published there are frozen and
   never used.
