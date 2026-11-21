@@ -171,6 +171,18 @@ fn failures_are_kept_and_the_layout_forgotten() {
     assert_eq!(answer(&window, "load_layout", serde_json::json!({})), serde_json::Value::Null);
 }
 
+/// [DESIGN] D52: the reports are listed, the built-in then the user's,
+/// and one of the user's kept and forgotten.
+#[test]
+fn reports_are_listed_kept_and_forgotten() {
+    let (_app, window) = window();
+    let listed = answer(&window, "list_reports", serde_json::json!({}));
+    assert!(listed["builtIn"].as_array().is_some_and(|b| !b.is_empty()));
+    let report = serde_json::json!({"id": "r1", "name": "Mine", "sql": "SELECT 1", "chart": null});
+    assert_eq!(answer(&window, "keep_report", serde_json::json!({"report": report})), serde_json::json!([report]));
+    assert_eq!(answer(&window, "forget_report", serde_json::json!({"id": "r1"})), serde_json::json!([]));
+}
+
 /// [DESIGN] D30: the menus' items are Studio's commands, each named once,
 /// and the platform's own items are not told to the webview.
 #[test]

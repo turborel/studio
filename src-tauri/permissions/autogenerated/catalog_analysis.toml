@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-catalog-analysis"
+description = "Enables the catalog_analysis command without any pre-configured scope."
+commands.allow = ["catalog_analysis"]
+
+[[permission]]
+identifier = "deny-catalog-analysis"
+description = "Denies the catalog_analysis command without any pre-configured scope."
+commands.deny = ["catalog_analysis"]

@@ -49,6 +49,7 @@ const DEFAULTS: Record<string, Handler> = {
   record_history: () => true,
   judge_script: () => null,
   set_aside_notices: () => [],
+  list_reports: () => ({ builtIn: [], own: [] }),
 };
 
 /** Mocks the backend with `handlers` over the defaults, and gives the calls made. */

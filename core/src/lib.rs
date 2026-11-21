@@ -3,6 +3,7 @@
 //! layer of commands over this crate, so what it does is tested here,
 //! without a window, against a live `turboreld` where it needs one.
 
+pub mod analyzer;
 pub mod catalog;
 pub mod connections;
 pub mod error;
@@ -11,6 +12,7 @@ pub mod failures;
 pub mod files;
 pub mod guard;
 pub mod preferences;
+pub mod reports;
 pub mod saved;
 pub mod secret;
 pub mod secrets;

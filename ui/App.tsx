@@ -24,7 +24,10 @@ import { keepAsChanged, restoreWorksheets } from "./state/worksheets";
 import { BuilderDialog } from "./builder/BuilderDialog";
 import { DataDialog } from "./data/DataDialog";
 import { FavouriteDialog, FoldersDialog, GuardDialog, HistoryDialog, ValuesDialog } from "./worksheet/dialogs";
-import { openConnection, type Store, StoreContext, useStudio } from "./state/store";
+import { type Dialog, openConnection, type Store, StoreContext, useStudio } from "./state/store";
+import { AnalyzerDialog } from "./analyzer/AnalyzerDialog";
+import { WhatIfDialog } from "./analyzer/PlanFindings";
+import { SaveReportDialog } from "./analyzer/Reports";
 import { applyTheme, DARK_QUERY, resolveTheme } from "./theme/theme";
 import type { ThemeName } from "./theme/tokens";
 
@@ -124,11 +127,25 @@ function Dialogs({ context }: { readonly context: CommandContext }) {
       return <FoldersDialog />;
     case "favourite":
       return <FavouriteDialog sql={dialog.sql} />;
+    default:
+      return <TaskDialogs dialog={dialog ?? null} />;
+  }
+}
+
+/** The dialog of a task shown, if any: of data, the builder, the analyzer and reports. */
+function TaskDialogs({ dialog }: { readonly dialog: Dialog | null }) {
+  switch (dialog?.kind) {
     case "data":
       return <DataDialog task={dialog.task} />;
     case "builder":
       return <BuilderDialog worksheet={dialog.worksheet} connection={dialog.connection} schema={dialog.schema} />;
-    case undefined:
+    case "analyzer":
+      return <AnalyzerDialog connection={dialog.connection} schema={dialog.schema} />;
+    case "whatIf":
+      return <WhatIfDialog whatIf={dialog.whatIf} />;
+    case "report":
+      return <SaveReportDialog sql={dialog.sql} chart={dialog.chart} />;
+    default:
       return null;
   }
 }

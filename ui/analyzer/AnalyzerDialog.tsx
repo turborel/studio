@@ -1,0 +1,242 @@
+/**
+ * The analyzer of a schema (RULES.md D50): the findings of its rules, each
+ * explained, its fix opened in a worksheet to be read and run; the
+ * schema's indexes, each with the constraint it serves; the settings that
+ * differ from their defaults; and what waits on the server, each saying
+ * why it cannot be shown yet.
+ */
+import { useEffect, useState } from "react";
+import { type Analysis, catalogAnalysis, type Finding } from "../ipc/analyzer";
+import { openDdl } from "../data/ddlActions";
+import { show } from "../state/actions";
+import { useStore } from "../state/store";
+import { Modal } from "../shell/Modal";
+import { thrownText } from "../model/ModelDialogs";
+
+/** What waits on the server: each, and why it cannot be shown yet. */
+export const WAITING: readonly (readonly [string, string])[] = [
+  ["Statement statistics", "Turborel keeps no counts of the statements run, their calls, rows and times, in a view."],
+  [
+    "Table and index statistics",
+    "Turborel shows no table's rows, sizes or scans, nor any index's size or use, in a view.",
+  ],
+  ["Column statistics", "Turborel shows not the planner's statistics of a column: its distinct values and nulls."],
+  ["Sizes of objects", "Turborel shows no table's or index's size on disk in a view."],
+];
+
+/** The tabs of the analyzer. */
+type Tab = "findings" | "indexes" | "settings" | "waiting";
+
+/** The tabs, each with its name. */
+const TABS: readonly (readonly [Tab, string])[] = [
+  ["findings", "Findings"],
+  ["indexes", "Indexes"],
+  ["settings", "Settings"],
+  ["waiting", "Waiting on the Server"],
+];
+
+/** The analysis of `schema` on `connection`, read as it is shown: null until read, or the failure's text. */
+function useAnalysis(connection: number, schema: string): Analysis | string | null {
+  const [found, setFound] = useState<Analysis | string | null>(null);
+  useEffect(() => {
+    let current = true;
+    catalogAnalysis(connection, schema).then(
+      (analysis) => {
+        if (current) {
+          setFound(analysis);
+        }
+      },
+      (thrown: unknown) => {
+        if (current) {
+          setFound(thrownText(thrown));
+        }
+      },
+    );
+    return () => {
+      current = false;
+    };
+  }, [connection, schema]);
+  return found;
+}
+
+/** A finding: chosen or not, its rule, object, what it says and its fix. */
+function FindingItem(props: { readonly finding: Finding; readonly chosen: boolean; readonly onToggle: () => void }) {
+  const f = props.finding;
+  return (
+    <li>
+      <label className="check">
+        <input type="checkbox" checked={props.chosen} onChange={props.onToggle} />
+        <strong>{f.rule}</strong> <span>{f.object}</span>
+      </label>
+      <p>{f.says}</p>
+      <pre className="definition-text">{f.fix}</pre>
+    </li>
+  );
+}
+
+/** The findings, each chosen at first, their fixes opened together. */
+function Findings({
+  findings,
+  onOpen,
+}: {
+  readonly findings: readonly Finding[];
+  readonly onOpen: (sql: string) => void;
+}) {
+  const [unchosen, setUnchosen] = useState<ReadonlySet<number>>(new Set());
+  if (findings.length === 0) {
+    return <p className="hint">No rule finds anything to change.</p>;
+  }
+  const toggle = (i: number) => () => {
+    setUnchosen((now) => {
+      const next = new Set(now);
+      if (!next.delete(i)) {
+        next.add(i);
+      }
+      return next;
+    });
+  };
+  const chosen = findings.filter((_, i) => !unchosen.has(i));
+  return (
+    <>
+      <ul className="findings" aria-label="Findings">
+        {findings.map((f, i) => (
+          <FindingItem key={`${f.rule}.${f.object}`} finding={f} chosen={!unchosen.has(i)} onToggle={toggle(i)} />
+        ))}
+      </ul>
+      <div className="dialog-buttons">
+        <button
+          type="button"
+          disabled={chosen.length === 0}
+          onClick={() => {
+            onOpen(chosen.map((f) => f.fix).join("\n\n"));
+          }}
+        >
+          Open Fixes in Worksheet
+        </button>
+      </div>
+    </>
+  );
+}
+
+/** The schema's indexes, each with its table, method, columns, options and the constraint it serves. */
+function Indexes({ analysis }: { readonly analysis: Analysis }) {
+  if (analysis.indexes.length === 0) {
+    return <p className="hint">No table of the schema has an index.</p>;
+  }
+  return (
+    <table className="details-table" aria-label="Indexes">
+      <thead>
+        <tr>
+          <th>Table</th>
+          <th>Index</th>
+          <th>Method</th>
+          <th>Unique</th>
+          <th>Columns</th>
+          <th>Options</th>
+          <th>Serves</th>
+        </tr>
+      </thead>
+      <tbody>
+        {analysis.indexes.map((r) => (
+          <tr key={r.index.name}>
+            <td>{r.table}</td>
+            <td>{r.index.name}</td>
+            <td>{r.index.method}</td>
+            <td>{r.index.unique ? "yes" : "no"}</td>
+            <td>{r.index.columns.join(", ")}</td>
+            <td>{r.index.options.map(([k, v]) => `${k} = ${v}`).join(", ")}</td>
+            <td>{r.serves ?? ""}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+/** The settings that differ from their defaults. */
+function Settings({ analysis }: { readonly analysis: Analysis }) {
+  if (analysis.settings.length === 0) {
+    return <p className="hint">Every setting has its default.</p>;
+  }
+  return (
+    <table className="details-table" aria-label="Settings">
+      <thead>
+        <tr>
+          <th>Setting</th>
+          <th>Value</th>
+          <th>Default</th>
+          <th>From</th>
+          <th>Takes effect</th>
+        </tr>
+      </thead>
+      <tbody>
+        {analysis.settings.map((s) => (
+          <tr key={s.name} title={s.description}>
+            <td>{s.name}</td>
+            <td>{s.value}</td>
+            <td>{s.default}</td>
+            <td>{s.source}</td>
+            <td>{s.takesEffect}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+/** What waits on the server, each with why. */
+function Waiting() {
+  return (
+    <dl className="waiting" aria-label="Waiting on the server">
+      {WAITING.map(([what, why]) => (
+        <div key={what}>
+          <dt>{what}: unavailable</dt>
+          <dd>{why}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+/** The analyzer of `schema` on `connection`. */
+export function AnalyzerDialog({ connection, schema }: { readonly connection: number; readonly schema: string }) {
+  const store = useStore();
+  const found = useAnalysis(connection, schema);
+  const [tab, setTab] = useState<Tab>("findings");
+  const close = () => {
+    show(store, null);
+  };
+  const open = (sql: string) => void openDdl(store, connection, { sql, title: `Fixes of ${schema}` }, false);
+  return (
+    <Modal title={`Analyze Schema ${schema}`} onClose={close} wide>
+      <div role="tablist" className="tabs">
+        {TABS.map(([t, name]) => (
+          <button
+            key={t}
+            type="button"
+            role="tab"
+            aria-selected={tab === t}
+            onClick={() => {
+              setTab(t);
+            }}
+          >
+            {name}
+          </button>
+        ))}
+      </div>
+      {found === null && tab !== "waiting" && <p className="hint">Reading the schema…</p>}
+      {typeof found === "string" && tab !== "waiting" && <p className="error">{found}</p>}
+      {typeof found === "object" && found !== null && tab === "findings" && (
+        <Findings findings={found.findings} onOpen={open} />
+      )}
+      {typeof found === "object" && found !== null && tab === "indexes" && <Indexes analysis={found} />}
+      {typeof found === "object" && found !== null && tab === "settings" && <Settings analysis={found} />}
+      {tab === "waiting" && <Waiting />}
+      <div className="dialog-buttons">
+        <button type="button" onClick={close}>
+          Close
+        </button>
+      </div>
+    </Modal>
+  );
+}

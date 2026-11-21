@@ -8,6 +8,8 @@ import type { Query } from "../results/requery";
 import type { Cell, ColumnInfo, Outcome, ServerTime, StudioError } from "../ipc/connections";
 import { keepWorksheets, type KeptWorksheet, loadWorksheets, type Piece } from "../ipc/worksheet";
 import type { Plan } from "../worksheet/plan";
+import type { ToRun } from "./running";
+import type { Chart } from "../ipc/analyzer";
 import type { StudioState, Store } from "./store";
 
 /** A statement run, and what it gave. */
@@ -102,6 +104,12 @@ export interface WorksheetState {
   readonly outline: boolean;
   /** The plans shown last, the latest last, so two may be compared. */
   readonly plans: readonly Plan[];
+  /** The statement the latest plan explains. */
+  readonly explained: ToRun | null;
+  /** The index a what-if made for the latest plan, and dropped after; null of a plan of no what-if. */
+  readonly whatIf: string | null;
+  /** The chart of the report the worksheet opened, its results first shown so. */
+  readonly chart: Chart | null;
   /** Its statements, as last split. */
   readonly pieces: readonly Piece[];
   /** Its runs' times and rows, the latest last. */
@@ -149,6 +157,9 @@ export function freshWorksheet(
     split: false,
     outline: false,
     plans: [],
+    explained: null,
+    whatIf: null,
+    chart: null,
     pieces: [],
     timings: [],
   };

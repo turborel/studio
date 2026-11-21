@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-keep-report"
+description = "Enables the keep_report command without any pre-configured scope."
+commands.allow = ["keep_report"]
+
+[[permission]]
+identifier = "deny-keep-report"
+description = "Denies the keep_report command without any pre-configured scope."
+commands.deny = ["keep_report"]

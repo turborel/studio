@@ -14,21 +14,14 @@ Code never cites this file (R-DOC-5).
 
 ## M8 Analyzer
 
-- Index views, the plan view, and the analyzer's rules, each with its
-  fix as SQL; what-if indexes.
-- The plan view's actual figures, by EXPLAIN ANALYZE, which main now
-  gives: each operator's estimated rows against its actual rows, loops
-  and probes, a large misestimate marked, its time where the server gives
-  one, `(never run)` shown so; two plans compared, before and after. It
-  runs the query, so it is run only when the user asks, never of itself;
-  its text read as main's EXPLAIN page gives it, the tests on that page's
-  examples.
-- Reports: built in (object counts and sizes, files, indexes,
-  privileges, sessions and settings) and the user's own, a saved query
-  shown as a table or a chart, with parameters.
+- The plan viewer: EXPLAIN and EXPLAIN ANALYZE opened in a viewer of a
+  summary, a graphical flow, a tree-table, the stages as tabs, two plans
+  compared, and the raw text last; its warnings linked to the analyzer's
+  rules.
+- Reports: built-in reports of sizes, once Turborel shows them.
 - Waiting on the server, each shown as unavailable, with a line saying
   why, until Turborel exposes it: per-statement statistics; table and
-  index statistics; the planner's column statistics.
+  index statistics; the planner's column statistics; object sizes.
 
 ## M9 Assistant
 

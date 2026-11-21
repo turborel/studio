@@ -9,6 +9,7 @@
 
 use serde::Deserialize;
 use tauri::State;
+use turborel_studio_core::analyzer::Analysis;
 use turborel_studio_core::catalog::Catalog;
 use turborel_studio_core::catalog::ddl::{self, ScriptAs};
 use turborel_studio_core::catalog::graphs::Graph;
@@ -106,6 +107,14 @@ pub(crate) async fn catalog_type(studio: State<'_, Studio>, connection: Connecti
 pub(crate) async fn catalog_graphs(studio: State<'_, Studio>, connection: ConnectionId, schema: String) -> Result<Vec<Graph>> {
     bounded("a schema", &schema, MAX_NAME_CHARS)?;
     blocking(&studio, move |m| Catalog::of(m, connection).graphs(&schema)).await
+}
+
+/// What the analyzer finds of a schema: its indexes, the findings of its
+/// rules, and the settings that differ from their defaults.
+#[tauri::command]
+pub(crate) async fn catalog_analysis(studio: State<'_, Studio>, connection: ConnectionId, schema: String) -> Result<Analysis> {
+    bounded("a schema", &schema, MAX_NAME_CHARS)?;
+    blocking(&studio, move |m| Catalog::of(m, connection).analysis(&schema)).await
 }
 
 /// What USAGE is read of.

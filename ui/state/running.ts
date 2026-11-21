@@ -551,6 +551,8 @@ export async function explain(store: Store, id: string, statement: ToRun, analyz
     ...x,
     runs: x.runs.map((r) => (r.id === run.id ? { ...r, rows, complete, plan } : r)),
     plans: [...x.plans, plan].slice(-2),
+    explained: statement,
+    whatIf: null,
     pane: "plan",
   }));
 }

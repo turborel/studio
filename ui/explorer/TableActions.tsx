@@ -7,7 +7,7 @@ import type { DataTask } from "../data/tasks";
 import { Icon, type IconName } from "../icons/Icon";
 import { baseTables, readModel } from "../model/live";
 import { openModel } from "../model/models";
-import { attempt } from "../state/actions";
+import { attempt, show } from "../state/actions";
 import { useStore } from "../state/store";
 
 /** An action's button: its icon and name. */
@@ -72,14 +72,25 @@ function ModelAction({ connection, schema }: { readonly connection: number; read
   );
 }
 
-/** The actions of schema `schema` on `connection`: a table made in it, its script, its comparison and its model. */
+/** The actions of schema `schema` on `connection`: a table made in it, its script, its comparison, its model and its analysis. */
 export function SchemaActions({ connection, schema }: { readonly connection: number; readonly schema: string }) {
+  const store = useStore();
   return (
     <div className="details-actions" role="group" aria-label="Schema actions">
       <Action icon="table" name="Create Table…" task={{ kind: "createTable", connection, schema }} />
       <Action icon="definition" name="Generate Script…" task={{ kind: "generate", connection, schema }} />
       <Action icon="compare" name="Compare Schema…" task={{ kind: "compareSchemas", connection, schema }} />
       <ModelAction connection={connection} schema={schema} />
+      <button
+        type="button"
+        className="tool"
+        onClick={() => {
+          show(store, { kind: "analyzer", connection, schema });
+        }}
+      >
+        <Icon name="analyze" />
+        Analyze Schema…
+      </button>
     </div>
   );
 }

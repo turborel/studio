@@ -11,7 +11,7 @@ import { useStore, useStudio } from "../state/store";
 import { changeWorksheet, type Pane, type RunResult, worksheetOf } from "../state/worksheets";
 import { showFailure } from "./editor/actions";
 import { viewOf } from "./editor/views";
-import { PlanView } from "./PlanView";
+import { PlanPane } from "../analyzer/PlanFindings";
 import { Icon } from "../icons/Icon";
 
 /** A result's tab's name: its number, after its connection's name where the results are of several. */
@@ -155,7 +155,7 @@ export function Panes({ id }: { readonly id: string }) {
       <div role="tabpanel" className="pane">
         {pane === "results" && <Results id={id} />}
         {pane === "messages" && <Messages id={id} />}
-        {pane === "plan" && <PlanView plans={plans ?? []} />}
+        {pane === "plan" && <PlanPane id={id} plans={plans ?? []} />}
         {pane === "timings" && <Timings id={id} />}
       </div>
     </div>

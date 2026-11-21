@@ -73,6 +73,7 @@ function OnePlan({ plan, stage, label }: { readonly plan: Plan; readonly stage: 
   const shown = plan.stages.find((s) => s.name === stage) ?? plan.stages.at(-1);
   return (
     <div className="plan" aria-label={label}>
+      <h4 className="plan-label">{label}</h4>
       <ul className="plan-tree">
         {(shown?.roots ?? []).map((root, i) => (
           <Node key={`${String(i)}.${root.operator}`} node={root} />
@@ -87,10 +88,32 @@ function OnePlan({ plan, stage, label }: { readonly plan: Plan; readonly stage: 
   );
 }
 
-/** The plan view of `plans`, the latest last. */
-export function PlanView({ plans }: { readonly plans: readonly Plan[] }) {
+/** Whether the plan before is shown beside the latest. */
+function CompareChoice(props: { readonly compare: boolean; readonly onCompare: (compare: boolean) => void }) {
+  return (
+    <label className="check">
+      <input
+        type="checkbox"
+        checked={props.compare}
+        onChange={(e) => {
+          props.onCompare(e.target.checked);
+        }}
+      />
+      <span>Compare with the plan before</span>
+    </label>
+  );
+}
+
+/** The plan view of `plans`, the latest last; of a what-if's, `whatIf` names its index, and the two are compared at first. */
+export function PlanView({
+  plans,
+  whatIf = null,
+}: {
+  readonly plans: readonly Plan[];
+  readonly whatIf?: string | null;
+}) {
   const [stage, setStage] = useState("physical");
-  const [compare, setCompare] = useState(false);
+  const [compare, setCompare] = useState(whatIf !== null);
   const latest = plans.at(-1);
   if (latest === undefined) {
     return <p className="hint">No plan yet: Explain shows the plan of the statement at the cursor.</p>;
@@ -112,22 +135,15 @@ export function PlanView({ plans }: { readonly plans: readonly Plan[] }) {
             {s.name}
           </button>
         ))}
-        {before !== undefined && (
-          <label className="check">
-            <input
-              type="checkbox"
-              checked={compare}
-              onChange={(e) => {
-                setCompare(e.target.checked);
-              }}
-            />
-            <span>Compare with the plan before</span>
-          </label>
-        )}
+        {before !== undefined && <CompareChoice compare={compare} onCompare={setCompare} />}
       </div>
       <div className={compare ? "plan-pair" : undefined}>
         {compare && before !== undefined && <OnePlan plan={before} stage={stage} label="The plan before" />}
-        <OnePlan plan={latest} stage={stage} label="The plan" />
+        <OnePlan
+          plan={latest}
+          stage={stage}
+          label={whatIf === null ? "The plan" : `The plan with the index ${whatIf}, dropped after`}
+        />
       </div>
     </div>
   );

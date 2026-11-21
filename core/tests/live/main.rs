@@ -23,6 +23,7 @@
     reason = "a test program, whose failures are panics (R-TEST-4)"
 )]
 
+mod analyzer;
 mod catalog;
 mod certs;
 mod connect;
@@ -147,6 +148,9 @@ const TESTS: &[(&str, Test)] = &[
     ("a_comparisons_script_syncs_the_target", data::a_comparisons_script_syncs_the_target),
     ("a_models_script_migrates_the_schema", data::a_models_script_migrates_the_schema),
     ("a_built_query_runs", data::a_built_query_runs),
+    ("a_schemas_analysis_finds_what_its_rules_say", analyzer::a_schemas_analysis_finds_what_its_rules_say),
+    ("a_what_if_index_changes_the_plan", analyzer::a_what_if_index_changes_the_plan),
+    ("the_built_in_reports_run", analyzer::the_built_in_reports_run),
     ("a_running_statement_is_cancelled", session::a_running_statement_is_cancelled),
     ("the_transaction_is_followed", session::the_transaction_is_followed),
     ("a_lost_connection_is_told_and_reconnected", session::a_lost_connection_is_told_and_reconnected),

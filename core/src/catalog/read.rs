@@ -259,6 +259,41 @@ impl Catalog<'_> {
         })
     }
 
+    /// The database's settings.
+    ///
+    /// # Errors
+    ///
+    /// The server's.
+    pub fn settings(&self) -> Result<Vec<crate::analyzer::Setting>> {
+        Ok(self
+            .rows(queries::SETTINGS, &[])?
+            .iter()
+            .map(|r| crate::analyzer::Setting {
+                name: need(r, 0),
+                value: text(r, 1).unwrap_or_default(),
+                source: need(r, 2),
+                default: text(r, 3).unwrap_or_default(),
+                takes_effect: need(r, 4),
+                description: text(r, 5).unwrap_or_default(),
+            })
+            .collect())
+    }
+
+    /// What the analyzer finds of `schema`'s base tables, read whole, and
+    /// the database's settings.
+    ///
+    /// # Errors
+    ///
+    /// The server's.
+    pub fn analysis(&self, schema: &str) -> Result<crate::analyzer::Analysis> {
+        let objects = self.objects(schema)?;
+        let mut tables = Vec::with_capacity(objects.tables.len());
+        for table in objects.tables.iter().filter(|t| crate::analyzer::is_base(&t.kind)) {
+            tables.push(self.table(schema, &table.name)?);
+        }
+        Ok(crate::analyzer::analyze(&tables, &self.settings()?))
+    }
+
     /// The parts of `schema`'s script: its domains, sequences, tables in
     /// the order their foreign keys need, and routines.
     ///

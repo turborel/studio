@@ -3,6 +3,7 @@
  * through `ui/ipc/` (R-TS-3) and changes the store with what it gives. A
  * failure is kept as the state's error, which the window shows.
  */
+import { listReports } from "../ipc/analyzer";
 import {
   cancelStatement,
   closeConnection,
@@ -57,15 +58,16 @@ export async function attempt<T>(store: Store, work: () => Promise<T>): Promise<
   }
 }
 
-/** Loads the settings, the saved connections, the keychain's status, Turborel's reserved words, the favourite queries and the project folders. */
+/** Loads the settings, the saved connections, the keychain's status, Turborel's reserved words, the favourite queries, the reports and the project folders. */
 export async function loadAll(store: Store): Promise<void> {
-  const [settings, saved, keychain, reservedWords, queries, projects] = await Promise.allSettled([
+  const [settings, saved, keychain, reservedWords, queries, projects, reports] = await Promise.allSettled([
     loadSettings(),
     listSavedConnections(),
     keychainStatus(),
     sqlWords(),
     listQueries(),
     projectFolders(),
+    listReports(),
   ]);
   // Each part that came is kept, so one that did not leaves the others (D49).
   const kept = <T>(r: PromiseSettledResult<T>, or: T): T => (r.status === "fulfilled" ? r.value : or);
@@ -77,8 +79,11 @@ export async function loadAll(store: Store): Promise<void> {
     reservedWords: kept(reservedWords, now.reservedWords),
     queries: kept(queries, now.queries),
     projects: kept(projects, now.projects),
+    reports: kept(reports, now.reports),
   }));
-  const failed = [settings, saved, keychain, reservedWords, queries, projects].find((r) => r.status === "rejected");
+  const failed = [settings, saved, keychain, reservedWords, queries, projects, reports].find(
+    (r) => r.status === "rejected",
+  );
   if (failed !== undefined) {
     await attempt(store, () => Promise.reject(failed.reason as Error));
   }

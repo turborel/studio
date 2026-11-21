@@ -20,6 +20,7 @@ so a crash leaves the old file or the new. None holds a password.
 | `history.json` | the configuration | the history of what ran |
 | `queries.json` | the configuration | the favourite queries |
 | `projects.json` | the configuration | the project folders |
+| `reports.json` | the configuration | the user's own reports |
 | `failures.log` | the configuration | the failures the window did not handle, a line each |
 | `turborel-studio-*` | the cache, `results` | a result's pages, sealed, while it is open |
 
@@ -193,6 +194,28 @@ The project folders, at most 100:
 {
   "format": 1,
   "folders": ["/home/ann/sql"]
+}
+```
+
+## reports.json
+
+The user's own reports ([The Analyzer](../user/09-analyzer.md#reports)),
+at most 1000, each of its identifier, name and query, and its chart, or
+null to show its rows as a table. A chart is of a `kind`, `bar` or
+`line`; the column whose values name its rows, `label`; and the columns
+whose numbers it draws, `values`, one to eight:
+
+```json
+{
+  "format": 1,
+  "reports": [
+    {
+      "id": "r1",
+      "name": "Sales by Region",
+      "sql": "SELECT REGION, SUM(AMOUNT) AS TOTAL FROM ANN.SALES GROUP BY REGION ORDER BY REGION",
+      "chart": { "kind": "bar", "label": "REGION", "values": ["TOTAL"] }
+    }
+  ]
 }
 ```
 

@@ -58,6 +58,21 @@ export interface Palette {
   readonly iconConnect: string;
   /** The icon of disconnecting. */
   readonly iconDisconnect: string;
+  /**
+   * The colours of a chart's series, in their fixed order: blue, orange,
+   * aqua, yellow, magenta, green, violet, red, each stepped for the
+   * theme's background and checked together for colour-blind separation
+   * (RULES.md D52). A chart's values and labels are written in text's
+   * colours, never these.
+   */
+  readonly series1: string;
+  readonly series2: string;
+  readonly series3: string;
+  readonly series4: string;
+  readonly series5: string;
+  readonly series6: string;
+  readonly series7: string;
+  readonly series8: string;
 }
 
 /** Studio's icon's maroon, sampled from `artwork/studio-icon.png`. */
@@ -89,6 +104,14 @@ export const PALETTES: Readonly<Record<ThemeName, Palette>> = {
     iconRollback: "#8A4B00",
     iconConnect: "#00796B",
     iconDisconnect: "#7B3FA0",
+    series1: "#2A78D6",
+    series2: "#EB6834",
+    series3: "#1BAF7A",
+    series4: "#EDA100",
+    series5: "#E87BA4",
+    series6: "#008300",
+    series7: "#6250D6",
+    series8: "#E34948",
   },
   dark: {
     background: "#1A1617",
@@ -114,6 +137,14 @@ export const PALETTES: Readonly<Record<ThemeName, Palette>> = {
     iconRollback: "#F0C060",
     iconConnect: "#64D2C4",
     iconDisconnect: "#D0A6F0",
+    series1: "#3987E5",
+    series2: "#D95926",
+    series3: "#199E70",
+    series4: "#C98500",
+    series5: "#D55181",
+    series6: "#008300",
+    series7: "#9085E9",
+    series8: "#E66767",
   },
 };
 

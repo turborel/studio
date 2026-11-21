@@ -320,6 +320,20 @@ export const COMMANDS: readonly Command[] = [
     run: onActive(loadSchemas),
   },
   {
+    id: "analyzer.open",
+    icon: "analyze",
+    title: "Analyze Schema…",
+    category: "Connection",
+    enabled: connected,
+    run: onActive(async (store, id) => {
+      const open = store.current().open.find((c) => c.id === id);
+      if (open !== undefined) {
+        show(store, { kind: "analyzer", connection: id, schema: open.session.schema ?? open.session.authorization });
+      }
+      return Promise.resolve();
+    }),
+  },
+  {
     id: "transaction.commit",
     icon: "commit",
     title: "Commit",

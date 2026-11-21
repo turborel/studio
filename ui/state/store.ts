@@ -14,6 +14,8 @@ import type { KeychainStatus, SavedConnection, SavedList } from "../ipc/saved";
 import type { CatalogState, Selected } from "../explorer/catalogState";
 import type { Confirm } from "../ipc/connections";
 import type { FavouriteQuery } from "../ipc/worksheet";
+import type { Chart, ReportList } from "../ipc/analyzer";
+import type { WhatIf } from "../analyzer/whatIf";
 import type { WorksheetState } from "./worksheets";
 
 /** A connection open in this window. */
@@ -47,7 +49,10 @@ export type Dialog =
   | { readonly kind: "folders" }
   | { readonly kind: "favourite"; readonly sql: string }
   | { readonly kind: "data"; readonly task: DataTask }
-  | { readonly kind: "builder"; readonly worksheet: string; readonly connection: number; readonly schema: string };
+  | { readonly kind: "builder"; readonly worksheet: string; readonly connection: number; readonly schema: string }
+  | { readonly kind: "analyzer"; readonly connection: number; readonly schema: string }
+  | { readonly kind: "whatIf"; readonly whatIf: WhatIf }
+  | { readonly kind: "report"; readonly sql: string; readonly chart: Chart | null };
 
 /** The values a statement's markers are given: its parameters' and its script variables'. */
 export interface Given {
@@ -72,6 +77,8 @@ export interface StudioState {
   /** Turborel's reserved words, as its lexer reads them. */
   readonly reservedWords: readonly string[];
   readonly queries: readonly FavouriteQuery[];
+  /** The reports: the built-in, then the user's own. */
+  readonly reports: ReportList;
   readonly projects: readonly string[];
   /** What the status bar tells of the result's cells selected, if any are. */
   readonly cellSummary: string | null;
@@ -98,6 +105,7 @@ export const INITIAL: StudioState = {
   closedWorksheets: [],
   reservedWords: [],
   queries: [],
+  reports: { builtIn: [], own: [] },
   projects: [],
   cellSummary: null,
   notices: [],

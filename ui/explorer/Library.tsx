@@ -1,7 +1,8 @@
 /**
- * The explorer's favourite queries and project folders (RULES.md D36):
- * each query opened in a worksheet, or forgotten; each project's `.sql`
- * files listed, each opened in a worksheet.
+ * The explorer's favourite queries, reports and project folders (RULES.md
+ * D36, D52): each query opened in a worksheet, or forgotten; each report
+ * opened in a worksheet and run; each project's `.sql` files listed, each
+ * opened in a worksheet.
  */
 import { useEffect, useState } from "react";
 import { addProjectFolder, forgetQuery, projectFiles, removeProjectFolder } from "../ipc/worksheet";
@@ -10,6 +11,7 @@ import { type Store, useStore, useStudio } from "../state/store";
 import { openWorksheet } from "../state/worksheets";
 import { openPath } from "../worksheet/commands";
 import { Icon } from "../icons/Icon";
+import { Reports } from "../analyzer/Reports";
 
 /** Runs `work`, keeping its failure as the error shown. */
 async function kept(store: Store, work: () => Promise<void>): Promise<void> {
@@ -154,13 +156,17 @@ function Projects() {
   );
 }
 
-/** The favourite queries and the project folders, each a section of the explorer. */
+/** The favourite queries, the reports and the project folders, each a section of the explorer. */
 export function Library() {
   return (
     <>
       <details className="explorer-section">
         <summary>Favourite Queries</summary>
         <Queries />
+      </details>
+      <details className="explorer-section">
+        <summary>Reports</summary>
+        <Reports />
       </details>
       <details className="explorer-section">
         <summary>Projects</summary>

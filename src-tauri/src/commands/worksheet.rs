@@ -9,11 +9,14 @@
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+use serde::Serialize;
+
 use tauri::{AppHandle, Runtime, State};
 use tauri_plugin_dialog::DialogExt;
 use turborel_studio_core::error::{Result, StudioError};
 use turborel_studio_core::events::ConnectionId;
 use turborel_studio_core::guard::policy::Confirm;
+use turborel_studio_core::reports::{Report, Reports, built_in_reports};
 use turborel_studio_core::worksheet::files::{Query, Worksheet};
 use turborel_studio_core::worksheet::folders::{Opened, SQL_EXTENSION};
 use turborel_studio_core::worksheet::history::Entry;
@@ -127,6 +130,37 @@ pub(crate) async fn keep_query(studio: State<'_, Studio>, query: Query) -> Resul
 pub(crate) async fn forget_query(studio: State<'_, Studio>, id: String) -> Result<Vec<Query>> {
     let kept = studio.kept.clone();
     off_the_window(move || kept.forget_query(&id)).await
+}
+
+/// The reports: the built-in, then the user's own.
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct ReportList {
+    /// The built-in reports.
+    built_in: Vec<Report>,
+    /// The user's own.
+    own: Vec<Report>,
+}
+
+/// The reports.
+#[tauri::command]
+pub(crate) async fn list_reports(studio: State<'_, Studio>) -> Result<ReportList> {
+    let reports = Reports::new(&studio.config);
+    off_the_window(move || Ok(ReportList { built_in: built_in_reports(), own: reports.list()? })).await
+}
+
+/// Keeps a report of the user's: their reports then.
+#[tauri::command]
+pub(crate) async fn keep_report(studio: State<'_, Studio>, report: Report) -> Result<Vec<Report>> {
+    let reports = Reports::new(&studio.config);
+    off_the_window(move || reports.keep(report)).await
+}
+
+/// Forgets a report of the user's: their reports then.
+#[tauri::command]
+pub(crate) async fn forget_report(studio: State<'_, Studio>, id: String) -> Result<Vec<Report>> {
+    let reports = Reports::new(&studio.config);
+    off_the_window(move || reports.forget(&id)).await
 }
 
 /// A path the dialog chose, as a path of the platform's.

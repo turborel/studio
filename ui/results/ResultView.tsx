@@ -21,11 +21,15 @@ import { EditTools } from "./EditTools";
 import { editable, Grid } from "./Grid";
 import { narrowed, nextSort, valueCondition } from "./requery";
 import { CompareView, GraphOfResult, PlaneOfResult, RecordView, spatialColumns, TextView } from "./ResultParts";
+import { defaultChart } from "./chart";
+import { ChartView } from "./ChartView";
+import type { Chart } from "../ipc/analyzer";
+import { show } from "../state/actions";
 import { allOf, chosenOf } from "./selection";
 import { ValueViewer, type Viewed } from "./viewers/ValueViewer";
 
 /** How a result is shown. */
-export type ResultMode = "grid" | "text" | "record" | "graph" | "plane";
+export type ResultMode = "grid" | "text" | "record" | "graph" | "plane" | "chart";
 
 /** Each view: its icon and name. */
 const MODES: readonly (readonly [ResultMode, IconName, string])[] = [
@@ -34,6 +38,7 @@ const MODES: readonly (readonly [ResultMode, IconName, string])[] = [
   ["record", "record", "Record"],
   ["graph", "graph", "Graph"],
   ["plane", "plane", "Plane"],
+  ["chart", "chart", "Chart"],
 ];
 
 /** No selection. */
@@ -191,6 +196,8 @@ interface ViewState {
   readonly viewing: boolean;
   readonly menu: { readonly cell: Item; readonly at: { x: number; y: number } } | null;
   readonly comparing: number | null;
+  /** The chart of the chart view, as last chosen; null for the one first shown. */
+  readonly chart: Chart | null;
 }
 
 /** A result view's state as first shown. */
@@ -202,6 +209,7 @@ const FIRST: ViewState = {
   viewing: false,
   menu: null,
   comparing: null,
+  chart: null,
 };
 
 /** What a result view's parts are given: the worksheet, the run, its state and the change of it. */
@@ -244,7 +252,9 @@ function useSummary(run: RunResult, selection: GridSelection): void {
 
 /** The toolbar's choice of view, and the value viewer. */
 function ModeTools({ run, view, change }: Parts) {
-  const modes = MODES.filter(([m]) => m !== "plane" || spatialColumns(run).length > 0);
+  const modes = MODES.filter(
+    ([m]) => (m !== "plane" || spatialColumns(run).length > 0) && (m !== "chart" || defaultChart(run.columns) !== null),
+  );
   return (
     <span className="tool-group" role="group" aria-label="View">
       {modes.map(([m, icon, name]) => (
@@ -274,8 +284,16 @@ function ModeTools({ run, view, change }: Parts) {
 function KeepTools({ id, run, view, change, names }: Parts & { readonly names: ReadonlyMap<number, string> }) {
   const store = useStore();
   const runs = useStudio((s) => worksheetOf(s, id)?.runs ?? NO_RUNS);
+  const report = () => {
+    show(store, {
+      kind: "report",
+      sql: run.sql,
+      chart: view.mode === "chart" ? (view.chart ?? defaultChart(run.columns)) : null,
+    });
+  };
   return (
     <span className="tool-group" role="group" aria-label="Keep">
+      <Tool icon="chart" name="Save as Report…" onClick={report} />
       <Tool
         icon={run.pinned ? "unpin" : "pin"}
         name={run.pinned ? "Unpin Result" : "Pin Result"}
@@ -388,6 +406,16 @@ function ResultMain(parts: Parts) {
       return <GraphOfResult run={run} />;
     case "plane":
       return <PlaneOfResult run={run} row={view.selection.current?.cell[1] ?? null} />;
+    case "chart":
+      return (
+        <ChartView
+          run={run}
+          chart={view.chart ?? defaultChart(run.columns)}
+          onChart={(chart) => {
+            change({ chart });
+          }}
+        />
+      );
   }
 }
 
@@ -497,7 +525,10 @@ export function ResultView({
   readonly names: ReadonlyMap<number, string>;
 }) {
   const store = useStore();
-  const [view, setView] = useState<ViewState>(FIRST);
+  const reported = useStudio((s) => worksheetOf(s, id)?.chart ?? null);
+  const [view, setView] = useState<ViewState>(() =>
+    reported === null ? FIRST : { ...FIRST, mode: "chart", chart: reported },
+  );
   const change = (next: Partial<ViewState>) => {
     setView((v) => ({ ...v, ...next }));
   };

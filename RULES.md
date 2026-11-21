@@ -89,6 +89,9 @@ Each is told in full in [§7](#7-the-decisions).
 | D47 | A schema taken to a model, or to another schema, by a script |
 | D48 | The query builder: a query written into a worksheet as it is built |
 | D49 | A window that never goes blank: failures shown and logged, files that do not fit set aside, a smoke test of the real window |
+| D50 | The analyzer: rules of the catalog and the plan, each finding's fix as SQL |
+| D51 | What-if indexes: made, explained and dropped, only when asked |
+| D52 | Reports and charts: queries shown as tables or charts, the user's kept |
 
 ---
 
@@ -125,6 +128,9 @@ Each is told in full in [§7](#7-the-decisions).
 | `ui/results/` | a result's grid, its views and viewers, its copies, exports and comparisons, the timings (D39), and its rows edited (D42) |
 | `ui/model/` | models: their diagram, file, tables designed, and comparisons with schemas (D46, D47) |
 | `ui/builder/` | the query builder (D48) |
+| `core/src/analyzer.rs` | the analyzer's rules of the catalog and the settings (D50) |
+| `core/src/reports.rs` | the built-in reports, and the user's kept (D52) |
+| `ui/analyzer/` | the analyzer's dialog, the plan's rule and findings, what-if indexes and reports (D50, D51, D52) |
 | `ui/data/` | the dialogs of a table's data and definitions: its rows edited, imported, exported and compared, and tables made and altered (D42 to D45) |
 | `ui/state/` | the window's store and its actions (D31) |
 | `ui/commands/` | the commands and their keys (D30) |
@@ -1098,6 +1104,56 @@ The review checklist:
 - *Why:* a window blank and silent, as d3 under a prototype frozen before
   it ran made it (D22), tells its user nothing; this one tells them, and
   the tests see what they see.
+
+#### D50. The analyzer: rules of the catalog and the plan, each finding's fix as SQL
+
+- **Read:** a schema's base tables whole, and INFORMATION_SCHEMA.SETTINGS,
+  by the backend; partitions judged with their partitioned table.
+- **Rules:** FK-NO-INDEX, INDEX-DUPLICATE, INDEX-PREFIX, TABLE-NO-KEY
+  and SETTING-ADVISED in Rust, of the catalog, so the assistant (M9)
+  can read them too; SCAN-NO-INDEX in the window, of the plan it parses
+  (D36), with the tables it scans read of the catalog. Each finding is
+  its rule's identifier, its object, what it says and its fix; sorted
+  by rule, then object.
+- **Settings advised:** only those whose values Turborel's Appendix C
+  says lose commits or weaken authentication: LOG.COMMIT_SYNC OFF,
+  LOG.DURABILITY NONE, SERVER.SCRAM_WITHOUT_TLS ON, SERVER.TRUST_LOCAL
+  ON.
+- **Fixes:** opened in a worksheet, never run by the analyzer; a
+  constraint's index never dropped.
+- **Waiting on the server:** statement, table, index and column
+  statistics and sizes, each shown unavailable, saying why.
+- *Why:* each change explained and reviewed before it runs; the same
+  catalog, the same findings.
+
+#### D51. What-if indexes: made, explained and dropped, only when asked
+
+- **How:** CREATE INDEX, EXPLAIN of the statement, then DROP INDEX, each
+  through the guards, in the worksheet; not under autocommit, ROLLBACK of
+  the EXPLAIN's transaction before the drop; nothing after a make that
+  failed; the drop after an EXPLAIN that failed too.
+- **Asked first:** a dialog says the index is made for real, apart from
+  any transaction, seen by other sessions while it stands.
+- **Shown:** the plan before and the plan with the index side by side.
+- *Why:* Turborel makes an index apart from any transaction (its
+  `create-index.md`), so it cannot be rolled back; a hypothetical index
+  waits on the server.
+
+#### D52. Reports and charts: queries shown as tables or charts, the user's kept
+
+- **Built in:** of the Information Schema, defined in Rust, each run by
+  the live tests: objects by schema, files, indexes, table privileges,
+  sessions, settings changed.
+- **The user's:** `reports.json`, format 1, at most 1000, each a name, a
+  query and a chart or none.
+- **Run:** in a worksheet, as any query, through the guards, its
+  parameters asked.
+- **Charts:** bars or lines, by hand in SVG, of one scale; at most eight
+  series in a fixed order of colours checked together for colour-blind
+  separation against each theme's background; a legend of two series or
+  more; values and labels in text's colours; the first 200 rows.
+- *Why:* a query worth keeping kept with how it is read; no chart
+  library for two forms.
 
 ---
 

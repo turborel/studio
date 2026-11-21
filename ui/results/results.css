@@ -246,3 +246,54 @@ path.plane-selected.plane-area {
   top: 0;
   z-index: 9999;
 }
+
+/* The chart view (D52): its choices, legend and drawing, in text's colours, its marks in the series'. */
+.chart-view {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  height: 100%;
+  overflow: auto;
+}
+
+.chart-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.chart {
+  width: 100%;
+  max-height: 60vh;
+  background: var(--background);
+}
+
+.chart-grid {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.chart-tick {
+  fill: var(--text-muted);
+  font-size: 11px;
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  color: var(--text);
+}
+
+.chart-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  margin-right: 4px;
+}

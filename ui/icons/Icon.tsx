@@ -7,6 +7,8 @@
  */
 import type { Icon as PhosphorIcon } from "@phosphor-icons/react";
 import { FileSqlIcon } from "@phosphor-icons/react/dist/csr/FileSql";
+import { ChartBarIcon } from "@phosphor-icons/react/dist/csr/ChartBar";
+import { StethoscopeIcon } from "@phosphor-icons/react/dist/csr/Stethoscope";
 import { PlayIcon } from "@phosphor-icons/react/dist/csr/Play";
 import { PlayCircleIcon } from "@phosphor-icons/react/dist/csr/PlayCircle";
 import { StopIcon } from "@phosphor-icons/react/dist/csr/Stop";
@@ -184,6 +186,8 @@ const ICONS = {
   unpin: [PushPinSlashIcon, "plain"],
   addRow: [RowsPlusBottomIcon, "plain"],
   review: [ListChecksIcon, "plain"],
+  chart: [ChartBarIcon, "plain"],
+  analyze: [StethoscopeIcon, "plain"],
 } as const satisfies Record<string, readonly [PhosphorIcon, Tone]>;
 
 /** An icon's name. */

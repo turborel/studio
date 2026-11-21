@@ -540,3 +540,30 @@ button:disabled .icon {
   white-space: pre-wrap;
   font-size: 12px;
 }
+
+/* The analyzer's findings, and what waits on the server (D50). */
+.findings {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 50vh;
+  overflow: auto;
+}
+
+.findings li {
+  border-bottom: 1px solid var(--border);
+  padding: 6px 0;
+}
+
+.findings p {
+  margin: 4px 0;
+}
+
+.waiting dt {
+  font-weight: 600;
+}
+
+.waiting dd {
+  margin: 0 0 8px;
+  color: var(--text-muted);
+}
