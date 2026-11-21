@@ -227,18 +227,26 @@ pub enum FoundServer {
     },
 }
 
+/// A server's Unix socket in `dir`, if one is there.
+#[cfg(unix)]
+fn socket_in(dir: &Path) -> Option<FoundServer> {
+    use std::os::unix::fs::FileTypeExt;
+    let socket = std::fs::read_dir(dir).ok()?.flatten().find(|e| e.file_type().is_ok_and(|t| t.is_socket()))?;
+    Some(FoundServer::Socket { path: socket.path().display().to_string() })
+}
+
+/// None: a server's named pipe is no file of the database's folder.
+#[cfg(not(unix))]
+fn socket_in(_: &Path) -> Option<FoundServer> {
+    None
+}
+
 /// A server found that may serve the database in `dir`.
 pub fn find_server(dir: &Path) -> Option<FoundServer> {
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::FileTypeExt;
-        let socket = std::fs::read_dir(dir).ok()?.flatten().find(|e| e.file_type().is_ok_and(|t| t.is_socket()));
-        if let Some(socket) = socket {
-            return Some(FoundServer::Socket { path: socket.path().display().to_string() });
-        }
-    }
-    let address = SocketAddr::from((Ipv4Addr::LOCALHOST, DEFAULT_PORT));
-    TcpStream::connect_timeout(&address, LOOK_WITHIN).ok().map(|_| FoundServer::Port { port: DEFAULT_PORT })
+    socket_in(dir).or_else(|| {
+        let address = SocketAddr::from((Ipv4Addr::LOCALHOST, DEFAULT_PORT));
+        TcpStream::connect_timeout(&address, LOOK_WITHIN).ok().map(|_| FoundServer::Port { port: DEFAULT_PORT })
+    })
 }
 
 /// The refusal of a database another process holds, with the server found.
