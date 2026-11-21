@@ -4,7 +4,16 @@
  * palette all run them by name, so each is in one place.
  */
 import { ZOOM } from "../ipc/preferences";
-import { attempt, cancel, changeSettings, disconnect, endTransaction, reconnectOpen, show } from "../state/actions";
+import {
+  attempt,
+  cancel,
+  changeSettings,
+  disconnect,
+  endTransaction,
+  newInMemory,
+  reconnectOpen,
+  show,
+} from "../state/actions";
 import type { IconName } from "../icons/Icon";
 import type { Store } from "../state/store";
 import { loadSchemas } from "../state/catalog";
@@ -239,6 +248,34 @@ export const COMMANDS: readonly Command[] = [
     run: ({ store }) => {
       show(store, { kind: "connection", editing: null });
     },
+  },
+  {
+    id: "database.open",
+    icon: "openDatabase",
+    title: "Open Database…",
+    category: "File",
+    enabled: always,
+    run: ({ store }) => {
+      show(store, { kind: "embedded", mode: "open", editing: null });
+    },
+  },
+  {
+    id: "database.new",
+    icon: "newDatabase",
+    title: "New Database…",
+    category: "File",
+    enabled: always,
+    run: ({ store }) => {
+      show(store, { kind: "embedded", mode: "new", editing: null });
+    },
+  },
+  {
+    id: "database.newInMemory",
+    icon: "inMemory",
+    title: "New In-Memory Database",
+    category: "File",
+    enabled: always,
+    run: ({ store }) => newInMemory(store),
   },
   {
     id: "worksheet.new",

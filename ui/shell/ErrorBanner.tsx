@@ -5,7 +5,7 @@
 import { dismissError } from "../state/actions";
 import { useStore, useStudio } from "../state/store";
 
-/** The notices of files set aside, each until dismissed (RULES.md D49). */
+/** The notices Studio tells, each until dismissed: files set aside (RULES.md D49), a database recovered as it opened (D59). */
 export function NoticeBanner() {
   const store = useStore();
   const notices = useStudio((s) => s.notices);

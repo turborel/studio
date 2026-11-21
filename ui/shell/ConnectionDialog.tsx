@@ -5,7 +5,7 @@
  * saves, or both.
  */
 import { type ReactNode, useState } from "react";
-import type { Environment } from "../ipc/connections";
+import type { ConnectionSpec, Environment } from "../ipc/connections";
 import type { SavedConnection } from "../ipc/saved";
 import { connectSaved, connectSpec, save, show } from "../state/actions";
 import { useStore, useStudio } from "../state/store";
@@ -276,9 +276,21 @@ function useActions(form: ConnectionForm) {
   };
 }
 
-/** The connection dialog, of `editing` or of a new connection. */
-export function ConnectionDialog({ editing }: { readonly editing: SavedConnection | null }) {
-  const [form, setForm] = useState<ConnectionForm>(() => formOf(editing));
+/** The fields the dialog begins with: of `editing`, or of a new connection given `spec`. */
+function beginning(editing: SavedConnection | null, spec: ConnectionSpec | undefined): ConnectionForm {
+  const made = formOf(editing);
+  return spec === undefined ? made : { ...made, spec: { ...made.spec, ...spec } };
+}
+
+/** The connection dialog, of `editing` or of a new connection, which begins with `spec` if given. */
+export function ConnectionDialog({
+  editing,
+  spec,
+}: {
+  readonly editing: SavedConnection | null;
+  readonly spec?: ConnectionSpec;
+}) {
+  const [form, setForm] = useState<ConnectionForm>(() => beginning(editing, spec));
   const set = (change: Partial<ConnectionForm>) => {
     setForm((now) => ({ ...now, ...change }));
   };

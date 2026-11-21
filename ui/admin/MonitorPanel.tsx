@@ -4,8 +4,9 @@
  * chosen: its sessions, each cancelled or ended; the server's counters,
  * drawn over the time the panel is open; the jobs; the files; the
  * memory's reservations; the backups, archived segments and restore
- * points; the replica group; and the settings, each set for the session
- * or the database, or given its default.
+ * points; the replica group; the settings, each set for the session or
+ * the database, or given its default; and the plug-ins, an embedded
+ * database's as Studio gave them (D59), and the extensions.
  */
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 import type { ViewName, ViewRows } from "../ipc/admin";
@@ -16,6 +17,7 @@ import { Drawing, Legend } from "../results/ChartView";
 import { isStudioError } from "../state/actions";
 import { useStore, useStudio } from "../state/store";
 import { runAct } from "./admin";
+import { PlugIns } from "./PlugIns";
 import "./admin.css";
 
 /** The monitor's tabs, each with its name. */
@@ -28,6 +30,7 @@ export const TABS = [
   ["backups", "Backups"],
   ["replication", "Replication"],
   ["settings", "Settings"],
+  ["plugIns", "Plug-ins"],
 ] as const;
 
 /** A tab's identifier. */
@@ -68,6 +71,17 @@ function useView(connection: number, view: ViewName, tick: number): Read {
   return read;
 }
 
+/** What is shown of a view with no rows to show: absent, or none. */
+function NoRows({ absent }: { readonly absent: boolean }) {
+  return absent ? (
+    <p className="hint">
+      The database has not this view: an embedded database has no server, so no server&apos;s sessions or counters.
+    </p>
+  ) : (
+    <p className="hint">No rows. Only the database&apos;s owner sees the server&apos;s and the database&apos;s rows.</p>
+  );
+}
+
 /** The rows of a view as a table, each row's acts after it. */
 function RowsTable(props: {
   readonly read: Read;
@@ -81,12 +95,8 @@ function RowsTable(props: {
   if (typeof read === "string") {
     return <p className="error">{read}</p>;
   }
-  if (read.rows.length === 0) {
-    return (
-      <p className="hint">
-        No rows. Only the database&apos;s owner sees the server&apos;s and the database&apos;s rows.
-      </p>
-    );
+  if (read.absent || read.rows.length === 0) {
+    return <NoRows absent={read.absent} />;
   }
   return (
     <div className="monitor-table">
@@ -263,7 +273,7 @@ function ViewTable(props: {
   readonly name: string;
 }) {
   const read = useView(props.connection, props.view, props.tick);
-  if (typeof read === "object" && read?.absent === true) {
+  if (props.view === "replicas" && typeof read === "object" && read?.absent === true) {
     return <p className="hint">This database is in no replica group.</p>;
   }
   return <RowsTable read={read} label={props.name} />;
@@ -387,6 +397,13 @@ function Settings({
   );
 }
 
+/** The views of the backups' tab. */
+const BACKUP_VIEWS: readonly (readonly [ViewName, string])[] = [
+  ["backups", "Backups"],
+  ["restorePoints", "Restore points"],
+  ["archivedSegments", "Archived segments"],
+];
+
 /** The tab `tab`'s content. */
 function TabContent({
   tab,
@@ -420,21 +437,17 @@ function TabContent({
     case "memory":
       return <Views connection={connection} tick={tick} views={[["memoryReservations", "Memory reservations"]]} />;
     case "backups":
-      return (
-        <Views
-          connection={connection}
-          tick={tick}
-          views={[
-            ["backups", "Backups"],
-            ["restorePoints", "Restore points"],
-            ["archivedSegments", "Archived segments"],
-          ]}
-        />
-      );
+      return <Views connection={connection} tick={tick} views={BACKUP_VIEWS} />;
     case "replication":
       return <Views connection={connection} tick={tick} views={[["replicas", "Replica group"]]} />;
     case "settings":
       return <Settings connection={connection} tick={tick} onAct={onAct} />;
+    case "plugIns":
+      return (
+        <PlugIns connection={connection}>
+          <Views connection={connection} tick={tick} views={[["extensions", "Extensions"]]} />
+        </PlugIns>
+      );
   }
 }
 

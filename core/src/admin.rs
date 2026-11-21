@@ -47,6 +47,8 @@ pub enum View {
     Replicas,
     /// The settings, as the session sees them.
     Settings,
+    /// The extensions created, and their plug-ins' processes and calls.
+    Extensions,
 }
 
 impl View {
@@ -77,6 +79,9 @@ impl View {
             View::Settings => {
                 "SELECT SETTING_NAME, SETTING_VALUE, VALUE_SOURCE, DEFAULT_VALUE, VALUE_KIND, IS_SESSION_SETTABLE, TAKES_EFFECT, DESCRIPTION, STARTED_VALUE, IS_PENDING FROM INFORMATION_SCHEMA.SETTINGS ORDER BY SETTING_NAME"
             }
+            View::Extensions => {
+                "SELECT EXTENSION_NAME, VERSION, DIRECTORY, SIGNER, PROCESSES_RUNNING, PROCESSES_STARTED, PROCESSES_FAILED, CALLS, CALLS_FAILED FROM INFORMATION_SCHEMA.EXTENSIONS ORDER BY EXTENSION_NAME"
+            }
         }
     }
 
@@ -96,15 +101,18 @@ pub struct ViewRows {
     pub columns: Vec<String>,
     /// The rows.
     pub rows: Vec<Vec<Option<String>>>,
-    /// Whether the database has not the view, as REPLICAS of a node of no replica group.
+    /// Whether the database has not the view, as REPLICAS of a node of no
+    /// replica group, or the server's views of an embedded database.
     pub absent: bool,
 }
 
-/// The SQLCODE of a table not defined, as of REPLICAS on a node of no replica group.
+/// The SQLCODE of a table not defined, as of REPLICAS on a node of no
+/// replica group, or a server's view of an embedded database.
 const NOT_DEFINED: i32 = -103;
 
-/// The rows of `view` on `connection`; of REPLICAS on a node of no
-/// replica group, none, and absent.
+/// The rows of `view` on `connection`; of a view the database has not,
+/// as REPLICAS on a node of no replica group or CONNECTIONS of an
+/// embedded database, none, and absent.
 ///
 /// # Errors
 ///
@@ -113,9 +121,7 @@ const NOT_DEFINED: i32 = -103;
 pub fn read(manager: &ConnectionManager, connection: ConnectionId, view: View) -> Result<ViewRows> {
     match manager.catalog(connection, view.query(), (&[], MAX_ROWS)) {
         Ok(rows) => Ok(ViewRows { columns: view.columns(), rows, absent: false }),
-        Err(e) if view == View::Replicas && e.sqlcode == NOT_DEFINED => {
-            Ok(ViewRows { columns: view.columns(), rows: Vec::new(), absent: true })
-        }
+        Err(e) if e.sqlcode == NOT_DEFINED => Ok(ViewRows { columns: view.columns(), rows: Vec::new(), absent: true }),
         Err(e) => Err(e),
     }
 }

@@ -39,6 +39,10 @@ pub enum Transport {
     Local,
     /// Over plain TCP: not secure, as the status bar says plainly.
     Plain,
+    /// An embedded database in a directory, in Studio's own process (RULES.md D59).
+    Embedded,
+    /// An embedded database in memory, gone as it is closed.
+    InMemory,
 }
 
 impl Transport {

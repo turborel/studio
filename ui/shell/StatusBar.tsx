@@ -3,17 +3,20 @@
  * environment and colour, the session's user, schema and transaction as
  * the server told them, whether it is secure, and the server's time for
  * the last statement; and what the result's cells selected hold. A
- * connection not secure says so plainly.
+ * connection not secure says so plainly; an embedded database says it is
+ * embedded, or in memory and not saved (D59).
  */
 import type { SessionState, Transport } from "../ipc/connections";
 import { openConnection, type OpenConnection, useStudio } from "../state/store";
 import { ENVIRONMENT_NAMES } from "./environment";
 
-/** How each transport is shown. */
+/** How each transport is shown: a server's, or an embedded database's (RULES.md D59). */
 const TRANSPORTS: Readonly<Record<Transport, string>> = {
   tls: "TLS",
   local: "Local socket",
   plain: "NOT SECURE",
+  embedded: "Embedded",
+  inMemory: "In-memory, not saved",
 };
 
 /** The microseconds in a millisecond. */

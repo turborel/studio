@@ -16,7 +16,8 @@ commit turborel-client is pinned to (RULES.md D10),
 
 [Statements](#statements) · [Types](#types) ·
 [The Information Schema](#the-information-schema) ·
-[turborel-client](#turborel-client) · [Capabilities](#capabilities) ·
+[turborel-client](#turborel-client) ·
+[The embedded library](#the-embedded-library) · [Capabilities](#capabilities) ·
 [Files](#files) · [Security](#security) ·
 [Implementation-defined](#implementation-defined) · [Limits](#limits)
 
@@ -140,6 +141,23 @@ them.
 | S-CLIENT-26 | What a connection asks for ([CLIENT What a connection asks for]) | the attribute `application`, Turborel Studio | done |
 | S-CLIENT-27 | A connection's role ([CLIENT Several servers]) | the status bar's Replica, from the status SERVER_READ_ONLY | done |
 
+## The embedded library
+
+The features of Turborel's embedded library Studio uses to open a
+database in its own process (RULES.md D59).
+
+| ID | Feature | Studio's use | Status |
+|---|---|---|---|
+| S-EMB-1 | A database in a folder, opened or made ([DOC client/03-embedding.md The database]) | Open Database… and New Database…, apart; a folder looked at first | done |
+| S-EMB-2 | A database in memory ([DOC client/03-embedding.md The database]) | New In-Memory Database, marked not saved | done |
+| S-EMB-3 | The folder's lock ([DOC operator/03-databases.md A database's directory]) | tried first; a database another process holds refused, its server offered | done |
+| S-EMB-4 | Sessions and their transactions ([DOC client/03-embedding.md Sessions]) | a session on a worker of its own; autocommit as of a server's connection | done |
+| S-EMB-5 | Prepared statements, parameters and cursors ([DOC client/03-embedding.md Prepared statements], [DOC client/03-embedding.md Cursors]) | a query's rows a page at a time; parameters given as text | done |
+| S-EMB-6 | Large objects ([DOC client/03-embedding.md Large objects]) | placed by a locator, as a server places them, and read a chunk at a time | done |
+| S-EMB-7 | Closing, with a checkpoint ([DOC operator/03-databases.md Checkpoints]) | on disconnect and on quit, once an open transaction is ended as the user answers | done |
+| S-EMB-8 | Recovery ([DOC operator/03-databases.md Recovery after a crash]) | as the engine recovers; Studio says so | done |
+| S-EMB-9 | Plug-ins ([DOC client/03-embedding.md Engines and other plug-ins]) | those `turboreld` registers; the monitor lists each, and why one is not loaded | done |
+
 ## Capabilities
 
 Studio asks for every capability turborel-client's `connect` asks for:
@@ -201,6 +219,7 @@ the manual.
 | S-SEC-7 | The webview's policy and capability (R-SEC-4, R-SEC-5) | done |
 | S-SEC-8 | The assistant sends only what the user chose, shown first, and its tools never act alone (R-SEC-12) | done |
 | S-SEC-9 | A Live Session shares no connection, setting nor secret; is encrypted end to end, its certificate pinned; admits each viewer by name and safety code | done |
+| S-SEC-10 | An embedded database's folders chosen by the platform's dialog; its keys read by the engine from the keys directory, never kept in Studio's files | done |
 
 ## Implementation-defined
 

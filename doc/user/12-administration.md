@@ -31,6 +31,10 @@ reads them each 1, 2, 5, 10 or 30 seconds, 5 at first, or never.
 | **Backups** | the backups, the restore points and the log's segments archived | BACKUPS, RESTORE_POINTS, ARCHIVED_SEGMENTS |
 | **Replication** | each member of the database's replica group: its address, role, epoch and view, and whether this node's link to it is up; of a database in no replica group, that it is in none | REPLICAS |
 | **Settings** | each setting, its value as the session sees it, where the value comes from, its default and kind, whether a session may set it, and when a change takes effect | SETTINGS |
+| **Plug-ins** | of an embedded database, each plug-in Studio gave it, whether it is loaded, and why not ([Connections](03-connections.md#settings-and-plug-ins)); then each extension created, its version, directory and signer, and its plug-in's processes and calls since the database opened | EXTENSIONS |
+
+An embedded database has no server, so no **Sessions** nor **Server**
+views: the monitor says so in those tabs, and shows the rest.
 
 The **Server** tab draws the workers busy, the statements waiting and
 the connections, read by read, the last 120 readings, once read twice.

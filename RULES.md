@@ -98,6 +98,7 @@ Each is told in full in [§7](#7-the-decisions).
 | D56 | Live Sessions: a workspace's state shared, filtered, end to end over QUIC, each viewer admitted |
 | D57 | Administration: the server read of its own views, each act written by the backend and run through the guards |
 | D58 | The nightly: unsigned installers of each platform, one pre-release, by hand until its trigger is turned on |
+| D59 | Embedded databases: a second backend behind the connection manager, opened apart from made, never against a lock |
 
 ---
 
@@ -493,7 +494,9 @@ The review checklist:
 #### D10. turborel-client, a git dependency at a pinned commit
 
 - **Chosen:** `turborel-client` (features `tls`, `scram`,
-  `system-roots`), `turborel` and `turborel-protocol`, from
+  `system-roots`), `turborel` and `turborel-protocol`, and the plug-ins
+  an embedded database is given (D59), `turborel-aes`, `turborel-lz4`
+  and `turborel-simd`, from
   github.com/turborel/turborel at commit
   `7189b102f79059f5d587d025a6efcc8d63b843e9` of `main`; BSD-2-Clause
   Plus Patent.
@@ -1410,6 +1413,50 @@ The review checklist:
   for a runner of its own.
 - *Why:* the owner asked for a nightly, as main has.
 
+#### D59. Embedded databases: a second backend behind the connection manager, opened apart from made, never against a lock
+
+- **What:** an embedded database, in a folder or in memory, opened in
+  Studio's own process by the `turborel` crate's embedded library
+  (`Database`, its sessions, prepared statements, cursors and large
+  objects), as a connection beside a server's. `core/src/embedded.rs`
+  opens or makes it; `core/src/embedded/worker.rs` is its worker, which
+  answers the same requests a server connection's worker answers, so
+  the worksheet, explorer, grid, plans, modeling, analyzer, monitor,
+  assistant and Live Sessions work on it unchanged, under the same
+  guards. A query is read through its cursor a page at a time; a large
+  object longer than a row holds is placed by a locator, as a server
+  places one; export and import write and read as turborel-client's.
+  Autocommit commits a statement's transaction as it completes, a
+  query's once its cursor is read through or closed.
+- **One worker each:** each embedded connection's session on a thread of
+  its own, `studio-embedded-<n>`, held by the manager (R-SAFE-5); the
+  database shared by the connections of it, closed with the last.
+- **Open apart from New:** Open Database takes only a folder that holds
+  a catalog, and makes nothing of a mistyped path; New Database only an
+  empty or new folder, hidden files aside. Each folder is chosen by the
+  platform's dialog (R-SEC-5), or is a saved connection's.
+- **Never fight a lock:** the folder's `lock` is tried first (as the
+  engine takes it, `File::try_lock`) and let go: one another process
+  holds is refused as open in another process, with a server found by
+  a socket in the folder, or on this computer's port 7422, offered. A
+  folder open in Studio is not opened twice.
+- **In memory:** a scratch database, marked not saved, gone as it closes.
+- **Closing:** disconnecting asks first how an open transaction ends;
+  quitting asks once for all, a second request within ten seconds
+  quitting at once, so a window that cannot answer never keeps Studio
+  open. Closing a database writes a checkpoint and gives up its lock;
+  one not closed is recovered as it opens again, and Studio says so.
+- **Plug-ins, keys and versions:** the plug-ins `turboreld` registers
+  (SIMD, LZ4, AES-256-GCM and ChaCha20-Poly1305 of the keys directory
+  given, SHA-256, SHA-512, HMAC-SHA-256 of the checksum key named), and
+  PLUGINS.DIRECTORIES if given; host plug-ins are never started. The
+  monitor lists each and why one is not loaded. A saved database keeps
+  its folder, its keys directory's path and its checksum key's name,
+  never a key. A database this build's engine cannot open is told so,
+  naming the engine's commit.
+- *Why:* Turborel runs as a server and as an embedded library; the owner
+  asked for Studio to open both (2026-11-21).
+
 ---
 
 ## 8. References
@@ -1419,6 +1466,9 @@ The review checklist:
   Pools*: what Studio's connections do.
 - Turborel, `doc/sql/07-information-schema.md`, *The Information
   Schema*: what the explorer reads.
+- Turborel, `doc/client/03-embedding.md`, *The Embedded Library*, and
+  `doc/operator/03-databases.md`, *Databases*: what an embedded database
+  does, its folder, its lock, its checkpoints and its recovery.
 - Turborel, `doc/sql/statements/explain.md`, *EXPLAIN*: what the
   analyzer reads.
 - W3C, *Web Content Accessibility Guidelines (WCAG) 2.2*: contrast and

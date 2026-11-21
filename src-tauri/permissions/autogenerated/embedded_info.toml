@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-embedded-info"
+description = "Enables the embedded_info command without any pre-configured scope."
+commands.allow = ["embedded_info"]
+
+[[permission]]
+identifier = "deny-embedded-info"
+description = "Denies the embedded_info command without any pre-configured scope."
+commands.deny = ["embedded_info"]

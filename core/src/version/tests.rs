@@ -31,7 +31,7 @@ fn every_manifest_carries_the_workspace_version() {
 fn the_pinned_commit_is_the_manifests() {
     let manifest = read("Cargo.toml");
     let pins: Vec<&str> = manifest.lines().filter(|line| line.contains("github.com/turborel/turborel")).collect();
-    assert_eq!(pins.len(), 3);
+    assert_eq!(pins.len(), 6);
     assert!(pins.iter().all(|line| line.contains(&format!("rev = \"{TURBOREL_COMMIT}\""))));
     assert_eq!(app_info().turborel_commit, TURBOREL_COMMIT);
 }

@@ -50,8 +50,8 @@ export interface StudioError {
   readonly diagnostics: Diagnostics | null;
 }
 
-/** How a connection reaches its server (R-SEC-3). */
-export type Transport = "tls" | "local" | "plain";
+/** How a connection reaches its server (R-SEC-3), or that it is of an embedded database, in a folder or in memory (RULES.md D59). */
+export type Transport = "tls" | "local" | "plain" | "embedded" | "inMemory";
 
 /** A session's transaction. */
 export interface Transaction {
@@ -77,6 +77,8 @@ export interface SessionState {
 export interface Opened {
   readonly connection: number;
   readonly session: SessionState;
+  /** What is told of its opening, as of an embedded database recovered. */
+  readonly told: string | null;
 }
 
 /** A column of a result. */

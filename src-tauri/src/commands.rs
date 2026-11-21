@@ -8,6 +8,7 @@ mod assistant;
 mod catalog;
 pub(crate) mod connections;
 pub(crate) mod data;
+pub(crate) mod embedded;
 mod files;
 mod live;
 mod preferences;
@@ -75,6 +76,13 @@ pub(crate) fn handler<R: Runtime>() -> impl Fn(Invoke<R>) -> bool + Send + Sync 
         connections::set_autocommit,
         connections::ping_connection,
         connections::list_threads,
+        embedded::choose_database_directory,
+        embedded::choose_keys_directory,
+        embedded::check_database_directory,
+        embedded::open_embedded,
+        embedded::embedded_info,
+        embedded::default_owner,
+        embedded::quit_studio,
         saved::list_saved_connections,
         saved::save_connection,
         saved::delete_saved_connection,

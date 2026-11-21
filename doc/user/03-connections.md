@@ -2,11 +2,14 @@
 
 [Contents](README.md)
 
-A connection is a session of a Turborel server. Studio opens one through
-Turborel's own client library, turborel-client, and keeps each on a
-thread of its own, so one waiting on its server never holds up the
-window or another connection. A connection may be saved, with its
-settings, its environment and its colour, and its password kept in the
+A connection is a session of a Turborel server, or of a database Studio
+opens itself, embedded. Studio opens a server's through Turborel's own
+client library, turborel-client, and an embedded database through
+Turborel's embedded library, in its own process ([Embedded
+databases](#embedded-databases)). It keeps each on a thread of its own,
+so one waiting on its server or its database never holds up the window
+or another connection. A connection may be saved, with its settings, its
+environment and its colour, and a server's password kept in the
 operating system's keychain.
 
 ## Opening a connection
@@ -123,12 +126,14 @@ dialog says why.
 
 The explorer lists:
 
-- **Open**: each connection open, with its colour. Clicking one makes it
-  the active connection, which the status bar, the toolbar and the
-  Connection menu act on; **Disconnect** ends it.
+- **Open**: each connection open, with its colour, an embedded
+  database's with a database's icon, and one in memory marked **not
+  saved**. Clicking one makes it the active connection, which the status
+  bar, the toolbar and the Connection menu act on; **Disconnect** ends
+  it.
 - **Pinned**: the saved connections pinned.
 - **Saved**: every saved connection, in its folders, folders and names
-  in order.
+  in order, an embedded database's with its folder's path.
 - **Recent**: the ten saved connections used last, the latest first.
 
 A saved connection's buttons, each an icon whose tooltip names it, are
@@ -165,8 +170,12 @@ Every statement Studio runs on a connection goes through its guards.
 
 ## Ending and reconnecting
 
-**Connection > Disconnect** ends the active connection. **Reconnect**
-connects it again, by the settings it was made by, in a new session.
+**Connection > Disconnect** ends the active connection. If its
+transaction is open, Studio first asks whether to **Commit** what it
+changed, **Roll Back**, or **Cancel** and keep the connection open.
+**Reconnect** connects it again, by the settings it was made by, in a
+new session; of an embedded database, a new session of the same
+database.
 **Cancel Statement** cancels the statement it runs, from a connection of
 its own to the server; the statement fails, SQLCODE -920, and is undone.
 **Commit** and **Rollback** end its transaction.
@@ -176,3 +185,118 @@ and the status bar, and takes no more statements until it is
 reconnected. When the window is shown again, or the network comes back,
 Studio checks each open connection, and connects one lost again, unless
 the setting **Check connections as the computer wakes** is off.
+
+Quitting Studio asks alike, once for every connection whose transaction
+is open: **Commit** commits each, **Roll Back** rolls each back, and
+**Cancel** keeps Studio open. A commit that fails is told, and Studio
+stays open. Closing the window a second time within ten seconds of being
+asked quits at once, each open transaction rolled back, so a window that
+cannot answer never keeps Studio open.
+
+## Embedded databases
+
+Turborel runs as a server, and as a library a program embeds. Studio
+opens both. An embedded database is opened in Studio's own process, kept
+in a folder, or in memory. Every part of Studio works on it as on a
+server's connection: worksheets, the explorer, results, plans, modeling,
+the analyzer, the monitor, the assistant and Live Sessions, under the
+same guards. Each embedded database's session is on a thread of its own,
+named `studio-embedded-` and the connection's number, as a server's is
+named `studio-connection-` and its number.
+
+The status bar says **Embedded** of a database in a folder, and
+**In-memory, not saved** of one in memory, where a server's connection
+says how it reaches its server.
+
+### Opening a database
+
+**File > Open Database…**, or the explorer's **Open Database…**, opens a
+database another program, or Studio, made. **Choose…** chooses its
+folder, with the platform's dialog, and Studio looks at it before
+anything is opened: a folder that holds no database is refused, with
+**New Database…** offered instead, and nothing is made in it, so a
+mistyped path never becomes a new, empty database.
+
+| Field | What it says |
+|---|---|
+| Database folder | the folder that holds the database |
+| Name, Folder in the explorer, Environment, Colour, Read-only | as of a server's connection |
+| Act as | the authorization identifier the session acts as; empty for the database's owner |
+| Keys directory | the folder of an encrypted database's keys, as `turboreld --keys` names it |
+| Checksum key | the name, in the keys directory, of the key of a database whose checksums are keyed, as `turboreld --checksum-key` names it |
+| Plug-in directories | the folders an extension's plug-in may be in, separated by `;`, as the setting PLUGINS.DIRECTORIES |
+
+**Open without Saving** opens it; **Save** saves it among the
+connections; **Save and Open** does both. A saved database opens its
+folder, and never makes a database there.
+
+### Making a database
+
+**File > New Database…** makes a database in a folder that is empty, but
+for hidden files, or new. A folder that holds a database is refused, with
+**Open Database…** offered instead, and one that holds other files is
+refused too. The **Owner** field names the database's owner, offered as
+this computer's user's name in upper case; the owner is made with no
+password, and its schema, of its name, is made too. **Create and Save**
+makes the database and saves it, to be opened, not made, thereafter.
+
+### A database in memory
+
+**File > New In-Memory Database** makes a database kept in memory, a
+scratch database to try things in. It is marked **not saved** in the
+explorer and the status bar. Nothing of it is written anywhere, and it
+is gone as its connection ends. Its owner is this computer's user's name
+in upper case.
+
+### A database another program holds
+
+A database is opened by one program at a time, which holds its folder's
+`lock` file while it has it open. Studio looks at the lock before it
+opens a database: one a server or another program holds is refused as
+open in another process. If a Unix socket of a server is in the folder,
+or a server answers on this computer's port 7422, the dialog offers
+**Connect to Its Server…**, which begins a new connection to it. A
+database open in Studio already is not opened a second time.
+
+### Closing, and after a crash
+
+Disconnecting from an embedded database, or quitting Studio, closes it,
+once its open transaction is committed or rolled back as Studio asks:
+a checkpoint is written, and its lock given up. If Studio, or the
+program before it, stopped without closing the database, the next
+opening recovers it, as the engine does, keeping every committed
+transaction and undoing the rest, and Studio says so above the window
+until the notice is dismissed.
+
+Studio's engine is Turborel at the commit Studio is built with
+([Versions](../appendix/c-versions.md)). A database another build of
+Turborel's alpha made, which this one cannot open, is refused with a
+message that says so, and names that commit.
+
+### Encrypted databases
+
+An encrypted database opens with its keys directory, the folder its
+keys are in, chosen with the platform's dialog, and its checksum key's
+name, if its checksums are keyed. Studio keeps only the folder's path and
+the key's name in its files, never a key: the engine reads each key from
+the keys directory as it needs it. A database whose keys are not given
+is refused with a message that asks for them.
+
+### Settings and plug-ins
+
+An embedded database's settings are read and changed as a server's: in
+the monitor's **Settings** tab, or by `SET DATABASE`, kept with the
+database ([Administration](12-administration.md)). The server's own
+views, as its sessions and counters, are not there, and the monitor says
+so.
+
+Studio gives an embedded database the plug-ins `turboreld` gives one:
+the SIMD kernels, LZ4 compression, AES-256-GCM and ChaCha20-Poly1305
+encryption by the keys directory given, SHA-256 and SHA-512 checksums,
+and HMAC-SHA-256 checksums by the checksum key given. The monitor's
+**Plug-ins** tab lists each, whether it is loaded, and why not:
+HMAC-SHA-256 without a checksum key; an extension's plug-in without
+plug-in directories; and a host plug-in (PLUGINS.HOST), which Studio
+never starts, so a database whose files, log or keys a host plug-in
+keeps opens on its server. The extensions the database has, and their
+plug-ins' processes and calls, are listed below them.

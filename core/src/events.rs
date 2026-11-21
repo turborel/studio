@@ -74,6 +74,9 @@ pub enum Event {
         /// What happened.
         event: turborel_studio_live::guest::GuestEvent,
     },
+    /// The user asked to quit: the window asks how each open transaction
+    /// ends, then quits (RULES.md D59).
+    QuitAsked,
 }
 
 /// What the backend tells its events to.

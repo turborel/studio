@@ -1,12 +1,15 @@
 /**
- * The connections in the explorer (RULES.md D28, R-UI-1, R-UI-3): those
- * open, each with its colour, made active by a click; then the saved ones,
- * the pinned first, then by folder, then the recent; each connected,
- * edited, pinned or deleted from its own buttons.
+ * The connections in the explorer (RULES.md D28, D59, R-UI-1, R-UI-3):
+ * those open, each with its colour, made active by a click, an in-memory
+ * database's marked as not saved; then the saved ones, servers' and
+ * embedded databases' with their folders shown, the pinned first, then by
+ * folder, then the recent; each connected, edited, pinned or deleted from
+ * its own buttons.
  */
 import { useState } from "react";
 import type { SavedConnection, SavedView } from "../ipc/saved";
 import { activate, connectSaved, disconnect, forget, reconnectOpen, save, show } from "../state/actions";
+import { OpenButtons } from "./OpenButtons";
 import { loadSchemas } from "../state/catalog";
 import { type OpenConnection, type Store, useStore, useStudio } from "../state/store";
 import { copyText, newWorksheetOn, uriOf } from "../explorer/menus";
@@ -15,6 +18,7 @@ import { prompted } from "./PromptDialog";
 import { type Folder, tree } from "./connectionsTree";
 import { tint } from "./environment";
 import { Icon } from "../icons/Icon";
+import "./embedded.css";
 
 /** A colour's swatch. */
 function Swatch({ colour }: { readonly colour: string | null }) {
@@ -44,17 +48,26 @@ function DeleteButton({ connection: c }: { readonly connection: SavedConnection 
   );
 }
 
-/** The items of saved connection `c`'s menu that edit it, copy its URI, and delete it. */
+/** Shows the dialog that edits saved connection `c`: of an embedded database, or of a server. */
+export function editSaved(store: Store, c: SavedConnection): void {
+  show(store, c.embedded == null ? { kind: "connection", editing: c } : { kind: "embedded", mode: "open", editing: c });
+}
+
+/** The items of saved connection `c`'s menu that edit it, and copy its URI or its database's folder. */
 function savedItems(store: Store, c: SavedConnection): MenuItem[] {
+  const copy: MenuItem =
+    c.embedded == null
+      ? { label: "Copy URI", icon: "copy", run: () => copyText(store, uriOf(c.spec)) }
+      : { label: "Copy Folder Path", icon: "copy", run: () => copyText(store, c.embedded?.directory ?? "") };
   return [
     {
       label: "Edit Connection…",
       icon: "edit",
       run: () => {
-        show(store, { kind: "connection", editing: c });
+        editSaved(store, c);
       },
     },
-    { label: "Copy URI", icon: "copy", run: () => copyText(store, uriOf(c.spec)) },
+    copy,
   ];
 }
 
@@ -117,12 +130,14 @@ function SavedItem({ view }: { readonly view: SavedView }) {
   const c: SavedConnection = view.connection;
   const connect = () => void connectSaved(store, c, null);
   const menu = useMenu(() => savedMenu(store, c));
+  const directory = c.embedded?.directory;
   return (
     <li role="treeitem" aria-selected="false" className="tree-item" tabIndex={0} {...menu}>
       <Swatch colour={tint(c.environment, c.colour)} />
-      <Icon name="connection" />
-      <span className="tree-name" onDoubleClick={connect}>
+      <Icon name={directory === undefined ? "connection" : "embedded"} />
+      <span className="tree-name" onDoubleClick={connect} title={directory}>
         {c.name}
+        {directory !== undefined && <span className="tree-detail"> {directory}</span>}
       </span>
       <button type="button" className="tool" aria-label={`Connect to ${c.name}`} title="Connect" onClick={connect}>
         <Icon name="connect" />
@@ -133,7 +148,7 @@ function SavedItem({ view }: { readonly view: SavedView }) {
         aria-label={`Edit ${c.name}`}
         title="Edit"
         onClick={() => {
-          show(store, { kind: "connection", editing: c });
+          editSaved(store, c);
         }}
       >
         <Icon name="edit" />
@@ -175,6 +190,15 @@ function FolderItems({ folder }: { readonly folder: Folder }) {
   );
 }
 
+/** The icon of an open connection, by what it is of. */
+const ICON_OF = {
+  tls: "connection",
+  local: "connection",
+  plain: "connection",
+  embedded: "embedded",
+  inMemory: "inMemory",
+} as const;
+
 /** An open connection's item. */
 function OpenItem({ connection, active }: { readonly connection: OpenConnection; readonly active: boolean }) {
   const store = useStore();
@@ -188,7 +212,7 @@ function OpenItem({ connection, active }: { readonly connection: OpenConnection;
       {...menu}
     >
       <Swatch colour={tint(connection.guards.environment, connection.colour)} />
-      <Icon name="connection" />
+      <Icon name={ICON_OF[connection.session.transport]} />
       <button
         type="button"
         className="tree-name"
@@ -199,6 +223,7 @@ function OpenItem({ connection, active }: { readonly connection: OpenConnection;
         {connection.name}
         {connection.session.lost ? " (lost)" : ""}
       </button>
+      {connection.session.transport === "inMemory" && <span className="badge-unsaved">not saved</span>}
       <button
         type="button"
         className="tool"
@@ -214,23 +239,15 @@ function OpenItem({ connection, active }: { readonly connection: OpenConnection;
 
 /** The connections' panel of the explorer. */
 export function ConnectionsPanel() {
-  const store = useStore();
   const saved = useStudio((s) => s.saved);
   const open = useStudio((s) => s.open);
   const active = useStudio((s) => s.active);
   const { pinned, root, recent } = tree(saved);
   return (
     <div className="connections-panel">
-      <button
-        type="button"
-        className="tool"
-        onClick={() => {
-          show(store, { kind: "connection", editing: null });
-        }}
-      >
-        <Icon name="newConnection" />
-        New Connection…
-      </button>
+      <div className="connections-new">
+        <OpenButtons className="tool" />
+      </div>
       <h3>Open</h3>
       <ul role="tree" aria-label="Open connections">
         {open.length === 0 && <li className="hint">No connection is open.</li>}

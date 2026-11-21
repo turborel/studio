@@ -97,6 +97,7 @@ fn each_view_names_its_columns() {
         View::ArchivedSegments,
         View::RestorePoints,
         View::Replicas,
+        View::Extensions,
     ] {
         assert!(view.query().starts_with("SELECT ") && !view.columns().is_empty(), "{view:?}");
     }

@@ -45,7 +45,11 @@ describe("the status bar", () => {
 
   it("shows a replica and the server's time [CLIENT What the server tells]", async () => {
     mockBackend({
-      open_connection: () => ({ connection: 1, session: { ...SESSION, serverReadOnly: true, schema: null } }),
+      open_connection: () => ({
+        connection: 1,
+        session: { ...SESSION, serverReadOnly: true, schema: null },
+        told: null,
+      }),
     });
     const store = new Store();
     await connectSpec(store, "R", { user: "ann" }, { environment: "test", readOnly: false }, null);
@@ -61,7 +65,9 @@ describe("the status bar", () => {
   });
 
   it("says plainly that a connection over plain TCP is not secure [RULE] R-SEC-3", async () => {
-    mockBackend({ open_connection: () => ({ connection: 1, session: { ...SESSION, transport: "plain" } }) });
+    mockBackend({
+      open_connection: () => ({ connection: 1, session: { ...SESSION, transport: "plain" }, told: null }),
+    });
     const store = new Store();
     await connectSpec(store, "Dev", { user: "ann" }, { environment: "development", readOnly: false }, null);
     within(store, <StatusBar />);

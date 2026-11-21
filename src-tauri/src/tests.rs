@@ -14,6 +14,8 @@ use turborel_studio_core::secrets::MemorySecrets;
 
 use crate::studio;
 
+mod embedded;
+
 /// The application on the mock runtime, with its own configuration and
 /// capabilities, and its main window.
 pub(crate) fn window() -> (App<MockRuntime>, WebviewWindow<MockRuntime>) {

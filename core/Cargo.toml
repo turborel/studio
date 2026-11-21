@@ -12,6 +12,9 @@ publish.workspace = true
 turborel-client.workspace = true
 turborel.workspace = true
 turborel-protocol.workspace = true
+turborel-aes.workspace = true
+turborel-lz4.workspace = true
+turborel-simd.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 aws-lc-rs.workspace = true
@@ -41,4 +44,9 @@ workspace = true
 [[test]]
 name = "live"
 path = "tests/live/main.rs"
+harness = false
+
+[[test]]
+name = "embedded"
+path = "tests/embedded/main.rs"
 harness = false

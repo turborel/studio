@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use super::{Environment, MAX_RECENT, PasswordChange, SavedConnection, SavedConnections};
+use super::{Environment, MAX_RECENT, PasswordChange, SavedConnection, SavedConnections, SavedEmbedded};
 use crate::connections::spec::ConnectionSpec;
 use crate::secrets::{MemorySecrets, SecretStore};
 
@@ -25,6 +25,7 @@ fn connection(name: &str) -> SavedConnection {
         read_only: true,
         pinned: false,
         favourites: Vec::new(),
+        embedded: None,
     }
 }
 
@@ -97,6 +98,30 @@ fn bad_fields_are_refused() {
         SavedConnection { name: " ".into(), ..connection("x") },
         SavedConnection { colour: Some("red".into()), ..connection("x") },
         SavedConnection { folder: vec![String::new()], ..connection("x") },
+        SavedConnection {
+            embedded: Some(SavedEmbedded { directory: "".into(), keys: None, checksum_key: None, plugin_directories: None, user: None }),
+            ..connection("x")
+        },
+        SavedConnection {
+            embedded: Some(SavedEmbedded {
+                directory: "/d".into(),
+                keys: None,
+                checksum_key: None,
+                plugin_directories: None,
+                user: Some("a b".into()),
+            }),
+            ..connection("x")
+        },
+        SavedConnection {
+            embedded: Some(SavedEmbedded {
+                directory: "/d".into(),
+                keys: None,
+                checksum_key: Some(String::new()),
+                plugin_directories: None,
+                user: None,
+            }),
+            ..connection("x")
+        },
         SavedConnection { folder: vec!["f".into(); 9], ..connection("x") },
         SavedConnection { id: "unknown".into(), ..connection("x") },
         SavedConnection {
@@ -118,6 +143,8 @@ fn the_manuals_example_is_read() {
     assert_eq!(list.connections[0].connection.name, "Orders");
     assert_eq!(list.connections[0].connection.folder, ["Team", "EU"]);
     assert_eq!(list.connections[0].connection.favourites[0].name, "ORDERS");
+    let embedded = list.connections[1].connection.embedded.clone().unwrap();
+    assert_eq!((embedded.checksum_key.as_deref(), embedded.user), (Some("CHECKSUMS"), None));
     assert_eq!(list.recent.len(), 1);
 }
 
@@ -129,4 +156,26 @@ fn an_earlier_builds_connections_are_read() {
     let list = saved.list().unwrap();
     assert_eq!(list.connections.len(), 1);
     assert!(dir.join("connections.json").exists());
+}
+
+/// [DESIGN] D59 [RULE] R-SEC-1 An embedded database is saved by its
+/// directory and where its keys are, never a key, and opens it only, never
+/// making one.
+#[test]
+fn an_embedded_database_is_saved_by_its_directory() {
+    let (saved, _, path) = saved("embedded");
+    let embedded = SavedEmbedded {
+        directory: "/data/orders".into(),
+        keys: Some("/secure/keys".into()),
+        checksum_key: Some("CHECKS".into()),
+        plugin_directories: None,
+        user: None,
+    };
+    let made = saved.save(SavedConnection { embedded: Some(embedded.clone()), ..connection("Orders") }, PasswordChange::Keep).unwrap();
+    assert_eq!(saved.get(&made.id).unwrap().embedded, Some(embedded.clone()));
+    let file = std::fs::read_to_string(&path).unwrap();
+    assert!(file.contains("\"directory\": \"/data/orders\"") && file.contains("\"keys\": \"/secure/keys\""), "{file}");
+    let spec = embedded.spec();
+    assert!(!spec.create);
+    assert_eq!(spec.place, crate::embedded::Place::Directory { path: "/data/orders".into() });
 }

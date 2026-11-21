@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-choose-keys-directory"
+description = "Enables the choose_keys_directory command without any pre-configured scope."
+commands.allow = ["choose_keys_directory"]
+
+[[permission]]
+identifier = "deny-choose-keys-directory"
+description = "Denies the choose_keys_directory command without any pre-configured scope."
+commands.deny = ["choose_keys_directory"]

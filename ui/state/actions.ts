@@ -20,6 +20,7 @@ import {
   type StudioError,
 } from "../ipc/connections";
 import type { StudioEvent } from "../ipc/events";
+import { type EmbeddedSpec, type Ending, openEmbedded, quitStudio } from "../ipc/embedded";
 import { type FavouriteQuery, listQueries, projectFolders, sqlWords } from "../ipc/worksheet";
 import { loadSettings, saveSettings, setAsideNotices, type Settings } from "../ipc/preferences";
 import {
@@ -141,8 +142,11 @@ function opened(
   about: Pick<OpenConnection, "name" | "savedId" | "guards" | "colour">,
 ): void {
   const connection: OpenConnection = { ...about, id: opened.connection, session: opened.session, serverTime: null };
+  // An in-memory database's badge says it is not saved; any other told is a notice.
+  const told = opened.session.transport === "inMemory" ? null : opened.told;
   store.update((now) => ({
     ...now,
+    notices: told === null ? now.notices : [...now.notices, `${about.name}: ${told}`],
     open: [...now.open, connection],
     active: connection.id,
     dialog: null,
@@ -180,8 +184,42 @@ export async function connectSpec(
   });
 }
 
-/** Ends connection `id`. */
-export async function disconnect(store: Store, id: number): Promise<void> {
+/** Opens or makes the embedded database `spec` says, as `about` names it (RULES.md D59). */
+export async function connectEmbedded(
+  store: Store,
+  spec: EmbeddedSpec,
+  about: Pick<OpenConnection, "name" | "savedId" | "guards" | "colour">,
+): Promise<boolean> {
+  const made = await attempt(store, () => openEmbedded(spec, about.guards));
+  if (made !== undefined) {
+    opened(store, made, about);
+    await refreshSaved(store);
+  }
+  return made !== undefined;
+}
+
+/** Makes a database in memory, a scratch one nothing of which is saved. */
+export async function newInMemory(store: Store): Promise<void> {
+  const count = store.current().open.filter((c) => c.session.transport === "inMemory").length;
+  const spec: EmbeddedSpec = {
+    place: { kind: "memory" },
+    create: true,
+    keys: null,
+    checksumKey: null,
+    pluginDirectories: null,
+    user: null,
+  };
+  const name = count === 0 ? "In-memory" : `In-memory ${String(count + 1)}`;
+  await connectEmbedded(store, spec, {
+    name,
+    savedId: null,
+    guards: { environment: "development", readOnly: false },
+    colour: null,
+  });
+}
+
+/** Ends connection `id` now, whatever its transaction: the backend rolls back what is left. */
+export async function disconnectNow(store: Store, id: number): Promise<void> {
   await attempt(store, async () => {
     await closeConnection(id);
   });
@@ -199,6 +237,48 @@ export async function disconnect(store: Store, id: number): Promise<void> {
       active: now.active === id ? (open[0]?.id ?? null) : now.active,
     };
   });
+}
+
+/** Ends connection `id`: first asked how its transaction ends, if one is open (RULES.md D59). */
+export async function disconnect(store: Store, id: number): Promise<void> {
+  const connection = store.current().open.find((c) => c.id === id);
+  if (connection?.session.transaction.active === true) {
+    show(store, { kind: "openTransactions", connections: [id], quitting: false });
+    return;
+  }
+  await disconnectNow(store, id);
+}
+
+/** Ends each of `connections`' transactions as `ending` says, then ends them, or quits Studio if `quitting`. */
+export async function endAndClose(
+  store: Store,
+  { connections, quitting }: { readonly connections: readonly number[]; readonly quitting: boolean },
+  ending: Ending,
+): Promise<void> {
+  if (quitting) {
+    await attempt(store, () => quitStudio(ending));
+    return;
+  }
+  for (const id of connections) {
+    await endTransaction(store, id, ending === "commit" ? "COMMIT" : "ROLLBACK");
+    if (store.current().open.find((c) => c.id === id)?.session.transaction.active !== true) {
+      await disconnectNow(store, id);
+    }
+  }
+  show(store, null);
+}
+
+/** Quits as the user asked: first asked how each open transaction ends, if any is open (RULES.md D59). */
+export async function quitAsked(store: Store): Promise<void> {
+  const active = store
+    .current()
+    .open.filter((c) => c.session.transaction.active)
+    .map((c) => c.id);
+  if (active.length === 0) {
+    await attempt(store, () => quitStudio("rollback"));
+    return;
+  }
+  show(store, { kind: "openTransactions", connections: active, quitting: true });
 }
 
 /** Sets the session of connection `id`, as the server last told it. */
@@ -293,6 +373,8 @@ export function told(store: Store, event: StudioEvent): void {
     assistantTold(store, event.conversation, event.event);
   } else if (event.kind === "assistantAsks") {
     assistantAsked(store, event.conversation, event.id, event.question);
+  } else if (event.kind === "quitAsked") {
+    void quitAsked(store);
   } else if (event.kind === "lost") {
     store.update((now) => ({
       ...now,

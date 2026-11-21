@@ -10,6 +10,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { type CommandContext, command, defaultKeys, runCommand } from "./commands/commands";
 import { bindings, keyOf } from "./commands/keys";
 import { onStudioEvent } from "./ipc/events";
+import { EmbeddedDialog } from "./shell/EmbeddedDialog";
+import { OpenTransactionsDialog } from "./shell/OpenTransactionsDialog";
 import { ConnectionDialog } from "./shell/ConnectionDialog";
 import { CommandPalette } from "./shell/CommandPalette";
 import { Dock, resetLayout } from "./shell/Dock";
@@ -115,7 +117,9 @@ function Dialogs({ context }: { readonly context: CommandContext }) {
   const dialog = useStudio((s) => s.dialog);
   switch (dialog?.kind) {
     case "connection":
-      return <ConnectionDialog editing={dialog.editing} />;
+      return (
+        <ConnectionDialog editing={dialog.editing} {...(dialog.spec === undefined ? {} : { spec: dialog.spec })} />
+      );
     case "palette":
       return <CommandPalette context={context} />;
     case "settings":
@@ -162,6 +166,10 @@ function TaskDialogs({ dialog }: { readonly dialog: Dialog | null }) {
       return <JoinDialog />;
     case "security":
       return <SecurityDialog connection={dialog.connection} form={dialog.form} />;
+    case "embedded":
+      return <EmbeddedDialog mode={dialog.mode} editing={dialog.editing} />;
+    case "openTransactions":
+      return <OpenTransactionsDialog connections={dialog.connections} quitting={dialog.quitting} />;
     default:
       return null;
   }

@@ -73,6 +73,24 @@ The saved connections, each with no password, and those used last:
       "readOnly": true,
       "pinned": true,
       "favourites": [{ "kind": "TABLE", "schema": "ANN", "name": "ORDERS" }]
+    },
+    {
+      "id": "0a9b8c7d6e5f40312a3b4c5d6e7f8091",
+      "name": "Sales (local)",
+      "folder": ["Local"],
+      "spec": {},
+      "environment": "development",
+      "colour": null,
+      "readOnly": false,
+      "pinned": false,
+      "favourites": [],
+      "embedded": {
+        "directory": "/Users/ann/databases/sales",
+        "keys": "/Users/ann/databases/sales-keys",
+        "checksumKey": "CHECKSUMS",
+        "pluginDirectories": null,
+        "user": null
+      }
     }
   ],
   "recent": ["6f1c0e2a9b3d4c5e8f7a6b5c4d3e2f10"]
@@ -90,6 +108,14 @@ null. `favourites` lists the connection's favourite objects
 each by its kind, `TABLE` (of a table or view), `ROUTINE` (by its
 specific name), `SEQUENCE`, `DOMAIN` or `TYPE`, its schema and its name;
 it may be left out, for none.
+
+`embedded`, of a saved embedded database
+([Connections](../user/03-connections.md#embedded-databases)), names its
+`directory`; its keys directory, `keys`, and its checksum key's name,
+`checksumKey`, never a key; its plug-in directories, `pluginDirectories`,
+separated by `;`; and the identifier its session acts as, `user`, null
+for the database's owner. Its `spec` is empty. A connection with no
+`embedded` is a server's.
 
 ## settings.json
 

@@ -157,11 +157,13 @@ fn test_problems(path: &str, line: usize, tags: &[Tag], known: &Known) -> Vec<St
 /// The signature that marks a live test, a function of the live
 /// harness's own (`core/tests/live`), which runs no `#[test]`.
 const LIVE_TEST: &str = "(live: &Live)";
+/// What marks a test of the embedded tests' program (RULES.md D59).
+const EMBEDDED_TEST: &str = "(scratch: &Scratch)";
 
 /// Whether `line` begins a test: `#[test]`, or a live test's signature.
 fn is_test(line: &str) -> bool {
     let line = line.trim();
-    line == "#[test]" || (line.starts_with("pub fn ") && line.contains(LIVE_TEST))
+    line == "#[test]" || (line.starts_with("pub fn ") && (line.contains(LIVE_TEST) || line.contains(EMBEDDED_TEST)))
 }
 
 /// Each Rust test of `text`, by its line, with the tags of its doc comment.

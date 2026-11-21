@@ -49,6 +49,7 @@ fn saved(live: &Live) -> SavedConnection {
         read_only: false,
         pinned: false,
         favourites: Vec::new(),
+        embedded: None,
     }
 }
 

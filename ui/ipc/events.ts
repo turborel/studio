@@ -1,7 +1,8 @@
 /**
  * What the backend tells unasked (RULES.md D24): notices, sessions changed
  * and connections lost, the assistant's turns and questions (D55), and
- * Live Sessions' events (D56), as the event `studio:event`.
+ * Live Sessions' events (D56), and the user's asking to quit (D59), as
+ * the event `studio:event`.
  */
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import type { Diagnostics, SessionState, StudioError } from "./connections";
@@ -25,7 +26,8 @@ export type StudioEvent =
   | { readonly kind: "assistant"; readonly conversation: string; readonly event: TurnEvent }
   | { readonly kind: "assistantAsks"; readonly conversation: string; readonly id: number; readonly question: Question }
   | { readonly kind: "liveHost"; readonly event: HostEvent }
-  | { readonly kind: "liveGuest"; readonly event: GuestEvent };
+  | { readonly kind: "liveGuest"; readonly event: GuestEvent }
+  | { readonly kind: "quitAsked" };
 
 /** Calls `handler` with each event the backend tells, until unlistened. */
 export function onStudioEvent(handler: (event: StudioEvent) => void): Promise<UnlistenFn> {

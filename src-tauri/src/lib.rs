@@ -10,10 +10,13 @@ mod state;
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use tauri::{App, Builder, Manager, Runtime};
+use std::time::{Duration, Instant};
+
+use tauri::{App, AppHandle, Builder, Emitter, Manager, RunEvent, Runtime, WindowEvent};
 use turborel_studio_core::assistant::service::Service;
 use turborel_studio_core::connections::manager::ConnectionManager;
 use turborel_studio_core::connections::spool;
+use turborel_studio_core::events::Event;
 use turborel_studio_core::events::Hub;
 use turborel_studio_core::files::private_dir;
 use turborel_studio_core::live::service::LiveService;
@@ -23,7 +26,7 @@ use turborel_studio_core::worksheet::files::Kept;
 use turborel_studio_core::worksheet::folders::Files;
 use turborel_studio_core::worksheet::history::History;
 
-use crate::state::{KeychainStatus, RESULTS_DIR, Studio, WebviewEvents};
+use crate::state::{EVENT, KeychainStatus, RESULTS_DIR, Studio, WebviewEvents};
 
 /// The folders the application keeps its files in.
 pub(crate) struct Folders {
@@ -76,6 +79,7 @@ pub(crate) fn manage<R: Runtime>(
         kept: Kept::new(&folders.config),
         files: Arc::new(Files::new(&folders.config)),
         failures: Arc::new(turborel_studio_core::failures::Failures::new(&folders.config)),
+        quit_asked: std::sync::Mutex::new(None),
     });
     Ok(())
 }
@@ -97,13 +101,51 @@ pub fn context<R: Runtime>() -> tauri::Context<R> {
     tauri::generate_context!()
 }
 
-/// Builds the application and runs it until its last window closes.
+/// How long a second request to quit, while the window asks how open
+/// transactions end, quits at once: a window that cannot answer never
+/// keeps Studio open.
+const QUIT_AGAIN_WITHIN: Duration = Duration::from_secs(10);
+
+/// Whether quitting waits for the window to ask how each open transaction
+/// ends (RULES.md D59): not if it was asked within `QUIT_AGAIN_WITHIN`, so
+/// a second request quits; else it is asked now.
+fn ask_before_quitting<R: Runtime>(app: &AppHandle<R>) -> bool {
+    let Some(studio) = app.try_state::<Studio>() else { return false };
+    let mut asked = studio.quit_asked.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    if asked.is_some_and(|at| at.elapsed() < QUIT_AGAIN_WITHIN) {
+        return false;
+    }
+    *asked = Some(Instant::now());
+    // A window that is gone asks nothing; Studio quits on the next request.
+    let _ = app.emit(EVENT, Event::QuitAsked);
+    true
+}
+
+/// What Studio does as it is asked to quit, and as it quits: the window
+/// asked first how each open transaction ends; every connection closed at
+/// the end, each embedded database with a checkpoint (RULES.md D59).
+fn quitting<R: Runtime>(app: &AppHandle<R>, event: RunEvent) {
+    match event {
+        RunEvent::ExitRequested { code: None, api, .. } if ask_before_quitting(app) => api.prevent_exit(),
+        RunEvent::WindowEvent { event: WindowEvent::CloseRequested { api, .. }, .. } if ask_before_quitting(app) => api.prevent_close(),
+        RunEvent::Exit => {
+            if let Some(studio) = app.try_state::<Studio>() {
+                studio.connections.close_all();
+            }
+        }
+        _ => {}
+    }
+}
+
+/// Builds the application and runs it until it quits.
 ///
 /// # Errors
 ///
 /// Tauri's, if the application cannot be built or its window made.
 pub fn run() -> Result<(), tauri::Error> {
-    studio(Builder::default()).run(context())
+    let app = studio(Builder::default()).build(context())?;
+    app.run(quitting);
+    Ok(())
 }
 
 #[cfg(test)]

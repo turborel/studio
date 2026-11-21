@@ -1,9 +1,12 @@
-//! The connection manager (RULES.md D24, R-SAFE-5): every open connection,
-//! each on a worker thread of its own that the manager starts, names and
-//! holds, its requests sent to that worker and its answers awaited;
-//! cancel through turborel-client's canceller, from the caller's thread
-//! (`[CLIENT Running statements]`); reconnection with the settings it was
-//! made by.
+//! The connection manager (RULES.md D24, D59, R-SAFE-5): every open
+//! connection, of a server or an embedded database, each on a worker
+//! thread of its own that the manager starts, names and holds, its
+//! requests sent to that worker and its answers awaited, the same requests
+//! of either kind; cancel through turborel-client's canceller, or the
+//! embedded session's, from the caller's thread (`[CLIENT Running
+//! statements]`); reconnection with the settings it was made by, or a new
+//! session of the same embedded database; an embedded database closed, a
+//! checkpoint written and its lock given up, as its connection is.
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;
@@ -12,6 +15,7 @@ use std::sync::{Arc, Mutex, MutexGuard};
 use std::thread::JoinHandle;
 
 use serde::Serialize;
+use turborel::txn::Stop;
 use turborel_client::Canceller;
 use turborel_client::settings::Settings;
 
@@ -21,6 +25,7 @@ use crate::connections::pages::Page;
 use crate::connections::session::SessionState;
 use crate::connections::spec::ConnectionSpec;
 use crate::connections::worker::{Job, Reply, Request, Worker};
+use crate::embedded::Embedded;
 use crate::error::{Result, StudioError};
 use crate::events::{ConnectionId, EventSink};
 use crate::guard::policy::{Confirm, Guards};
@@ -35,13 +40,28 @@ pub const MAX_VALUES: usize = 10_000;
 pub const MAX_VALUE_BYTES: usize = 16 * 1024 * 1024;
 /// The prefix of a worker thread's name (R-SAFE-5).
 pub const WORKER_PREFIX: &str = "studio-connection-";
+/// The prefix of an embedded database's worker thread's name (R-SAFE-5).
+pub const EMBEDDED_PREFIX: &str = "studio-embedded-";
+
+/// What a connection is of: a server, by the settings it was made by; or
+/// an embedded database Studio holds.
+enum Origin {
+    Server(Box<Settings>),
+    Embedded(Arc<Embedded>),
+}
+
+/// What cancels a connection's statement.
+enum Stopper {
+    Server(Option<Canceller>),
+    Embedded(Option<Arc<Stop>>),
+}
 
 /// A connection's worker, as the manager holds it.
 struct Handle {
     jobs: Sender<Job>,
     thread: JoinHandle<()>,
-    canceller: Option<Canceller>,
-    settings: Settings,
+    stopper: Stopper,
+    origin: Origin,
     guards: Guards,
 }
 
@@ -77,6 +97,8 @@ pub enum ImportAnswer {
     Confirm(Confirm),
 }
 
+pub use embedded::EmbeddedInfo;
+
 /// A connection opened: its number and its session.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -85,6 +107,8 @@ pub struct Opened {
     pub connection: ConnectionId,
     /// Its session.
     pub session: SessionState,
+    /// What is told of its opening, as of an embedded database recovered.
+    pub told: Option<String>,
 }
 
 /// Every open connection.
@@ -102,9 +126,9 @@ impl std::fmt::Debug for ConnectionManager {
     }
 }
 
-/// The worker's name of connection `id`.
-fn worker_name(id: ConnectionId) -> String {
-    format!("{WORKER_PREFIX}{id}")
+/// The worker's name of connection `id`, of a server's or of an embedded database.
+fn worker_name(id: ConnectionId, embedded: bool) -> String {
+    if embedded { format!("{EMBEDDED_PREFIX}{id}") } else { format!("{WORKER_PREFIX}{id}") }
 }
 
 impl ConnectionManager {
@@ -140,15 +164,18 @@ impl ConnectionManager {
     ) -> Result<Opened> {
         let mut settings = spec.resolve(password, variable)?;
         settings.key_cache = self.key_cache.clone();
-        let id = {
-            let mut next = self.next.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-            let id = *next;
-            *next = next.saturating_add(1);
-            id
-        };
+        let id = self.next_id();
         let (handle, session) = self.start(id, settings, guards)?;
         self.handles().insert(id, handle);
-        Ok(Opened { connection: id, session })
+        Ok(Opened { connection: id, session, told: None })
+    }
+
+    /// A new connection's number.
+    fn next_id(&self) -> ConnectionId {
+        let mut next = self.next.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let id = *next;
+        *next = next.saturating_add(1);
+        id
     }
 
     /// Starts connection `id`'s worker, which connects by `settings`, and
@@ -158,7 +185,7 @@ impl ConnectionManager {
         let (ready, connected) = mpsc::channel::<Result<(SessionState, Option<Canceller>)>>();
         let (spool, events, worker_settings) = (self.spool.clone(), Arc::clone(&self.events), settings.clone());
         let thread = std::thread::Builder::new()
-            .name(worker_name(id))
+            .name(worker_name(id, false))
             .spawn(move || match worker_settings.connect() {
                 Ok(connection) => {
                     let canceller = connection.canceller();
@@ -172,7 +199,10 @@ impl ConnectionManager {
             .map_err(|e| StudioError::misuse(format!("[DESIGN] the connection's worker cannot start: {e}")))?;
         let started = connected.recv().map_err(|_| StudioError::lost("[DESIGN] the connection's worker ended"));
         match started.and_then(|r| r) {
-            Ok((session, canceller)) => Ok((Handle { jobs, thread, canceller, settings, guards }, session)),
+            Ok((session, canceller)) => Ok((
+                Handle { jobs, thread, stopper: Stopper::Server(canceller), origin: Origin::Server(Box::new(settings)), guards },
+                session,
+            )),
             Err(error) => {
                 let _ = thread.join(); // It has ended: its failure is the one given.
                 Err(error)
@@ -478,64 +508,6 @@ impl ConnectionManager {
     pub fn ping(&self, id: ConnectionId) -> Result<()> {
         self.ask(id, Request::Ping).map(drop)
     }
-
-    /// Cancels the statement connection `id` runs, from this thread.
-    ///
-    /// # Errors
-    ///
-    /// SQLCODE -910 for an unknown connection, or one with no canceller;
-    /// the cancel's failure, if the server cannot be reached.
-    pub fn cancel(&self, id: ConnectionId) -> Result<()> {
-        let canceller = self.handles().get(&id).ok_or_else(|| unknown(id))?.canceller.clone();
-        let canceller = canceller.ok_or_else(|| StudioError::misuse("[DESIGN] the connection cannot be cancelled"))?;
-        canceller.cancel().map_err(StudioError::from)
-    }
-
-    /// Ends connection `id`, waiting for its worker to end.
-    ///
-    /// # Errors
-    ///
-    /// SQLCODE -910 for an unknown connection; the server's failure as the
-    /// session ends, as a deferred constraint's at its commit.
-    pub fn close(&self, id: ConnectionId) -> Result<()> {
-        let answer = self.ask(id, Request::Terminate).map(drop);
-        let handle = self.handles().remove(&id);
-        if let Some(handle) = handle {
-            let _ = handle.thread.join(); // It has answered Terminate, and ends.
-        }
-        answer
-    }
-
-    /// Connects connection `id` again, by the settings it was made by: its
-    /// old session ended, its results with it.
-    ///
-    /// # Errors
-    ///
-    /// SQLCODE -910 for an unknown connection; the connection's failure.
-    pub fn reconnect(&self, id: ConnectionId) -> Result<SessionState> {
-        let old = self.handles().remove(&id).ok_or_else(|| unknown(id))?;
-        let (reply, _) = mpsc::channel();
-        let _ = old.jobs.send((Request::Terminate, reply)); // A worker already ended needs no Terminate.
-        let _ = old.thread.join(); // It ends as it is told, or has ended.
-        let (handle, session) = self.start(id, old.settings, old.guards)?;
-        self.handles().insert(id, handle);
-        Ok(session)
-    }
-
-    /// The threads the manager holds, one for each open connection.
-    pub fn threads(&self) -> Vec<ThreadInfo> {
-        self.handles().keys().map(|&connection| ThreadInfo { name: worker_name(connection), connection }).collect()
-    }
-}
-
-impl Drop for ConnectionManager {
-    /// Every connection ended, and its worker with it (R-SAFE-5).
-    fn drop(&mut self) {
-        let ids: Vec<ConnectionId> = self.handles().keys().copied().collect();
-        for id in ids {
-            let _ = self.close(id); // Each is ended; a failure as it ends has no one to tell.
-        }
-    }
 }
 
 /// The session `reply` gives.
@@ -563,3 +535,6 @@ fn unknown(id: ConnectionId) -> StudioError {
 fn unexpected() -> StudioError {
     StudioError::misuse("[DESIGN] the connection's worker answered out of turn")
 }
+
+mod embedded;
+mod ending;

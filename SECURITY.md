@@ -123,6 +123,12 @@ named.
   handle, which may quote a server's message.
 - The assistant's log and Live Sessions' log keep what was asked, done
   and shared, never a key, a secret, a row's value nor a workspace.
+- A saved embedded database keeps, in `connections.json`, its folder,
+  its keys directory's path and its checksum key's name, never a key:
+  the engine reads each key from the keys directory as it needs it. An
+  embedded database's folders reach the backend only as the platform's
+  dialog chose them, or as they were saved, so the window cannot name
+  another folder to open or make a database in.
 
 Studio sends nothing anywhere of its own accord: no telemetry, no
 analytics, no updates. The network is touched only by the user's

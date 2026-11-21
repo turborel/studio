@@ -7,6 +7,15 @@ import { invoke } from "@tauri-apps/api/core";
 import type { ObjectRef } from "./catalog";
 import type { ConnectionSpec, Environment, Opened } from "./connections";
 
+/** An embedded database a saved connection opens: its folder, and where its keys are, never a key (RULES.md D59). */
+export interface SavedEmbedded {
+  readonly directory: string;
+  readonly keys: string | null;
+  readonly checksumKey: string | null;
+  readonly pluginDirectories: string | null;
+  readonly user: string | null;
+}
+
 /** A saved connection. */
 export interface SavedConnection {
   readonly id: string;
@@ -18,6 +27,8 @@ export interface SavedConnection {
   readonly readOnly: boolean;
   readonly pinned: boolean;
   readonly favourites: readonly ObjectRef[];
+  /** The embedded database it opens, in place of a server. */
+  readonly embedded?: SavedEmbedded | null;
 }
 
 /** A saved connection, and whether its password is in the keychain. */

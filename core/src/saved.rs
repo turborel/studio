@@ -73,6 +73,46 @@ pub struct SavedConnection {
     /// Its favourite objects, pinned at the top of its catalog.
     #[serde(default)]
     pub favourites: Vec<ObjectRef>,
+    /// The embedded database it opens, in place of a server its settings
+    /// reach (RULES.md D59).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub embedded: Option<SavedEmbedded>,
+}
+
+/// An embedded database a saved connection opens: its directory, and
+/// where its keys are, never a key itself (RULES.md D59, R-SEC-1).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct SavedEmbedded {
+    /// The database's directory.
+    pub directory: PathBuf,
+    /// Its keys directory, if it is encrypted.
+    #[serde(default)]
+    pub keys: Option<PathBuf>,
+    /// The name of its checksum key in the keys directory, if its
+    /// checksums are keyed.
+    #[serde(default)]
+    pub checksum_key: Option<String>,
+    /// The directories its extensions' plug-ins may be in, by `;`.
+    #[serde(default)]
+    pub plugin_directories: Option<String>,
+    /// The identifier its session acts as, if not its owner's.
+    #[serde(default)]
+    pub user: Option<String>,
+}
+
+impl SavedEmbedded {
+    /// What opens it: never made, only opened.
+    pub fn spec(&self) -> crate::embedded::EmbeddedSpec {
+        crate::embedded::EmbeddedSpec {
+            place: crate::embedded::Place::Directory { path: self.directory.clone() },
+            create: false,
+            keys: self.keys.clone(),
+            checksum_key: self.checksum_key.clone(),
+            plugin_directories: self.plugin_directories.clone(),
+            user: self.user.clone(),
+        }
+    }
 }
 
 /// The file's document.
@@ -186,6 +226,17 @@ impl SavedConnection {
         }
         if self.colour.as_deref().is_some_and(|c| !is_colour(c)) {
             return Err(StudioError::misuse("[DESIGN] a colour is written #RRGGBB"));
+        }
+        if let Some(embedded) = &self.embedded {
+            if embedded.directory.as_os_str().is_empty() {
+                return Err(StudioError::misuse("[DESIGN] an embedded database is saved with its directory"));
+            }
+            if let Some(name) = &embedded.checksum_key {
+                named("checksum key", name)?;
+            }
+            if embedded.user.as_deref().is_some_and(|u| !crate::embedded::identifier(u)) {
+                return Err(StudioError::misuse("[DESIGN] the identifier is letters, digits and underscores, beginning with a letter"));
+            }
         }
         self.spec.validate()
     }

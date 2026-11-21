@@ -104,6 +104,9 @@ import { CodeIcon } from "@phosphor-icons/react/dist/csr/Code";
 import { BinaryIcon } from "@phosphor-icons/react/dist/csr/Binary";
 import { VectorThreeIcon } from "@phosphor-icons/react/dist/csr/VectorThree";
 import { PushPinSlashIcon } from "@phosphor-icons/react/dist/csr/PushPinSlash";
+import { FolderPlusIcon } from "@phosphor-icons/react/dist/csr/FolderPlus";
+import { MemoryIcon } from "@phosphor-icons/react/dist/csr/Memory";
+import { PuzzlePieceIcon } from "@phosphor-icons/react/dist/csr/PuzzlePiece";
 
 /** The colour an icon takes, by what it does: a theme token's, or the text's. */
 export type Tone = "plain" | "run" | "stop" | "commit" | "rollback" | "connect" | "disconnect";
@@ -137,6 +140,11 @@ const ICONS = {
   details: [InfoIcon, "plain"],
   start: [DatabaseIcon, "plain"],
   connection: [PlugsConnectedIcon, "plain"],
+  embedded: [DatabaseIcon, "plain"],
+  inMemory: [MemoryIcon, "plain"],
+  openDatabase: [FolderOpenIcon, "connect"],
+  newDatabase: [FolderPlusIcon, "connect"],
+  plugIn: [PuzzlePieceIcon, "plain"],
   folder: [FolderIcon, "plain"],
   schema: [DatabaseIcon, "plain"],
   table: [TableIcon, "plain"],

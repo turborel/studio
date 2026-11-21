@@ -10,6 +10,28 @@ afterEach(() => {
 });
 
 describe("the monitor at its edges", () => {
+  it("tells a server's views absent of an embedded database, and lists its plug-ins [DESIGN] D59", async () => {
+    catalogBackend({
+      admin_view: (args) => ({ columns: ["ID"], rows: [], absent: args["view"] !== "extensions" }),
+      embedded_info: () => ({
+        place: { kind: "memory" },
+        user: "ANN",
+        plugIns: [{ name: "SHA-256", kind: "hash function", loaded: true, note: "checksums" }],
+      }),
+    });
+    const store = await opened();
+    within(store, <MonitorPanel />);
+    await settle();
+    expect(screen.getAllByText(/an embedded database has no server/u).length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole("tab", { name: "Replication" }));
+    await settle();
+    expect(screen.getByText("This database is in no replica group.")).toBeTruthy();
+    fireEvent.click(screen.getByRole("tab", { name: "Plug-ins" }));
+    await settle();
+    expect(screen.getByRole("table", { name: "Plug-ins" }).textContent).toContain("SHA-256");
+    expect(screen.getByText(/No rows/u)).toBeTruthy();
+  });
+
   it("tells a server it cannot read, one of no row, and counters it cannot draw [DESIGN] D57", async () => {
     let reads = 0;
     catalogBackend({

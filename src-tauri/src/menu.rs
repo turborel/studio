@@ -18,6 +18,9 @@ pub const MENUS: [(&str, &[Item]); 7] = [
         "File",
         &[
             Some(("connection.new", "New Connection…")),
+            Some(("database.open", "Open Database…")),
+            Some(("database.new", "New Database…")),
+            Some(("database.newInMemory", "New In-Memory Database")),
             Some(("worksheet.new", "New Worksheet")),
             Some(("file.open", "Open File…")),
             Some(("model.new", "New Model")),

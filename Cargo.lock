@@ -2409,6 +2409,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4050469837a6ff301cd14c1f8f24f88549e6d548f24f64e2148eb0f72cebc51f"
 
 [[package]]
+name = "lz4_flex"
+version = "0.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ecbdfe44b1bd960b68170b417450a628c43f7cf56bb3c5317e61cb230ee7f226"
+
+[[package]]
 name = "mac-notification-sys"
 version = "0.6.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5005,6 +5011,15 @@ version = "0.0.0"
 source = "git+https://github.com/turborel/turborel?rev=7189b102f79059f5d587d025a6efcc8d63b843e9#7189b102f79059f5d587d025a6efcc8d63b843e9"
 
 [[package]]
+name = "turborel-aes"
+version = "0.0.0"
+source = "git+https://github.com/turborel/turborel?rev=7189b102f79059f5d587d025a6efcc8d63b843e9#7189b102f79059f5d587d025a6efcc8d63b843e9"
+dependencies = [
+ "aws-lc-rs",
+ "turborel",
+]
+
+[[package]]
 name = "turborel-client"
 version = "0.0.0"
 source = "git+https://github.com/turborel/turborel?rev=7189b102f79059f5d587d025a6efcc8d63b843e9#7189b102f79059f5d587d025a6efcc8d63b843e9"
@@ -5016,11 +5031,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "turborel-lz4"
+version = "0.0.0"
+source = "git+https://github.com/turborel/turborel?rev=7189b102f79059f5d587d025a6efcc8d63b843e9#7189b102f79059f5d587d025a6efcc8d63b843e9"
+dependencies = [
+ "lz4_flex",
+ "turborel",
+]
+
+[[package]]
 name = "turborel-protocol"
 version = "0.0.0"
 source = "git+https://github.com/turborel/turborel?rev=7189b102f79059f5d587d025a6efcc8d63b843e9#7189b102f79059f5d587d025a6efcc8d63b843e9"
 dependencies = [
  "aws-lc-rs",
+ "turborel",
+]
+
+[[package]]
+name = "turborel-simd"
+version = "0.0.0"
+source = "git+https://github.com/turborel/turborel?rev=7189b102f79059f5d587d025a6efcc8d63b843e9#7189b102f79059f5d587d025a6efcc8d63b843e9"
+dependencies = [
  "turborel",
 ]
 
@@ -5050,8 +5082,11 @@ dependencies = [
  "serde_json",
  "tokio",
  "turborel",
+ "turborel-aes",
  "turborel-client",
+ "turborel-lz4",
  "turborel-protocol",
+ "turborel-simd",
  "turborel-studio-live",
  "windows-native-keyring-store",
  "zbus-secret-service-keyring-store",

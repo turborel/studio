@@ -7,7 +7,8 @@
 import type { ModelDoc } from "../model/models";
 import type { DataTask } from "../data/tasks";
 import { createContext, useContext, useSyncExternalStore } from "react";
-import type { Guards, ServerTime, SessionState, StudioError } from "../ipc/connections";
+import type { ConnectionSpec, Guards, ServerTime, SessionState, StudioError } from "../ipc/connections";
+import type { EmbeddedMode } from "../shell/embeddedForm";
 import type { Settings } from "../ipc/preferences";
 import { DEFAULT_SETTINGS } from "../ipc/preferences";
 import type { KeychainStatus, SavedConnection, SavedList } from "../ipc/saved";
@@ -35,7 +36,19 @@ export interface OpenConnection {
 
 /** The dialog shown, if any. */
 export type Dialog =
-  | { readonly kind: "connection"; readonly editing: SavedConnection | null }
+  | {
+      readonly kind: "connection";
+      readonly editing: SavedConnection | null;
+      /** Settings the new connection begins with, as of a server found for a database another process holds. */
+      readonly spec?: ConnectionSpec;
+    }
+  | { readonly kind: "embedded"; readonly mode: EmbeddedMode; readonly editing: SavedConnection | null }
+  | {
+      /** How the open transactions of `connections` end, before they are closed or Studio quits (RULES.md D59). */
+      readonly kind: "openTransactions";
+      readonly connections: readonly number[];
+      readonly quitting: boolean;
+    }
   | { readonly kind: "palette" }
   | { readonly kind: "settings" }
   | { readonly kind: "about" }
@@ -106,7 +119,7 @@ export interface StudioState {
   readonly projects: readonly string[];
   /** What the status bar tells of the result's cells selected, if any are. */
   readonly cellSummary: string | null;
-  /** What Studio tells of its files set aside, until each is dismissed. */
+  /** What Studio tells, until each is dismissed: its files set aside, a database recovered as it opened. */
   readonly notices: readonly string[];
   /** The models open, each a tab, and the one active. */
   readonly models: readonly ModelDoc[];

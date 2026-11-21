@@ -3,7 +3,7 @@ import { CatalogTree } from "../explorer/CatalogTree";
 import { Details } from "../explorer/Details";
 import { Library } from "../explorer/Library";
 import { useStore, useStudio } from "../state/store";
-import { show } from "../state/actions";
+import { OpenButtons } from "./OpenButtons";
 import { openWorksheet } from "../state/worksheets";
 import { Icon } from "../icons/Icon";
 import { ConnectionsPanel } from "./ConnectionsPanel";
@@ -30,15 +30,7 @@ export function WelcomePanel() {
     <div className="panel-empty">
       <h1>Turborel Studio</h1>
       <div className="welcome-actions">
-        <button
-          type="button"
-          onClick={() => {
-            show(store, { kind: "connection", editing: null });
-          }}
-        >
-          <Icon name="newConnection" />
-          New Connection…
-        </button>
+        <OpenButtons />
         <button
           type="button"
           onClick={() => {

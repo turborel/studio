@@ -19,13 +19,14 @@ export type ViewName =
   | "archivedSegments"
   | "restorePoints"
   | "replicas"
-  | "settings";
+  | "settings"
+  | "extensions";
 
 /** A view's rows, each cell as text, a null null. */
 export interface ViewRows {
   readonly columns: readonly string[];
   readonly rows: readonly (readonly (string | null)[])[];
-  /** Whether the database has not the view, as REPLICAS of a node of no replica group. */
+  /** Whether the database has not the view, as REPLICAS of a node of no replica group, or a server's view of an embedded database. */
   readonly absent: boolean;
 }
 

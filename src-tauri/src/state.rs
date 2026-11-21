@@ -51,6 +51,9 @@ pub struct Studio {
     pub assistant: Arc<turborel_studio_core::assistant::service::Service>,
     /// Live Sessions.
     pub live: Arc<turborel_studio_core::live::service::LiveService>,
+    /// When the window was last asked how to end open transactions as the
+    /// user quit, if it was (RULES.md D59).
+    pub quit_asked: std::sync::Mutex<Option<std::time::Instant>>,
 }
 
 /// Tells the backend's events to the webview.

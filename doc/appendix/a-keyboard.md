@@ -11,6 +11,9 @@ are bound.
 | Command | Menu | macOS | Linux, Windows |
 |---|---|---|---|
 | New Connection… | File | Cmd+Shift+N | Ctrl+Shift+N |
+| Open Database… | File | | |
+| New Database… | File | | |
+| New In-Memory Database | File | | |
 | New Worksheet | File | Cmd+N | Ctrl+N |
 | Open File… | File | Cmd+O | Ctrl+O |
 | New Model | File | | |

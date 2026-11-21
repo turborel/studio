@@ -147,7 +147,7 @@ pub struct ImportReport {
 
 /// A source whose fields go into the columns chosen: those of no column
 /// let go.
-struct Mapped<S> {
+pub(crate) struct Mapped<S> {
     inner: S,
     /// The fields kept, by place.
     keep: Vec<usize>,
@@ -177,6 +177,21 @@ fn delimited(name: &str) -> String {
     format!("\"{}\"", name.replace('"', "\"\""))
 }
 
+/// The file `spec` names, its fields that go into columns alone, each
+/// heading its column's name as a delimited identifier.
+///
+/// # Errors
+///
+/// SQLCODE -910 if no field goes into a column, or the file cannot be opened.
+pub(crate) fn mapped(spec: &ImportSpec) -> Result<Mapped<Delimited<BufReader<File>>>> {
+    let keep: Vec<usize> = spec.fields.iter().enumerate().filter_map(|(at, f)| f.as_ref().map(|_| at)).collect();
+    if keep.is_empty() {
+        return Err(StudioError::misuse("[DESIGN] an import takes at least one field into a column"));
+    }
+    let names = spec.fields.iter().flatten().map(|n| delimited(n)).collect();
+    Ok(Mapped { inner: source(&spec.path, &spec.reading)?, keep, names, header_read: false })
+}
+
 /// Imports the file `spec` names over `connection`, as it says.
 ///
 /// # Errors
@@ -185,12 +200,7 @@ fn delimited(name: &str) -> String {
 /// or the import stops: where, why, and how many rows were committed and
 /// rolled back.
 pub fn run_import(connection: &mut Connected, spec: &ImportSpec) -> Result<ImportReport> {
-    let keep: Vec<usize> = spec.fields.iter().enumerate().filter_map(|(at, f)| f.as_ref().map(|_| at)).collect();
-    if keep.is_empty() {
-        return Err(StudioError::misuse("[DESIGN] an import takes at least one field into a column"));
-    }
-    let names = spec.fields.iter().flatten().map(|n| delimited(n)).collect();
-    let mut mapped = Mapped { inner: source(&spec.path, &spec.reading)?, keep, names, header_read: false };
+    let mut mapped = mapped(spec)?;
     let how = Import { table: spec.table.clone(), batch: spec.batch, skip: spec.skip };
     let mut skipped = Vec::new();
     let done = import(connection, &mut mapped, &how, &mut |r: Rejected| {

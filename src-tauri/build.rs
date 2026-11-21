@@ -10,7 +10,7 @@
 /// Every command the application defines, as `src/commands.rs` registers
 /// them and `capabilities/main.json` grants them; the checks tool holds the
 /// three lists equal.
-const COMMANDS: [&str; 101] = [
+const COMMANDS: [&str; 108] = [
     "app_info",
     "admin_view",
     "admin_act",
@@ -57,6 +57,13 @@ const COMMANDS: [&str; 101] = [
     "set_autocommit",
     "ping_connection",
     "list_threads",
+    "choose_database_directory",
+    "choose_keys_directory",
+    "check_database_directory",
+    "open_embedded",
+    "embedded_info",
+    "default_owner",
+    "quit_studio",
     "list_saved_connections",
     "save_connection",
     "delete_saved_connection",

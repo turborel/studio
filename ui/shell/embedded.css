@@ -1,0 +1,37 @@
+/* Embedded databases among the connections, and their dialog (RULES.md D59). */
+
+.tree-detail {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+/* An in-memory database's mark: nothing of it is saved (RULES.md D59). */
+.badge-unsaved {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 0 4px;
+  border-radius: 3px;
+  background: var(--alert);
+  color: var(--on-alert);
+}
+
+.connections-new {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.folder-chosen {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.folder-chosen output {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-muted);
+}

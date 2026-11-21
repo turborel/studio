@@ -19,6 +19,12 @@ publish = false
 turborel-client = { git = "https://github.com/turborel/turborel", rev = "7189b102f79059f5d587d025a6efcc8d63b843e9", features = ["tls", "scram", "system-roots"] }
 turborel = { git = "https://github.com/turborel/turborel", rev = "7189b102f79059f5d587d025a6efcc8d63b843e9" }
 turborel-protocol = { git = "https://github.com/turborel/turborel", rev = "7189b102f79059f5d587d025a6efcc8d63b843e9" }
+# Embedded databases (RULES.md D59): the plug-ins turboreld registers with a
+# database, so Studio opens the databases a server opens: LZ4, the ciphers,
+# hashes and keyring of its keys directory, and the SIMD kernels.
+turborel-aes = { git = "https://github.com/turborel/turborel", rev = "7189b102f79059f5d587d025a6efcc8d63b843e9" }
+turborel-lz4 = { git = "https://github.com/turborel/turborel", rev = "7189b102f79059f5d587d025a6efcc8d63b843e9" }
+turborel-simd = { git = "https://github.com/turborel/turborel", rev = "7189b102f79059f5d587d025a6efcc8d63b843e9" }
 # The IPC's and the files' encoding (RULES.md D17).
 serde = { version = "=1.0.229", features = ["derive"] }
 serde_json = "=1.0.154"
