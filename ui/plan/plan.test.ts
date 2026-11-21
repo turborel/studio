@@ -1,5 +1,6 @@
 import { misestimated, operators, parsePlan } from "./plan";
 import { kindOf, rangeOf } from "./kinds";
+import { ownTime } from "./summary";
 
 /** The lines of a plan as EXPLAIN gives them, one row each, the result's left margin taken off. */
 function lines(text: string): string[] {
@@ -158,5 +159,18 @@ describe("a plan", () => {
     expect(nodes[6]?.millis).toBe(0.022);
     expect(parsePlan(["-- ran: 1 row"]).ranMillis).toBeNull();
     expect(parsePlan(["-- ran: something"]).ran).toBeNull();
+  });
+});
+
+describe("an operator's own time", () => {
+  it("is told to the microsecond, with no error of floating point [DESIGN] D54", () => {
+    const plan = parsePlan([
+      "-- physical:",
+      "HashJoin O.CUSTOMER_ID = C.ID  (actual rows=240, time=1.316 ms)",
+      "  SeqScan DEMO.ORDERS  (actual rows=240, time=0.591 ms)",
+      "",
+    ]);
+    const join = plan.stages[0]?.roots[0];
+    expect(join === undefined ? null : ownTime(join)).toBe(0.725);
   });
 });

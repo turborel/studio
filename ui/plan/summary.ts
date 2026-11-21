@@ -60,13 +60,16 @@ export function tableOf(node: PlanNode): string | null {
   );
 }
 
-/** `node`'s own time: its time but its inputs'. */
+/** The thousandths of a millisecond EXPLAIN ANALYZE tells a time to: its microseconds. */
+const MICROS_PER_MILLI = 1000;
+
+/** `node`'s own time: its time but its inputs', to the microsecond EXPLAIN ANALYZE tells, so no error of floating point is shown. */
 export function ownTime(node: PlanNode): number | null {
   if (node.millis === null) {
     return null;
   }
   const inputs = node.children.reduce((sum, c) => sum + (c.millis ?? 0), 0);
-  return Math.max(0, node.millis - inputs);
+  return Math.round(Math.max(0, node.millis - inputs) * MICROS_PER_MILLI) / MICROS_PER_MILLI;
 }
 
 /** The physical stage's roots, or the last stage's. */
