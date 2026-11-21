@@ -504,7 +504,7 @@ The review checklist:
   an embedded database is given (D59), `turborel-aes`, `turborel-lz4`
   and `turborel-simd`, from
   github.com/turborel/turborel at commit
-  `ba8c845f27f24b736572e8aaf462b0adade9be29` of `main`; BSD-2-Clause
+  `829b5fb302c907cc26963baa8c5aacbdb5a4ca7a` of `main`; BSD-2-Clause
   Plus Patent.
 - **Not crates.io:** the 0.0.0 crates published there are frozen and
   never used.

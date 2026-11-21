@@ -20,15 +20,15 @@ png = "0.18.1"
 gif = "0.14.2"
 # Turborel's own client library, at a pinned commit of Turborel's main
 # (RULES.md D10). The crates.io 0.0.0 crates are frozen and never used.
-turborel-client = { git = "https://github.com/turborel/turborel", rev = "ba8c845f27f24b736572e8aaf462b0adade9be29", features = ["tls", "scram", "system-roots"] }
-turborel = { git = "https://github.com/turborel/turborel", rev = "ba8c845f27f24b736572e8aaf462b0adade9be29" }
-turborel-protocol = { git = "https://github.com/turborel/turborel", rev = "ba8c845f27f24b736572e8aaf462b0adade9be29" }
+turborel-client = { git = "https://github.com/turborel/turborel", rev = "829b5fb302c907cc26963baa8c5aacbdb5a4ca7a", features = ["tls", "scram", "system-roots"] }
+turborel = { git = "https://github.com/turborel/turborel", rev = "829b5fb302c907cc26963baa8c5aacbdb5a4ca7a" }
+turborel-protocol = { git = "https://github.com/turborel/turborel", rev = "829b5fb302c907cc26963baa8c5aacbdb5a4ca7a" }
 # Embedded databases (RULES.md D59): the plug-ins turboreld registers with a
 # database, so Studio opens the databases a server opens: LZ4, the ciphers,
 # hashes and keyring of its keys directory, and the SIMD kernels.
-turborel-aes = { git = "https://github.com/turborel/turborel", rev = "ba8c845f27f24b736572e8aaf462b0adade9be29" }
-turborel-lz4 = { git = "https://github.com/turborel/turborel", rev = "ba8c845f27f24b736572e8aaf462b0adade9be29" }
-turborel-simd = { git = "https://github.com/turborel/turborel", rev = "ba8c845f27f24b736572e8aaf462b0adade9be29" }
+turborel-aes = { git = "https://github.com/turborel/turborel", rev = "829b5fb302c907cc26963baa8c5aacbdb5a4ca7a" }
+turborel-lz4 = { git = "https://github.com/turborel/turborel", rev = "829b5fb302c907cc26963baa8c5aacbdb5a4ca7a" }
+turborel-simd = { git = "https://github.com/turborel/turborel", rev = "829b5fb302c907cc26963baa8c5aacbdb5a4ca7a" }
 # The IPC's and the files' encoding (RULES.md D17).
 serde = { version = "=1.0.229", features = ["derive"] }
 serde_json = "=1.0.154"
