@@ -80,10 +80,10 @@ export function modelSvg(model: Model): string {
   const height = bottom - top + MARGIN * 2;
   const style =
     "rect{fill:#ffffff;stroke:#5c5254}rect.header{fill:#ece8e8}text{font:12px sans-serif;fill:#1b1415}" +
-    "text.name{font-weight:600}text.type{fill:#5c5254}line{stroke:#562024;stroke-width:1.5}";
+    "text.name{font-weight:600}text.type{fill:#5c5254}line{stroke:#A74C2E;stroke-width:1.5}";
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" width="${String(width)}" height="${String(height)}" viewBox="${String(left - MARGIN)} ${String(top - MARGIN)} ${String(width)} ${String(height)}">` +
-    `<style>${style}</style><defs><marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#562024"/></marker></defs>` +
+    `<style>${style}</style><defs><marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#A74C2E"/></marker></defs>` +
     `${edgesSvg(model)}${model.tables.map(tableSvg).join("")}</svg>\n`
   );
 }

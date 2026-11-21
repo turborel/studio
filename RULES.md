@@ -59,7 +59,7 @@ Each is told in full in [§7](#7-the-decisions).
 | D17 | serde and serde_json for the IPC and the files |
 | D18 | The front end's tools: Vite, TypeScript, ESLint, Prettier and Vitest |
 | D19 | The checks tool is Rust, in `xtask/` |
-| D20 | Two themes, their accent the icon's maroon |
+| D20 | Two themes, their accent the icon's copper |
 | D21 | The icon set, made from the owner's icon by `cargo xtask icons` |
 | D22 | The webview's content security policy |
 | D23 | The supply chain: cargo deny and npm audit |
@@ -614,23 +614,27 @@ The review checklist:
 - *Why:* automation in the project's own language runs the same on every
   platform, and is tested (R-PROC-5).
 
-#### D20. Two themes, their accent the icon's maroon
+#### D20. Two themes, their accent the icon's copper
 
 - **Themes:** light and dark, following the system's preference; their
   palettes are `ui/theme/tokens.ts`, written as CSS variables.
-- **Accent:** #562024, the tile's maroon in `artwork/studio-icon.png`. It fills
-  the chrome in both themes under white text; on the dark background, a
-  tint of it, #E8A4AC, draws accent text and focus rings.
+- **Accent:** the copper of the icon's ribbon spiral, its main tone
+  #C26B47 sampled from the fills of `artwork/studio-icon.svg`. White on
+  it is too faint for text, so the chrome is filled, under white text, by
+  the ribbon's deeper step, #A74C2E, a fill of the same file, which also
+  draws accent text and focus rings on the light background; on the dark
+  background, a lighter step, #DE9776, also of the file, draws them.
 - **Contrast:** tests hold every pair to WCAG 2.2 AA (R-UI-2).
-- *Why:* the maroon is Studio's mark; too dark to read on the dark
-  background, its tint keeps the accent legible there.
+- *Why:* the copper is Studio's mark; its steps keep the accent legible
+  as a fill under text and as text or a ring on either background.
 
 #### D21. The icon set, made from the owner's icon by `cargo xtask icons`
 
-- **Source:** `artwork/studio-icon.png`, the owner's, kept unchanged: a
-  maroon tile of continuous corners on a transparent 2048 px canvas, in
-  the proportion of Apple's app icon grid, so one file serves every
-  platform.
+- **Source:** `artwork/studio-icon.svg`, the owner's vector artwork,
+  kept unchanged: a copper ribbon spiral on a white superellipse tile,
+  824 on a 1024 grid, with a faint hairline edge and a transparent
+  margin, so one file serves every platform; `artwork/studio-icon.png`
+  beside it is the same at 2048 pixels.
 - **The set:** `cargo xtask icons` runs Tauri's CLI on it, into
   `src-tauri/icons`, and removes the CLI's mobile folders; Studio is
   built for the desktop alone.

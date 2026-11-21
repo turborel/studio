@@ -142,7 +142,8 @@ one, Enter runs it, and Escape closes the palette.
 
 Studio has a light theme and a dark one. By default it follows the
 system's; **View > Theme** chooses one for good. The accent of both is
-the maroon of Studio's icon.
+the copper of Studio's icon, its ribbon spiral, in a step of it that
+reads on each theme's background.
 
 **View > Zoom In** and **Zoom Out** change the window's zoom by ten
 percent at a time, from 50 % to 300 %; **Actual Size** sets it back to

@@ -1,6 +1,6 @@
 //! `icons` (RULES.md D21): Studio's icon set, made by Tauri's CLI from the
-//! owner's icon, `artwork/studio-icon.png`, the one source for every
-//! platform. The file is already a tile on Apple's grid, so macOS takes it
+//! owner's vector icon, `artwork/studio-icon.svg`, the one source for every
+//! platform. The file is already a tile with its margin, so macOS takes it
 //! as it is. The CLI's mobile folders are removed: Studio is built for the
 //! desktop alone.
 
@@ -8,7 +8,7 @@ use crate::command::{NPM, root, run, say};
 use crate::error::Result;
 
 /// The owner's icon, the source of the set.
-pub const SOURCE: &str = "artwork/studio-icon.png";
+pub const SOURCE: &str = "artwork/studio-icon.svg";
 /// Where Tauri's icon set goes.
 const ICONS: &str = "src-tauri/icons";
 /// The folders of mobile icons the CLI makes too.

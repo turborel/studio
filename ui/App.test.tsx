@@ -27,7 +27,7 @@ describe("the window", () => {
     mockBackend();
     await renderWindow();
     expect(document.documentElement.dataset["theme"]).toBe("light");
-    expect(document.documentElement.style.getPropertyValue("--accent")).toBe("#562024");
+    expect(document.documentElement.style.getPropertyValue("--accent")).toBe("#A74C2E");
   });
 
   it("applies the theme the settings choose [DESIGN] D20", async () => {

@@ -141,25 +141,27 @@ sees it before it goes, and that no tool acts without the user
 
 ## The artwork
 
-The logo, `artwork/studio-logo.svg`, and its white form for dark
-backgrounds, `artwork/studio-logo-white.svg`, are Studio's icon as the
-mark, from `artwork/studio-icon.png`, beside the wordmark TURBOREL
+The logo, `artwork/studio-logo.svg`, and its form of white text for
+dark backgrounds, `artwork/studio-logo-white.svg`, are Studio's mark,
+the copper ribbon spiral of its icon, beside the wordmark TURBOREL
 STUDIO set in EB Garamond ExtraBold (800), under the SIL Open Font
 License, and outlined to paths. The font itself is not committed.
 
-The icon is the owner's file, `artwork/studio-icon.png`: a tile on a
-transparent canvas in the proportion of Apple's grid, the one source for
-every platform (RULES.md D21). To change it:
+The icon is the owner's vector artwork, `artwork/studio-icon.svg`: the
+spiral on a white superellipse tile, 824 on a 1024 grid, with a faint
+hairline edge and a transparent margin, the one source for every
+platform (RULES.md D21). Beside it, `artwork/studio-icon.png` is the
+same rendered at 2048 pixels. To change it:
 
-1. Replace `artwork/studio-icon.png` with the owner's new file, as it
-   is: never redrawn, cropped or recoloured here.
-2. Run `cargo xtask icons`. It runs Tauri's CLI on the file, which
+1. Replace both files with the owner's new ones, as they are: never
+   redrawn, cropped or recoloured here.
+2. Run `cargo xtask icons`. It runs Tauri's CLI on the SVG, which
    writes `src-tauri/icons` (`.icns`, `.ico` and the PNG sizes), and
    removes the CLI's mobile folders.
-3. If the tile's colour changed, sample the new accent from the tile
-   and set it in `ui/theme/tokens.ts` and RULES.md D20; the theme
+3. If the mark's colour changed, sample the new accent from the SVG's
+   fills and set it in `ui/theme/tokens.ts` and RULES.md D20; the theme
    tests hold its contrast in both themes.
-4. Commit the file and the set together, as `build: …`.
+4. Commit the files and the set together, as `build: …`.
 
 ## Commit messages
 

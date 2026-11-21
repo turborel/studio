@@ -1,5 +1,6 @@
 import { applyTheme, cssVariable, resolveTheme } from "./theme";
-import { PALETTES, STUDIO_MAROON, contrast, luminance, type ThemeName } from "./tokens";
+import iconSvg from "../../artwork/studio-icon.svg?raw";
+import { COPPER_DEEP, COPPER_LIGHT, PALETTES, STUDIO_COPPER, contrast, luminance, type ThemeName } from "./tokens";
 
 /** WCAG 2.2 AA: text of normal size. */
 const TEXT = 4.5;
@@ -34,11 +35,14 @@ describe("themes", () => {
     expect(contrast("#FFFFFF", "#FFFFFF")).toBe(1);
   });
 
-  it("takes the accent from the icon's maroon in both themes [DESIGN] D20", () => {
-    expect(STUDIO_MAROON).toBe("#562024");
-    for (const theme of THEMES) {
-      expect(PALETTES[theme].accent).toBe(STUDIO_MAROON);
+  it("takes the accent from the icon's copper in both themes [DESIGN] D20", () => {
+    for (const step of [STUDIO_COPPER, COPPER_DEEP, COPPER_LIGHT]) {
+      expect(iconSvg).toContain(`fill="${step}"`);
     }
+    for (const theme of THEMES) {
+      expect(PALETTES[theme].accent).toBe(COPPER_DEEP);
+    }
+    expect(PALETTES.dark.accentText).toBe(COPPER_LIGHT);
   });
 
   it.each(THEMES)("keeps the %s theme's text readable [RULE] R-UI-2", (theme) => {

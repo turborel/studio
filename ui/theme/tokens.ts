@@ -1,10 +1,11 @@
 /**
  * The colours of Studio's two themes (RULES.md D20, R-UI-2), defined once
- * and applied as CSS variables. The accent is the maroon of Studio's icon,
- * `artwork/studio-icon.png`, its tile sampled from the file: #562024. It fills the
- * chrome in both themes, under white text; where the accent is drawn as
- * text or a focus ring on the dark theme's background, a tint of it is
- * used, since the maroon itself is too dark to read there.
+ * and applied as CSS variables. The accent is the copper of Studio's icon,
+ * its ribbon spiral, sampled from the fills of `artwork/studio-icon.svg`:
+ * its main tone #C26B47. White on that is too faint for text, so the
+ * chrome is filled, under white text, by the ribbon's deeper step, which
+ * also draws accent text and focus rings on the light background; on the
+ * dark background a lighter step of the ribbon draws them.
  */
 
 /** A theme's name. */
@@ -75,8 +76,12 @@ export interface Palette {
   readonly series8: string;
 }
 
-/** Studio's icon's maroon, sampled from `artwork/studio-icon.png`. */
-export const STUDIO_MAROON = "#562024";
+/** The main tone of Studio's icon's copper ribbon, sampled from `artwork/studio-icon.svg`. */
+export const STUDIO_COPPER = "#C26B47";
+/** The ribbon's deeper step, a fill of the same file: the accent's fill, and its text on the light background. */
+export const COPPER_DEEP = "#A74C2E";
+/** The ribbon's lighter step, a fill of the same file: the accent's text and ring on the dark background. */
+export const COPPER_LIGHT = "#DE9776";
 
 /** The palettes of the two themes. */
 export const PALETTES: Readonly<Record<ThemeName, Palette>> = {
@@ -87,11 +92,11 @@ export const PALETTES: Readonly<Record<ThemeName, Palette>> = {
     border: "#D3CCCC",
     text: "#1B1415",
     textMuted: "#5C5254",
-    accent: STUDIO_MAROON,
+    accent: COPPER_DEEP,
     onAccent: "#FFFFFF",
-    accentText: STUDIO_MAROON,
-    focus: STUDIO_MAROON,
-    selection: "#F0DADD",
+    accentText: COPPER_DEEP,
+    focus: COPPER_DEEP,
+    selection: "#F6DDD2",
     onSelection: "#1B1415",
     danger: "#B3261E",
     warning: "#7A4F00",
@@ -120,11 +125,11 @@ export const PALETTES: Readonly<Record<ThemeName, Palette>> = {
     border: "#433A3B",
     text: "#EEE8E8",
     textMuted: "#B4AAAB",
-    accent: STUDIO_MAROON,
+    accent: COPPER_DEEP,
     onAccent: "#FFFFFF",
-    accentText: "#E8A4AC",
-    focus: "#E8A4AC",
-    selection: "#5A2A2F",
+    accentText: COPPER_LIGHT,
+    focus: COPPER_LIGHT,
+    selection: "#5E3324",
     onSelection: "#FFFFFF",
     danger: "#FF8A80",
     warning: "#F0C060",
