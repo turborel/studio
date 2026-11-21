@@ -1,0 +1,118 @@
+# The latest alpha of Studio, built for each platform, as main's nightly
+# builds Turborel's: unsigned installers published as one pre-release
+# tagged `nightly`, made again at each build, its files at fixed names
+# with their SHA-256 sums (doc/user/01-installing.md). The toolchain comes
+# from rust-toolchain.toml.
+#
+# It runs by hand alone until the owner turns on its trigger below, once
+# the installers are seen to build on every platform (TODO.md, M12).
+name: nightly
+
+on:
+  # The trigger, to be turned on: each change of main once verify passed.
+  # workflow_run:
+  #   workflows: [verify]
+  #   branches: [main]
+  #   types: [completed]
+  workflow_dispatch:
+
+# Builds run one at a time. A build that has started always finishes, so
+# frequent merges cannot cancel each one before it publishes. Of the
+# builds waiting, only the newest is kept.
+concurrency:
+  group: nightly
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  LINUX_PACKAGES: libwebkit2gtk-4.1-dev build-essential pkg-config libxdo-dev librsvg2-dev file
+
+jobs:
+  build:
+    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - os: ubuntu-latest
+            name: linux-x64
+            bundles: appimage,deb
+          - os: macos-latest
+            name: macos-arm64
+            bundles: dmg
+          - os: windows-latest
+            name: windows-x64
+            bundles: msi
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "26"
+          cache: npm
+      - name: Tauri's Linux packages
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y $LINUX_PACKAGES
+      - name: Install the pinned toolchain
+        run: rustup toolchain install
+      - name: The front end's packages
+        run: npm ci --no-fund --no-audit
+      - name: The installers
+        run: npm exec -- tauri build --bundles ${{ matrix.bundles }}
+      - name: At fixed names
+        shell: bash
+        run: |
+          mkdir out
+          for f in target/release/bundle/*/*.{dmg,msi,AppImage,deb}; do
+            [ -e "$f" ] || continue
+            cp "$f" "out/turborel-studio-nightly-${{ matrix.name }}.${f##*.}"
+          done
+          ls out
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: turborel-studio-nightly-${{ matrix.name }}
+          path: out/*
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          path: builds
+          merge-multiple: true
+      - name: Replace the nightly pre-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+        run: |
+          # Checks of older commits can finish after newer ones, so a build
+          # never replaces a nightly built from a later commit of main.
+          old=$(gh release view nightly --json targetCommitish -q .targetCommitish 2>/dev/null || true)
+          if [ -n "$old" ]; then
+            order=$(gh api "repos/$GH_REPO/compare/$old...$SHA" -q .status)
+            if [ "$order" = "behind" ] || [ "$order" = "identical" ]; then
+              echo "The nightly already holds $old, which is not older than $SHA."
+              exit 0
+            fi
+          fi
+          (cd builds && sha256sum turborel-studio-nightly-* > SHA256SUMS)
+          client=$(sed -n 's/^turborel-client = .*rev = "\([0-9a-f]*\)".*/\1/p' Cargo.toml)
+          gh release delete nightly --yes --cleanup-tag || true
+          gh release create nightly builds/* --prerelease --target "$SHA" \
+            --title "Nightly (alpha)" \
+            --notes "The latest alpha of Turborel Studio, built from $SHA once it passed every check, on turborel-client $client. Unsigned: doc/user/01-installing.md says how to open it on each system, and how to check the files against SHA256SUMS. Anything may change from one build to the next (VERSIONING.md)."

@@ -43,6 +43,52 @@ signed.
 To run Studio from the source as it is changed, run
 `npm exec -- tauri dev` instead.
 
+## The nightly
+
+Studio's latest alpha may also be built as the pre-release
+[nightly](https://github.com/turborel/studio/releases/tag/nightly), from
+a commit of main that passed every check. It holds an installer of each
+platform, at a fixed name, and their SHA-256 sums:
+
+| File | For |
+|---|---|
+| `turborel-studio-nightly-macos-arm64.dmg` | macOS on Apple silicon |
+| `turborel-studio-nightly-windows-x64.msi` | Windows on x64 |
+| `turborel-studio-nightly-linux-x64.AppImage` | Linux on x64, any distribution |
+| `turborel-studio-nightly-linux-x64.deb` | Debian and Ubuntu on x64 |
+| `SHA256SUMS` | the sum of each |
+
+Its notes name the commit of Studio and of turborel-client it was built
+from. Each build replaces the last, never with an older commit's.
+Anything may change from one build to the next
+([VERSIONING.md](../../VERSIONING.md)).
+
+### Checking a file
+
+Check a file against `SHA256SUMS`, in the folder of both:
+
+- **Linux:** `sha256sum --check --ignore-missing SHA256SUMS`
+- **macOS:** `shasum -a 256 --check --ignore-missing SHA256SUMS`
+- **Windows:** `Get-FileHash turborel-studio-nightly-windows-x64.msi -Algorithm SHA256`
+  in PowerShell, and compare its hash with the file's line in
+  `SHA256SUMS`.
+
+### Opening an unsigned build
+
+The installers are not signed until the owner's certificates are, so
+each system asks before it opens one:
+
+- **macOS:** open the `.dmg` and drag Turborel Studio to Applications.
+  The first time, Control-click the application, choose **Open**, then
+  **Open** again; or, after macOS refuses it, open **System Settings >
+  Privacy & Security** and choose **Open Anyway**.
+- **Windows:** when SmartScreen says it protected the PC, choose **More
+  info**, then **Run anyway**.
+- **Linux:** make the AppImage executable,
+  `chmod +x turborel-studio-nightly-linux-x64.AppImage`, and run it; or
+  install the `.deb` with
+  `sudo apt install ./turborel-studio-nightly-linux-x64.deb`.
+
 ## A server to connect to
 
 Studio connects to a Turborel server of the same release. Turborel's
