@@ -64,7 +64,9 @@ impl Viewer {
                 *last = Some(state);
             }
         });
-        let guest = runtime.block_on(Guest::join(&invite, VIEWER, on)).map_err(|e| Error(format!("the viewer could not join: {e}")))?;
+        let guest = runtime
+            .block_on(async { Guest::join(&invite, VIEWER, on).await })
+            .map_err(|e| Error(format!("the viewer could not join: {e}")))?;
         Ok(Viewer { guest, state, runtime })
     }
 
@@ -83,9 +85,15 @@ impl Viewer {
 
 impl Drop for Viewer {
     fn drop(&mut self) {
-        self.guest.leave();
-        // The goodbye is let go before the runtime ends.
-        self.runtime.block_on(tokio::time::sleep(SETTLE));
+        // Within the runtime, the guest's own: its goodbye sent and let go
+        // before the runtime ends. A failure here, of a scene failing
+        // already, is let pass, so the run goes on to the next scene.
+        let (guest, runtime) = (&self.guest, &self.runtime);
+        let _ = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            let _inside = runtime.enter();
+            guest.leave();
+            runtime.block_on(async { tokio::time::sleep(SETTLE).await });
+        }));
     }
 }
 
@@ -112,6 +120,7 @@ pub fn suggestion_scene(scene: &Scene<'_>) -> Result<()> {
     let tab = viewer.tab()?;
     let mut film = scene.film(None);
     film.frame(150)?;
+    let _inside = viewer.runtime.enter();
     viewer.guest.suggest(&tab, "SELECT NAME, CITY FROM CUSTOMERS WHERE CITY IN ('Lisbon', 'Porto') ORDER BY NAME");
     scene.session.wait_for("section[aria-label=\"Suggestions\"]")?;
     film.frame(250)?;

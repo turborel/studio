@@ -199,16 +199,19 @@ fn scenes() -> Vec<(&'static str, Act)> {
     all
 }
 
-/// Takes `act`, named `name`: its failure told, the window as it was
-/// pictured in `homes`, and whatever it left open closed.
+/// Takes `act`, named `name`: its failure told at once, the window as the
+/// scene left it pictured in `homes`, and whatever it left open closed.
 fn take(scene: &Scene<'_>, (name, act): (&str, Act), homes: &Path) -> Option<String> {
     say(&format!("==> screenshots: {name}, {}", scene.theme));
     let Err(e) = act(scene) else { return None };
-    let _ = scene.escape(); // Whatever it left open is closed.
+    // The window as the scene left it, then whatever it left open closed.
     if let Ok(shown) = scene.shot() {
-        let _ = write_png(&shown, &homes.join(format!("failed-{}-{}.png", name.replace(' ', "-"), scene.theme))); // A failure's picture helps alone.
+        let _ = write_png(&shown, &homes.join(format!("failed-{}-{}.png", name.replace([' ', '\''], "-"), scene.theme))); // A failure's picture helps alone.
     }
-    Some(format!("{name}, {}: {e}", scene.theme))
+    let _ = scene.escape();
+    let failed = format!("{name}, {}: {e}", scene.theme);
+    say(&format!("screenshots: failed: {failed}")); // Told at once, as a later panic would lose it.
+    Some(failed)
 }
 
 /// What every theme's scenes share: the application, the folders, the
