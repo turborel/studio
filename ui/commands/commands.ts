@@ -7,6 +7,7 @@ import { ZOOM } from "../ipc/preferences";
 import { cancel, changeSettings, disconnect, endTransaction, reconnectOpen, show } from "../state/actions";
 import type { IconName } from "../icons/Icon";
 import type { Store } from "../state/store";
+import { loadSchemas } from "../state/catalog";
 import { openWorksheet } from "../state/worksheets";
 import {
   EDITOR_ACTS,
@@ -265,6 +266,14 @@ export const COMMANDS: readonly Command[] = [
         await onActive(cancel)(context);
       }
     },
+  },
+  {
+    id: "catalog.refresh",
+    icon: "reconnect",
+    title: "Refresh Catalog",
+    category: "Connection",
+    enabled: connected,
+    run: onActive(loadSchemas),
   },
   {
     id: "transaction.commit",

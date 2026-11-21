@@ -21,7 +21,8 @@ import {
   statementAtCursor,
   toggleBookmark,
 } from "./actions";
-import { connectionOf, defaultSchema, namespace, tableDetail, tableNamed, unquoted } from "./catalog";
+import { connectionOf, defaultSchema, tableDetail, tableNamed, unquoted } from "./catalog";
+import { completionSource, iconElement, toCompletion } from "../complete/source";
 import { Editor, SPLIT_AFTER_MS } from "./Editor";
 import { describeSource, describeTable, editorExtensions, TABLE_DRAG, writtenFor } from "./extensions";
 import { bookmarks, failureField, piecesField, setPieces } from "./fields";
@@ -138,7 +139,6 @@ describe("the editor's catalog", () => {
     expect(await tableDetail(bridge, null, "STAFF")).toEqual(STAFF);
     expect(await tableDetail(bridge, "ANN", "STAFF")).toEqual(STAFF);
     expect(asked.filter((a) => a.command === "catalog_table")).toHaveLength(1);
-    expect(namespace(bridge)).toEqual({});
     store.update((now) => ({
       ...now,
       catalogs: {
@@ -160,7 +160,6 @@ describe("the editor's catalog", () => {
         },
       },
     }));
-    expect(namespace(bridge)).toEqual({ ANN: { STAFF: ["ID", "NAME", "DEPT"], '"lower"': [] } });
     changeWorksheet(store, id, (w) => ({ ...w, connection: null }));
     expect(await tableDetail(bridge, null, "STAFF")).toBeNull();
   });
@@ -186,39 +185,53 @@ describe("the editor's catalog", () => {
     expect(store.current().error).toBeNull();
   });
 
-  it("completes a table's columns after its name or alias, and snippets where a word begins [DESIGN] D36", async () => {
-    catalogBackend();
+  it("completes from the engine as typed, by Turborel's parser's scope or by the words, each item its icon [DESIGN] D40", async () => {
+    catalogBackend({ statement_scope: () => ({ parsed: false, sources: [] }) });
     const store = await opened();
     const id = openWorksheet(store);
-    const view = editor("SELECT s. FROM STAFF s; se", store, id);
-    const sources = view.state.languageDataAt<(c: CompletionContext) => unknown>("autocomplete", 9);
-    const results = await Promise.all(sources.map((source) => source(new CompletionContext(view.state, 9, true))));
-    const columns = results.find((r) =>
-      (r as { options?: { label: string }[] } | null)?.options?.some((o) => o.label === "NAME"),
-    ) as { from: number; options: { label: string; detail: string }[] };
-    expect(columns.from).toBe(9);
-    expect(columns.options.map((o) => o.label)).toEqual(["ID", "NAME", "DEPT"]);
-    const words = await Promise.all(sources.map((source) => source(new CompletionContext(view.state, 26, false))));
-    const snippets = words.find((r) =>
-      (r as { options?: { label: string }[] } | null)?.options?.some((o) => o.label === "sel"),
-    ) as { from: number };
-    expect(snippets.from).toBe(24);
-    const nothing = await Promise.all(sources.map((source) => source(new CompletionContext(view.state, 0, false))));
-    expect(
-      nothing.filter(
-        (r) => r !== null && (r as { options: unknown[] }).options.length > 0 && (r as { from: number }).from === 0,
-      ),
-    ).toEqual([]);
-    const unknown = editor("SELECT x. FROM T", store, id);
-    const none = await Promise.all(
-      unknown.state
-        .languageDataAt<(c: CompletionContext) => unknown>("autocomplete", 9)
-        .map((s) => s(new CompletionContext(unknown.state, 9, true))),
-    );
-    catalogBackend({ catalog_table: () => Promise.reject(new Error("no")) });
-    expect(none.length).toBeGreaterThan(0);
+    const source = completionSource({ store, worksheet: id });
+    const at = (doc: string, pos: number, explicit = false) =>
+      source(new CompletionContext(EditorState.create({ doc }), pos, explicit));
+    const columns = await at("SELECT s. FROM STAFF s", 9);
+    expect(columns?.options.map((o) => o.label)).toEqual(["ID", "NAME", "DEPT"]);
+    expect(columns?.options[0]?.detail).toBe("INTEGER");
+    expect(await at("SELECT ", 7)).toBeNull();
+    expect((await at("SELECT ", 7, true))?.options.length).toBeGreaterThan(0);
+    expect(await at("SELECT 'a", 9, true)).toBeNull();
+    const words = await at("sel", 3);
+    expect(words?.options.some((o) => o.label === "sel" && o.type === "snippet")).toBe(true);
+    catalogBackend({
+      statement_scope: () => ({
+        parsed: true,
+        sources: [{ kind: "table", schema: "ANN", name: "STAFF", alias: "Q", columns: null, outer: true }],
+      }),
+    });
+    expect((await at("SELECT q. FROM STAFF q", 9))?.options.map((o) => o.label)).toEqual(["ID", "NAME", "DEPT"]);
+    expect(iconElement("table").querySelector("svg")).not.toBeNull();
+    expect(iconElement("table").innerHTML).toBe(iconElement("table").innerHTML);
+    expect((await at("SELECT q.;\nVALUES (1)", 9))?.options.length).toBeGreaterThan(0);
+    expect((await at("INSERT INTO STAFF (", 19))?.options[0]?.label).toBe("NAME");
+    expect((await at("SELECT * FROM STAFF WHERE", 25))?.options.length).toBeGreaterThan(0);
+    changeWorksheet(store, id, (w) => ({ ...w, running: true }));
+    expect((await at("SELECT *", 8))?.options.length).toBeGreaterThan(0);
+  });
+
+  it("applies an item as written, a snippet by its fields, and ranks what was chosen first after [DESIGN] D40", () => {
+    const view = new EditorView({ state: EditorState.create({ doc: "SELECT x FROM T" }) });
+    const item = toCompletion({
+      label: "NAME",
+      kind: "column",
+      boost: 30,
+      detail: "VARCHAR(20)",
+      info: "of ANN.STAFF",
+    });
+    expect(item.boost).toBe(30);
+    (item.apply as (v: EditorView, c: unknown, from: number, to: number) => void)(view, item, 7, 8);
+    expect(view.state.doc.toString()).toBe("SELECT NAME FROM T");
+    const snip = toCompletion({ label: "sel", kind: "snippet", boost: 8, apply: "SELECT #{columns}" });
+    (snip.apply as (v: EditorView, c: unknown, from: number, to: number) => void)(view, snip, 0, 0);
+    expect(view.state.doc.toString().startsWith("SELECT columns")).toBe(true);
     view.destroy();
-    unknown.destroy();
   });
 
   it("writes a table dropped as a query of its columns, or an INSERT, and describes it [DESIGN] D36", async () => {

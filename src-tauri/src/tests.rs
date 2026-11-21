@@ -282,6 +282,10 @@ fn a_script_is_split_and_the_words_given() {
     assert_eq!(pieces[0]["from"], 0);
     assert_eq!(pieces[0]["statement"]["class"], "read");
     assert_eq!(pieces[1]["statement"]["destroys"], "DROP TABLE");
+    let scope = answer(&window, "statement_scope", serde_json::json!({"text": "SELECT é. FROM STAFF é", "cursor": 9}));
+    assert_eq!(scope["parsed"], true);
+    assert_eq!(scope["sources"][0]["alias"], "É");
+    assert_eq!(answer(&window, "statement_scope", serde_json::json!({"text": "SELECT", "cursor": 0}))["parsed"], false);
     let words = answer(&window, "sql_words", serde_json::json!({}));
     assert!(words.as_array().unwrap().iter().any(|w| w == "SELECT"));
 }

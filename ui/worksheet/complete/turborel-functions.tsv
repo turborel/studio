@@ -1,0 +1,113 @@
+# The built-in functions of Turborel's manual at 3df14c1621d8063f12452a6c189017e34b8e9fd9, copied by `cargo xtask headings` (RULES.md D40).
+sql/04-expressions.md	Numeric expressions	CHAR_LENGTH(s)	the characters of a character string
+sql/04-expressions.md	Numeric expressions	CHARACTER_LENGTH(s)	the characters of a character string
+sql/04-expressions.md	Numeric expressions	OCTET_LENGTH(s)	the octets of a string, as UTF-8, or of a binary string
+sql/04-expressions.md	Numeric expressions	BIT_LENGTH(s)	*(extension)* eight bits to each of those octets
+sql/04-expressions.md	Numeric expressions	POSITION(a IN b)	where string a first begins in b, from 1; 0 if not in it, 1 if a is empty; of binary strings, in octets
+sql/04-expressions.md	Numeric expressions	EXTRACT(f FROM d)	the field f of a datetime or interval
+sql/04-expressions.md	Numeric expressions	WIDTH_BUCKET(x, b1, b2, n)	which of n buckets of equal width from b1 to b2 x falls in
+sql/04-expressions.md	Numeric expressions	LN(x)	the natural logarithm of x, and e raised to the power x
+sql/04-expressions.md	Numeric expressions	EXP(x)	the natural logarithm of x, and e raised to the power x
+sql/04-expressions.md	Numeric expressions	POWER(x, y)	x raised to the power y, and the square root of x, POWER(x, 0.5)
+sql/04-expressions.md	Numeric expressions	SQRT(x)	x raised to the power y, and the square root of x, POWER(x, 0.5)
+sql/04-expressions.md	Numeric expressions	FLOOR(x)	the greatest whole number not above x
+sql/04-expressions.md	Numeric expressions	CEILING(x)	the least whole number not below x
+sql/04-expressions.md	Numeric expressions	CEIL(x)	the least whole number not below x
+sql/04-expressions.md	Numeric expressions	ABS(x)	the absolute value of x, of x's type
+sql/04-expressions.md	Numeric expressions	MOD(n, m)	the remainder of n divided by m, of n's sign
+sql/04-expressions.md	Numeric expressions	SIN(x)	the sine, cosine and tangent of x radians
+sql/04-expressions.md	Numeric expressions	COS(x)	the sine, cosine and tangent of x radians
+sql/04-expressions.md	Numeric expressions	TAN(x)	the sine, cosine and tangent of x radians
+sql/04-expressions.md	Numeric expressions	SINH(x)	the hyperbolic sine, cosine and tangent of x
+sql/04-expressions.md	Numeric expressions	COSH(x)	the hyperbolic sine, cosine and tangent of x
+sql/04-expressions.md	Numeric expressions	TANH(x)	the hyperbolic sine, cosine and tangent of x
+sql/04-expressions.md	Numeric expressions	ASIN(x)	the angle in radians whose sine, cosine or tangent x is
+sql/04-expressions.md	Numeric expressions	ACOS(x)	the angle in radians whose sine, cosine or tangent x is
+sql/04-expressions.md	Numeric expressions	ATAN(x)	the angle in radians whose sine, cosine or tangent x is
+sql/04-expressions.md	Numeric expressions	LOG(b, x)	the logarithm of x to the base b, and to the base 10
+sql/04-expressions.md	Numeric expressions	LOG10(x)	the logarithm of x to the base b, and to the base 10
+sql/04-expressions.md	String expressions	SUBSTRING(s FROM start [FOR length] [USING units])	the characters of s from start, counting from 1, length of them or the rest; of a binary string, its octets
+sql/04-expressions.md	String expressions	UPPER(s)	s in upper or lower case
+sql/04-expressions.md	String expressions	LOWER(s)	s in upper or lower case
+sql/04-expressions.md	String expressions	TRIM([[LEADING | TRAILING | BOTH] [c] FROM] s)	s without the character c, a space if not written, at its start, end or both, the default
+sql/04-expressions.md	String expressions	LTRIM(s [, set])	s without any of the characters of set, a space if not written, at its start, its end or both
+sql/04-expressions.md	String expressions	RTRIM(s [, set])	s without any of the characters of set, a space if not written, at its start, its end or both
+sql/04-expressions.md	String expressions	BTRIM(s [, set])	s without any of the characters of set, a space if not written, at its start, its end or both
+sql/04-expressions.md	String expressions	LPAD(s, n [, pad])	s brought to n characters, cut if longer, else with pad, a space if not written, repeated before it or after it; '' if n is less than 1
+sql/04-expressions.md	String expressions	RPAD(s, n [, pad])	s brought to n characters, cut if longer, else with pad, a space if not written, repeated before it or after it; '' if n is less than 1
+sql/04-expressions.md	String expressions	OVERLAY(s PLACING r FROM start [FOR length] [USING units])	s with r in place of length characters from start, or of as many as r has; of binary strings, octets
+sql/04-expressions.md	String expressions	TRIM([[LEADING | TRAILING | BOTH] [o] FROM] b)	of a binary string b, b without the octet o, X'00' if not written
+sql/04-expressions.md	Regular expressions	OCCURRENCES_REGEX(pattern [FLAG f] IN s [FROM start] [USING units])	how many matches there are; -1 if start is not a position of s
+sql/04-expressions.md	Regular expressions	POSITION_REGEX([START | AFTER] pattern [FLAG f] IN s [FROM start] [USING units] [OCCURRENCE n] [GROUP g])	where the nth match, or its group g, begins, or with AFTER the position after it ends; 0 if there is none
+sql/04-expressions.md	Regular expressions	SUBSTRING_REGEX(pattern [FLAG f] IN s [FROM start] [USING units] [OCCURRENCE n] [GROUP g])	what the nth match, or its group g, matched; null if there is none
+sql/04-expressions.md	Regular expressions	TRANSLATE_REGEX(pattern [FLAG f] IN s [WITH r] [FROM start] [USING units] [OCCURRENCE n | ALL])	s with every match, or the nth, replaced by r, '' if not written
+sql/04-expressions.md	Set functions	COUNT(*)	the rows
+sql/04-expressions.md	Set functions	COUNT(x)	the rows where x is not null
+sql/04-expressions.md	Set functions	SUM(x)	the sum and mean of x; of exact numbers, AVG of the scale 2 more; of DECFLOAT, DECFLOAT(34); of intervals too
+sql/04-expressions.md	Set functions	AVG(x)	the sum and mean of x; of exact numbers, AVG of the scale 2 more; of DECFLOAT, DECFLOAT(34); of intervals too
+sql/04-expressions.md	Set functions	MIN(x)	the least and greatest x
+sql/04-expressions.md	Set functions	MAX(x)	the least and greatest x
+sql/04-expressions.md	Set functions	EVERY(x)	of a BOOLEAN x, TRUE if each x is TRUE, else FALSE
+sql/04-expressions.md	Set functions	ARRAY_AGG(x ORDER BY ...)	an array of every x, nulls among them, in the order ORDER BY gives; null of no rows
+sql/04-expressions.md	Set functions	COLLECT(x)	a multiset of every x, nulls among them; DISTINCT once each; null of no rows
+sql/04-expressions.md	Set functions	FUSION(m)	a multiset of the elements of every multiset m; null of no rows
+sql/04-expressions.md	Set functions	INTERSECTION(m)	a multiset of as many of each value as the multiset m of fewest has; null of no rows
+sql/04-expressions.md	Set functions	ANY(x)	of a BOOLEAN x, TRUE if an x is TRUE, else FALSE
+sql/04-expressions.md	Set functions	SOME(x)	of a BOOLEAN x, TRUE if an x is TRUE, else FALSE
+sql/04-expressions.md	Set functions	ANY_VALUE(x)	one of the values of x, the first one read
+sql/04-expressions.md	Set functions	LISTAGG(x, 'sep') WITHIN GROUP (ORDER BY ...)	the strings x joined by the separator in the order ORDER BY gives, CHARACTER VARYING(32767)
+sql/04-expressions.md	Set functions	XMLAGG(x ORDER BY ...)	of XML values x, those not null one after another in the order ORDER BY gives, a document node of them by default ([XML Values](19-xml.md)); null of none
+sql/04-expressions.md	Set functions	JSON_ARRAYAGG(x [ORDER BY ...])	the JSON text of an array of every x, in the order ORDER BY gives; null of no rows
+sql/04-expressions.md	Set functions	JSON_OBJECTAGG(name VALUE x)	the JSON text of an object of each row's member, name a character string; null of no rows
+sql/04-expressions.md	Set functions	PERCENTILE_CONT(p) WITHIN GROUP (ORDER BY x)	the value a fraction p of the way through the sorted x, between two of them if it falls between
+sql/04-expressions.md	Set functions	PERCENTILE_DISC(p) WITHIN GROUP (ORDER BY x)	the first of the sorted x whose share of the values up to it is at least p
+sql/04-expressions.md	Set functions	VAR_POP(x)	the variance of x, of the population and of a sample
+sql/04-expressions.md	Set functions	VAR_SAMP(x)	the variance of x, of the population and of a sample
+sql/04-expressions.md	Set functions	STDDEV_POP(x)	their square roots, the standard deviations
+sql/04-expressions.md	Set functions	STDDEV_SAMP(x)	their square roots, the standard deviations
+sql/04-expressions.md	Set functions	COVAR_POP(y, x)	the covariance of the pairs of y and x, of the population and of a sample
+sql/04-expressions.md	Set functions	COVAR_SAMP(y, x)	the covariance of the pairs of y and x, of the population and of a sample
+sql/04-expressions.md	Set functions	CORR(y, x)	the size of their coefficient of correlation, from 0 to 1
+sql/04-expressions.md	Set functions	REGR_SLOPE(y, x)	the slope and intercept of the least-squares line of y on x
+sql/04-expressions.md	Set functions	REGR_INTERCEPT(y, x)	the slope and intercept of the least-squares line of y on x
+sql/04-expressions.md	Set functions	REGR_R2(y, x)	that line's coefficient of determination
+sql/04-expressions.md	Set functions	REGR_COUNT(y, x)	the pairs in which neither y nor x is null
+sql/04-expressions.md	Set functions	REGR_AVGX(y, x)	the means of x and of y
+sql/04-expressions.md	Set functions	REGR_AVGY(y, x)	the means of x and of y
+sql/04-expressions.md	Set functions	REGR_SXX(y, x)	the sums of the squares of the deviations of x and of y from their means, and of their products
+sql/04-expressions.md	Set functions	REGR_SYY(y, x)	the sums of the squares of the deviations of x and of y from their means, and of their products
+sql/04-expressions.md	Set functions	REGR_SXY(y, x)	the sums of the squares of the deviations of x and of y from their means, and of their products
+sql/06-queries.md	Window functions	ROW_NUMBER()	the row's place in its partition, from 1
+sql/06-queries.md	Window functions	RANK()	1 more than the rows ordered before its peers
+sql/06-queries.md	Window functions	DENSE_RANK()	1 more than the peer groups ordered before its own
+sql/06-queries.md	Window functions	PERCENT_RANK()	(RANK − 1) / (rows − 1), 0 of a partition of one row
+sql/06-queries.md	Window functions	CUME_DIST()	the rows up to its last peer, divided by the rows
+sql/06-queries.md	Window functions	NTILE(n)	the row's tile, the partition cut into n tiles in order
+sql/06-queries.md	Window functions	LAG(x [, k [, d]])	x of the row k rows before, else d
+sql/06-queries.md	Window functions	LEAD(x [, k [, d]])	x of the row k rows after, else d
+sql/06-queries.md	Window functions	FIRST_VALUE(x)	x of the frame's first row
+sql/06-queries.md	Window functions	LAST_VALUE(x)	x of the frame's last row
+sql/06-queries.md	Window functions	NTH_VALUE(x, n)	x of the frame's nth row
+sql/14-vectors.md	Functions	VECTOR_NORM(v [, norm])	the length of v: NORM2 by default, NORM1 or NORMINF
+sql/14-vectors.md	Functions	VECTOR_NORMALIZE(v)	v divided by its length
+sql/14-vectors.md	Functions	VECTOR_ELEMENT(v, i)	element i, counted from 1
+sql/14-vectors.md	Functions	VECTOR_SLICE(v, from, count)	count elements from element from
+sql/14-vectors.md	Functions	VECTOR_CONCAT(a, b)	a's elements, then b's
+sql/14-vectors.md	Functions	VECTOR_EQUALS(a, b)	whether a and b are alike in shape and every element
+sql/14-vectors.md	Functions	VECTORPROPERTY(v, property)	its Dimensions or its BaseType, the format in lower case
+sql/14-vectors.md	Functions	VECTOR_TO_ARRAY(v)	the elements as an ARRAY, and back
+sql/14-vectors.md	Functions	ARRAY_TO_VECTOR(a)	the elements as an ARRAY, and back
+sql/14-vectors.md	Functions	VECTOR_QUANTIZE(v, format [, scale [, zero]])	v in INT8, by scale and zero point; in BINARY, a bit set of each element above the threshold scale, 0 by default; or in FLOAT16
+sql/14-vectors.md	Functions	VECTOR_DEQUANTIZE(v, scale, zero)	an INT8 vector back in FLOAT32
+sql/20-property-graphs.md	Functions	ELEMENT_ID(v)	the element's identity, the JSON text of its table and key
+sql/20-property-graphs.md	Functions	VERTEX_ID(v)	the same as a JSON value
+sql/20-property-graphs.md	Functions	EDGE_ID(e)	the same as a JSON value
+sql/20-property-graphs.md	Functions	LABELS(v)	an array of its labels
+sql/20-property-graphs.md	Functions	PROPERTY_EXISTS(v, name)	whether one of its labels gives it the property
+sql/20-property-graphs.md	Functions	PATH_LENGTH(p)	the edges of path variable p
+sql/20-property-graphs.md	Functions	VERTICES(p)	arrays of their identities, in path order
+sql/20-property-graphs.md	Functions	EDGES(p)	arrays of their identities, in path order
+sql/20-property-graphs.md	Functions	IS_ACYCLIC(p)	whether the path is so
+sql/20-property-graphs.md	Functions	IS_TRAIL(p)	whether the path is so
+sql/20-property-graphs.md	Functions	IS_SIMPLE(p)	whether the path is so
+sql/20-property-graphs.md	Functions	PATH_TO_JSON(p)	a JSON array of the identities of its elements

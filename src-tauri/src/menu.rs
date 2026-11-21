@@ -67,6 +67,7 @@ pub const MENUS: [(&str, &[Item]); 6] = [
             Some(("connection.reconnect", "Reconnect")),
             None,
             Some(("statement.cancel", "Cancel Statement")),
+            Some(("catalog.refresh", "Refresh Catalog")),
             Some(("transaction.commit", "Commit")),
             Some(("transaction.rollback", "Rollback")),
         ],

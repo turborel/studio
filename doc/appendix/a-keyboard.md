@@ -18,6 +18,7 @@ are bound.
 | Disconnect | Connection | | |
 | Reconnect | Connection | | |
 | Cancel Statement | Connection | Cmd+. | Ctrl+. |
+| Refresh Catalog | Connection | | |
 | Commit | Connection | | |
 | Rollback | Connection | | |
 | Run Statement | Worksheet | Cmd+Enter | Ctrl+Enter |

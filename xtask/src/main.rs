@@ -9,6 +9,7 @@ mod coverage;
 mod docs;
 mod error;
 mod files;
+mod functions;
 mod icon;
 mod ipc;
 
@@ -22,7 +23,10 @@ const COMMANDS: [(&str, &str); 7] = [
     ("coverage", "the Rust and TypeScript tests' coverage, held to their floors (RULES.md D7); --files shows each file's"),
     ("audit", "the supply chain: cargo deny, npm audit of the shipped packages, and no ring in the tree"),
     ("rules", "the repository's own rules alone: sizes, markers, the manual, citations and the IPC's lists"),
-    ("headings", "copy the headings of Turborel's manual from a checkout's doc/ (an argument) for citations"),
+    (
+        "headings",
+        "copy the headings of Turborel's manual, and its built-in functions, from a checkout's doc/, or a doc/ exported of the commit named after it",
+    ),
     ("icons", "make Tauri's icon set, src-tauri/icons, of artwork/studio-icon.png"),
     ("install-hooks", "point git at .githooks/, so each commit runs `cargo xtask verify` first"),
 ];
@@ -34,7 +38,7 @@ fn main() -> ExitCode {
         Some("coverage") => coverage::coverage(args.get(1).is_some_and(|a| a == "--files")),
         Some("audit") => checks::audit(),
         Some("rules") => checks::rules(),
-        Some("headings") => citations::copy_headings(args.get(1).map(String::as_str)),
+        Some("headings") => citations::copy_headings(args.get(1).map(String::as_str), args.get(2).map(String::as_str)),
         Some("icons") => icon::icons(),
         Some("install-hooks") => command::install_hooks(),
         _ => {

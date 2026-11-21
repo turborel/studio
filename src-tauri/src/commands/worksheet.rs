@@ -17,7 +17,8 @@ use turborel_studio_core::guard::policy::Confirm;
 use turborel_studio_core::worksheet::files::{Query, Worksheet};
 use turborel_studio_core::worksheet::folders::{Opened, SQL_EXTENSION};
 use turborel_studio_core::worksheet::history::Entry;
-use turborel_studio_core::worksheet::script::{Piece, key_words, pieces};
+use turborel_studio_core::worksheet::scope::{Scope, scope};
+use turborel_studio_core::worksheet::script::{Piece, byte_at, key_words, pieces};
 
 use crate::commands::connections::blocking;
 use crate::state::Studio;
@@ -46,6 +47,13 @@ pub(crate) fn sql_words() -> Vec<&'static str> {
 #[tauri::command]
 pub(crate) async fn split_script(text: String) -> Result<Vec<Piece>> {
     off_the_window(move || pieces(&text)).await
+}
+
+/// What the statement `text` reads, the cursor `cursor` UTF-16 code units
+/// into it, for completion (RULES.md D40).
+#[tauri::command]
+pub(crate) async fn statement_scope(text: String, cursor: usize) -> Result<Scope> {
+    off_the_window(move || Ok(scope(&text, byte_at(&text, cursor)))).await
 }
 
 /// What connection `connection`'s guards would ask of `sql` before it

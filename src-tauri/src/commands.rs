@@ -60,6 +60,7 @@ pub(crate) fn handler<R: Runtime>() -> impl Fn(Invoke<R>) -> bool + Send + Sync 
         files::notify_finished,
         worksheet::sql_words,
         worksheet::split_script,
+        worksheet::statement_scope,
         worksheet::judge_script,
         worksheet::statement_parameters,
         worksheet::search_history,

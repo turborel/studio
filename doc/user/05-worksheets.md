@@ -26,15 +26,6 @@ The editor knows Turborel's SQL: its reserved words, as Turborel's own
 lexer reads them, the words its statements read, its types, strings,
 delimited identifiers and comments, each in a colour of its own.
 
-- **Completion**, as a word is typed or by Ctrl+Space, offers key words;
-  the tables of the schemas the explorer has read, and the session's
-  schema's without their schema's name; after a table's name, or its
-  alias in the statement's FROM or JOIN, and a period, its columns, read
-  as they are asked for; and snippets.
-- **Snippets** are completions with fields, which Tab moves between:
-  `sel` a SELECT, `ins` an INSERT, `upd` an UPDATE, `del` a DELETE, `ct`
-  a CREATE TABLE, `ci` a CREATE INDEX, `cv` a CREATE VIEW, `with` a
-  query of a WITH, and `exp` an EXPLAIN.
 - **Describe**: the pointer resting on a table's name, or **Worksheet >
   Describe**, shows its columns and their types.
 - **A routine's parameters** are shown as its arguments are written,
@@ -57,6 +48,58 @@ delimited identifiers and comments, each in a colour of its own.
   in; **Upper Case** and **Lower Case** change the selection's case, or
   the word's at the cursor.
 - A click with Cmd, on macOS, or Ctrl, elsewhere, adds a cursor.
+
+## Completion
+
+Completion offers, as a word is typed, after a period, and by
+Ctrl+Space, what may be written where the cursor is. The statement is
+read by Turborel's own parser, with a name put where one is being typed
+so that a statement being written parses; one that does not parse even
+so is read by its words.
+
+| Where | What is offered |
+|---|---|
+| a statement's start | the words that begin a statement, and the snippets |
+| after FROM, JOIN, INTO, UPDATE, TABLE, or a comma of FROM | the session's schema's tables and views, the schemas, and the statement's common table expressions |
+| after NEXT VALUE FOR | the session's schema's sequence generators |
+| after a schema's name and a period | its tables, views, sequences and routines |
+| after a table's name or its alias and a period | its columns |
+| after a table of FROM | AS, JOIN and the joins' words, ON, WHERE, GROUP BY, ORDER BY and the other clauses' |
+| after JOIN … ON | the conditions the foreign keys between the table joined and the others imply, then the columns |
+| within INSERT INTO t ( | the columns of t that take a value, as one list, then each column |
+| right after SELECT * | the star written as its columns |
+| after AS in CAST( | the types |
+| in a value expression | the columns of the statement's tables, common table expressions and derived tables; Turborel's built-in functions; the session's schema's routines; the words of value expressions and of the clauses that may follow; and the snippets |
+
+A column two of the statement's tables have is written qualified, by its
+table's alias or name; one only one has, by its name alone. A name is
+written as Turborel's lexer reads it back: bare where it is a regular
+identifier in upper case and no reserved word, else delimited. Key words
+and functions are written in the case the formatter's setting says, or
+in upper case where it keeps the case written. Nothing is offered in a
+string, a delimited name being written, or a comment.
+
+The items are ranked by kind, columns first, then common table
+expressions, tables, views, schemas, sequences, routines, functions,
+snippets and key words; by scope, the statement's outermost query's
+first; and by how often each was chosen before, this session. Matching
+is fuzzy: the letters typed in order, not all together. Each item shows
+its kind's icon and its type, or a routine's signature; its popup says
+a column's type, whether it may be null, its default and its table, a
+function's signature, what it gives and where Turborel's manual says so,
+or a snippet's template.
+
+Completion reads the catalog the explorer has read, and the session's
+schema's objects as it first needs them, each table's columns as they
+are asked for. While the worksheet runs a statement, it reads from what
+is read alone, as the connection is busy. **Connection > Refresh
+Catalog** reads the catalog again, as running a statement that changes
+definitions does.
+
+The built-in functions are those of the tables of functions of
+Turborel's manual, at the commit Studio is built with.
+
+## Dropping a table
 
 A table dragged from the explorer's tree into the editor writes a SELECT
 of its columns where it is dropped, or an INSERT of them, each value a

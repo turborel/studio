@@ -59,6 +59,27 @@ export interface OpenedFile {
   readonly text: string;
 }
 
+/** A source of rows a statement reads. */
+export interface ScopeSourceRead {
+  readonly kind: "table" | "cte" | "derived";
+  readonly schema: string | null;
+  readonly name: string | null;
+  readonly alias: string | null;
+  readonly columns: readonly string[] | null;
+  readonly outer: boolean;
+}
+
+/** What a statement reads, by Turborel's parser. */
+export interface StatementScope {
+  readonly parsed: boolean;
+  readonly sources: readonly ScopeSourceRead[];
+}
+
+/** What the statement `text` reads, the cursor `cursor` UTF-16 code units into it. */
+export function statementScope(text: string, cursor: number): Promise<StatementScope> {
+  return invoke<StatementScope>("statement_scope", { text, cursor });
+}
+
 /** The reserved words of Turborel's SQL. */
 export function sqlWords(): Promise<string[]> {
   return invoke<string[]>("sql_words");

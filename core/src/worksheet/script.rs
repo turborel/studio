@@ -58,6 +58,19 @@ pub fn pieces(script: &str) -> Result<Vec<Piece>> {
     Ok(found)
 }
 
+/// The byte of `text` that `units` UTF-16 code units from its start reach,
+/// at most its length.
+pub fn byte_at(text: &str, units: usize) -> usize {
+    let mut counted = 0_usize;
+    for (at, c) in text.char_indices() {
+        if counted >= units {
+            return at;
+        }
+        counted = counted.saturating_add(c.len_utf16());
+    }
+    text.len()
+}
+
 /// The UTF-16 code units of `text` before its byte `at`.
 fn utf16(text: &str, at: usize) -> usize {
     text.get(..at).map_or(0, |before| before.encode_utf16().count())
@@ -101,6 +114,14 @@ mod tests {
     fn the_reserved_words_are_the_lexers() {
         assert!(key_words().contains(&"SELECT") && key_words().contains(&"VALUE"));
         assert!(!key_words().contains(&"INDEX"));
+    }
+
+    /// [DESIGN] D36: a place in UTF-16 code units is the byte it reaches,
+    /// past letters of more than one unit and of more than one byte.
+    #[test]
+    fn a_place_is_found_in_bytes() {
+        let text = "é😀a";
+        assert_eq!([0, 1, 3, 4, 9].map(|u| super::byte_at(text, u)), [0, 2, 6, 7, 7]);
     }
 
     /// [RULE] R-SEC-6: a script longer than its bound is refused.

@@ -78,6 +78,7 @@ Each is told in full in [§7](#7-the-decisions).
 | D36 | Worksheets: scripts split as the server splits them, run through the guards |
 | D37 | The editor: CodeMirror 6 in Turborel's SQL |
 | D38 | A run's end notified by the platform, from the backend |
+| D40 | Completion: of the place, from the parser's scope and the catalog's cache |
 
 ---
 
@@ -108,6 +109,7 @@ Each is told in full in [§7](#7-the-decisions).
 | `ui/shell/` | the dock, toolbar, status bar, dialogs and the explorer's connections |
 | `ui/explorer/` | the catalog's tree, the details panel and the definition view (D33) |
 | `ui/worksheet/` | the worksheet, its editor, panes, plan view, formatter and dialogs (D36, D37) |
+| `ui/worksheet/complete/` | completion, and the copy of Turborel's built-in functions (D40) |
 | `ui/state/` | the window's store and its actions (D31) |
 | `ui/commands/` | the commands and their keys (D30) |
 | `ui/test/` | the one Vitest setup and the one mock of the backend (R-TEST-7) |
@@ -857,6 +859,31 @@ The review checklist:
   window is hidden.
 - *Why:* a long statement is waited on in another window, and its end
   should not be missed.
+
+#### D40. Completion: of the place, from the parser's scope and the catalog's cache
+
+- **The place:** read by the statement's words before the cursor: its
+  start, after FROM and the like, after a qualifier, after a table of
+  FROM, after JOIN … ON, within INSERT's column list, after SELECT *,
+  after CAST's AS, or a value expression of a clause.
+- **The scope:** the statement's tables, aliases, common table
+  expressions and derived tables, read by Turborel's parser through the
+  backend, with a name where the cursor is; by its words where it parses
+  neither way.
+- **Words:** each of Turborel's lists (D37), offered only where its place
+  allows.
+- **Functions:** the rows of the tables of functions of Turborel's manual,
+  copied by `cargo xtask headings` at the pinned commit, and the few its
+  manual describes under headings of their own.
+- **Cache:** the window's catalog, read further as asked for, never while
+  the worksheet runs; read again after a definition changes, or by
+  Refresh Catalog.
+- **Rank:** kind, then the outermost query's scope, then how often chosen
+  this session; matching CodeMirror's own, fuzzy.
+- **No comments:** Turborel keeps no comments of objects, so a popup has
+  none.
+- *Why:* completion that knows the statement and the database, and is
+  never slower than the typing.
 
 ---
 

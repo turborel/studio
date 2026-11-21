@@ -5,16 +5,7 @@
  * its arguments are written, and a table dropped from the explorer
  * written as a query of its columns.
  */
-import {
-  autocompletion,
-  closeBrackets,
-  closeBracketsKeymap,
-  type Completion,
-  type CompletionContext,
-  type CompletionResult,
-  completionKeymap,
-  snippetCompletion,
-} from "@codemirror/autocomplete";
+import { autocompletion, closeBrackets, closeBracketsKeymap, completionKeymap } from "@codemirror/autocomplete";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { sql } from "@codemirror/lang-sql";
 import {
@@ -47,7 +38,9 @@ import {
 import type { TableDetail } from "../../ipc/catalog";
 import { sqlName, turborelDialect } from "../dialect";
 import { markers } from "../variables";
-import { type Bridge, defaultSchema, namespace, tableDetail, tableNamed } from "./catalog";
+import { completionSource, iconElement } from "../complete/source";
+import type { ItemKind } from "../complete/engine";
+import { type Bridge, defaultSchema, tableDetail, tableNamed } from "./catalog";
 import { worksheetFields } from "./fields";
 import { parameterHints } from "./hints";
 
@@ -55,58 +48,6 @@ import { parameterHints } from "./hints";
 export const TABLE_DRAG = "application/x-turborel-table";
 /** The longest text whose markers are marked, in characters: past it, none is. */
 const MAX_MARKED = 1_000_000;
-
-/** The snippets, each its name, what it is and its template, `#{}` a field Tab moves to. */
-export const SNIPPETS: readonly (readonly [string, string, string])[] = [
-  ["sel", "SELECT … FROM … WHERE …", "SELECT #{columns}\nFROM #{table}\nWHERE #{condition}"],
-  ["ins", "INSERT INTO … VALUES …", "INSERT INTO #{table} (#{columns})\nVALUES (#{values})"],
-  ["upd", "UPDATE … SET … WHERE …", "UPDATE #{table}\nSET #{column} = #{value}\nWHERE #{condition}"],
-  ["del", "DELETE FROM … WHERE …", "DELETE FROM #{table}\nWHERE #{condition}"],
-  [
-    "ct",
-    "CREATE TABLE …",
-    "CREATE TABLE #{name} (\n    #{column} #{type},\n    CONSTRAINT #{name}_PK PRIMARY KEY (#{column})\n)",
-  ],
-  ["ci", "CREATE INDEX …", "CREATE INDEX #{name} ON #{table} (#{columns})"],
-  ["cv", "CREATE VIEW …", "CREATE VIEW #{name} AS\nSELECT #{columns}\nFROM #{table}"],
-  ["with", "WITH … AS (…) SELECT …", "WITH #{name} AS (\n    #{query}\n)\nSELECT #{columns}\nFROM #{name}"],
-  ["exp", "EXPLAIN …", "EXPLAIN #{query}"],
-];
-
-/** The snippets, as completions where a word is begun. */
-function snippets(context: CompletionContext): CompletionResult | null {
-  const word = context.matchBefore(/\w+/u);
-  if (word === null || (word.from === word.to && !context.explicit)) {
-    return null;
-  }
-  const options: Completion[] = SNIPPETS.map(([label, detail, template]) =>
-    snippetCompletion(template, { label, detail, type: "text" }),
-  );
-  return { from: word.from, options, validFor: /^\w*$/u };
-}
-
-/** The columns of the table, or alias, before the cursor's period, read if need be. */
-function columns(bridge: Bridge): (context: CompletionContext) => Promise<CompletionResult | null> {
-  return async (context) => {
-    const before = context.matchBefore(/("(?:[^"]|"")+"|[A-Za-z_][A-Za-z0-9_]*)\.(\w*)$/u);
-    if (before === null) {
-      return null;
-    }
-    const name = before.text.slice(0, before.text.lastIndexOf("."));
-    const { schema, table } = tableNamed(context.state.doc.toString(), name);
-    const detail = await tableDetail(bridge, schema, table);
-    if (detail === null) {
-      return null;
-    }
-    const reserved = new Set(bridge.store.current().reservedWords);
-    const options = detail.columns.map((c) => ({
-      label: sqlName(c.name, reserved),
-      detail: c.typeWritten,
-      type: "property",
-    }));
-    return { from: before.to - (before.text.length - name.length - 1), options, validFor: /^\w*$/u };
-  };
-}
 
 /** The marks of the text's markers: parameters and script variables. */
 const PARAMETER = Decoration.mark({ class: "cm-parameter" });
@@ -231,14 +172,7 @@ export const languageCompartment = new Compartment();
 
 /** The language, its completion of the catalog as `bridge` reads it now. */
 export function language(bridge: Bridge): Extension {
-  const now = bridge.store.current();
-  const schema = defaultSchema(bridge);
-  return sql({
-    dialect: turborelDialect(now.reservedWords),
-    schema: namespace(bridge),
-    ...(schema === null ? {} : { defaultSchema: sqlName(schema, new Set(now.reservedWords)) }),
-    upperCaseKeywords: true,
-  });
+  return sql({ dialect: turborelDialect(bridge.store.current().reservedWords) });
 }
 
 /** Every extension of a worksheet's editor, `changed` told of each change of its text. */
@@ -256,7 +190,11 @@ export function editorExtensions(bridge: Bridge, changed: (text: string) => void
     syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
     bracketMatching(),
     closeBrackets(),
-    autocompletion(),
+    autocompletion({
+      override: [completionSource(bridge)],
+      icons: false,
+      addToOptions: [{ render: (completion) => iconElement((completion.type ?? "keyword") as ItemKind), position: 20 }],
+    }),
     rectangularSelection(),
     crosshairCursor(),
     highlightActiveLine(),
@@ -270,7 +208,6 @@ export function editorExtensions(bridge: Bridge, changed: (text: string) => void
       ...completionKeymap,
     ]),
     languageCompartment.of(language(bridge)),
-    EditorState.languageData.of(() => [{ autocomplete: snippets }, { autocomplete: columns(bridge) }]),
     markerPlugin,
     worksheetFields(),
     describeAt(bridge),

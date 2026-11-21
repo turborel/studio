@@ -5,4 +5,5 @@
 pub mod files;
 pub mod folders;
 pub mod history;
+pub mod scope;
 pub mod script;

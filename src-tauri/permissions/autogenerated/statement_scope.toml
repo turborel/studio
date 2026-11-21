@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-statement-scope"
+description = "Enables the statement_scope command without any pre-configured scope."
+commands.allow = ["statement_scope"]
+
+[[permission]]
+identifier = "deny-statement-scope"
+description = "Denies the statement_scope command without any pre-configured scope."
+commands.deny = ["statement_scope"]

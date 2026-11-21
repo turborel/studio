@@ -200,10 +200,14 @@ pub fn ts_tests(text: &str) -> Vec<(usize, Vec<Tag>)> {
 
 /// Copies the headings of every page of Turborel's manual under `dir`, a
 /// checkout's `doc/`, into `HEADINGS_FILE`.
-pub fn copy_headings(dir: Option<&str>) -> Result<()> {
-    let dir = Path::new(dir.ok_or_else(|| Error("usage: cargo xtask headings <turborel checkout>/doc".into()))?);
+pub fn copy_headings(dir: Option<&str>, at: Option<&str>) -> Result<()> {
+    let dir = Path::new(dir.ok_or_else(|| Error("usage: cargo xtask headings <turborel checkout>/doc [commit]".into()))?);
     let checkout = dir.parent().map_or_else(|| ".".to_owned(), |p| p.to_string_lossy().into_owned());
-    let (_, commit) = crate::command::output("git", &["-C", &checkout, "rev-parse", "HEAD"])?;
+    // A doc/ exported of a commit names its commit; a checkout's is its HEAD.
+    let commit = match at {
+        Some(commit) => commit.to_owned(),
+        None => crate::command::output("git", &["-C", &checkout, "rev-parse", "HEAD"])?.1,
+    };
     let mut lines =
         vec![format!("# The headings of Turborel's manual at {}, copied by `cargo xtask headings` (RULES.md D6).", commit.trim())];
     let mut pages = Vec::new();
@@ -215,7 +219,8 @@ pub fn copy_headings(dir: Option<&str>) -> Result<()> {
     }
     lines.push(String::new());
     std::fs::write(root().join(HEADINGS_FILE), lines.join("\n"))?;
-    say(&format!("headings: {HEADINGS_FILE} written"));
+    crate::functions::copy_functions(dir, commit.trim())?;
+    say(&format!("headings: {HEADINGS_FILE} and {} written", crate::functions::FUNCTIONS_FILE));
     Ok(())
 }
 

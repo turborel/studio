@@ -244,3 +244,10 @@ button.danger {
   gap: 6px;
   align-items: center;
 }
+
+.cm-completion-kind {
+  display: inline-flex;
+  width: 18px;
+  margin-right: 4px;
+  vertical-align: middle;
+}

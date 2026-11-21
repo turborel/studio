@@ -166,3 +166,19 @@ export async function scriptChosen(store: Store, id: number): Promise<string | n
   changeCatalog(store, id, (c) => ({ ...c, chosen: [] }));
   return parts.join("\n");
 }
+
+/** Reads the schemas of connection `id`, if not read, and the objects of schema `schema`, if not read, the tree as it is. */
+export async function ensureObjects(store: Store, id: number, schema: string): Promise<void> {
+  if (store.current().catalogs[id]?.schemas === undefined || store.current().catalogs[id]?.schemas === null) {
+    await reading(store, async () => {
+      const schemas = await catalogSchemas(id);
+      changeCatalog(store, id, (c) => ({ ...c, schemas }));
+    });
+  }
+  if (store.current().catalogs[id]?.objects[schema] === undefined) {
+    await reading(store, async () => {
+      const objects = await catalogObjects(id, schema);
+      changeCatalog(store, id, (c) => ({ ...c, objects: { ...c.objects, [schema]: objects } }));
+    });
+  }
+}

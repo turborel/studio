@@ -41,6 +41,7 @@
     "allow-notify-finished",
     "allow-sql-words",
     "allow-split-script",
+    "allow-statement-scope",
     "allow-judge-script",
     "allow-statement-parameters",
     "allow-search-history",
