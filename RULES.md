@@ -1621,7 +1621,8 @@ The review checklist:
   README says it reads files "simple enough" and promises no more; it
   follows semantic versioning, keeps a changelog and an MSRV, and is
   released monthly. Taken for its one use, reading a sheet the user
-  chose, its failures told as the file's; the owner may replace it.
+  chose, its failures told as the file's. The owner approved it on
+  2026-11-21.
   `zip` 9.8.1, deflate alone, writes the tests' workbooks.
 - **Parquet** waits: no crate fits as yet (TODO.md).
 - **A new table:** each field's type inferred from the first 1000
@@ -1732,7 +1733,7 @@ The review checklist:
   added without its script (`BackendOnly`, D38); the webview is granted
   none of its commands. Its reader of Linux's desktop files brings
   `tiny-keccak`, CC0-1.0, a dedication to the public domain, which
-  `deny.toml` allows for it.
+  `deny.toml` allows for it, as the owner approved on 2026-11-21.
 - **The window:** the backend reads each link (`live::link::opened`),
   keeps the last until the window takes it (`take_live_link`, as a link
   may start Studio before its page loads), and tells it (`liveLink`).
