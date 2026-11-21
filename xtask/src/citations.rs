@@ -2,7 +2,8 @@
 //! every citation names a decision, rule or heading that exists. Turborel's
 //! headings are copied, at the commit `turborel-client` is pinned to, into
 //! `xtask/turborel-headings.tsv`, so the check needs no checkout of
-//! Turborel.
+//! Turborel: those a file of Studio's cites alone, so no heading Studio
+//! does not use, as one that names another product, is kept in its files.
 
 use std::collections::BTreeSet;
 use std::path::Path;
@@ -146,6 +147,44 @@ pub fn check_tests(paths: &[String]) -> Result<()> {
     if problems.is_empty() { Ok(()) } else { fail(problems.join("\n")) }
 }
 
+/// The headings of Turborel's manual the files of `paths` cite, each by
+/// its page: a `[CLIENT …]` heading of each of the client's pages.
+///
+/// # Errors
+///
+/// A file that cannot be read.
+pub fn cited_headings(paths: &[String]) -> Result<BTreeSet<(String, String)>> {
+    let mut cited = BTreeSet::new();
+    let texts = paths.iter().filter(|p| ["rs", "ts", "tsx", "md"].iter().any(|e| crate::files::ext_is(p, e)));
+    for path in texts {
+        for tag in tags_in(&std::fs::read_to_string(root().join(path))?) {
+            match tag {
+                Tag::Doc(page, heading) => {
+                    cited.insert((page, heading));
+                }
+                Tag::Client(heading) => cited.extend(CLIENT_PAGES.iter().map(|p| ((*p).to_owned(), heading.clone()))),
+                Tag::Design(_) | Tag::Rule(_) | Tag::Studio(_) => {}
+            }
+        }
+    }
+    Ok(cited)
+}
+
+/// Checks that every heading copied is one a file cites (RULES.md D6), so
+/// the copy holds nothing of Turborel's manual Studio does not use.
+pub fn check_headings(paths: &[String]) -> Result<()> {
+    let cited = cited_headings(paths)?;
+    let copied = std::fs::read_to_string(root().join(HEADINGS_FILE))?;
+    let problems: Vec<String> = copied
+        .lines()
+        .filter(|l| !l.starts_with('#') && !l.is_empty())
+        .filter_map(|l| l.split_once('\t'))
+        .filter(|(p, h)| !cited.contains(&((*p).to_owned(), (*h).to_owned())))
+        .map(|(p, h)| format!("{HEADINGS_FILE}: {p} {h} is cited nowhere: copy the headings again (RULES.md D6)"))
+        .collect();
+    if problems.is_empty() { Ok(()) } else { fail(problems.join("\n")) }
+}
+
 /// What is wrong with the citations `tags` of the test at `path:line`.
 fn test_problems(path: &str, line: usize, tags: &[Tag], known: &Known) -> Vec<String> {
     if tags.is_empty() {
@@ -215,9 +254,11 @@ pub fn copy_headings(dir: Option<&str>, at: Option<&str>) -> Result<()> {
     let mut pages = Vec::new();
     collect_pages(dir, dir, &mut pages)?;
     pages.sort();
+    let cited = cited_headings(&crate::files::tracked()?)?;
     for page in pages {
         let text = std::fs::read_to_string(dir.join(&page))?;
-        lines.extend(headings_of(&text).into_iter().map(|h| format!("{page}\t{h}")));
+        let of_page = headings_of(&text).into_iter().filter(|h| cited.contains(&(page.clone(), h.clone())));
+        lines.extend(of_page.map(|h| format!("{page}\t{h}")));
     }
     lines.push(String::new());
     std::fs::write(root().join(HEADINGS_FILE), lines.join("\n"))?;

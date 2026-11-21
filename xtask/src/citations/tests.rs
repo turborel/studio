@@ -50,3 +50,14 @@ fn a_live_tests_citation_is_its_doc_comments() {
     let text = "/// [CLIENT Connecting] It connects.\npub fn connects(live: &Live) {}\n\npub fn helper(live: &Live) {}\n";
     assert_eq!(rust_tests(text), [(2, vec![Tag::Client("Connecting".into())]), (4, vec![])]);
 }
+
+/// [DESIGN] D6: the headings a file cites are known by their pages, a
+/// client's heading of each of the client's pages, so the copy keeps
+/// those alone.
+#[test]
+fn the_headings_cited_are_known_by_their_pages() {
+    let cited = super::cited_headings(&["xtask/src/citations/tests.rs".to_owned()]).unwrap();
+    assert!(cited.contains(&("sql/07-information-schema.md".to_owned(), "TABLES".to_owned())));
+    assert!(cited.contains(&("client/02-library.md".to_owned(), "Running statements".to_owned())));
+    assert!(cited.contains(&("client/02-library-connections.md".to_owned(), "Running statements".to_owned())));
+}

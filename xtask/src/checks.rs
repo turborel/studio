@@ -29,6 +29,7 @@ pub fn rules() -> Result<()> {
     files::check_sources(&tracked)?;
     docs::check_manual(&tracked)?;
     citations::check_tests(&tracked)?;
+    citations::check_headings(&tracked)?;
     ipc::check_commands()?;
     say("rules: the repository's rules hold");
     Ok(())

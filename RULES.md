@@ -448,9 +448,12 @@ The review checklist:
 - **`[STUDIO <heading>]`:** a heading of this repository's manual.
 - **`[DESIGN] D<n>`** and **`[RULE] R-<id>`:** this file's.
 - **The copy:** `xtask/turborel-headings.tsv` holds the headings of
-  Turborel's manual at the commit D10 pins, made by
-  `cargo xtask headings`; the checks tool refuses a citation of what is
-  not there.
+  Turborel's manual at the commit D10 pins that a file of Studio's
+  cites, and no other, so nothing of Turborel's manual Studio does not
+  use, as a heading naming another product, is kept in its files; made
+  by `cargo xtask headings`. The checks tool refuses a citation of what
+  is not there, and a heading copied that nothing cites: a new citation
+  is copied by running `cargo xtask headings` again.
 - *Why:* a heading is what a reader finds; the copy checks citations with
   no checkout of Turborel.
 
