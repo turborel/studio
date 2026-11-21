@@ -42,23 +42,6 @@ window.studioMenu = (element) => {
 };
 ";
 
-/// The page's script that takes its call to save a text file, keeping the
-/// text in `window.studioSaved`: what it replaced to take it.
-const TAKE_SAVE: &str = r"
-const internals = window.__TAURI_INTERNALS__;
-const call = internals.invoke.bind(internals);
-window.studioSaved = null;
-const taken = (cmd, args, options) => (cmd === 'save_text_file' ? ((window.studioSaved = args.text), Promise.resolve(null)) : call(cmd, args, options));
-try { internals.invoke = taken; } catch (e) {}
-if (internals.invoke === taken) { return 'the call'; }
-try { Object.defineProperty(internals, 'invoke', { value: taken, writable: true, configurable: true }); } catch (e) {}
-if (internals.invoke === taken) { return 'the call, defined'; }
-const held = new Proxy(internals, { get: (target, name) => (name === 'invoke' ? taken : target[name]) });
-try { window.__TAURI_INTERNALS__ = held; } catch (e) {}
-try { Object.defineProperty(window, '__TAURI_INTERNALS__', { value: held, configurable: true }); } catch (e) {}
-return window.__TAURI_INTERNALS__ === held ? 'the object' : 'nothing';
-";
-
 /// Makes the demo database in `dir`, of the seed's statements, owned by `DEMO_USER`.
 fn demo_database(dir: &Path) -> Result<()> {
     let failed = |e: turborel::error::SqlError| Error(format!("the demo database: {e}"));
@@ -280,28 +263,46 @@ fn diagram_scene(scene: &Scene<'_>) -> Result<()> {
     scene.session.script("window.studioRow('DEMO')?.click()")?;
     scene.session.wait_for("[aria-label=\"Schema actions\"]")?;
     scene.click_text("[aria-label=\"Schema actions\"] button", "Open Model")?;
-    // The model opens in a tab of its own, which is shown.
-    scene.click_text(".dock-tab", "DEMO")?;
+    // The model opens in a tab of its own, shown as it opens.
     scene.session.wait_for(".react-flow__node")?;
     scene.save("er-diagram")?;
     if scene.theme != "light" {
         return Ok(());
     }
-    // The page's call of the backend taken, as it is made: by the call
-    // itself, or by the object that holds it, whichever the page lets be
-    // replaced; the save dialog never opened.
-    let how = scene.session.script(TAKE_SAVE)?;
+    // Studio's own Export as SVG, its file named in the platform's save
+    // dialog as a person names it, by keys typed into the dialog.
+    let file = scene.out.join("er-diagram.svg");
+    let _ = std::fs::remove_file(&file); // One of a run before is made again.
     scene.session.click("button[aria-label=\"Export as SVG…\"]")?;
-    let mut svg = serde_json::Value::Null;
-    for _ in 0..10 {
-        std::thread::sleep(SETTLE);
-        svg = scene.session.script("return window.studioSaved")?;
-        if svg.is_string() {
-            break;
+    name_in_save_dialog(&file)?;
+    for _ in 0..20 {
+        if file.is_file() {
+            return Ok(());
         }
+        std::thread::sleep(SETTLE);
     }
-    let Some(svg) = svg.as_str() else { return fail(format!("the diagram was not exported, its call taken by {how}")) };
-    std::fs::write(scene.out.join("er-diagram.svg"), svg).map_err(|e| Error(format!("er-diagram.svg: {e}")))
+    fail(format!("the diagram was not exported to {}", file.display()))
+}
+
+/// Names `file` in the platform's save dialog open now, as a person does:
+/// the dialog found by its title, the name typed, and Return, by
+/// `xdotool` of the display the window is on.
+fn name_in_save_dialog(file: &Path) -> Result<()> {
+    let typed = |args: &[&str]| -> Result<()> {
+        let done = std::process::Command::new("timeout")
+            .arg("30")
+            .arg("xdotool")
+            .args(args)
+            .status()
+            .map_err(|e| Error(format!("cannot run xdotool: {e}")))?;
+        if done.success() { Ok(()) } else { fail(format!("xdotool {} failed", args.join(" "))) }
+    };
+    let path = file.display().to_string();
+    typed(&["search", "--sync", "--onlyvisible", "--name", "Save", "windowactivate", "--sync"])?;
+    std::thread::sleep(SETTLE);
+    typed(&["key", "ctrl+a"])?;
+    typed(&["type", "--delay", "20", &path])?;
+    typed(&["key", "Return"])
 }
 
 /// Live Sessions: a session presented, its panel shown.
