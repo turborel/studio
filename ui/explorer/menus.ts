@@ -160,6 +160,7 @@ export function schemaMenu(store: Store, connection: number, schema: string): Me
     { label: "New Worksheet", icon: "newWorksheet", run: () => newWorksheetOn(store, connection, schema) },
     "separator",
     { label: "Create Table…", icon: "table", run: task(store, { kind: "createTable", connection, schema }) },
+    { label: "Import into New Table…", icon: "open", run: task(store, { kind: "importNew", connection, schema }) },
     { label: "Generate Script…", icon: "definition", run: task(store, { kind: "generate", connection, schema }) },
     {
       label: "Open Model",

@@ -143,12 +143,27 @@ describe("importing a file", () => {
                 ["Ada", "1", "x"],
                 [null, "2", "y"],
               ],
+              inferred: [
+                { typeWritten: "VARCHAR(10)", nulls: true },
+                { typeWritten: "INTEGER", nulls: false },
+                { typeWritten: "VARCHAR(10)", nulls: false },
+              ],
+              sheets: null,
             }
-          : { headings: null, records: [["name", "ID", "extra"]] },
+          : { headings: null, records: [["name", "ID", "extra"]], inferred: [], sheets: null },
       import_rows: (args) => {
         asks += 1;
         return args["confirmed"] === true || asks > 2
-          ? { kind: "imported", answer: { rows: 2, rejected: 1, skipped: ["record 3, line 4: duplicate; skipped"] } }
+          ? {
+              kind: "imported",
+              answer: {
+                rows: 2,
+                rejected: 1,
+                skipped: ["record 3, line 4: duplicate; skipped"],
+                cancelled: false,
+                rolledBack: 0,
+              },
+            }
           : { kind: "confirm", answer: { class: "writeRows", destroys: [], unclassified: [], production: true } };
       },
     });
@@ -175,9 +190,12 @@ describe("importing a file", () => {
     fireEvent.click(screen.getByRole("checkbox", { name: "First record names the fields" }));
     await settle();
     fireEvent.change(screen.getByRole("combobox", { name: "Column of field 3" }), { target: { value: "ID" } });
+    expect(screen.getByText("values of VARCHAR(10) do not cast to INTEGER")).toBeTruthy();
+    expect(screen.getByText("ID is chosen for more than one field.")).toBeTruthy();
+    expect(screen.getByText("VARCHAR(10) cast to VARCHAR(20)")).toBeTruthy();
     fireEvent.change(screen.getByRole("combobox", { name: "Column of field 3" }), { target: { value: "" } });
     fireEvent.change(screen.getByRole("spinbutton", { name: /Commit each/u }), { target: { value: "10" } });
-    fireEvent.click(screen.getByRole("checkbox", { name: "Skip a row refused, and tell it" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Skip a row refused, and tell it" }));
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: "Import" }));
       await settle();
@@ -201,11 +219,12 @@ describe("importing a file", () => {
       confirmed: true,
       spec: {
         path: "/data/staff.csv",
-        reading: { format: "csv", header: true, delimiter: ";", null: "N/A" },
+        reading: { format: "csv", header: true, delimiter: ";", null: "N/A", sheet: null },
         table: '"ANN"."STAFF"',
         fields: ["NAME", "ID", null],
         batch: 10,
         skip: true,
+        limit: null,
       },
     });
     fireEvent.click(screen.getByRole("button", { name: "Close" }));
@@ -217,7 +236,9 @@ describe("importing a file", () => {
       catalog_table: () => refused({ message: "gone" }),
       choose_import_file: () => (fail ? null : "/data/bad.csv"),
       preview_import: () =>
-        fail ? refused(new Error("record 1: a quote not closed")) : { headings: null, records: [] },
+        fail
+          ? refused(new Error("record 1: a quote not closed"))
+          : { headings: null, records: [], inferred: [], sheets: null },
       import_rows: () =>
         refused({
           sqlcode: -910,

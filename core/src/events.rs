@@ -44,6 +44,14 @@ pub enum Event {
         /// How far it has come.
         progress: crate::connections::manager::sqlfile::FileProgress,
     },
+    /// How far an import on a connection has come (RULES.md D63).
+    #[serde(rename_all = "camelCase")]
+    Import {
+        /// The connection.
+        connection: ConnectionId,
+        /// How far it has come.
+        progress: crate::connections::imports::ImportProgress,
+    },
     /// A connection was lost: it takes no more until it is reconnected.
     #[serde(rename_all = "camelCase")]
     Lost {

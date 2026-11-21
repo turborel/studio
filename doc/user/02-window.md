@@ -94,7 +94,7 @@ through the connection's guards, as one typed would
 |---|---|
 | an open connection in the explorer | New Worksheet, on it; Refresh Catalog; Analyze Schema…; Edit Connection…; Copy URI, with no password; Reconnect; Disconnect |
 | a saved connection | Connect; Edit Connection…; Copy URI; Pin or Unpin; Delete…, which asks for its name typed |
-| a schema | New Worksheet, its schema set; Create Table…; Generate Script…; Open Model; Compare Schema…; Analyze Schema…; Copy Name; Properties; Refresh |
+| a schema | New Worksheet, its schema set; Create Table…; Import into New Table…; Generate Script…; Open Model; Compare Schema…; Analyze Schema…; Copy Name; Properties; Refresh |
 | a table | New Worksheet; Open Data, its first 200 rows; Open Data Filtered…; Alter Table…; Indexes…; Analyze Table…; Import…; Export…; Compare Rows…; Script As CREATE, ALTER, DROP, SELECT, INSERT, UPDATE or DELETE, to a worksheet or the clipboard; Copy Name; Copy Qualified Name; Rename…; Drop Table; Dependencies; Properties; Refresh |
 | a view | New Worksheet; Open Data; Script As CREATE, SELECT or DROP; Copy Name; Copy Qualified Name; Drop View; Dependencies; Properties; Refresh |
 | a column, a constraint, an index or a trigger | Copy Name; Rename Column… and Drop Column, of a column; Drop Constraint, Drop Index or Drop Trigger; Properties |

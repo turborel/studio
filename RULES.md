@@ -102,6 +102,7 @@ Each is told in full in [§7](#7-the-decisions).
 | D60 | The manual's images: made by the checks tool of the real window and a demo database, never by hand |
 | D61 | Explain Analyze of a data change: said to change data, rolled back to a savepoint unless kept |
 | D62 | Run SQL File: a file streamed, scanned and judged whole, run by its options, never by the assistant |
+| D63 | The import wizard: CSV, JSON and Excel, into a table or a new one typed from a sample, watched and cancelled |
 
 ---
 
@@ -1047,7 +1048,8 @@ The review checklist:
   first 20 records; each field taken into a column chosen or skipped;
   imported by turborel-client's `import`, by copy where the server
   grants it, a batch committed at a time, through the guards as an
-  INSERT into the table.
+  INSERT into the table. Its formats, a new table, and its progress,
+  cancel and limit are D63's.
 - **Export:** a table's rows, or those a condition keeps, by the
   result's export (D39).
 - *Why:* data brought in and taken out at any size, the webview reaching
@@ -1591,6 +1593,54 @@ The review checklist:
   editor, and a person loading one needs to know, before it runs, what
   it will do, and after, what it did.
 
+
+#### D63. The import wizard: CSV, JSON and Excel, into a table or a new one typed from a sample, watched and cancelled
+
+- **Formats** (`core/src/connections/imports/`): CSV and tab-separated
+  text, as D43; JSON as one array of objects or one object a line
+  (NDJSON); and an Excel `.xlsx` sheet, the first or the one chosen. A
+  source of turborel-client's `Source`, read a record at a time, so
+  memory holds a record, whatever the file's size; an object or a line
+  longer than 16 MiB is refused.
+- **JSON's fields:** the keys of the first 100 objects, in the order they
+  first come; a key first seen later stops the import by its record,
+  never dropped unseen. A value is its text: a number exactly as written
+  (serde_json's raw values), so every one of 38 digits is kept; TRUE and
+  FALSE; an object or array as its JSON text; null.
+- **Excel's cells**, by calamine's cell reader, a row at a time, the
+  workbook's shared strings held whole: a number as the shortest decimal
+  that is the same double, as Excel keeps doubles, so a number past 15
+  digits is exact only as text; a date as `YYYY-MM-DD`, with its time if
+  it has one; TRUE or FALSE; an error as Excel shows it, `#N/A`, which a
+  column of a number refuses.
+- **calamine** 0.38.0, MIT, pure Rust, no default features: its own
+  README says it reads files "simple enough" and promises no more; it
+  follows semantic versioning, keeps a changelog and an MSRV, and is
+  released monthly. Taken for its one use, reading a sheet the user
+  chose, its failures told as the file's; the owner may replace it.
+  `zip` 9.8.1, deflate alone, writes the tests' workbooks.
+- **Parquet** waits: no crate fits as yet (TODO.md).
+- **A new table:** each field's type inferred from the first 1000
+  records (`infer.rs`), the narrowest of BOOLEAN, INTEGER, BIGINT,
+  NUMERIC(p,s) to 38 digits, DOUBLE PRECISION, DATE, TIME, TIMESTAMP,
+  TIMESTAMP WITH TIME ZONE, JSON, else CHARACTER VARYING of its longest
+  value rounded up, or CLOB past 32,767; a number written with leading
+  zeros stays text. The user names and types each column, or leaves it
+  out; the CREATE TABLE shown as it is edited, run through the guards
+  before the import, the catalog read again.
+- **An existing table:** each field's cast shown, of its inferred type to
+  its column's, and flagged where it cannot fit or cast, a null for a
+  column that takes none, a column chosen twice, or a column that takes
+  no null and has no default left out.
+- **Loading:** by copy in batches (D43); the event `import` tells the
+  records read, the rows skipped and the bytes, or a sheet's rows, read
+  of all, at most every 250 ms; **Cancel Import** stops between records,
+  the batches committed kept, the one under way rolled back, and says
+  so; a row refused stops the import, is skipped and told, or is
+  skipped to a limit, past which the import stops.
+- *Why:* data comes as spreadsheets and JSON as often as CSV, and a new
+  table should take its types from what is in the file, shown before
+  anything is made.
 ---
 
 ## 8. References

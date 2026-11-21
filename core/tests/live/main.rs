@@ -148,6 +148,7 @@ const TESTS: &[(&str, Test)] = &[
     ("every_type_is_shown_as_its_text", statements::every_type_is_shown_as_its_text),
     ("a_38_digit_number_round_trips", statements::a_38_digit_number_round_trips),
     ("rows_are_imported_from_a_file", data::rows_are_imported_from_a_file),
+    ("json_records_are_imported", data::json_records_are_imported),
     ("the_table_dialogs_ddl_runs", data::the_table_dialogs_ddl_runs),
     ("a_comparisons_script_syncs_the_target", data::a_comparisons_script_syncs_the_target),
     ("a_models_script_migrates_the_schema", data::a_models_script_migrates_the_schema),

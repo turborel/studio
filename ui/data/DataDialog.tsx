@@ -17,7 +17,9 @@ export function DataDialog({ task }: { readonly task: DataTask }) {
     case "editRows":
       return <EditRowsDialog of={task} />;
     case "import":
-      return <ImportDialog of={task} />;
+      return <ImportDialog target={{ kind: "existing", of: task }} />;
+    case "importNew":
+      return <ImportDialog target={{ kind: "new", connection: task.connection, schema: task.schema }} />;
     case "export":
       return <ExportDialog of={task} />;
     case "alterTable":

@@ -78,6 +78,7 @@ export function SchemaActions({ connection, schema }: { readonly connection: num
   return (
     <div className="details-actions" role="group" aria-label="Schema actions">
       <Action icon="table" name="Create Table…" task={{ kind: "createTable", connection, schema }} />
+      <Action icon="open" name="Import into New Table…" task={{ kind: "importNew", connection, schema }} />
       <Action icon="definition" name="Generate Script…" task={{ kind: "generate", connection, schema }} />
       <Action icon="compare" name="Compare Schema…" task={{ kind: "compareSchemas", connection, schema }} />
       <ModelAction connection={connection} schema={schema} />

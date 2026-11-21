@@ -6,18 +6,31 @@
 import { invoke } from "@tauri-apps/api/core";
 import type { Cell, Confirm, StatementClass } from "./connections";
 
+/** The formats a file to import is read as. */
+export type ImportFormat = "csv" | "tsv" | "json" | "ndjson" | "xlsx";
+
 /** How a file to import is read. */
 export interface Reading {
-  readonly format: "csv" | "tsv";
+  readonly format: ImportFormat;
   readonly header: boolean;
   readonly delimiter: string | null;
   readonly null: string | null;
+  /** The sheet of a workbook, or null for its first. */
+  readonly sheet: string | null;
 }
 
-/** A file's first records. */
+/** A field's type, inferred from a file's first records. */
+export interface Inferred {
+  readonly typeWritten: string;
+  readonly nulls: boolean;
+}
+
+/** A file's first records, each field's type inferred, and a workbook's sheets. */
 export interface Preview {
   readonly headings: readonly string[] | null;
   readonly records: readonly (readonly Cell[])[];
+  readonly inferred: readonly Inferred[];
+  readonly sheets: readonly string[] | null;
 }
 
 /** An import: the file, how it is read, the table as SQL writes it, the column of each field or none, the batch, and whether to skip rows refused. */
@@ -28,6 +41,8 @@ export interface ImportSpec {
   readonly fields: readonly (string | null)[];
   readonly batch: number;
   readonly skip: boolean;
+  /** The rows that may be skipped before the import stops; null for any. */
+  readonly limit: number | null;
 }
 
 /** What an import did. */
@@ -35,6 +50,16 @@ export interface ImportReport {
   readonly rows: number;
   readonly rejected: number;
   readonly skipped: readonly string[];
+  readonly cancelled: boolean;
+  readonly rolledBack: number;
+}
+
+/** How far an import has come: records read, rows skipped, and bytes, or a sheet's rows, read of all. */
+export interface ImportProgress {
+  readonly records: number;
+  readonly rejected: number;
+  readonly read: number;
+  readonly total: number;
 }
 
 /** What an import answers: its report, or the guards' question. */
@@ -123,6 +148,11 @@ export interface FileProgress {
 export type FileAnswer =
   | { readonly kind: "ran"; readonly report: FileReport }
   | { readonly kind: "confirm"; readonly confirm: Confirm; readonly scan: Scan };
+
+/** Cancels the import running on `connection`. */
+export function cancelImport(connection: number): Promise<void> {
+  return invoke<undefined>("cancel_import", { connection });
+}
 
 /** Asks which `.sql` file to run: its path, or null if the user cancelled. */
 export function chooseSqlFile(): Promise<string | null> {

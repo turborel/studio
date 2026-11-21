@@ -106,7 +106,8 @@ Above a base table's tabs, **Edit Rows…**, **Import…**, **Export…**,
 **Compare Rows…** and **Alter Table…** edit its rows, import a file's rows
 into it, export its rows, compare them with another table's, and alter
 it; above a schema's definition, **Create Table…** makes a table in it,
-and **Generate Script…** writes the definitions of the objects chosen
+**Import into New Table…** makes one of a file's fields and imports its
+rows, and **Generate Script…** writes the definitions of the objects chosen
 of it ([Editing Data](07-editing-data.md)); **Compare Schema…** compares
 it with another, and **Open Model** opens a model of its tables
 ([Schema Modeling](08-modeling.md)).

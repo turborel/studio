@@ -114,6 +114,7 @@ pub(crate) fn handler<R: Runtime>() -> impl Fn(Invoke<R>) -> bool + Send + Sync 
         data::choose_import_file,
         data::preview_import,
         data::import_rows,
+        data::cancel_import,
         data::choose_sql_file,
         data::scan_sql_file,
         data::run_sql_file,

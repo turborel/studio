@@ -16,7 +16,7 @@ use turborel_client::export::ExportFormat;
 use turborel_client::statements::Statement;
 
 use crate::connections::cells::ColumnInfo;
-use crate::connections::imports::{ImportReport, ImportSpec, run_import};
+use crate::connections::imports::{ImportReport, ImportSpec, Teller, Watch, run_import};
 use crate::connections::outcome::{Outcome, Ran, ResultId, ServerTime};
 use crate::connections::pages::{PAGE_ROWS, Page, Pages};
 use crate::connections::session::SessionState;
@@ -59,8 +59,9 @@ pub(crate) enum Request {
     Value { result: ResultId, row: u64, column: usize },
     /// A query's rows written to a file as they come, as CSV or native.
     Export { sql: String, path: PathBuf, format: ExportFormat },
-    /// A file's rows imported into a table.
-    Import(Box<ImportSpec>),
+    /// A file's rows imported into a table, cancelled when `stop` is set,
+    /// its progress told to `tell`.
+    Import { spec: Box<ImportSpec>, stop: Arc<std::sync::atomic::AtomicBool>, tell: Teller },
     /// Ask whether the server answers.
     Ping,
     /// End the connection, and the worker.
@@ -202,7 +203,10 @@ impl Worker {
             Request::Describe(sql) => self.describe(&sql).map(Reply::Columns),
             Request::Value { result, row, column } => self.value(result, row, column).map(Reply::Value),
             Request::Export { sql, path, format } => self.export(&sql, &path, format).map(Reply::Exported),
-            Request::Import(spec) => run_import(self.connection()?, &spec).map(Reply::Imported),
+            Request::Import { spec, stop, tell } => {
+                let watch = Watch { stop: &stop, tell: &*tell.0 };
+                run_import(self.connection()?, &spec, Some(&watch)).map(Reply::Imported)
+            }
             Request::Terminate => self.terminate().map(|()| Reply::Done),
         }
     }

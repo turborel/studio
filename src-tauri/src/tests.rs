@@ -150,7 +150,8 @@ fn a_file_chosen_is_previewed() {
     app.state::<crate::state::Studio>().files.choose(&path).unwrap();
     let reading = serde_json::json!({"format": "csv", "header": true, "delimiter": null, "null": null});
     let shown = answer(&window, "preview_import", serde_json::json!({"path": path.display().to_string(), "reading": reading}));
-    assert_eq!(shown, serde_json::json!({"headings": ["ID", "NAME"], "records": [["1", "Ada"]]}));
+    let inferred = serde_json::json!([{"typeWritten": "INTEGER", "nulls": false}, {"typeWritten": "VARCHAR(10)", "nulls": false}]);
+    assert_eq!(shown, serde_json::json!({"headings": ["ID", "NAME"], "records": [["1", "Ada"]], "inferred": inferred, "sheets": null}));
     let spec = serde_json::json!({"path": path.display().to_string(), "reading": reading, "table": "T", "fields": ["ID", null], "batch": 1, "skip": false});
     assert_eq!(
         refusal(&window, "import_rows", serde_json::json!({"connection": 7, "spec": spec, "confirmed": false}))["sqlstate"],

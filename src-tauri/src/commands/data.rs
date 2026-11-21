@@ -1,6 +1,6 @@
-//! Data brought in (RULES.md D43, D62): a CSV or tab-separated file the
-//! platform's dialog chooses, previewed, and its rows imported into a
-//! table; a `.sql` file scanned, run and cancelled, and its log saved;
+//! Data brought in (RULES.md D43, D62, D63): a CSV, tab-separated, JSON or
+//! Excel file the platform's dialog chooses, previewed, and its rows
+//! imported into a table, or the import cancelled; a `.sql` file scanned, run and cancelled, and its log saved;
 //! each through the backend, so the webview reaches no file system
 //! (R-SEC-5): a file is read only if the user chose it this session.
 
@@ -25,7 +25,8 @@ use crate::commands::connections::blocking;
 use crate::state::Studio;
 
 /// The extensions of the files offered for import, and their filter's name.
-const IMPORT_FILES: (&str, [&str; 3]) = ("CSV and tab-separated text", ["csv", "tsv", "txt"]);
+const IMPORT_FILES: (&str, [&str; 7]) =
+    ("CSV, tab-separated text, JSON and Excel", ["csv", "tsv", "txt", "json", "ndjson", "jsonl", "xlsx"]);
 
 /// The extensions of the files Run SQL File offers, and their filter's name.
 const SQL_FILES: (&str, [&str; 1]) = ("SQL scripts", ["sql"]);
@@ -70,6 +71,12 @@ pub(crate) async fn import_rows(
 ) -> Result<ImportAnswer> {
     let path = studio.files.chosen(&spec.path)?;
     blocking(&studio, move |m| m.import(connection, ImportSpec { path, ..spec }, confirmed)).await
+}
+
+/// Cancels the import running on `connection`.
+#[tauri::command]
+pub(crate) async fn cancel_import(studio: State<'_, Studio>, connection: ConnectionId) -> Result<()> {
+    blocking(&studio, move |m| m.cancel_import(connection)).await
 }
 
 /// Asks which `.sql` file to run: its path, chosen so it may be read this

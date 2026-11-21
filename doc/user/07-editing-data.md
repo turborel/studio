@@ -9,16 +9,17 @@ tables' rows compared. A table is made, or altered, by a dialog that
 writes its DDL as it is filled in. A `.sql` file of any size is run on
 a connection without the editor. A base table's details, in the
 explorer, offer each of its tasks, and a schema's details **Create
-Table…** and **Generate Script…**:
+Table…**, **Import into New Table…** and **Generate Script…**:
 
 | Action | What it does |
 |---|---|
 | **Edit Rows…** | opens the table's first rows, or those a condition keeps, in a worksheet of their own, to be edited |
-| **Import…** | imports the rows of a CSV or tab-separated file into the table |
+| **Import…** | imports the rows of a CSV, tab-separated, JSON or Excel file into the table |
 | **Export…** | exports the table's rows, or those a condition keeps, to a file |
 | **Compare Rows…** | compares the table's rows with another table's, and writes the statements that make the other's rows the same |
 | **Alter Table…** | alters the table, an action of ALTER TABLE at a time |
 | **Create Table…** | makes a table in the schema |
+| **Import into New Table…** | makes a table in the schema of a file's fields, its columns typed from the file, and imports its rows |
 | **Generate Script…** | writes the definitions of the schema's objects chosen, in a worksheet |
 
 ## Editing rows
@@ -88,34 +89,84 @@ the query is run again, to show the rows as they are.
 ## Importing
 
 **Import…** opens the platform's dialog to choose a file, a `.csv`,
-`.tsv` or `.txt` file, and shows its first 20 records as it is read:
+`.tsv`, `.txt`, `.json`, `.ndjson`, `.jsonl` or `.xlsx` file, and shows
+its first 20 records as it is read:
 
-- **Format**: CSV, its fields between commas and quoted as they need, or
-  tab-separated, its fields between tabs and never quoted.
-- **First record names the fields**: the file's first record is its
-  header.
-- **Delimiter**: another character between fields, one ASCII character,
-  not a quote or a line break.
-- **Null is written**: the text a field not in quotes is written as to
-  be null; an empty field is null, if nothing is written here.
+- **Format**: **CSV**, its fields between commas and quoted as they
+  need; **Tab-separated**, its fields between tabs and never quoted;
+  **JSON array**, one array of objects, a record an object; **JSON, an
+  object a line**; or **Excel workbook**, a record a row of a sheet.
+- **Sheet**: of a workbook, the sheet read, its first at first.
+- **First record names the fields**: of CSV, tab-separated text and a
+  sheet, the first record is its header.
+- **Delimiter**: of CSV and tab-separated text, another character
+  between fields, one ASCII character, not a quote or a line break.
+- **Null is written**: of CSV and tab-separated text, the text a field
+  not in quotes is written as to be null; an empty field is null, if
+  nothing is written here.
+
+The fields of JSON are the keys of its first 100 objects, in the order
+they first come; a key first seen later stops the import at its
+object. A JSON number is taken exactly as written, every digit of it, so
+a number of 38 digits goes whole into a NUMERIC(38) column; true and
+false are TRUE and FALSE, and an object or array is its JSON text. A
+cell of a sheet is taken as Excel keeps it: a number as a double, so a
+number of more than 15 digits is exact only if it is written in the
+sheet as text; a date as `2024-01-02`, with its time if it has one; an
+error as Excel shows it, such as `#N/A`.
 
 Above each field a choice gives the column it goes into, or **Skip**. A
 field goes at first into the column its heading names, as a name is
 read in SQL, a regular identifier in upper case, or else into the
 column of its name in any case; of a file of no header, into the column
-of its place.
+of its place. Under the choice, the cast its values take, of the type
+Studio finds of them to the column's, `INTEGER cast to NUMERIC(38,0)`,
+and in red what may go wrong: values that do not cast to the column's
+type, numbers of more digits than it holds, text longer than it holds,
+or nulls of a column that takes none. A column chosen for two fields,
+or a column that takes no null and has no default left with no field,
+is listed above the buttons.
+
+**Import into New Table…**, of a schema, takes the same file and makes
+a table of it: its name, at first the file's, and a column of each
+field, named by its heading and of the type its first 1000 records
+show, which may be changed, or the column left out. The types are
+Turborel's: BOOLEAN; INTEGER, BIGINT, or NUMERIC of the digits seen, as
+many as 38; DOUBLE PRECISION; DATE, TIME, TIMESTAMP and TIMESTAMP WITH
+TIME ZONE; JSON; else VARCHAR of the longest value, rounded up. A
+number written with leading zeros, as a postal code is, stays text. The
+CREATE TABLE is shown as the columns change:
+
+```
+CREATE TABLE ANN.PEOPLE (
+    AMOUNT NUMERIC(38,0),
+    BORN TIMESTAMP
+)
+```
+
+**Create Table and Import** runs it through the connection's guards
+first, then imports into the new table.
 
 **Commit each … rows** commits the rows a batch at a time, 1000 at
-first, or all at once for 0. **Skip a row refused, and tell it** skips a
-row the server refuses, or of too many or too few fields, and goes on;
-otherwise the first ends the import. **Import** asks the connection's
-guards first, as of an INSERT into the table, then imports the rows by
-copy, where the server grants it and no column is a large object, or by
-INSERT, and says how many rows were imported, and which were skipped and
-why, the first 100 of them. A file is read a record at a time, so a file
-of any size is imported. An import begins with no transaction active,
-as it commits its batches; one that stops says where, why, and how many
-rows were committed and rolled back.
+first, or all at once for 0. A row the server refuses, or of too many
+or too few fields:
+
+- **Stop at the first row refused**: ends the import, its batch rolled
+  back.
+- **Skip a row refused, and tell it**: skips it and goes on.
+- **Skip at most … rows refused, then stop**: skips that many, and
+  stops at the next.
+
+**Import** asks the connection's guards first, as of an INSERT into the
+table, then imports the rows by copy, where the server grants it and no
+column is a large object, or by INSERT. While it runs, the dialog shows
+the records read and skipped; **Cancel Import** stops it between
+records, keeping the batches committed and rolling back the one under
+way. At the end it says how many rows were imported, and which were
+skipped and why, the first 100 of them. A file is read a record at a
+time, so a file of any size is imported. An import begins with no
+transaction active, as it commits its batches; one that stops says
+where, why, and how many rows were committed and rolled back.
 
 Studio reads only the file chosen in the dialog.
 

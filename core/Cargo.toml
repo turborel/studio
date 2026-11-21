@@ -17,6 +17,7 @@ turborel-lz4.workspace = true
 turborel-simd.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+calamine.workspace = true
 aws-lc-rs.workspace = true
 keyring-core.workspace = true
 reqwest.workspace = true
@@ -34,6 +35,7 @@ zbus-secret-service-keyring-store.workspace = true
 
 [dev-dependencies]
 rcgen.workspace = true
+zip.workspace = true
 
 [lints]
 workspace = true

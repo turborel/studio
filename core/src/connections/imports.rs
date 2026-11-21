@@ -1,20 +1,31 @@
-//! Rows imported from a CSV or tab-separated file (`[CLIENT Importing]`,
-//! RULES.md D43): the file previewed, its first records as the grid shows
-//! them; each field taken into the column the user chose, or skipped; and
-//! the rows inserted by turborel-client's `import`, which copies where the
-//! server grants it, a batch committed at a time.
+//! Rows imported from a file (`[CLIENT Importing]`, RULES.md D43, D63):
+//! CSV or tab-separated text, JSON, as an array of objects or an object a
+//! line, or an Excel sheet; the file previewed, its first records as the
+//! grid shows them, and each field's type inferred for a new table; each
+//! field taken into the column the user chose, or skipped; and the rows
+//! inserted by turborel-client's `import`, which copies where the server
+//! grants it, a batch committed at a time, its progress told and a cancel
+//! heard between records.
+
+pub mod infer;
+pub mod json;
+pub mod xlsx;
 
 use std::fs::File;
-use std::io::BufReader;
-use std::path::PathBuf;
+use std::io::{BufReader, Read};
+use std::path::{Path, PathBuf};
+use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::time::{Duration, Instant};
 
 use serde::{Deserialize, Serialize};
 use turborel::value::Value;
 use turborel_client::agent::Connected;
 use turborel_client::import::{Delimited, Dialect, Import, Rejected, import};
-use turborel_client::import::{Heading, Record, Source, SourceError};
+use turborel_client::import::{Heading, Position, Record, Source, SourceError};
 
 use crate::connections::cells::{Cell, cell};
+use crate::connections::imports::infer::Inferred;
 use crate::error::{Result, StudioError};
 
 /// The records a preview shows.
@@ -30,6 +41,12 @@ pub enum Format {
     Csv,
     /// Fields between tabs, never quoted.
     Tsv,
+    /// One JSON array of objects [RFC 8259], a record an object.
+    Json,
+    /// One JSON object a line.
+    Ndjson,
+    /// A sheet of an Excel workbook, `.xlsx`, a record a row.
+    Xlsx,
 }
 
 /// How a file is read: its format, whether its first record names its
@@ -46,6 +63,9 @@ pub struct Reading {
     /// The text a field not in quotes is written as to be null, if not the
     /// empty one.
     pub null: Option<String>,
+    /// The sheet of a workbook, if not its first.
+    #[serde(default)]
+    pub sheet: Option<String>,
 }
 
 impl Reading {
@@ -57,8 +77,8 @@ impl Reading {
     /// quote or a line break.
     pub fn dialect(&self) -> Result<Dialect> {
         let base = match self.format {
-            Format::Csv => Dialect::csv(),
             Format::Tsv => Dialect::tsv(),
+            Format::Csv | Format::Json | Format::Ndjson | Format::Xlsx => Dialect::csv(),
         };
         let base = if self.header { base.with_header() } else { base };
         let base = match &self.null {
@@ -80,6 +100,10 @@ pub struct Preview {
     pub headings: Option<Vec<String>>,
     /// Its first records' fields, a null as none.
     pub records: Vec<Vec<Cell>>,
+    /// Each field's type, inferred from its first `infer::SAMPLED` records.
+    pub inferred: Vec<Inferred>,
+    /// The sheets of a workbook, in order; none of another file.
+    pub sheets: Option<Vec<String>>,
 }
 
 /// What a source's failure says.
@@ -87,34 +111,103 @@ fn told(e: &SourceError) -> StudioError {
     StudioError::misuse(format!("[DESIGN] {}: {}", e.position, e.message))
 }
 
-/// The file at `path`, read as `reading` says.
-fn source(path: &std::path::Path, reading: &Reading) -> Result<Delimited<BufReader<File>>> {
+/// The file at `path`, opened, its bytes read counted in `read`.
+fn opened(path: &Path, read: Arc<AtomicU64>) -> Result<BufReader<Counted>> {
     let file = File::open(path).map_err(|e| StudioError::misuse(format!("[DESIGN] {}: {e}", path.display())))?;
-    Ok(Delimited::new(BufReader::new(file), reading.dialect()?))
+    Ok(BufReader::new(Counted { file, read }))
+}
+
+/// A file whose bytes read are counted, for an import's progress.
+pub(crate) struct Counted {
+    file: File,
+    read: Arc<AtomicU64>,
+}
+
+impl Read for Counted {
+    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
+        let n = self.file.read(buf)?;
+        self.read.fetch_add(u64::try_from(n).unwrap_or(0), Ordering::Relaxed);
+        Ok(n)
+    }
+}
+
+/// A source whose type is known only as a file is opened.
+pub(crate) struct Any<'a>(&'a mut dyn Source);
+
+impl Source for Any<'_> {
+    fn headings(&mut self) -> std::result::Result<Option<Vec<Heading>>, SourceError> {
+        self.0.headings()
+    }
+
+    fn record(&mut self) -> std::result::Result<Option<Record>, SourceError> {
+        self.0.record()
+    }
+}
+
+/// Runs `work` with the records of the file at `path`, read as `reading`
+/// says, its bytes read counted in `read`, or its rows of a sheet, and
+/// how many there are in all: bytes, or a sheet's rows.
+///
+/// # Errors
+///
+/// SQLCODE -910 if the file cannot be opened, or read as its format; what
+/// `work` gives.
+pub(crate) fn with_source<T>(
+    path: &Path,
+    reading: &Reading,
+    read: &Arc<AtomicU64>,
+    work: impl FnOnce(Any<'_>, u64) -> Result<T>,
+) -> Result<T> {
+    let size = std::fs::metadata(path).map_or(0, |m| m.len());
+    match reading.format {
+        Format::Csv | Format::Tsv => {
+            let mut source = Delimited::new(opened(path, Arc::clone(read))?, reading.dialect()?);
+            work(Any(&mut source), size)
+        }
+        Format::Json | Format::Ndjson => {
+            let layout = if reading.format == Format::Json { json::Layout::Array } else { json::Layout::Lines };
+            let mut source = json::JsonRecords::new(opened(path, Arc::clone(read))?, layout);
+            work(Any(&mut source), size)
+        }
+        Format::Xlsx => {
+            let mut book = xlsx::workbook(path)?;
+            let mut source = xlsx::SheetRecords::new(xlsx::cells(&mut book, reading.sheet.as_deref())?, reading.header);
+            let rows = source.dimensions_rows();
+            work(Any(&mut source), rows)
+        }
+    }
 }
 
 /// The first `PREVIEW_RECORDS` records of the file at `path`, read as
-/// `reading` says.
+/// `reading` says, and each field's type inferred from its first
+/// `infer::SAMPLED`.
 ///
 /// # Errors
 ///
 /// SQLCODE -910 if the file cannot be read, or a record of it.
-pub fn preview(path: &std::path::Path, reading: &Reading) -> Result<Preview> {
-    let mut source = source(path, reading)?;
-    let headings = source.headings().map_err(|e| told(&e))?.map(|h| h.into_iter().map(|h| h.name).collect());
-    let mut records = Vec::new();
-    while records.len() < PREVIEW_RECORDS {
-        match source.record().map_err(|e| told(&e))? {
-            Some(record) => records.push(record.values.iter().map(cell).collect()),
-            None => break,
+pub fn preview(path: &Path, reading: &Reading) -> Result<Preview> {
+    let sheets = if reading.format == Format::Xlsx { Some(xlsx::sheet_names(path)?) } else { None };
+    let read = Arc::new(AtomicU64::new(0));
+    let (headings, sample) = with_source(path, reading, &read, |mut source, _| {
+        let headings: Option<Vec<String>> = source.headings().map_err(|e| told(&e))?.map(|h| h.into_iter().map(|h| h.name).collect());
+        let mut sample: Vec<Vec<Cell>> = Vec::new();
+        while sample.len() < infer::SAMPLED {
+            match source.record().map_err(|e| told(&e))? {
+                Some(record) => sample.push(record.values.iter().map(cell).collect()),
+                None => break,
+            }
         }
-    }
-    Ok(Preview { headings, records })
+        Ok((headings, sample))
+    })?;
+    let width = headings.as_ref().map_or_else(|| sample.iter().map(Vec::len).max().unwrap_or(0), Vec::len);
+    let inferred = infer::infer(&sample, width);
+    let records = sample.into_iter().take(PREVIEW_RECORDS).collect();
+    Ok(Preview { headings, records, inferred, sheets })
 }
 
 /// An import: the file, how it is read, the table, the column each field
-/// goes into or none for a field skipped, the rows a batch commits, and
-/// whether a row refused is skipped.
+/// goes into or none for a field skipped, the rows a batch commits,
+/// whether a row refused is skipped, and how many may be.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ImportSpec {
@@ -130,10 +223,13 @@ pub struct ImportSpec {
     pub batch: u64,
     /// Whether a row refused is skipped, and told.
     pub skip: bool,
+    /// The rows that may be skipped before the import stops; none for any.
+    #[serde(default)]
+    pub limit: Option<u64>,
 }
 
-/// What an import did: the rows inserted and committed, those skipped, and
-/// what was told of the first of them.
+/// What an import did: the rows inserted and committed, those skipped,
+/// what was told of the first of them, and whether it was cancelled.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ImportReport {
@@ -143,20 +239,89 @@ pub struct ImportReport {
     pub rejected: u64,
     /// What was told of the first `MAX_TOLD` of those skipped.
     pub skipped: Vec<String>,
+    /// Whether the user cancelled it: the batch under way rolled back.
+    pub cancelled: bool,
+    /// The rows of the batch under way rolled back as it was cancelled.
+    pub rolled_back: u64,
 }
 
-/// A source whose fields go into the columns chosen: those of no column
-/// let go.
-pub(crate) struct Mapped<S> {
+/// How far an import has come.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ImportProgress {
+    /// The records read.
+    pub records: u64,
+    /// The rows skipped.
+    pub rejected: u64,
+    /// The file's bytes read, or a sheet's rows.
+    pub read: u64,
+    /// Its bytes, or rows, in all.
+    pub total: u64,
+}
+
+/// What an import is told by and tells as it goes: whether to stop, and
+/// where its progress goes.
+pub struct Watch<'a> {
+    /// Set to cancel it.
+    pub stop: &'a AtomicBool,
+    /// Told the progress, at most every `TOLD_EVERY`.
+    pub tell: &'a dyn Fn(ImportProgress),
+}
+
+/// Where an import's progress is told, as a request carries it.
+#[derive(Clone)]
+pub struct Teller(pub Arc<dyn Fn(ImportProgress) + Send + Sync>);
+
+impl std::fmt::Debug for Teller {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("Teller")
+    }
+}
+
+/// How often an import tells its progress, at most.
+const TOLD_EVERY: Duration = Duration::from_millis(250);
+/// What a source says as the import is cancelled.
+pub(crate) const CANCELLED: &str = "the import was cancelled";
+
+/// A source whose fields go into the columns chosen, those of no column
+/// let go, its progress told and a cancel or too many rows skipped heard
+/// between records.
+pub(crate) struct Mapped<'a, S> {
     inner: S,
     /// The fields kept, by place.
     keep: Vec<usize>,
     /// Their columns' names, as delimited identifiers.
     names: Vec<String>,
     header_read: bool,
+    watch: Option<&'a Watch<'a>>,
+    /// The file's bytes read, or none of a sheet, and their total.
+    read: (Arc<AtomicU64>, u64),
+    records: u64,
+    /// The rows skipped, and how many may be.
+    rejected: (Arc<AtomicU64>, Option<u64>),
+    told: Instant,
 }
 
-impl<S: Source> Source for Mapped<S> {
+impl<S: Source> Mapped<'_, S> {
+    /// Tells the progress, if it is time, or if `last`.
+    pub(crate) fn tell(&mut self, last: bool) {
+        if let Some(watch) = self.watch
+            && (last || self.told.elapsed() >= TOLD_EVERY)
+        {
+            self.told = Instant::now();
+            let read = self.read.0.load(Ordering::Relaxed);
+            let read = if read == 0 { self.records } else { read };
+            (watch.tell)(ImportProgress {
+                records: self.records,
+                rejected: self.rejected.0.load(Ordering::Relaxed),
+                read,
+                total: self.read.1,
+            });
+        }
+    }
+}
+
+impl<S: Source> Source for Mapped<'_, S> {
     fn headings(&mut self) -> std::result::Result<Option<Vec<Heading>>, SourceError> {
         if !self.header_read {
             self.header_read = true;
@@ -166,7 +331,19 @@ impl<S: Source> Source for Mapped<S> {
     }
 
     fn record(&mut self) -> std::result::Result<Option<Record>, SourceError> {
+        let next = Position { record: self.records.saturating_add(1), line: None };
+        if self.watch.is_some_and(|w| w.stop.load(Ordering::SeqCst)) {
+            return Err(SourceError { position: next, message: CANCELLED.to_owned() });
+        }
+        let rejected = self.rejected.0.load(Ordering::Relaxed);
+        if let Some(limit) = self.rejected.1
+            && rejected > limit
+        {
+            return Err(SourceError { position: next, message: format!("more than {limit} rows were refused") });
+        }
+        self.tell(false);
         let Some(record) = self.inner.record()? else { return Ok(None) };
+        self.records = self.records.saturating_add(1);
         let values = self.keep.iter().map(|&at| record.values.get(at).cloned().unwrap_or(Value::Null)).collect();
         Ok(Some(Record { values, position: record.position }))
     }
@@ -177,39 +354,71 @@ fn delimited(name: &str) -> String {
     format!("\"{}\"", name.replace('"', "\"\""))
 }
 
-/// The file `spec` names, its fields that go into columns alone, each
-/// heading its column's name as a delimited identifier.
+/// Runs `work` with the file `spec` names, its fields that go into
+/// columns alone, each heading its column's name as a delimited
+/// identifier, told and heard as `watch` says, and the count of rows
+/// skipped it hears.
 ///
 /// # Errors
 ///
-/// SQLCODE -910 if no field goes into a column, or the file cannot be opened.
-pub(crate) fn mapped(spec: &ImportSpec) -> Result<Mapped<Delimited<BufReader<File>>>> {
+/// SQLCODE -910 if no field goes into a column, or the file cannot be
+/// opened; what `work` gives.
+pub(crate) fn with_mapped<T>(
+    spec: &ImportSpec,
+    watch: Option<&Watch<'_>>,
+    work: impl FnOnce(&mut Mapped<'_, Any<'_>>, &Arc<AtomicU64>) -> Result<T>,
+) -> Result<T> {
     let keep: Vec<usize> = spec.fields.iter().enumerate().filter_map(|(at, f)| f.as_ref().map(|_| at)).collect();
     if keep.is_empty() {
         return Err(StudioError::misuse("[DESIGN] an import takes at least one field into a column"));
     }
     let names = spec.fields.iter().flatten().map(|n| delimited(n)).collect();
-    Ok(Mapped { inner: source(&spec.path, &spec.reading)?, keep, names, header_read: false })
+    let read = Arc::new(AtomicU64::new(0));
+    let rejected = Arc::new(AtomicU64::new(0));
+    with_source(&spec.path, &spec.reading, &read, |inner, total| {
+        let counted = if spec.reading.format == Format::Xlsx { Arc::new(AtomicU64::new(0)) } else { Arc::clone(&read) };
+        let mut mapped = Mapped {
+            inner,
+            keep,
+            names,
+            header_read: false,
+            watch,
+            read: (counted, total),
+            records: 0,
+            rejected: (Arc::clone(&rejected), spec.limit),
+            told: Instant::now(),
+        };
+        let done = work(&mut mapped, &rejected);
+        mapped.tell(true);
+        done
+    })
 }
 
-/// Imports the file `spec` names over `connection`, as it says.
+/// Imports the file `spec` names over `connection`, as it says, told and
+/// heard as `watch` says.
 ///
 /// # Errors
 ///
 /// SQLCODE -910 if no field goes into a column, the file cannot be read,
 /// or the import stops: where, why, and how many rows were committed and
 /// rolled back.
-pub fn run_import(connection: &mut Connected, spec: &ImportSpec) -> Result<ImportReport> {
-    let mut mapped = mapped(spec)?;
+pub fn run_import(connection: &mut Connected, spec: &ImportSpec, watch: Option<&Watch<'_>>) -> Result<ImportReport> {
     let how = Import { table: spec.table.clone(), batch: spec.batch, skip: spec.skip };
     let mut skipped = Vec::new();
-    let done = import(connection, &mut mapped, &how, &mut |r: Rejected| {
-        if skipped.len() < MAX_TOLD {
-            skipped.push(r.to_string());
-        }
-    });
+    let done = with_mapped(spec, watch, |mapped, rejected| {
+        Ok(import(connection, mapped, &how, &mut |r: Rejected| {
+            rejected.fetch_add(1, Ordering::Relaxed);
+            if skipped.len() < MAX_TOLD {
+                skipped.push(r.to_string());
+            }
+        }))
+    })?;
     match done {
-        Ok(done) => Ok(ImportReport { rows: done.rows, rejected: done.rejected, skipped }),
+        Ok(done) => Ok(ImportReport { rows: done.rows, rejected: done.rejected, skipped, cancelled: false, rolled_back: 0 }),
+        Err(stopped) if matches!(&stopped.cause, turborel_client::import::Cause::Input(m) if m.ends_with(CANCELLED)) => {
+            let rejected = u64::try_from(skipped.len()).unwrap_or(0);
+            Ok(ImportReport { rows: stopped.committed, rejected, skipped, cancelled: true, rolled_back: stopped.rolled_back })
+        }
         Err(stopped) => {
             let (sqlcode, sqlstate) = match &stopped.cause {
                 turborel_client::import::Cause::Sql(failure) => (failure.sqlcode, failure.sqlstate.clone()),

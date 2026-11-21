@@ -14,7 +14,7 @@ use turborel_client::export::ExportFormat;
 use turborel_client::import::{Position, Record, Source};
 use turborel_protocol::{Column, Completed, Reply};
 
-use crate::connections::imports::{ImportReport, ImportSpec, MAX_TOLD, mapped};
+use crate::connections::imports::{CANCELLED as IMPORT_CANCELLED, ImportReport, ImportSpec, MAX_TOLD, Watch, with_mapped};
 use crate::error::{Result, StudioError};
 
 /// `field`, as CSV writes it: quoted where it must be.
@@ -171,31 +171,45 @@ const CANCELLED: i32 = -920;
 /// turborel-client imports one over a connection: no transaction active
 /// as it begins, a batch committed at a time, a row refused skipped where
 /// asked and it alone was undone, else the import stopped, its batch
-/// rolled back.
+/// rolled back; told and heard as `watch` says, a cancel rolling back the
+/// batch under way.
 ///
 /// # Errors
 ///
 /// SQLCODE -910 if no field goes into a column, the file cannot be read,
 /// or a transaction is active; the import stopped: where, why, and how
 /// many rows were committed and rolled back.
-pub fn import(session: &Session, spec: &ImportSpec) -> Result<ImportReport> {
+pub fn import(session: &Session, spec: &ImportSpec, watch: Option<&Watch<'_>>) -> Result<ImportReport> {
     if session.transaction_mode().is_some() {
         return Err(StudioError::misuse("[DESIGN] an import begins with no transaction active, as it commits its batches"));
     }
-    let mut source = mapped(spec)?;
-    let headings = source.headings().map_err(|e| StudioError::misuse(format!("[DESIGN] {}: {}", e.position, e.message)))?;
-    let names: Vec<String> = headings.unwrap_or_default().into_iter().map(|h| h.name).collect();
-    let marks = vec!["?"; names.len()].join(", ");
-    let insert = session.prepare(&format!("INSERT INTO {} ({}) VALUES ({marks})", spec.table, names.join(", ")))?;
-    let mut run = Run { session, insert, spec, committed: 0, in_batch: 0, rejected: 0, skipped: Vec::new() };
-    loop {
-        let record = match source.record() {
-            Ok(record) => record,
-            Err(e) => return Err(run.stop(Some(&e.position), &StudioError::misuse(format!("[DESIGN] {}", e.message)))),
-        };
-        let Some(record) = record else { break };
-        run.row(record)?;
-    }
-    run.commit()?;
-    Ok(ImportReport { rows: run.committed, rejected: run.rejected, skipped: run.skipped })
+    with_mapped(spec, watch, |source, rejected| {
+        let headings = source.headings().map_err(|e| StudioError::misuse(format!("[DESIGN] {}: {}", e.position, e.message)))?;
+        let names: Vec<String> = headings.unwrap_or_default().into_iter().map(|h| h.name).collect();
+        let marks = vec!["?"; names.len()].join(", ");
+        let insert = session.prepare(&format!("INSERT INTO {} ({}) VALUES ({marks})", spec.table, names.join(", ")))?;
+        let mut run = Run { session, insert, spec, committed: 0, in_batch: 0, rejected: 0, skipped: Vec::new() };
+        loop {
+            let record = match source.record() {
+                Ok(record) => record,
+                Err(e) if e.message == IMPORT_CANCELLED => {
+                    let _ = session.rollback(); // The batch under way is undone.
+                    let rolled_back = run.in_batch;
+                    return Ok(ImportReport {
+                        rows: run.committed,
+                        rejected: run.rejected,
+                        skipped: run.skipped,
+                        cancelled: true,
+                        rolled_back,
+                    });
+                }
+                Err(e) => return Err(run.stop(Some(&e.position), &StudioError::misuse(format!("[DESIGN] {}", e.message)))),
+            };
+            let Some(record) = record else { break };
+            run.row(record)?;
+            rejected.store(run.rejected, std::sync::atomic::Ordering::Relaxed);
+        }
+        run.commit()?;
+        Ok(ImportReport { rows: run.committed, rejected: run.rejected, skipped: run.skipped, cancelled: false, rolled_back: 0 })
+    })
 }

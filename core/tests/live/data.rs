@@ -13,11 +13,12 @@ use crate::{Live, no_environment, run};
 fn spec(path: &std::path::Path, fields: &[Option<&str>], (batch, skip): (u64, bool)) -> ImportSpec {
     ImportSpec {
         path: path.to_owned(),
-        reading: Reading { format: Format::Csv, header: true, delimiter: None, null: None },
+        reading: Reading { format: Format::Csv, header: true, delimiter: None, null: None, sheet: None },
         table: "\"ANN\".\"IMPORTED\"".to_owned(),
         fields: fields.iter().map(|f| f.map(str::to_owned)).collect(),
         batch,
         skip,
+        limit: None,
     }
 }
 
@@ -199,5 +200,56 @@ pub fn a_built_query_runs(live: &Live) {
     for sql in ["DROP TABLE ANN.STAFF CASCADE", "DROP TABLE ANN.DEPTS CASCADE"] {
         let RunAnswer::Ran(_) = manager.run(id, sql, true).unwrap() else { panic!("asked") };
     }
+    manager.close(id).unwrap();
+}
+
+/// [CLIENT Importing] [DESIGN] D63 [DOC sql/02-data-types.md Numbers]: a
+/// JSON array's and an object-a-line file's records are imported into a
+/// server's table by copy, a 38-digit number kept whole, the progress
+/// told; an import cancelled keeps its batches committed.
+pub fn json_records_are_imported(live: &Live) {
+    const WIDE: &str = "12345678901234567890123456789012345678";
+    let (manager, events) = live.manager();
+    let id = live.owner(&manager);
+    manager.set_autocommit(id, true).unwrap();
+    run(&manager, id, "CREATE TABLE JSONED (ID INTEGER PRIMARY KEY, N NUMERIC(38,0), DOC JSON)").unwrap();
+    let dir = live.server.dir.join("imports");
+    std::fs::create_dir_all(&dir).unwrap();
+    let json = dir.join("wide.json");
+    std::fs::write(&json, format!(r#"[{{"id": 1, "n": {WIDE}, "doc": {{"a": 1}}}}, {{"id": 2, "n": -{WIDE}}}]"#)).unwrap();
+    let reading = |format| Reading { format, header: true, delimiter: None, null: None, sheet: None };
+    let spec = |path: &std::path::Path, format, batch| ImportSpec {
+        path: path.to_owned(),
+        reading: reading(format),
+        table: "JSONED".into(),
+        fields: vec![Some("ID".into()), Some("N".into()), Some("DOC".into())],
+        batch,
+        skip: false,
+        limit: None,
+    };
+    let ImportAnswer::Imported(done) = manager.import(id, spec(&json, Format::Json, 1000), false).unwrap() else { panic!("asked") };
+    assert_eq!(done.rows, 2);
+    let Outcome::Rows { page, .. } = run(&manager, id, "SELECT N FROM JSONED ORDER BY ID").unwrap().outcome else { panic!("no rows") };
+    assert_eq!(page.rows, [[Some(WIDE.to_owned())], [Some(format!("-{WIDE}"))]]);
+    assert!(
+        events.take().iter().any(|e| matches!(e, turborel_studio_core::events::Event::Import { progress, .. } if progress.records == 2))
+    );
+    run(&manager, id, "DELETE FROM JSONED WHERE ID > 0").unwrap();
+    let lines = dir.join("many.ndjson");
+    let text = (1..=20_000).map(|n| format!("{{\"id\": {n}, \"n\": {n}}}\n")).collect::<Vec<_>>().concat();
+    std::fs::write(&lines, text).unwrap();
+    let report = std::thread::scope(|scope| {
+        let running = scope.spawn(|| manager.import(id, spec(&lines, Format::Ndjson, 100), false));
+        while !running.is_finished() {
+            let _ = manager.cancel_import(id); // None runs until the import begins.
+            std::thread::sleep(std::time::Duration::from_millis(5));
+        }
+        running.join().unwrap().unwrap()
+    });
+    let ImportAnswer::Imported(report) = report else { panic!("asked") };
+    assert!(report.cancelled, "{report:?}");
+    let Outcome::Rows { page, .. } = run(&manager, id, "SELECT COUNT(*) FROM JSONED").unwrap().outcome else { panic!("no rows") };
+    assert_eq!(page.rows[0][0], Some(report.rows.to_string()));
+    let RunAnswer::Ran(_) = manager.run(id, "DROP TABLE JSONED CASCADE", true).unwrap() else { panic!("asked") };
     manager.close(id).unwrap();
 }

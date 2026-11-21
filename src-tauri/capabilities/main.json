@@ -90,6 +90,7 @@
     "allow-choose-import-file",
     "allow-preview-import",
     "allow-import-rows",
+    "allow-cancel-import",
     "allow-choose-sql-file",
     "allow-scan-sql-file",
     "allow-run-sql-file",

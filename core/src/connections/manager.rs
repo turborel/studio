@@ -118,7 +118,8 @@ pub struct ConnectionManager {
     spool: PathBuf,
     events: Arc<dyn EventSink>,
     key_cache: turborel_client::scram::KeyCache,
-    /// What stops the file each connection runs, if one does (RULES.md D62).
+    /// What stops the file each connection runs, or the import, if one
+    /// does (RULES.md D62, D63).
     files: Mutex<BTreeMap<ConnectionId, Arc<std::sync::atomic::AtomicBool>>>,
 }
 
@@ -473,7 +474,15 @@ impl ConnectionManager {
         {
             return Ok(ImportAnswer::Confirm(confirm));
         }
-        match self.ask(id, Request::Import(Box::new(spec)))? {
+        let stop = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        self.files().insert(id, Arc::clone(&stop));
+        let events = Arc::clone(&self.events);
+        let tell = crate::connections::imports::Teller(Arc::new(move |progress| {
+            events.emit(crate::events::Event::Import { connection: id, progress });
+        }));
+        let asked = self.ask(id, Request::Import { spec: Box::new(spec), stop, tell });
+        self.files().remove(&id);
+        match asked? {
             Reply::Imported(report) => Ok(ImportAnswer::Imported(report)),
             Reply::Ran(_)
             | Reply::Rows(_)
@@ -485,6 +494,19 @@ impl ConnectionManager {
             | Reply::Session(_)
             | Reply::Done => Err(unexpected()),
         }
+    }
+
+    /// Cancels the import running on connection `id`, if one is: no record
+    /// after the one being read is imported, and the batch under way is
+    /// rolled back.
+    ///
+    /// # Errors
+    ///
+    /// SQLCODE -910 if no import runs on it.
+    pub fn cancel_import(&self, id: ConnectionId) -> Result<()> {
+        let stop = self.files().get(&id).cloned().ok_or_else(|| StudioError::misuse("[DESIGN] no import runs on the connection"))?;
+        stop.store(true, std::sync::atomic::Ordering::SeqCst);
+        Ok(())
     }
 
     /// The environment of connection `id`, as its guards were given it.

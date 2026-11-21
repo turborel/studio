@@ -175,9 +175,10 @@ impl EmbeddedWorker {
                 let session = self.session()?;
                 export(session, &sql, &mut file, format).map(Reply::Exported).map_err(|e| failed(session, e))
             }
-            Request::Import(spec) => {
+            Request::Import { spec, stop, tell } => {
                 let session = self.session()?;
-                import(session, &spec).map(Reply::Imported).map_err(|e| failed(session, e))
+                let watch = crate::connections::imports::Watch { stop: &stop, tell: &*tell.0 };
+                import(session, &spec, Some(&watch)).map(Reply::Imported).map_err(|e| failed(session, e))
             }
             Request::Terminate => {
                 self.terminate();

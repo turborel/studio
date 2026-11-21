@@ -16,6 +16,7 @@ export interface TableOf {
 export type DataTask =
   | ({ readonly kind: "editRows" } & TableOf)
   | ({ readonly kind: "import" } & TableOf)
+  | { readonly kind: "importNew"; readonly connection: number; readonly schema: string }
   | ({ readonly kind: "export" } & TableOf)
   | ({ readonly kind: "compare" } & TableOf)
   | ({ readonly kind: "alterTable" } & TableOf)

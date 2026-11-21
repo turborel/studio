@@ -10,7 +10,7 @@
 /// Every command the application defines, as `src/commands.rs` registers
 /// them and `capabilities/main.json` grants them; the checks tool holds the
 /// three lists equal.
-const COMMANDS: [&str; 113] = [
+const COMMANDS: [&str; 114] = [
     "app_info",
     "admin_view",
     "admin_act",
@@ -95,6 +95,7 @@ const COMMANDS: [&str; 113] = [
     "choose_import_file",
     "preview_import",
     "import_rows",
+    "cancel_import",
     "choose_sql_file",
     "scan_sql_file",
     "run_sql_file",

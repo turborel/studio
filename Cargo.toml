@@ -31,7 +31,12 @@ turborel-lz4 = { git = "https://github.com/turborel/turborel", rev = "a4e9cf93ff
 turborel-simd = { git = "https://github.com/turborel/turborel", rev = "a4e9cf93ffa55c17eed814bb0d257d327ab05fc7" }
 # The IPC's and the files' encoding (RULES.md D17).
 serde = { version = "=1.0.229", features = ["derive"] }
-serde_json = "=1.0.154"
+serde_json = { version = "=1.0.154", features = ["raw_value"] }
+# Excel sheets imported (RULES.md D63): calamine, pure Rust, MIT, read
+# through its cell reader, a row at a time.
+calamine = { version = "=0.38.0", default-features = false }
+# The tests' workbooks, written as the zip calamine reads them is.
+zip = { version = "=9.8.1", default-features = false, features = ["deflate"] }
 # The encryption of a result's spooled pages (RULES.md D25), the
 # aws-lc-rs rustls already builds on.
 aws-lc-rs = "=1.18.2"

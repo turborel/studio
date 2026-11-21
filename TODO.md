@@ -12,6 +12,13 @@ Code never cites this file (R-DOC-5).
 - Waiting on the server, shown as unavailable until Turborel has it: a
   debugger of SQL routines, with breakpoints and stepping.
 
+## M6 Data
+
+- Parquet files imported, once a crate fits R-DEP-2: the Apache Arrow
+  project's `parquet` crate, Apache-2.0, is the one of note, and it
+  brings the Arrow crates and a codec of each compression with it; the
+  owner decides whether that weight is taken.
+
 ## M8 Analyzer
 
 - Waiting on the server, shown as unavailable, with a line saying why,

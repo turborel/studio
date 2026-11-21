@@ -129,11 +129,12 @@ pub fn the_transaction_is_followed(scratch: &Scratch) {
 fn import_spec(file: &std::path::Path, fields: &[Option<&str>], (batch, skip): (u64, bool)) -> ImportSpec {
     ImportSpec {
         path: file.to_owned(),
-        reading: Reading { format: Format::Csv, header: true, delimiter: None, null: None },
+        reading: Reading { format: Format::Csv, header: true, delimiter: None, null: None, sheet: None },
         table: "IMPORTED".into(),
         fields: fields.iter().map(|f| f.map(str::to_owned)).collect(),
         batch,
         skip,
+        limit: None,
     }
 }
 

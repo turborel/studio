@@ -35,8 +35,9 @@ person who works with the database one window for it:
 - a [results grid](doc/user/06-results.md) that reads a query's rows a
   page at a time, and shows, edits, copies and sums exact numbers of
   every one of their 38 digits;
-- [editing a table's rows](doc/user/07-editing-data.md), importing and
-  exporting them, and dialogs that write DDL;
+- [editing a table's rows](doc/user/07-editing-data.md), importing
+  them from CSV, JSON or Excel into a table or a new one typed from the
+  file, exporting them, and dialogs that write DDL;
 - [schema diagrams and models](doc/user/08-modeling.md), designed
   offline and compared with a live schema, and schema compare;
 - an [analyzer](doc/user/09-analyzer.md) of indexes, plans and
