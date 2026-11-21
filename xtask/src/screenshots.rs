@@ -144,7 +144,10 @@ impl Scene<'_> {
     /// if one is open, closed first.
     fn tool(&self, name: &str) -> Result<()> {
         self.session.press(&[], &[ESCAPE])?;
-        self.session.click(&format!("[role=\"toolbar\"][aria-label=\"Worksheet\"] button[aria-label=\"{name}\"]"))
+        // The worksheet's toolbar is drawn again as the scene before leaves it.
+        let button = format!("[role=\"toolbar\"][aria-label=\"Worksheet\"] button[aria-label=\"{name}\"]");
+        self.session.wait_for(&button)?;
+        self.session.click(&button)
     }
 
     /// Clicks, as a person does, the element `selector` finds whose text
