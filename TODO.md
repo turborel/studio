@@ -12,12 +12,6 @@ Code never cites this file (R-DOC-5).
 - Waiting on the server, shown as unavailable until Turborel has it: a
   debugger of SQL routines, with breakpoints and stepping.
 
-## M6 Data and definitions
-
-- A data compare of two tables or connections, writing the statements
-  that sync them.
-- Create and alter table dialogs that show their DDL before it runs.
-
 ## M7 Schema modeling
 
 - ER diagrams of a live schema and of property graphs, laid out, saved

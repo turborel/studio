@@ -143,6 +143,8 @@ const TESTS: &[(&str, Test)] = &[
     ("a_cursor_ends_its_transaction_under_autocommit", statements::a_cursor_ends_its_transaction_under_autocommit),
     ("every_type_is_shown_as_its_text", statements::every_type_is_shown_as_its_text),
     ("rows_are_imported_from_a_file", data::rows_are_imported_from_a_file),
+    ("the_table_dialogs_ddl_runs", data::the_table_dialogs_ddl_runs),
+    ("a_comparisons_script_syncs_the_target", data::a_comparisons_script_syncs_the_target),
     ("a_running_statement_is_cancelled", session::a_running_statement_is_cancelled),
     ("the_transaction_is_followed", session::the_transaction_is_followed),
     ("a_lost_connection_is_told_and_reconnected", session::a_lost_connection_is_told_and_reconnected),

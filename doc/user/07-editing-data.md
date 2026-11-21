@@ -4,14 +4,20 @@
 
 A table's rows are edited in a worksheet's results, each change staged
 until it is applied, all of them then in one transaction. A file's rows
-are imported into a table, and a table's rows exported to a file. A
-base table's details, in the explorer, offer each:
+are imported into a table, a table's rows exported to a file, and two
+tables' rows compared. A table is made, or altered, by a dialog that
+writes its DDL as it is filled in. A base table's details, in the
+explorer, offer each of its tasks, and a schema's details **Create
+Table…**:
 
 | Action | What it does |
 |---|---|
 | **Edit Rows…** | opens the table's first rows, or those a condition keeps, in a worksheet of their own, to be edited |
 | **Import…** | imports the rows of a CSV or tab-separated file into the table |
 | **Export…** | exports the table's rows, or those a condition keeps, to a file |
+| **Compare Rows…** | compares the table's rows with another table's, and writes the statements that make the other's rows the same |
+| **Alter Table…** | alters the table, an action of ALTER TABLE at a time |
+| **Create Table…** | makes a table in the schema |
 
 ## Editing rows
 
@@ -116,3 +122,78 @@ Studio reads only the file chosen in the dialog.
 **Export…** exports the table's rows, or those a condition keeps, as
 CSV or as native rows, to the file the platform's dialog chooses, as a
 result's export does ([Results](06-results.md#exporting)).
+
+## Comparing rows
+
+**Compare Rows…** compares the table's rows, the source's, with those of
+a target: a table of any open connection, its schema and its name the
+source's at first. Rows are matched by the target's key, its primary key
+or a unique key of NOT NULL columns, which the source must have too, and
+compared by the columns both tables have, as the target types them; a
+large object is not compared. Each table is read whole, in its key's
+order, a page at a time, at most 100,000 rows of each, and values are
+compared as their text.
+
+**Compare** says how many rows are the same, and how many the target
+must have inserted, updated and deleted to be the same as the source.
+**Open Script in Worksheet** opens the statements that make it so, in a
+worksheet of the target's connection, to be read and run there: an
+UPDATE of the columns that differ of each row of both, an INSERT of each
+row the target lacks, and a DELETE of each row the source lacks, each
+value a literal of its column's type ([Results](06-results.md#copying)):
+
+```sql
+UPDATE "ANN"."PRICES_COPY" SET "NAME" = 'Ink''s', "PRICE" = 3.00 WHERE "ID" = 2;
+INSERT INTO "ANN"."PRICES_COPY" ("ID", "NAME", "PRICE") VALUES (4, 'Pad', NULL);
+DELETE FROM "ANN"."PRICES_COPY" WHERE "ID" = 3;
+```
+
+## Making and altering tables
+
+**Create Table…** makes a table in the schema. Its form gives the
+table's name; its columns, each with its name, its type, chosen from
+Turborel's types or written, whether it is NOT NULL, its default, as SQL
+writes it, and whether it is the primary key or unique; and the table's
+constraints, each a primary key, unique, a check or a foreign key, of a
+name or none. A column is moved up, removed or added; a constraint
+removed or added. As it is filled in, the dialog shows the CREATE TABLE
+it writes ([CREATE TABLE](https://github.com/turborel/turborel/blob/main/doc/sql/statements/create-table.md)),
+each name as Turborel reads it back, bare where it is a regular
+identifier in upper case and not reserved, else in quotes; each type,
+default and condition as written:
+
+```sql
+CREATE TABLE ANN.DEPT (
+    ID INTEGER NOT NULL PRIMARY KEY,
+    NAME VARCHAR(20) DEFAULT 'none' UNIQUE
+);
+```
+
+**Alter Table…** alters the table, ALTER TABLE taking one action a
+statement ([ALTER TABLE](https://github.com/turborel/turborel/blob/main/doc/sql/statements/alter-table.md)).
+An action is chosen, its fields filled in, and **Add to Script** adds its
+statement to the script; an action added is removed by its **Remove**:
+
+| Action | What it writes |
+|---|---|
+| **Add Column** | `ADD COLUMN` of the column defined |
+| **Drop Column** | `DROP COLUMN` of the column chosen, RESTRICT or CASCADE |
+| **Rename Column** | `RENAME COLUMN … TO` its new name |
+| **Set Default**, **Drop Default** | `ALTER COLUMN … SET DEFAULT` or `DROP DEFAULT` |
+| **Set NOT NULL**, **Drop NOT NULL** | `ALTER COLUMN … SET NOT NULL` or `DROP NOT NULL` |
+| **Set Data Type** | `ALTER COLUMN … SET DATA TYPE`, a longer or more precise type of its kind |
+| **Add Constraint** | `ADD` of the constraint defined |
+| **Drop Constraint** | `DROP CONSTRAINT` of the constraint chosen, RESTRICT or CASCADE |
+| **Rename Table** | `RENAME TO` its new name |
+
+```sql
+ALTER TABLE ANN.STAFF2 ADD COLUMN NOTE VARCHAR(10) DEFAULT 'x' NOT NULL;
+ALTER TABLE ANN.STAFF2 ALTER COLUMN NOTE SET DATA TYPE VARCHAR(40);
+ALTER TABLE ANN.STAFF2 RENAME COLUMN NOTE TO REMARK;
+```
+
+Either dialog's **Open in Worksheet** opens its DDL in a worksheet of the
+connection, to be read, changed and run there; **Run** opens it and runs
+it at once. It runs as any script does, through the connection's guards,
+in the session's transaction, and the explorer reads the catalog again
+after it.

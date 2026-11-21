@@ -98,8 +98,10 @@ Of a table or view, its tabs are:
 | **Dependencies** | what it uses, as the tables a view reads, and what uses it: views, routines and triggers that read it, and other tables' foreign keys that reference it |
 | **Definition** | its definition as SQL |
 
-Above a base table's tabs, **Edit Rows…**, **Import…** and **Export…**
-edit its rows, import a file's rows into it, and export its rows
+Above a base table's tabs, **Edit Rows…**, **Import…**, **Export…**,
+**Compare Rows…** and **Alter Table…** edit its rows, import a file's rows
+into it, export its rows, compare them with another table's, and alter
+it; above a schema's definition, **Create Table…** makes a table in it
 ([Editing Data](07-editing-data.md)).
 
 **Partitions** is shown only of a partitioned table or a partition. The

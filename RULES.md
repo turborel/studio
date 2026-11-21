@@ -83,6 +83,8 @@ Each is told in full in [§7](#7-the-decisions).
 | D41 | Data: values written as the grid shows them |
 | D42 | Rows edited in the grid, staged, applied in one transaction |
 | D43 | Imports and exports of a table, through the backend |
+| D44 | Tables made and altered by dialogs that write their DDL |
+| D45 | Rows compared by the target's key, synced by a script |
 
 ---
 
@@ -115,7 +117,7 @@ Each is told in full in [§7](#7-the-decisions).
 | `ui/worksheet/` | the worksheet, its editor, panes, plan view, formatter and dialogs (D36, D37) |
 | `ui/worksheet/complete/` | completion, and the copy of Turborel's built-in functions (D40) |
 | `ui/results/` | a result's grid, its views and viewers, its copies, exports and comparisons, the timings (D39), and its rows edited (D42) |
-| `ui/data/` | the dialogs of a table's data and definitions: its rows edited, imported and exported (D42, D43) |
+| `ui/data/` | the dialogs of a table's data and definitions: its rows edited, imported, exported and compared, and tables made and altered (D42 to D45) |
 | `ui/state/` | the window's store and its actions (D31) |
 | `ui/commands/` | the commands and their keys (D30) |
 | `ui/test/` | the one Vitest setup and the one mock of the backend (R-TEST-7) |
@@ -980,6 +982,37 @@ The review checklist:
   result's export (D39).
 - *Why:* data brought in and taken out at any size, the webview reaching
   no file system.
+
+#### D44. Tables made and altered by dialogs that write their DDL
+
+- **Create Table:** the table's name, its columns, each with its name,
+  type, NOT NULL, default and key, and its constraints, primary key,
+  unique, check or foreign key; the CREATE TABLE shown as it is filled
+  in.
+- **Alter Table:** an action of ALTER TABLE at a time, each its own
+  statement, staged into a script: column added, dropped or renamed, its
+  default, NOT NULL or data type set or dropped, a constraint added or
+  dropped, the table renamed.
+- **Names:** written as Turborel reads them back: bare where a regular
+  identifier in upper case and not reserved, else delimited. Types,
+  defaults and conditions as the user wrote them.
+- **Run:** the DDL opened in a worksheet of the connection, and run there
+  if asked, as any script, through its guards, the catalog read again
+  after.
+- *Why:* the DDL is seen, and can be changed, before it runs.
+
+#### D45. Rows compared by the target's key, synced by a script
+
+- **Matched:** by the target's key, which the source must have; compared
+  by the columns both have, as the target types them, as their text;
+  large objects not compared.
+- **Read:** each table whole, in its key's order, at most 100,000 rows a
+  side.
+- **Script:** UPDATE of the columns that differ, INSERT of the rows the
+  target lacks, DELETE of those the source lacks, each value a literal;
+  opened in a worksheet of the target's connection, never run by the
+  comparison.
+- *Why:* two tables made the same by statements read before they run.
 
 ---
 

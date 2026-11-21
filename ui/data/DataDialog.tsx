@@ -3,7 +3,9 @@
  * the task's kind.
  */
 import { EditRowsDialog, ExportDialog } from "./TableTasks";
+import { CompareDialog } from "./CompareDialog";
 import { ImportDialog } from "./ImportDialog";
+import { AlterTableDialog, CreateTableDialog } from "./TableDialogs";
 import type { DataTask } from "./tasks";
 
 /** The dialog of `task`. */
@@ -15,9 +17,11 @@ export function DataDialog({ task }: { readonly task: DataTask }) {
       return <ImportDialog of={task} />;
     case "export":
       return <ExportDialog of={task} />;
-    case "compare":
     case "alterTable":
+      return <AlterTableDialog of={task} />;
     case "createTable":
-      return null;
+      return <CreateTableDialog connection={task.connection} schema={task.schema} />;
+    case "compare":
+      return <CompareDialog of={task} />;
   }
 }

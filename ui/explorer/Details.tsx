@@ -22,7 +22,7 @@ import { useStore, useStudio } from "../state/store";
 import { Icon, type IconName } from "../icons/Icon";
 import { type Selected, tableKey } from "./catalogState";
 import { Definition } from "./Definition";
-import { TableActions } from "./TableActions";
+import { SchemaActions, TableActions } from "./TableActions";
 import { sameObject, savedOf, toggleFavourite } from "./Favourites";
 
 /** A table of `rows`, under `headings`. */
@@ -438,7 +438,12 @@ function Parts({ connection, object }: { connection: number; object: Selected })
     case "domain":
       return <Generated connection={connection} kind={object.kind} schema={object.schema} name={object.name} />;
     case "schema":
-      return <Definition connection={connection} of={{ kind: "schema", schema: object.schema }} />;
+      return (
+        <>
+          <SchemaActions connection={connection} schema={object.schema} />
+          <Definition connection={connection} of={{ kind: "schema", schema: object.schema }} />
+        </>
+      );
     case "user":
     case "role":
       return <Grants kind={object.kind} name={object.name} security={security} />;

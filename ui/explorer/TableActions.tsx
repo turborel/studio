@@ -40,6 +40,17 @@ export function TableActions(props: {
       <Action icon="edit" name="Edit Rows…" task={{ kind: "editRows", ...of }} />
       <Action icon="open" name="Import…" task={{ kind: "import", ...of }} />
       <Action icon="export" name="Export…" task={{ kind: "export", ...of }} />
+      <Action icon="compare" name="Compare Rows…" task={{ kind: "compare", ...of }} />
+      <Action icon="definition" name="Alter Table…" task={{ kind: "alterTable", ...of }} />
+    </div>
+  );
+}
+
+/** The actions of schema `schema` on `connection`: a table made in it. */
+export function SchemaActions({ connection, schema }: { readonly connection: number; readonly schema: string }) {
+  return (
+    <div className="details-actions" role="group" aria-label="Schema actions">
+      <Action icon="table" name="Create Table…" task={{ kind: "createTable", connection, schema }} />
     </div>
   );
 }
