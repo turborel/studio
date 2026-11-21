@@ -143,8 +143,10 @@ impl Session<'_> {
         Ok(self.element(selector)?.is_some())
     }
 
-    /// Clicks the element `selector` finds.
+    /// Clicks the element `selector` finds, once the window draws it: what
+    /// it shows told if it never does.
     pub fn click(&self, selector: &str) -> Result<()> {
+        self.wait_for(selector)?;
         let Some(element) = self.element(selector)? else { return fail(format!("no {selector} to click")) };
         let (code, answer) = self.ask("POST", &format!("/element/{element}/click"), Some(&serde_json::json!({})))?;
         if code == 200 { Ok(()) } else { fail(format!("{selector} could not be clicked: {answer}")) }
