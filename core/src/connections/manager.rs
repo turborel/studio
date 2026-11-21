@@ -15,6 +15,7 @@ use serde::Serialize;
 use turborel_client::Canceller;
 use turborel_client::settings::Settings;
 
+use crate::connections::imports::{ImportReport, ImportSpec};
 use crate::connections::outcome::{Ran, ResultId};
 use crate::connections::pages::Page;
 use crate::connections::session::SessionState;
@@ -61,6 +62,17 @@ pub struct ThreadInfo {
 pub enum RunAnswer {
     /// It ran.
     Ran(Box<Ran>),
+    /// It runs once the user confirms this.
+    Confirm(Confirm),
+}
+
+/// What an import through its guards gave: its report, or, of one the
+/// guards ask about, what to confirm.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase", tag = "kind", content = "answer")]
+pub enum ImportAnswer {
+    /// It ran.
+    Imported(ImportReport),
     /// It runs once the user confirms this.
     Confirm(Confirm),
 }
@@ -218,6 +230,7 @@ impl ConnectionManager {
             | Reply::Types(_)
             | Reply::Value(_)
             | Reply::Exported(_)
+            | Reply::Imported(_)
             | Reply::Page(_)
             | Reply::Session(_)
             | Reply::Done => Err(unexpected()),
@@ -239,6 +252,7 @@ impl ConnectionManager {
             | Reply::Types(_)
             | Reply::Value(_)
             | Reply::Exported(_)
+            | Reply::Imported(_)
             | Reply::Session(_)
             | Reply::Done => Err(unexpected()),
         }
@@ -292,6 +306,7 @@ impl ConnectionManager {
             | Reply::Types(_)
             | Reply::Value(_)
             | Reply::Exported(_)
+            | Reply::Imported(_)
             | Reply::Page(_)
             | Reply::Session(_)
             | Reply::Done => Err(unexpected()),
@@ -312,6 +327,7 @@ impl ConnectionManager {
             | Reply::Types(_)
             | Reply::Value(_)
             | Reply::Exported(_)
+            | Reply::Imported(_)
             | Reply::Page(_)
             | Reply::Session(_)
             | Reply::Done => Err(unexpected()),
@@ -336,6 +352,7 @@ impl ConnectionManager {
             | Reply::Columns(_)
             | Reply::Value(_)
             | Reply::Exported(_)
+            | Reply::Imported(_)
             | Reply::Page(_)
             | Reply::Session(_)
             | Reply::Done => Err(unexpected()),
@@ -359,6 +376,7 @@ impl ConnectionManager {
             | Reply::Columns(_)
             | Reply::Types(_)
             | Reply::Exported(_)
+            | Reply::Imported(_)
             | Reply::Page(_)
             | Reply::Session(_)
             | Reply::Done => Err(unexpected()),
@@ -390,6 +408,41 @@ impl ConnectionManager {
             | Reply::Columns(_)
             | Reply::Types(_)
             | Reply::Value(_)
+            | Reply::Imported(_)
+            | Reply::Page(_)
+            | Reply::Session(_)
+            | Reply::Done => Err(unexpected()),
+        }
+    }
+
+    /// Imports the rows of the file `spec` names into its table on
+    /// connection `id`, the guards asked first as of an INSERT into it:
+    /// what they ask, unless `confirmed` (RULES.md D43).
+    ///
+    /// # Errors
+    ///
+    /// SQLCODE -910 for an unknown connection, a table name too long, or
+    /// an import that stops; SQLSTATE 25006 on a read-only connection.
+    pub fn import(&self, id: ConnectionId, spec: ImportSpec, confirmed: bool) -> Result<ImportAnswer> {
+        if spec.table.len() > MAX_SQL_BYTES || spec.fields.len() > MAX_VALUES {
+            return Err(StudioError::misuse(format!(
+                "[DESIGN] an import names a table of at most {MAX_SQL_BYTES} bytes, and at most {MAX_VALUES} fields"
+            )));
+        }
+        let guards = self.handles().get(&id).ok_or_else(|| unknown(id))?.guards;
+        if let Some(confirm) = guards.judge(&format!("INSERT INTO {} DEFAULT VALUES", spec.table))?
+            && !confirmed
+        {
+            return Ok(ImportAnswer::Confirm(confirm));
+        }
+        match self.ask(id, Request::Import(Box::new(spec)))? {
+            Reply::Imported(report) => Ok(ImportAnswer::Imported(report)),
+            Reply::Ran(_)
+            | Reply::Rows(_)
+            | Reply::Columns(_)
+            | Reply::Types(_)
+            | Reply::Value(_)
+            | Reply::Exported(_)
             | Reply::Page(_)
             | Reply::Session(_)
             | Reply::Done => Err(unexpected()),
@@ -486,6 +539,7 @@ fn session(reply: Reply) -> Result<SessionState> {
         | Reply::Types(_)
         | Reply::Value(_)
         | Reply::Exported(_)
+        | Reply::Imported(_)
         | Reply::Page(_)
         | Reply::Done => Err(unexpected()),
     }

@@ -22,6 +22,7 @@ import { useStore, useStudio } from "../state/store";
 import { Icon, type IconName } from "../icons/Icon";
 import { type Selected, tableKey } from "./catalogState";
 import { Definition } from "./Definition";
+import { TableActions } from "./TableActions";
 import { sameObject, savedOf, toggleFavourite } from "./Favourites";
 
 /** A table of `rows`, under `headings`. */
@@ -424,7 +425,10 @@ function Parts({ connection, object }: { connection: number; object: Selected })
       return table === undefined ? (
         <p className="hint">Reading…</p>
       ) : (
-        <TableDetails connection={connection} detail={table} />
+        <>
+          <TableActions connection={connection} schema={table.schema} table={table.name} kind={table.kind} />
+          <TableDetails connection={connection} detail={table} />
+        </>
       );
     case "routine":
       return <RoutineDetails connection={connection} schema={object.schema} specific={object.specific} />;

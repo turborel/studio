@@ -69,6 +69,8 @@ import { TreeStructureIcon } from "@phosphor-icons/react/dist/csr/TreeStructure"
 import { UserIcon } from "@phosphor-icons/react/dist/csr/User";
 import { UsersThreeIcon } from "@phosphor-icons/react/dist/csr/UsersThree";
 import { XIcon } from "@phosphor-icons/react/dist/csr/X";
+import { ListChecksIcon } from "@phosphor-icons/react/dist/csr/ListChecks";
+import { RowsPlusBottomIcon } from "@phosphor-icons/react/dist/csr/RowsPlusBottom";
 import { CopyIcon } from "@phosphor-icons/react/dist/csr/Copy";
 import { ExportIcon } from "@phosphor-icons/react/dist/csr/Export";
 import { TextTIcon } from "@phosphor-icons/react/dist/csr/TextT";
@@ -180,6 +182,8 @@ const ICONS = {
   hex: [BinaryIcon, "plain"],
   vector: [VectorThreeIcon, "plain"],
   unpin: [PushPinSlashIcon, "plain"],
+  addRow: [RowsPlusBottomIcon, "plain"],
+  review: [ListChecksIcon, "plain"],
 } as const satisfies Record<string, readonly [PhosphorIcon, Tone]>;
 
 /** An icon's name. */

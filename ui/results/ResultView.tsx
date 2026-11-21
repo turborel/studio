@@ -15,7 +15,10 @@ import { type RunResult, worksheetOf } from "../state/worksheets";
 import { chosenCells, copyCells, exportResult, pinResult, queryOf, requery, requeryable, showSummary } from "./actions";
 import { summary, summaryText } from "./aggregate";
 import { COPY_FORMATS, type CopyFormat } from "./copy";
-import { Grid } from "./Grid";
+import { editCell } from "./edits";
+import { stage } from "./editing";
+import { EditTools } from "./EditTools";
+import { editable, Grid } from "./Grid";
 import { narrowed, nextSort, valueCondition } from "./requery";
 import { CompareView, GraphOfResult, PlaneOfResult, RecordView, spatialColumns, TextView } from "./ResultParts";
 import { allOf, chosenOf } from "./selection";
@@ -320,6 +323,7 @@ function ResultToolbar(parts: Parts & { readonly names: ReadonlyMap<number, stri
         <Tool icon="save" name="Export as Native Rows…" onClick={exportAs("native")} />
       </span>
       <KeepTools {...parts} />
+      <EditTools id={id} run={run} selection={view.selection} />
     </div>
   );
 }
@@ -347,6 +351,11 @@ function ResultGrid({ id, run, view, change }: Parts) {
       }}
       onCellMenu={(cell, at) => {
         change({ menu: { cell, at } });
+      }}
+      editing={run.editing}
+      lobs={run.lobs}
+      onEdit={(cell, value) => {
+        stage(store, id, run.id, (e) => editCell(e, cell, value, run.rows.length));
       }}
     />
   );
@@ -382,46 +391,59 @@ function ResultMain(parts: Parts) {
   }
 }
 
+/** The filters of a cell's menu: to its value, or out of it; none of a value no comparison takes, or of no query. */
+function filterBy({ id, run }: Parts, store: ReturnType<typeof useStore>, cell: Item, excluding: boolean) {
+  const condition = valueCondition(run.columns, cell[0], run.rows[cell[1]]?.[cell[0]] ?? null, excluding);
+  return condition === null || !requeryable(run)
+    ? null
+    : () => void requery(store, id, run.id, (q) => ({ ...q, filter: narrowed(q.filter, condition) }));
+}
+
 /** The menu of the cell `cell`: its items. */
-function menuItems({ id, run, view, change }: Parts, store: ReturnType<typeof useStore>, cell: Item) {
-  const filterBy = (excluding: boolean) => {
-    const condition = valueCondition(run.columns, cell[0], run.rows[cell[1]]?.[cell[0]] ?? null, excluding);
-    return condition === null || !requeryable(run)
-      ? null
-      : () => void requery(store, id, run.id, (q) => ({ ...q, filter: narrowed(q.filter, condition) }));
-  };
+function menuItems(parts: Parts, store: ReturnType<typeof useStore>, cell: Item) {
+  const { id, run, view, change } = parts;
+  const nullable = editable({ columns: run.columns, rows: run.rows, editing: run.editing, lobs: run.lobs }, cell);
   const one: GridSelection = {
     ...NOTHING,
     current: { cell, range: { x: cell[0], y: cell[1], width: 1, height: 1 }, rangeStack: [] },
   };
+  const act = (f: () => void) => f;
   return [
-    ["Filter to This Value", filterBy(false)],
-    ["Filter Out This Value", filterBy(true)],
+    ["Filter to This Value", filterBy(parts, store, cell, false)],
+    ["Filter Out This Value", filterBy(parts, store, cell, true)],
     [
       "View Value",
-      () => {
+      act(() => {
         change({ selection: one, viewing: true });
-      },
+      }),
     ],
     [
       "Show in Record View",
-      () => {
+      act(() => {
         change({ record: cell[1], mode: "record" });
-      },
+      }),
     ],
     [
       "Freeze Up to This Column",
-      () => {
+      act(() => {
         change({ freeze: cell[0] + 1 });
-      },
+      }),
     ],
     [
       "Unfreeze Columns",
       view.freeze === 0
         ? null
-        : () => {
+        : act(() => {
             change({ freeze: 0 });
-          },
+          }),
+    ],
+    [
+      "Set to NULL",
+      nullable
+        ? act(() => {
+            stage(store, id, run.id, (e) => editCell(e, cell, null, run.rows.length));
+          })
+        : null,
     ],
   ] as const;
 }

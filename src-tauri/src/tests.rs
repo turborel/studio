@@ -129,9 +129,31 @@ fn every_connection_command_refuses_a_connection_not_open() {
         ("ping_connection", &id),
         ("close_result", &result),
         ("set_autocommit", &on),
+        ("result_value", &serde_json::json!({"connection": 7, "result": 1, "row": 0, "column": 0})),
     ] {
         assert_eq!(refusal(&window, command, args.clone())["sqlstate"], "TB910", "{command}");
     }
+}
+
+/// [CLIENT Importing] [DESIGN] D43: a file chosen is previewed, and its
+/// import is refused of a connection not open.
+#[test]
+fn a_file_chosen_is_previewed() {
+    use tauri::Manager;
+    let (app, window) = window();
+    let dir = std::env::temp_dir().join(format!("studio-chosen-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join("staff.csv");
+    std::fs::write(&path, "ID,NAME\n1,Ada\n").unwrap();
+    app.state::<crate::state::Studio>().files.choose(&path).unwrap();
+    let reading = serde_json::json!({"format": "csv", "header": true, "delimiter": null, "null": null});
+    let shown = answer(&window, "preview_import", serde_json::json!({"path": path.display().to_string(), "reading": reading}));
+    assert_eq!(shown, serde_json::json!({"headings": ["ID", "NAME"], "records": [["1", "Ada"]]}));
+    let spec = serde_json::json!({"path": path.display().to_string(), "reading": reading, "table": "T", "fields": ["ID", null], "batch": 1, "skip": false});
+    assert_eq!(
+        refusal(&window, "import_rows", serde_json::json!({"connection": 7, "spec": spec, "confirmed": false}))["sqlstate"],
+        "TB910"
+    );
 }
 
 /// [DESIGN] D30: the menus' items are Studio's commands, each named once,
@@ -313,9 +335,10 @@ fn the_history_and_worksheets_are_kept() {
     assert_eq!(answer(&window, "forget_query", serde_json::json!({"id": "q1"})), serde_json::json!([]));
 }
 
-/// [RULE] R-SEC-5 [DESIGN] D36: no file the user did not choose, nor a
-/// folder not a project, is read, written or listed; a connection not open
-/// is neither judged nor described; a notification too long is refused.
+/// [RULE] R-SEC-5 [DESIGN] D36 D43: no file the user did not choose, nor a
+/// folder not a project, is read, written, listed, previewed or imported;
+/// a connection not open is neither judged nor described; a notification
+/// too long, or an export's file of no plain name, is refused.
 #[test]
 fn files_not_chosen_are_refused() {
     let (_app, window) = window();
@@ -331,4 +354,14 @@ fn files_not_chosen_are_refused() {
     assert_eq!(refusal(&window, "notify_finished", serde_json::json!({"title": long, "body": ""}))["sqlstate"], "TB910");
     let values = serde_json::json!({"connection": 7, "sql": "SELECT 1", "confirmed": false, "values": ["1"]});
     assert_eq!(refusal(&window, "run_statement", values)["sqlstate"], "TB910");
+    let reading = serde_json::json!({"format": "csv", "header": true, "delimiter": null, "null": null});
+    let csv = std::env::temp_dir().join("studio-not-chosen.csv").display().to_string();
+    assert_eq!(refusal(&window, "preview_import", serde_json::json!({"path": csv, "reading": reading}))["sqlstate"], "TB910");
+    let spec = serde_json::json!({"path": csv, "reading": reading, "table": "T", "fields": ["A"], "batch": 1, "skip": false});
+    assert_eq!(
+        refusal(&window, "import_rows", serde_json::json!({"connection": 7, "spec": spec, "confirmed": false}))["sqlstate"],
+        "TB910"
+    );
+    let request = serde_json::json!({"connection": 7, "sql": "SELECT 1", "kind": "csv", "name": "a/b"});
+    assert_eq!(refusal(&window, "export_query", serde_json::json!({"request": request}))["sqlstate"], "TB910");
 }

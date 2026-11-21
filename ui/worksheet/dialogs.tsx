@@ -55,6 +55,47 @@ function Listed({
   );
 }
 
+/** The guards' question, within a dialog: what the script does, and whether to run it, its buttons `yes` and `no`. */
+export function GuardQuestion({
+  confirm,
+  answer,
+  labels = ["Run", "Don't Run"],
+}: {
+  readonly confirm: Confirm;
+  readonly answer: (run: boolean) => void;
+  readonly labels?: readonly [string, string];
+}) {
+  return (
+    <>
+      {confirm.production && (
+        <p className="guard-production">This is a production connection, and the script may write.</p>
+      )}
+      <p>The script {CLASS_NAMES[confirm.class]}.</p>
+      <Listed heading="It destroys:" items={confirm.destroys} className="guard-destroys" code={false} />
+      <Listed heading="Studio cannot tell what these do:" items={confirm.unclassified} code />
+      <div className="dialog-buttons">
+        <button
+          type="button"
+          onClick={() => {
+            answer(false);
+          }}
+        >
+          {labels[1]}
+        </button>
+        <button
+          type="button"
+          className="danger"
+          onClick={() => {
+            answer(true);
+          }}
+        >
+          {labels[0]}
+        </button>
+      </div>
+    </>
+  );
+}
+
 /** The guards' question: what the script does, and whether to run it. */
 export function GuardDialog({
   confirm,
@@ -70,31 +111,7 @@ export function GuardDialog({
         answer(false);
       }}
     >
-      {confirm.production && (
-        <p className="guard-production">This is a production connection, and the script may write.</p>
-      )}
-      <p>The script {CLASS_NAMES[confirm.class]}.</p>
-      <Listed heading="It destroys:" items={confirm.destroys} className="guard-destroys" code={false} />
-      <Listed heading="Studio cannot tell what these do:" items={confirm.unclassified} code />
-      <div className="dialog-buttons">
-        <button
-          type="button"
-          onClick={() => {
-            answer(false);
-          }}
-        >
-          Don't Run
-        </button>
-        <button
-          type="button"
-          className="danger"
-          onClick={() => {
-            answer(true);
-          }}
-        >
-          Run
-        </button>
-      </div>
+      <GuardQuestion confirm={confirm} answer={answer} />
     </Modal>
   );
 }

@@ -8,6 +8,7 @@
 import {
   DataEditor,
   type DrawHeaderCallback,
+  type EditableGridCell,
   type GridCell,
   GridCellKind,
   type GridColumn,
@@ -21,6 +22,8 @@ import { useCallback, useMemo, useState } from "react";
 import type { Cell, ColumnInfo } from "../ipc/connections";
 import { useStudio } from "../state/store";
 import { PALETTES, type ThemeName } from "../theme/tokens";
+import type { Editing } from "../state/worksheets";
+import { type Edits, writable } from "./edits";
 import { numeric } from "./literals";
 import type { SortKey } from "./requery";
 
@@ -52,6 +55,11 @@ export interface GridProps {
   readonly onHeader: (column: number, adding: boolean) => void;
   /** The context menu of a cell, at a place in the window. */
   readonly onCellMenu: (cell: Item, at: { x: number; y: number }) => void;
+  /** The rows' edits, while they are edited; and the cells of large objects not sent whole, which are not. */
+  readonly editing: Editing | null;
+  readonly lobs: readonly string[];
+  /** A cell given a value, typed in its editor. */
+  readonly onEdit: (cell: Item, value: string) => void;
 }
 
 /** The grid's colours, of Studio's theme. */
@@ -97,25 +105,81 @@ export function columnWidth(info: ColumnInfo, index: number, rows: readonly (rea
   return Math.round(Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, longest * CHARACTER + 16)));
 }
 
-/** The cell the grid draws at `col`, `row`, a null in colour `muted`. */
-export function gridCell(
-  columns: readonly ColumnInfo[],
-  rows: readonly (readonly Cell[])[],
-  [col, row]: Item,
-  muted: string,
-): GridCell {
-  const value = rows[row]?.[col] ?? null;
-  const info = columns[col];
+/** The colours a cell is drawn in, of Studio's theme. */
+export interface CellColours {
+  readonly muted: string;
+  /** A cell changed, or a row added. */
+  readonly changed: string;
+  /** A row removed. */
+  readonly removed: string;
+}
+
+/** What the grid shows: the rows read, and, while they are edited, their edits. */
+export interface Shown {
+  readonly columns: readonly ColumnInfo[];
+  readonly rows: readonly (readonly Cell[])[];
+  readonly editing: Editing | null;
+  readonly lobs: readonly string[];
+}
+
+/** A cell's value, and how it is marked: undefined for a row added's default. */
+interface Valued {
+  readonly value: Cell | undefined;
+  readonly mark: "changed" | "removed" | null;
+}
+
+/** The value of a row read's cell `col`, `row`, staged in `edits` or as read. */
+function readValue(rows: Shown["rows"], edits: Edits | undefined, [col, row]: Item): Valued {
+  const read = rows[row]?.[col] ?? null;
+  if (edits?.removed.includes(row) === true) {
+    return { value: read, mark: "removed" };
+  }
+  const changed = edits?.changed[row];
+  return changed !== undefined && col in changed
+    ? { value: changed[col] ?? null, mark: "changed" }
+    : { value: read, mark: null };
+}
+
+/** The value cell `col`, `row` shows, staged or read, and how it is marked. */
+function valueAt({ rows, editing }: Shown, [col, row]: Item): Valued {
+  const edits = editing?.edits;
+  if (edits !== undefined && row >= rows.length) {
+    const added = edits.added[row - rows.length] ?? {};
+    return { value: col in added ? (added[col] ?? null) : undefined, mark: "changed" };
+  }
+  return readValue(rows, edits, [col, row]);
+}
+
+/** Whether cell `col`, `row` is edited in place: of a column written, of a row not removed, of no large object not sent whole. */
+export function editable(shown: Shown, [col, row]: Item): boolean {
+  const editing = shown.editing;
+  if (editing === null || !writable(editing.target, col) || editing.edits.removed.includes(row)) {
+    return false;
+  }
+  return row >= shown.rows.length || !shown.lobs.includes(`${String(row)}:${String(col)}`);
+}
+
+/** The cell the grid draws at `col`, `row`, in `colours`. */
+export function gridCell(shown: Shown, cell: Item, colours: CellColours): GridCell {
+  const { value, mark } = valueAt(shown, cell);
+  const info = shown.columns[cell[0]];
   const right = info !== undefined && numeric(info);
-  const text = value ?? "NULL";
+  const text = value === undefined ? "DEFAULT" : (value ?? "NULL");
+  const muted = value === null || value === undefined;
+  const open = editable(shown, cell);
+  const theme = {
+    ...(muted ? { textDark: colours.muted } : {}),
+    ...(mark === "changed" ? { bgCell: colours.changed } : {}),
+    ...(mark === "removed" ? { textDark: colours.removed } : {}),
+  };
   return {
     kind: GridCellKind.Text,
-    data: text,
+    data: value ?? "",
     displayData: text.length > 500 ? `${text.slice(0, 500)}…` : text,
-    allowOverlay: false,
-    readonly: true,
+    allowOverlay: open,
+    readonly: !open,
     contentAlign: right ? "right" : "left",
-    ...(value === null ? { themeOverride: { textDark: muted } } : {}),
+    ...(Object.keys(theme).length > 0 ? { themeOverride: theme } : {}),
   };
 }
 
@@ -157,14 +221,37 @@ function shownTheme(): ThemeName {
   return document.documentElement.dataset["theme"] === "dark" ? "dark" : "light";
 }
 
+/** The grid's cells, of the theme `name`'s colours. */
+function useContent(props: GridProps, name: ThemeName): (cell: Item) => GridCell {
+  const { columns, rows, editing, lobs } = props;
+  const palette = PALETTES[name];
+  return useCallback(
+    (cell: Item) =>
+      gridCell({ columns, rows, editing, lobs }, cell, {
+        muted: palette.textMuted,
+        changed: palette.selection,
+        removed: palette.danger,
+      }),
+    [columns, rows, editing, lobs, palette],
+  );
+}
+
+/** What a cell's editor gives, staged as the cell's text. */
+function edited(props: GridProps): (cell: Item, value: EditableGridCell) => void {
+  return (cell, value) => {
+    if (value.kind === GridCellKind.Text) {
+      props.onEdit(cell, value.data);
+    }
+  };
+}
+
 /** A result's grid. */
 export function Grid(props: GridProps) {
   const { columns, rows, complete, onMore, onHeader, onCellMenu } = props;
   const choice = useStudio((s) => s.settings.theme);
   const name = shownTheme();
-  const muted = PALETTES[name].textMuted;
   const grid = useGridColumns(props);
-  const content = useCallback((cell: Item) => gridCell(columns, rows, cell, muted), [columns, rows, muted]);
+  const content = useContent(props, name);
   const visible = useCallback(
     (range: Rectangle) => {
       if (!complete && range.y + range.height >= rows.length - READ_AHEAD) {
@@ -177,7 +264,7 @@ export function Grid(props: GridProps) {
     <div className="result-grid" data-theme-choice={choice}>
       <DataEditor
         columns={grid.columns}
-        rows={rows.length}
+        rows={rows.length + (props.editing?.edits.added.length ?? 0)}
         getCellContent={content}
         getCellsForSelection={true}
         freezeColumns={props.freeze}
@@ -200,6 +287,7 @@ export function Grid(props: GridProps) {
         onColumnResize={(_column, width, col) => {
           grid.resize(col, width);
         }}
+        onCellEdited={edited(props)}
         onCellContextMenu={(cell, event) => {
           event.preventDefault();
           onCellMenu(cell, { x: event.bounds.x + event.localEventX, y: event.bounds.y + event.localEventY });

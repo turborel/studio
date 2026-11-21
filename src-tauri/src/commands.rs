@@ -5,6 +5,7 @@
 
 mod catalog;
 pub(crate) mod connections;
+pub(crate) mod data;
 mod files;
 mod preferences;
 mod saved;
@@ -59,6 +60,9 @@ pub(crate) fn handler<R: Runtime>() -> impl Fn(Invoke<R>) -> bool + Send + Sync 
         catalog::catalog_definition,
         files::save_text_file,
         files::export_query,
+        data::choose_import_file,
+        data::preview_import,
+        data::import_rows,
         files::notify_finished,
         worksheet::sql_words,
         worksheet::split_script,

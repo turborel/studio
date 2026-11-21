@@ -42,6 +42,7 @@ function run(rows: (string | null)[][], extra: Partial<RunResult> = {}): RunResu
     lobs: [],
     pinned: false,
     query: null,
+    editing: null,
     ...extra,
   };
 }

@@ -47,7 +47,7 @@ shows what it gives. These rows say how each kind is shown.
 How each of Turborel's types
 ([DOC sql/02-data-types.md Data Types]) is shown in the grid and its
 viewers: as the text the server's value gives. Each is edited in a
-table's rows as it is shown, from M6 (S-CLIENT-22).
+table's rows as it is shown (RULES.md D41, D42).
 
 | ID | Types | Shown | Status |
 |---|---|---|---|
@@ -131,10 +131,10 @@ them.
 | S-CLIENT-18 | The session's status and settings ([CLIENT What the server tells]) | the status bar: user, schema, transaction, read-only, replica | done |
 | S-CLIENT-19 | Rows affected, generated values and server time ([CLIENT What the server tells]) | the messages pane and the status bar | done |
 | S-CLIENT-20 | A failure's diagnostics ([CLIENT What the server tells]) | the messages pane | done |
-| S-CLIENT-21 | Large objects ([CLIENT Large objects]) | read whole for the viewers, a chunk at a time, by `read_lob`; edited values written by `create_lob` from M6 (S-CLIENT-22) | done |
-| S-CLIENT-22 | Copying ([CLIENT Copying and exporting]) | importing CSV | not yet |
+| S-CLIENT-21 | Large objects ([CLIENT Large objects]) | read whole for the viewers, a chunk at a time, by `read_lob`; a value longer than a row holds written by `create_lob` | done |
+| S-CLIENT-22 | Copying ([CLIENT Copying and exporting]) | importing a file, by `import`, which copies where the server grants it | done |
 | S-CLIENT-23 | Exporting, CSV and native ([CLIENT Copying and exporting]) | a result's export, and a statement run straight to a file | done |
-| S-CLIENT-24 | Reading CSV ([CLIENT Importing]) | importing CSV | not yet |
+| S-CLIENT-24 | Reading CSV ([CLIENT Importing]) | importing a CSV or tab-separated file, previewed first | done |
 | S-CLIENT-25 | Ping and reset ([CLIENT Controlling the session]) | checking a connection; a session is not reset | done |
 | S-CLIENT-26 | What a connection asks for ([CLIENT What a connection asks for]) | the attribute `application`, Turborel Studio | done |
 | S-CLIENT-27 | A connection's role ([CLIENT Several servers]) | the status bar's Replica, from the status SERVER_READ_ONLY | done |
@@ -161,7 +161,7 @@ never sent.
 | S-CAP-11 | `multi-statement` | not used: a script is split and run a statement at a time (S-STMT-12) | done |
 | S-CAP-12 | `compression` | not asked for | done |
 | S-CAP-13 | `commit-position` | not used | done |
-| S-CAP-14 | `copy` | importing CSV | not yet |
+| S-CAP-14 | `copy` | importing a file | done |
 | S-CAP-15 | `row-counts` | rows affected | done |
 | S-CAP-16 | `generated-values` | identity values generated | done |
 | S-CAP-17 | `fetch-ends` | a cursor's transaction under autocommit, ended as its last row is read or it is closed; the session read again then | done |

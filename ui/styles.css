@@ -505,3 +505,10 @@ button:disabled .icon {
   padding: 0 2px;
   display: inline-flex;
 }
+
+.details-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 4px;
+}

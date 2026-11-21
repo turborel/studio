@@ -4,6 +4,7 @@
  * and read in React through `useStudio`, so each component renders again
  * when what it reads changes.
  */
+import type { DataTask } from "../data/tasks";
 import { createContext, useContext, useSyncExternalStore } from "react";
 import type { Guards, ServerTime, SessionState, StudioError } from "../ipc/connections";
 import type { Settings } from "../ipc/preferences";
@@ -43,7 +44,8 @@ export type Dialog =
     }
   | { readonly kind: "history" }
   | { readonly kind: "folders" }
-  | { readonly kind: "favourite"; readonly sql: string };
+  | { readonly kind: "favourite"; readonly sql: string }
+  | { readonly kind: "data"; readonly task: DataTask };
 
 /** The values a statement's markers are given: its parameters' and its script variables'. */
 export interface Given {

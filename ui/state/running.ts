@@ -291,6 +291,7 @@ function begun(
     lobs: [],
     pinned: false,
     query: null,
+    editing: null,
   };
 }
 

@@ -98,6 +98,10 @@ Of a table or view, its tabs are:
 | **Dependencies** | what it uses, as the tables a view reads, and what uses it: views, routines and triggers that read it, and other tables' foreign keys that reference it |
 | **Definition** | its definition as SQL |
 
+Above a base table's tabs, **Edit Rows…**, **Import…** and **Export…**
+edit its rows, import a file's rows into it, and export its rows
+([Editing Data](07-editing-data.md)).
+
 **Partitions** is shown only of a partitioned table or a partition. The
 index a partitioned table's index made on a partition is named by the
 template, the partition's schema and its name, shown apart by `/`.

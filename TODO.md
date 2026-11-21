@@ -14,13 +14,8 @@ Code never cites this file (R-DOC-5).
 
 ## M6 Data and definitions
 
-- Editing rows, staged and run in a transaction, each type edited as it
-  is shown, a large object written by `create_lob`; importing CSV by
-  copy (S-CLIENT-22, S-CLIENT-24).
-- Edit a table's first N rows, or a filtered set, in the grid.
 - A data compare of two tables or connections, writing the statements
   that sync them.
-- Import and export wizards.
 - Create and alter table dialogs that show their DDL before it runs.
 
 ## M7 Schema modeling

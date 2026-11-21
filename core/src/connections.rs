@@ -2,6 +2,7 @@
 //! manager and its workers, statements run and their results paged.
 
 pub mod cells;
+pub mod imports;
 pub mod manager;
 pub mod outcome;
 pub mod pages;

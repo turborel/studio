@@ -3,6 +3,7 @@
  * it runs on, its runs and messages, the values its markers were given,
  * its bookmarks; made, closed, reopened and kept between sessions.
  */
+import type { EditTarget, Edits } from "../results/edits";
 import type { Query } from "../results/requery";
 import type { Cell, ColumnInfo, Outcome, ServerTime, StudioError } from "../ipc/connections";
 import { keepWorksheets, type KeptWorksheet, loadWorksheets, type Piece } from "../ipc/worksheet";
@@ -38,6 +39,14 @@ export interface RunResult {
   readonly pinned: boolean;
   /** How its result is sorted and filtered, run again; null as written. */
   readonly query: Query | null;
+  /** Its rows' edits staged, and the table they are made in, while its rows are edited. */
+  readonly editing: Editing | null;
+}
+
+/** A result's rows being edited: the table, and what is staged. */
+export interface Editing {
+  readonly target: EditTarget;
+  readonly edits: Edits;
 }
 
 /** A run's time and rows, kept so runs of a statement are compared. */

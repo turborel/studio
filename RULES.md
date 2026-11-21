@@ -81,6 +81,8 @@ Each is told in full in [§7](#7-the-decisions).
 | D39 | Results: paged in a canvas grid, sorted and filtered on the server, values read whole for their viewers |
 | D40 | Completion: of the place, from the parser's scope and the catalog's cache |
 | D41 | Data: values written as the grid shows them |
+| D42 | Rows edited in the grid, staged, applied in one transaction |
+| D43 | Imports and exports of a table, through the backend |
 
 ---
 
@@ -90,7 +92,7 @@ Each is told in full in [§7](#7-the-decisions).
 |---|---|
 | `Cargo.toml` | the Rust workspace: the version (D5), the pinned Turborel commit (D10), every Rust dependency and the lints |
 | `core/` | `turborel-studio-core`, the backend: everything Studio does but draw, tested without a window (D1) |
-| `core/src/connections/` | the connection manager and its workers (D24), settings (D26), statements' outcomes, results paged (D25), and values read whole and exports (D39) |
+| `core/src/connections/` | the connection manager and its workers (D24), settings (D26), statements' outcomes, results paged (D25), values read whole and exports (D39), and imports (D43) |
 | `core/src/guard/` | statements classified, and the guards on what runs (D29) |
 | `core/src/catalog/` | the catalog read from the Information Schema, and the definitions written of it (D33) |
 | `core/src/worksheet/` | scripts split, the history, the worksheets and queries kept, and the files a worksheet may use (D36) |
@@ -112,7 +114,8 @@ Each is told in full in [§7](#7-the-decisions).
 | `ui/explorer/` | the catalog's tree, the details panel and the definition view (D33) |
 | `ui/worksheet/` | the worksheet, its editor, panes, plan view, formatter and dialogs (D36, D37) |
 | `ui/worksheet/complete/` | completion, and the copy of Turborel's built-in functions (D40) |
-| `ui/results/` | a result's grid, its views and viewers, its copies, exports and comparisons, and the timings (D39) |
+| `ui/results/` | a result's grid, its views and viewers, its copies, exports and comparisons, the timings (D39), and its rows edited (D42) |
+| `ui/data/` | the dialogs of a table's data and definitions: its rows edited, imported and exported (D42, D43) |
 | `ui/state/` | the window's store and its actions (D31) |
 | `ui/commands/` | the commands and their keys (D30) |
 | `ui/test/` | the one Vitest setup and the one mock of the backend (R-TEST-7) |
@@ -944,6 +947,39 @@ The review checklist:
   time, and sent as its locator (`[CLIENT Large objects]`).
 - *Why:* what the grid shows can be written back as it is shown, and no
   message carries more than a row holds.
+
+#### D42. Rows edited in the grid, staged, applied in one transaction
+
+- **Where:** any result whose query reads one base table and holds its
+  key, the primary key or a unique key of NOT NULL columns; each result
+  column the table's of its name. A table's **Edit Rows…** opens its
+  first rows, or those a condition keeps, so.
+- **Staged:** cells changed, rows added and rows removed, kept in the
+  run, until applied, reverted or let go; generated and always-identity
+  columns, and large objects not sent whole, not edited.
+- **Statements:** DELETE and UPDATE of each row by its key as read, of
+  the columns changed alone; INSERT of the columns given values, or
+  DEFAULT VALUES; each value a parameter (D41).
+- **Applied:** judged by the guards together, then run in a transaction
+  of their own, under autocommit too, committed if each UPDATE and DELETE
+  changed exactly one row, else rolled back; within the session's
+  transaction, if one is active, left to it. The query is run again
+  after.
+- *Why:* edits that cannot change rows they did not mean to, kept or
+  lost together.
+
+#### D43. Imports and exports of a table, through the backend
+
+- **Import:** the file chosen in the platform's dialog, opened by the
+  backend, read only if chosen this session (R-SEC-5); previewed by its
+  first 20 records; each field taken into a column chosen or skipped;
+  imported by turborel-client's `import`, by copy where the server
+  grants it, a batch committed at a time, through the guards as an
+  INSERT into the table.
+- **Export:** a table's rows, or those a condition keeps, by the
+  result's export (D39).
+- *Why:* data brought in and taken out at any size, the webview reaching
+  no file system.
 
 ---
 

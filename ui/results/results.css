@@ -239,3 +239,10 @@ path.plane-selected.plane-area {
 .status-cells {
   margin-left: auto;
 }
+
+.grid-portal {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 9999;
+}

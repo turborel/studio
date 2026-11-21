@@ -6,17 +6,25 @@ import { columnWidth, gridCell, gridTheme, headerDrawer, sortMark } from "./Grid
 const ID: ColumnInfo = { name: "ID", typeWritten: "INTEGER", typeName: null, notNull: true };
 const COLUMNS: ColumnInfo[] = [ID, { name: null, typeWritten: "VARCHAR(600)", typeName: null, notNull: false }];
 
+/** The colours of the tests' cells. */
+const COLOURS = { muted: "#777777", changed: "#eeeeee", removed: "#aa0000" };
+
 describe("the grid's drawing", () => {
   it("draws numbers to the right, a null muted, a long value cut, in Studio's colours [DESIGN] D13 D39", () => {
-    expect(gridCell(COLUMNS, [["1", null]], [0, 0], "#777777")).toMatchObject({ data: "1", contentAlign: "right" });
-    expect(gridCell(COLUMNS, [["1", null]], [1, 0], "#777777")).toMatchObject({
-      data: "NULL",
+    const shown = (rows: (string | null)[][]) => ({ columns: COLUMNS, rows, editing: null, lobs: [] });
+    expect(gridCell(shown([["1", null]]), [0, 0], COLOURS)).toMatchObject({ data: "1", contentAlign: "right" });
+    expect(gridCell(shown([["1", null]]), [1, 0], COLOURS)).toMatchObject({
+      displayData: "NULL",
       themeOverride: { textDark: "#777777" },
     });
-    expect(gridCell(COLUMNS, [["1", "x".repeat(600)]], [1, 0], "#777777")).toMatchObject({
+    expect(gridCell(shown([["1", "x".repeat(600)]]), [1, 0], COLOURS)).toMatchObject({
       displayData: `${"x".repeat(500)}…`,
     });
-    expect(gridCell(COLUMNS, [], [5, 9], "#777777")).toMatchObject({ data: "NULL", contentAlign: "left" });
+    expect(gridCell(shown([]), [5, 9], COLOURS)).toMatchObject({
+      displayData: "NULL",
+      contentAlign: "left",
+      readonly: true,
+    });
     expect(gridTheme("dark")).toMatchObject({ bgCell: PALETTES.dark.background, textDark: PALETTES.dark.text });
     expect(sortMark([], 0)).toBe("");
     expect(sortMark([{ column: 0, descending: true }], 0)).toBe(" ▼");

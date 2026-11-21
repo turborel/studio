@@ -143,6 +143,20 @@ impl Files {
 
     /// Whether `path` may be read or written: one chosen, or a `.sql` file
     /// of a project folder.
+    /// `path`, if the user chose it in the platform's dialog this session.
+    ///
+    /// # Errors
+    ///
+    /// SQLCODE -910 if it was not chosen.
+    pub fn chosen(&self, path: &Path) -> Result<PathBuf> {
+        let path = whole(path)?;
+        if self.chosen.lock().map_err(|_| StudioError::misuse("[DESIGN] the files were poisoned"))?.contains(&path) {
+            Ok(path)
+        } else {
+            Err(StudioError::misuse(format!("[DESIGN] {} is no file chosen", path.display())))
+        }
+    }
+
     fn allowed(&self, path: &Path) -> Result<PathBuf> {
         let path = whole(path)?;
         let chosen = self.chosen.lock().map_err(|_| StudioError::misuse("[DESIGN] the files were poisoned"))?.contains(&path);

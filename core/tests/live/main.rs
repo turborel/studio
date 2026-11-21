@@ -26,6 +26,7 @@
 mod catalog;
 mod certs;
 mod connect;
+mod data;
 mod guards;
 mod server;
 mod session;
@@ -141,6 +142,7 @@ const TESTS: &[(&str, Test)] = &[
     ("a_result_is_exported", statements::a_result_is_exported),
     ("a_cursor_ends_its_transaction_under_autocommit", statements::a_cursor_ends_its_transaction_under_autocommit),
     ("every_type_is_shown_as_its_text", statements::every_type_is_shown_as_its_text),
+    ("rows_are_imported_from_a_file", data::rows_are_imported_from_a_file),
     ("a_running_statement_is_cancelled", session::a_running_statement_is_cancelled),
     ("the_transaction_is_followed", session::the_transaction_is_followed),
     ("a_lost_connection_is_told_and_reconnected", session::a_lost_connection_is_told_and_reconnected),
