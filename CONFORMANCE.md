@@ -179,7 +179,7 @@ the manual.
 | S-FILE-2 | Saved connections, with no password | done |
 | S-FILE-3 | Studio's settings | done |
 | S-FILE-4 | The dock's layout | done |
-| S-FILE-5 | The assistant's audit log | not yet |
+| S-FILE-5 | The assistant's audit log | done |
 | S-FILE-6 | The worksheets, with their text | done |
 | S-FILE-7 | The history of what ran, with no statement of security | done |
 | S-FILE-8 | The favourite queries | done |
@@ -196,7 +196,7 @@ the manual.
 | S-SEC-5 | A read-only connection begins each transaction READ ONLY (R-SEC-7) | done |
 | S-SEC-6 | A statement that destroys asks first (R-SEC-8) | done |
 | S-SEC-7 | The webview's policy and capability (R-SEC-4, R-SEC-5) | done |
-| S-SEC-8 | The assistant sends only what the user chose, shown first, and its tools never act alone (R-SEC-12) | not yet |
+| S-SEC-8 | The assistant sends only what the user chose, shown first, and its tools never act alone (R-SEC-12) | done |
 
 ## Implementation-defined
 
@@ -221,4 +221,4 @@ makes them.
 | S-LIMIT-2 | The text of a cell the grid draws | its first 500 characters; the value viewer shows it whole | done |
 | S-LIMIT-3 | A large object's viewer reads at most | its first 16 MiB, a chunk of 256 KiB at a time | done |
 | S-LIMIT-4 | A worksheet's history | 1000 statements, each at most 64 KiB | done |
-| S-LIMIT-5 | The rows the assistant's `run_query` returns | set in M9 | not yet |
+| S-LIMIT-5 | The rows the assistant's `run_query` returns | the policy's, 100 at first, 1 to 10,000 | done |

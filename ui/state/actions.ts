@@ -4,6 +4,7 @@
  * failure is kept as the state's error, which the window shows.
  */
 import { listReports, type ReportList } from "../ipc/analyzer";
+import { assistantAsked, assistantTold } from "../assistant/chat";
 import {
   cancelStatement,
   closeConnection,
@@ -283,6 +284,10 @@ export function told(store: Store, event: StudioEvent): void {
         position: null,
       });
     }
+  } else if (event.kind === "assistant") {
+    assistantTold(store, event.conversation, event.event);
+  } else if (event.kind === "assistantAsks") {
+    assistantAsked(store, event.conversation, event.id, event.question);
   } else if (event.kind === "lost") {
     store.update((now) => ({
       ...now,

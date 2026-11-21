@@ -14,6 +14,8 @@ import { ArrowsSplitIcon } from "@phosphor-icons/react/dist/csr/ArrowsSplit";
 import { ScissorsIcon } from "@phosphor-icons/react/dist/csr/Scissors";
 import { ArrowsMergeIcon } from "@phosphor-icons/react/dist/csr/ArrowsMerge";
 import { TreeViewIcon } from "@phosphor-icons/react/dist/csr/TreeView";
+import { ChatsCircleIcon } from "@phosphor-icons/react/dist/csr/ChatsCircle";
+import { WrenchIcon } from "@phosphor-icons/react/dist/csr/Wrench";
 import { PlayIcon } from "@phosphor-icons/react/dist/csr/Play";
 import { PlayCircleIcon } from "@phosphor-icons/react/dist/csr/PlayCircle";
 import { StopIcon } from "@phosphor-icons/react/dist/csr/Stop";
@@ -198,6 +200,8 @@ const ICONS = {
   limit: [ScissorsIcon, "plain"],
   join: [ArrowsMergeIcon, "plain"],
   tree: [TreeViewIcon, "plain"],
+  assistant: [ChatsCircleIcon, "plain"],
+  tool: [WrenchIcon, "plain"],
 } as const satisfies Record<string, readonly [PhosphorIcon, Tone]>;
 
 /** An icon's name. */

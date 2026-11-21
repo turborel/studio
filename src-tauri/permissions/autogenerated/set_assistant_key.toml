@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-set-assistant-key"
+description = "Enables the set_assistant_key command without any pre-configured scope."
+commands.allow = ["set_assistant_key"]
+
+[[permission]]
+identifier = "deny-set-assistant-key"
+description = "Denies the set_assistant_key command without any pre-configured scope."
+commands.deny = ["set_assistant_key"]

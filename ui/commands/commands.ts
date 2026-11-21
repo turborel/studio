@@ -32,6 +32,8 @@ import type { ThemeChoice } from "../theme/theme";
 export interface CommandContext {
   readonly store: Store;
   readonly resetLayout: () => void;
+  /** Shows a panel of the dock, added if the layout has it not. */
+  readonly showPanel?: (id: "assistant" | "details") => void;
 }
 
 /** A command. */
@@ -397,6 +399,26 @@ export const COMMANDS: readonly Command[] = [
   zoom("zoom.in", "Zoom In", ZOOM.step, "Mod+="),
   zoom("zoom.out", "Zoom Out", -ZOOM.step, "Mod+-"),
   zoom("zoom.reset", "Actual Size", 0, "Mod+0"),
+  {
+    id: "assistant.open",
+    icon: "assistant",
+    title: "Assistant",
+    category: "View",
+    enabled: always,
+    run: ({ showPanel }) => {
+      showPanel?.("assistant");
+    },
+  },
+  {
+    id: "assistant.settings",
+    icon: "settings",
+    title: "Assistant Settings…",
+    category: "View",
+    enabled: always,
+    run: ({ store }) => {
+      show(store, { kind: "assistantSettings" });
+    },
+  },
   {
     id: "layout.reset",
     icon: "layout",

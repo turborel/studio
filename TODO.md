@@ -23,19 +23,26 @@ Code never cites this file (R-DOC-5).
 
 ## M9 Assistant
 
-- Providers behind a trait: Claude, and the user's own model in both
-  wire formats; the tools; what is sent shown first; the audit log
-  (S-FILE-5); the mock model server (S-SEC-8, S-LIMIT-5).
-- A manual check against the real API, for the owner to run with a key.
-- Guard rails, in code and the database, never the prompt: policy levels
-  per connection (Off, Explain only, Read, Propose changes), production
-  Off by default and at most Read; the hard floor, which the classifier
-  marks already; allow and deny lists by class, schema and table, and
-  tables hidden from the assistant; limits on rows, statement time, tool
-  calls and tokens; a login of its own for the assistant; each statement
-  shown with its class, objects and estimate, and each block with its
-  rule; the policy file, format 1; a corpus of statements blocked at
-  every level, run in CI.
+- A check against the real API, for the owner to run with a key, as no
+  test calls a real model:
+  1. Build Studio, open a saved connection of a development database
+     that holds a table or two, and **View > Assistant Settings…**: turn
+     the assistant on, keep Claude and `claude-opus-5-5`, and save a key.
+  2. Ask "Which tables have no primary key?" with a worksheet's SQL
+     sent: the preview shows the body, of no key; **Send**; the answer
+     streams, `list_tables` and `describe_table` are shown with their
+     outcomes, and the turn ends with its tokens.
+  3. Ask the same again: the turn's tokens name some read of the cache.
+  4. Ask it to count a table's rows: `run_query` asks, with its class,
+     objects and estimate; **Run**; the count comes back.
+  5. Ask it to drop the table: its draft is shown in red, blocked, and
+     its worksheet runs only once the table's name is typed.
+  6. Set the level to **Explain only**, ask it to count rows again:
+     `run_query` is shown blocked by `LEVEL`.
+  7. **Show the Log**: each request is there, of no key; **Clear the
+     Log** empties it.
+  8. Choose a model of the user's own, a local model server's
+     chat-completions endpoint, and ask again.
 
 ## M10 Live Sessions
 

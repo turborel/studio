@@ -21,6 +21,7 @@ import { judgeScript, notifyFinished, recordHistory, statementParameters } from 
 import { showFailure } from "../worksheet/editor/actions";
 import { viewOf } from "../worksheet/editor/views";
 import { parsePlan } from "../plan/plan";
+import { prompted } from "../shell/PromptDialog";
 import { bound, substituted, variableNames } from "../worksheet/variables";
 import { isStudioError, session } from "./actions";
 import { loadSchemas } from "./catalog";
@@ -450,8 +451,27 @@ async function asRun(store: Store, id: string, work: () => Promise<void>): Promi
   }
 }
 
+/** Whether worksheet `id` may run: one of no draft blocked for the assistant, or one whose word the user types (RULES.md D55). */
+async function draftConfirmed(store: Store, id: string): Promise<boolean> {
+  const draft = worksheetOf(store.current(), id)?.draft;
+  if (draft?.blocked !== true) {
+    return true;
+  }
+  const word = draft.confirm ?? "RUN";
+  const typed = await prompted(
+    store,
+    "Run the Assistant's Draft",
+    `It is blocked for the assistant. Type ${word} to run it yourself`,
+  );
+  return typed !== null && typed.toUpperCase() === word.toUpperCase();
+}
+
 /** Runs `statements` of worksheet `id`, in turn, as this module's header says. */
 export async function runStatements(store: Store, id: string, statements: readonly ToRun[]): Promise<void> {
+  if (!(await draftConfirmed(store, id))) {
+    tell(store, id, message("notice", "Not run: the assistant's draft runs only once its word is typed."));
+    return;
+  }
   const connection = await ready(store, id, statements);
   if (connection === null) {
     return;

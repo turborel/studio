@@ -16,6 +16,7 @@ serde.workspace = true
 serde_json.workspace = true
 aws-lc-rs.workspace = true
 keyring-core.workspace = true
+reqwest.workspace = true
 
 [target.'cfg(target_os = "macos")'.dependencies]
 apple-native-keyring-store.workspace = true

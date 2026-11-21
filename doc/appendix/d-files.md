@@ -21,6 +21,9 @@ so a crash leaves the old file or the new. None holds a password.
 | `queries.json` | the configuration | the favourite queries |
 | `projects.json` | the configuration | the project folders |
 | `reports.json` | the configuration | the user's own reports |
+| `assistant.json` | the configuration | the assistant's settings, of no key |
+| `assistant-policy.json` | the configuration | the assistant's policy of each saved connection |
+| `assistant-audit.jsonl` | the configuration | the assistant's log, an entry a line |
 | `failures.log` | the configuration | the failures the window did not handle, a line each |
 | `turborel-studio-*` | the cache, `results` | a result's pages, sealed, while it is open |
 
@@ -31,8 +34,9 @@ setting out of its bounds, is set aside: renamed beside itself, with
 and Studio starts without it. The window says so until the notice is
 dismissed.
 
-`failures.log` is no JSON document: each line is the second it was
-written, since 1970, then what the window told of a failure, its lines
+`failures.log` is no JSON document, nor is `assistant-audit.jsonl`
+([assistant-audit.jsonl](#assistant-auditjsonl)). Each line of
+`failures.log` is the second it was written, since 1970, then what the window told of a failure, its lines
 joined, at most 16,384 characters. Past 1 MiB it is begun again, the
 old kept as `failures.log.old`. It holds no secret.
 
@@ -218,6 +222,77 @@ whose numbers it draws, `values`, one to eight:
     }
   ]
 }
+```
+
+## assistant.json
+
+The assistant's settings ([The Assistant](../user/10-assistant.md#turning-it-on)):
+whether it is on, `enabled`; the model it asks, `provider`, `claude`
+or `own`; Claude's model, `claudeModel`; and the user's own model,
+`own`, of its base URL, model, wire format, `chatCompletions` or
+`anthropic`, and whether it calls tools. Its keys are kept in the
+keychain alone, never here.
+
+```json
+{
+  "format": 1,
+  "enabled": true,
+  "provider": "own",
+  "claudeModel": "claude-opus-5-5",
+  "own": {
+    "baseUrl": "http://localhost:11434",
+    "model": "local-model",
+    "wire": "chatCompletions",
+    "tools": true
+  }
+}
+```
+
+## assistant-policy.json
+
+The assistant's policy of each saved connection, by the connection's
+identifier, at most 1000 ([The policy](../user/10-assistant.md#the-policy)).
+Its `level` is `off`, `explainOnly`, `read` or `proposeChanges`. The
+classes allowed and denied, `allowClasses` and `denyClasses`, are of
+`read`, `transaction`, `session`, `writeRows`, `changeSchema`,
+`security`, `administration` and `unclassified`; an empty list of those
+allowed allows each. The lists of schemas and tables hold at most 500,
+each `SCHEMA` or `SCHEMA.TABLE`. A connection the file does not name
+has its environment's policy. **Export Policies…** writes this file
+whole, and **Import Policies…** reads one of its shape.
+
+```json
+{
+  "format": 1,
+  "connections": {
+    "9f2c4e1a": {
+      "level": "read",
+      "preview": true,
+      "redactLiterals": false,
+      "allowClasses": [],
+      "denyClasses": ["security"],
+      "allowObjects": [],
+      "denyObjects": ["ANN.PAY"],
+      "hidden": ["HR"],
+      "limits": { "rows": 100, "statementSeconds": 30, "toolCalls": 20, "tokens": 64000 },
+      "login": "HELPER"
+    }
+  }
+}
+```
+
+## assistant-audit.jsonl
+
+The assistant's log ([The log](../user/10-assistant.md#the-log)): a line
+of JSON each request, of format 1, its time in seconds since 1970, the
+provider, the model that answered, the connection's name, the kinds of
+context sent, each tool call and what became of it, how it stopped, and
+its tokens. Past 1 MiB it is begun again, the old let go; a line of
+another format, or that is no entry, is passed over. It holds no key,
+nor a row's value.
+
+```json
+{"format":1,"time":1795046400,"provider":"claude","model":"claude-opus-5-5","connection":"Orders","sent":["schema","sql"],"tools":[{"name":"run_query","outcome":"approved"}],"stop":"toolUse","usage":{"input":5120,"output":240,"cacheRead":4800,"cacheWritten":0}}
 ```
 
 ## A model's file

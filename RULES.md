@@ -94,6 +94,7 @@ Each is told in full in [§7](#7-the-decisions).
 | D52 | Reports and charts: queries shown as tables or charts, the user's kept |
 | D53 | Context menus everywhere, of the registry, and a new worksheet a click away |
 | D54 | The plan viewer: a summary, a flow, a tree-table, the stages, the raw text last |
+| D55 | The assistant: off until turned on, called by the backend, its guard rails in code and the database |
 
 ---
 
@@ -1218,6 +1219,74 @@ The review checklist:
   and detail, their figures aside.
 - *Why:* the owner found the raw plan too raw; a plan read at a glance,
   its raw text a tab away.
+
+#### D55. The assistant: off until turned on, called by the backend, its guard rails in code and the database
+
+- **Providers:** Claude, by Anthropic's Messages API at
+  `https://api.anthropic.com`, of `claude-opus-5-5` by default; or the
+  user's own model, of a base URL, a model, a key or none, and a wire
+  format, Anthropic Messages or chat completions, each read by a reader
+  of its own behind one trait, so another is added beside them. One that
+  calls no tools is asked with none. HTTPS, or HTTP of this machine
+  alone. Off until the user turns it on, in `assistant.json`.
+- **Requests:** made by the backend alone (R-SEC-12), streamed, of
+  `anthropic-version: 2023-06-01`; effort `medium`, `high` of a request
+  that sends a plan; `max_tokens` the policy's; tools strict and of
+  `eager_input_streaming`, in one order, each input checked against its
+  schema before it runs; `tool_choice` `auto`; the schema's context in
+  the system prompt, sorted and of no time, cached by `cache_control`.
+  `stop_reason` is read before the content: a refusal is shown with its
+  `stop_details` and runs no tool. 429 and 5xx are tried again, four
+  attempts in all, after `retry-after` up to a minute, else 1, 2 and 4
+  seconds; any other status is told by what it means.
+- **Fallbacks:** Claude's server-side fallbacks are asked for, by
+  `fallbacks: "default"` and the beta header
+  `server-side-fallback-2026-07-01`, so a busy model may be answered for
+  by another of Claude's; the log names the model that answered.
+- **Sent:** the schema's context, the worksheet's SQL, its plan and its
+  first 20 rows, each but the context only as the user ticks it; the
+  literals of SQL and plans redacted to `?` where the policy says, as it
+  does of production at first; the whole body shown before it is sent
+  where the policy says, as it does at first; a key never.
+- **Tools:** the catalog's lists and descriptions, EXPLAIN, the
+  analyzer's findings (D50), `run_query` once the user approves it, and
+  `propose_sql`, which drafts into a worksheet. Each runs on a connection
+  of the assistant's own, opened for its conversation, each transaction
+  READ ONLY (D29) and each statement cancelled past the policy's seconds
+  by STATEMENT.TIMEOUT_MS; as the policy's login, where it names one, so
+  the database refuses what Studio might miss.
+- **Policy:** each saved connection's, in `assistant-policy.json`, format
+  1: a level, Off, Explain only, Read or Propose changes, Read at first
+  and Off of production, never past Read there; allowed and denied
+  classes and objects; objects hidden; limits of rows (100), seconds
+  (30), tool calls (20) and tokens (64,000), each bounded. Every
+  statement is judged by Turborel's parser through D29's classifier: the
+  hard floor, a statement that does not parse, dynamic SQL, CALL and a
+  compound statement are never run nor explained, and a draft of one is
+  blocked, run only once the user types the object's name it names.
+  Each stop names its rule. A corpus of statements blocked at every
+  level, `core/src/assistant/blocked.sql`, runs in the tests.
+- **Questions:** each turn runs on a thread named
+  `studio-assistant-<conversation>`; a request to show or a query to
+  run is told the window as the event `assistantAsks`, of a number the
+  window answers by, waiting 30 minutes before it is taken as no.
+- **Log:** `assistant-audit.jsonl`, the owner's alone, an entry a line,
+  each of format 1: of each request, sent or not, its time, provider,
+  model, connection, kinds of context, tool calls and what became of
+  them, its stop and its tokens; begun again past 1 MiB; no key nor
+  value.
+- **Tests:** a mock model, a local HTTP server on a thread named
+  `studio-mock-model` speaking both wire formats; no test calls a real
+  model nor needs a key. A check against the real API, for the owner,
+  is in TODO.md.
+- **Dependency:** `reqwest` 0.13.5, MIT and Apache-2.0, without its
+  default features, of `rustls` and `blocking`: rustls on aws-lc-rs, no
+  ring (D23); the HTTP client of the Rust ecosystem, of its makers'
+  stable release line.
+- *Why:* the owner asked for an assistant that is clear and safe: one
+  that can never, for example, drop a database. What it may do is
+  decided by Studio and the database, never by what a model is told,
+  so no answer, nor text it reads, talks its way past it.
 
 ---
 

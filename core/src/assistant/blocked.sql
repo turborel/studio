@@ -1,0 +1,83 @@
+-- The statements the assistant may never run at any level (RULES.md D55),
+-- each between lines of `--- `; read by the policy's tests. Each the
+-- hard floor holds, that does not parse, or that runs SQL of its own.
+DROP TABLE STAFF CASCADE
+---
+drop table staff restrict
+---
+DrOp TaBlE "Staff" CASCADE
+---
+DROP
+  TABLE
+    ANN.STAFF
+      CASCADE
+---
+/* tidy up */ DROP SCHEMA ANN CASCADE
+---
+-- only a comment first
+TRUNCATE TABLE STAFF
+---
+DELETE FROM STAFF
+---
+delete from ann.staff
+---
+UPDATE STAFF SET PAY = 0
+---
+GRANT SELECT ON STAFF TO PUBLIC
+---
+REVOKE SELECT ON STAFF FROM PUBLIC
+---
+CREATE USER EVE PASSWORD 'x'
+---
+DROP USER EVE
+---
+CREATE ROLE AUDITORS
+---
+DROP ROLE AUDITORS
+---
+SET SESSION AUTHORIZATION 'EVE'
+---
+SET DATABASE LOCKS.WAIT = 'OFF'
+---
+ALTER DATABASE OWNER TO EVE
+---
+ALTER DATABASE REPLICATION MEMBERS 'node-1 node-2'
+---
+RESCAN BACKUP TARGET
+---
+ALTER USER ANN PASSWORD 'x'
+---
+END CONNECTION 7
+---
+CANCEL CONNECTION 7
+---
+CREATE EXTENSION VAULT
+---
+DROP EXTENSION VAULT
+---
+ALTER EXTENSION VAULT UPDATE
+---
+BACKUP DATABASE TO 'file:///tmp/b'
+---
+CREATE RESTORE POINT BEFORE_MIGRATION
+---
+EXECUTE IMMEDIATE 'DROP TABLE STAFF'
+---
+PREPARE S FROM 'DELETE FROM STAFF'
+---
+EXECUTE S
+---
+CALL ANN.PURGE()
+---
+call purge()
+---
+SELECT 1; DROP TABLE STAFF
+---
+SELECT * FROM STAFF;
+DELETE FROM STAFF
+---
+DROP TABLЕ STAFF
+---
+DRОP TABLE STAFF
+---
+BEGIN ATOMIC DELETE FROM STAFF; END

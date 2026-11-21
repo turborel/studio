@@ -30,6 +30,7 @@ import { defaultLayout, PANELS } from "./layout";
 import { DetailsPanel, ExplorerPanel, WelcomePanel } from "./panels";
 import { activateModel, closeModel, type ModelDoc } from "../model/models";
 import { ModelView } from "../model/ModelView";
+import { AssistantPanel } from "../assistant/AssistantPanel";
 import { useMenu } from "./ContextMenu";
 import { tabMenu } from "../worksheet/menus";
 
@@ -55,6 +56,7 @@ const COMPONENTS = {
   [PANELS.details.id]: DetailsPanel,
   [PANELS.worksheet.id]: WorksheetPanel,
   [PANELS.model.id]: ModelPanel,
+  [PANELS.assistant.id]: AssistantPanel,
 };
 
 /** The icon of each panel's tab, by its component. */
@@ -64,6 +66,7 @@ export const TAB_ICONS: Readonly<Record<string, IconName>> = {
   [PANELS.details.id]: "details",
   [PANELS.worksheet.id]: "worksheet",
   [PANELS.model.id]: "graph",
+  [PANELS.assistant.id]: "assistant",
 };
 
 /** A panel's tab: its icon, then dockview's own tab of its title. */

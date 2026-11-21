@@ -10,8 +10,21 @@
 /// Every command the application defines, as `src/commands.rs` registers
 /// them and `capabilities/main.json` grants them; the checks tool holds the
 /// three lists equal.
-const COMMANDS: [&str; 68] = [
+const COMMANDS: [&str; 81] = [
     "app_info",
+    "assistant_settings",
+    "save_assistant_settings",
+    "set_assistant_key",
+    "assistant_policy",
+    "save_assistant_policy",
+    "export_assistant_policy",
+    "import_assistant_policy",
+    "set_assistant_login_password",
+    "assistant_audit",
+    "clear_assistant_audit",
+    "assistant_ask",
+    "assistant_answer",
+    "assistant_forget",
     "open_connection",
     "close_connection",
     "reconnect",

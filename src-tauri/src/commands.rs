@@ -3,6 +3,7 @@
 //! arguments to the backend, which validates them before it does anything
 //! (R-SEC-6).
 
+mod assistant;
 mod catalog;
 pub(crate) mod connections;
 pub(crate) mod data;
@@ -27,6 +28,19 @@ fn app_info() -> AppInfo {
 pub(crate) fn handler<R: Runtime>() -> impl Fn(Invoke<R>) -> bool + Send + Sync + 'static {
     tauri::generate_handler![
         app_info,
+        assistant::assistant_settings,
+        assistant::save_assistant_settings,
+        assistant::set_assistant_key,
+        assistant::assistant_policy,
+        assistant::save_assistant_policy,
+        assistant::export_assistant_policy,
+        assistant::import_assistant_policy,
+        assistant::set_assistant_login_password,
+        assistant::assistant_audit,
+        assistant::clear_assistant_audit,
+        assistant::assistant_ask,
+        assistant::assistant_answer,
+        assistant::assistant_forget,
         connections::open_connection,
         connections::close_connection,
         connections::reconnect,

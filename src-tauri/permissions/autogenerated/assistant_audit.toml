@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-assistant-audit"
+description = "Enables the assistant_audit command without any pre-configured scope."
+commands.allow = ["assistant_audit"]
+
+[[permission]]
+identifier = "deny-assistant-audit"
+description = "Denies the assistant_audit command without any pre-configured scope."
+commands.deny = ["assistant_audit"]

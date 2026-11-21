@@ -44,6 +44,24 @@ pub enum Event {
         /// Why.
         error: StudioError,
     },
+    /// What happens in a turn of an assistant's conversation (RULES.md D55).
+    #[serde(rename_all = "camelCase")]
+    Assistant {
+        /// The conversation.
+        conversation: String,
+        /// What happened.
+        event: crate::assistant::turn::TurnEvent,
+    },
+    /// A question of an assistant's turn, which waits for the user's answer.
+    #[serde(rename_all = "camelCase")]
+    AssistantAsks {
+        /// The conversation.
+        conversation: String,
+        /// The question's number, which the answer names.
+        id: u64,
+        /// The question.
+        question: crate::assistant::turn::Question,
+    },
 }
 
 /// What the backend tells its events to.

@@ -17,7 +17,7 @@ and at the top of the window on Linux and Windows. Its menus are:
 | **Edit** | Undo, Redo, Cut, Copy, Paste, Select All |
 | **Worksheet** | Run Statement, Run Script, Run Script on a Folder's Connections…, Explain, Explain Analyze, Run to CSV File…, Run to Native Rows File…, Query Builder…, Format, Toggle Comment, Upper Case, Lower Case, Find and Replace…, Toggle Bookmark, Next Bookmark, Previous Bookmark, Go to Definition, Describe, Split Editor, Outline, Add to Favourite Queries…, Autocommit, Pin Tab, Close Worksheet, Close Other Worksheets |
 | **Connection** | Disconnect, Reconnect, Cancel Statement, Refresh Catalog, Analyze Schema…, Commit, Rollback |
-| **View** | Command Palette…, Theme: System, Theme: Light, Theme: Dark, Zoom In, Zoom Out, Actual Size, Reset Layout |
+| **View** | Command Palette…, Theme: System, Theme: Light, Theme: Dark, Zoom In, Zoom Out, Actual Size, Assistant, Assistant Settings…, Reset Layout |
 | **Window** | Minimize, Full Screen |
 | **Help** | About Turborel Studio, Keyboard Shortcuts |
 
@@ -58,13 +58,15 @@ The dock holds the panels. When Studio is first opened:
   **New Worksheet** begin, and each worksheet opens there as a tab of
   its own, marked by the colour of the connection it runs on; the **+**
   after a group's tabs opens a new worksheet there;
-- **Details** is on the right, showing what is selected in the explorer.
+- **Details** is on the right, showing what is selected in the explorer,
+  and the **Assistant** a tab beside it ([The Assistant](10-assistant.md)).
 
 A panel is moved by dragging its tab: onto another group to join it, or
 to a group's edge to split it. A group is resized by dragging the line
 between it and the next. Studio keeps the layout as it is left, and lays
 the window out so when it opens again. **View > Reset Layout** lays it
-out as it was first.
+out as it was first. **View > Assistant** shows the assistant's panel,
+added beside Details where the layout has it not.
 
 ## Context menus
 

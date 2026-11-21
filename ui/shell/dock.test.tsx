@@ -41,7 +41,7 @@ describe("the dock's layout", () => {
     const asked = mockBackend();
     const { api, done, change } = dock();
     await restore(api);
-    expect(done).toEqual(["add", "add", "add"]);
+    expect(done).toEqual(["add", "add", "add", "add"]);
     change();
     change();
     await vi.advanceTimersByTimeAsync(SAVE_AFTER_MS);
@@ -59,7 +59,7 @@ describe("the dock's layout", () => {
     mockBackend({ load_layout: () => ({ grid: {} }) });
     const { api, done } = dock(true);
     await restore(api);
-    expect(done).toEqual(["fromJSON", "clear", "add", "add", "add"]);
+    expect(done).toEqual(["fromJSON", "clear", "add", "add", "add", "add"]);
   });
 
   it("is reset and saved by Reset Layout [DESIGN] D14", async () => {
@@ -67,7 +67,7 @@ describe("the dock's layout", () => {
     const { api, done } = dock();
     resetLayout(api);
     await vi.advanceTimersByTimeAsync(0);
-    expect(done).toEqual(["clear", "add", "add", "add"]);
+    expect(done).toEqual(["clear", "add", "add", "add", "add"]);
     expect(asked.map((a) => a.command)).toEqual(["save_layout"]);
   });
 });

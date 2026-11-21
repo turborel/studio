@@ -91,6 +91,8 @@ pub const MENUS: [(&str, &[Item]); 6] = [
             Some(("zoom.out", "Zoom Out")),
             Some(("zoom.reset", "Actual Size")),
             None,
+            Some(("assistant.open", "Assistant")),
+            Some(("assistant.settings", "Assistant Settings…")),
             Some(("layout.reset", "Reset Layout")),
         ],
     ),

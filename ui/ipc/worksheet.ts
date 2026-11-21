@@ -12,6 +12,8 @@ export interface Classified {
   readonly class: StatementClass;
   readonly destroys: string | null;
   readonly floor: string | null;
+  /** The object a statement the floor holds names, where it names one. */
+  readonly object?: string | null;
   readonly readWrite: boolean;
   readonly connects: boolean;
 }

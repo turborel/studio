@@ -34,6 +34,11 @@ keyring-core = "=1.1.0"
 apple-native-keyring-store = { version = "=1.0.2", features = ["keychain"] }
 windows-native-keyring-store = "=1.1.0"
 zbus-secret-service-keyring-store = { version = "=1.0.1", features = ["crypto-rust"] }
+# The assistant's calls of its model (RULES.md D55): HTTP on rustls, its
+# crypto aws-lc-rs and its roots the platform's, as reqwest's rustls
+# feature gives; blocking, as the backend's work runs on threads of its
+# own.
+reqwest = { version = "=0.13.5", default-features = false, features = ["rustls", "blocking"] }
 # The desktop shell (RULES.md D9).
 tauri = { version = "=2.12.7", features = [] }
 tauri-build = { version = "=2.7.6", features = [] }

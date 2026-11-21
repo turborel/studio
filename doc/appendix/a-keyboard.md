@@ -61,6 +61,8 @@ are bound.
 | Zoom In | View | Cmd+= | Ctrl+= |
 | Zoom Out | View | Cmd+- | Ctrl+- |
 | Actual Size | View | Cmd+0 | Ctrl+0 |
+| Assistant | View | | |
+| Assistant Settings… | View | | |
 | Reset Layout | View | | |
 | About Turborel Studio | Help | | |
 | Keyboard Shortcuts | Help | F1 | F1 |

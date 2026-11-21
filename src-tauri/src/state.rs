@@ -47,6 +47,8 @@ pub struct Studio {
     pub files: Arc<Files>,
     /// The window's failures' log.
     pub failures: Arc<turborel_studio_core::failures::Failures>,
+    /// The assistant's conversations, settings, policies and log.
+    pub assistant: Arc<turborel_studio_core::assistant::service::Service>,
 }
 
 /// Tells the backend's events to the webview.

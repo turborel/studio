@@ -11,6 +11,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use tauri::{App, Builder, Manager, Runtime};
+use turborel_studio_core::assistant::service::Service;
 use turborel_studio_core::connections::manager::ConnectionManager;
 use turborel_studio_core::connections::spool;
 use turborel_studio_core::events::Hub;
@@ -59,9 +60,13 @@ pub(crate) fn manage<R: Runtime>(
     spool::clear_stale(&folders.results)?;
     let hub = Arc::new(Hub::default());
     hub.listen(Arc::new(WebviewEvents(app.handle().clone())));
+    let connections = Arc::new(ConnectionManager::new(folders.results.clone(), hub.clone()));
+    let saved = Arc::new(SavedConnections::new(folders.config.join(SAVED_FILE), Arc::clone(&secrets)));
+    let assistant = Arc::new(Service::new(&folders.config, (Arc::clone(&saved), secrets), Arc::clone(&connections), hub));
     app.manage(Studio {
-        connections: Arc::new(ConnectionManager::new(folders.results.clone(), hub)),
-        saved: Arc::new(SavedConnections::new(folders.config.join(SAVED_FILE), secrets)),
+        connections,
+        saved,
+        assistant,
         config: folders.config.clone(),
         keychain,
         history: Arc::new(History::new(&folders.config)),

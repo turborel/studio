@@ -1,7 +1,7 @@
 /**
  * The dock's panels and their first layout (RULES.md D14): the Object
- * Explorer on the left, worksheets and models in the centre, details on
- * the right.
+ * Explorer on the left, worksheets and models in the centre, details and
+ * the assistant on the right.
  */
 import type { DockviewApi } from "dockview-react";
 
@@ -12,6 +12,7 @@ export const PANELS = {
   details: { id: "details", title: "Details" },
   worksheet: { id: "worksheet", title: "Worksheet" },
   model: { id: "model", title: "Model" },
+  assistant: { id: "assistant", title: "Assistant" },
 } as const;
 
 /** The width of the side panels as the layout first opens, in pixels. */
@@ -33,5 +34,28 @@ export function defaultLayout(api: DockviewApi): void {
     title: PANELS.details.title,
     position: { referencePanel: PANELS.welcome.id, direction: "right" },
     initialWidth: SIDE_WIDTH,
+  });
+  api.addPanel({
+    id: PANELS.assistant.id,
+    component: PANELS.assistant.id,
+    title: PANELS.assistant.title,
+    position: { referencePanel: PANELS.details.id, direction: "within" },
+    inactive: true,
+  });
+}
+
+/** Shows panel `id`, added where its kind goes if the layout has it not. */
+export function showPanel(api: DockviewApi, id: typeof PANELS.assistant.id | typeof PANELS.details.id): void {
+  const panel = api.getPanel(id);
+  if (panel !== undefined) {
+    panel.api.setActive();
+    return;
+  }
+  const beside = api.getPanel(PANELS.details.id) ?? api.getPanel(PANELS.welcome.id);
+  api.addPanel({
+    id,
+    component: id,
+    title: PANELS[id].title,
+    ...(beside === undefined ? {} : { position: { referencePanel: beside.id, direction: "within" as const } }),
   });
 }

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-save-assistant-policy"
+description = "Enables the save_assistant_policy command without any pre-configured scope."
+commands.allow = ["save_assistant_policy"]
+
+[[permission]]
+identifier = "deny-save-assistant-policy"
+description = "Denies the save_assistant_policy command without any pre-configured scope."
+commands.deny = ["save_assistant_policy"]

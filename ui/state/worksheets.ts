@@ -110,6 +110,8 @@ export interface WorksheetState {
   readonly whatIf: string | null;
   /** The chart of the report the worksheet opened, its results first shown so. */
   readonly chart: Chart | null;
+  /** The assistant's draft it holds, if one: blocked for the assistant, run only once its word is typed. */
+  readonly draft: { readonly blocked: boolean; readonly confirm: string | null } | null;
   /** Its statements, as last split. */
   readonly pieces: readonly Piece[];
   /** Its runs' times and rows, the latest last. */
@@ -160,6 +162,7 @@ export function freshWorksheet(
     explained: null,
     whatIf: null,
     chart: null,
+    draft: null,
     pieces: [],
     timings: [],
   };

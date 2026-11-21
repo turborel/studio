@@ -5,14 +5,14 @@
 //! EXECUTE, EXECUTE GQL) are classified the strictest, so a guard fails
 //! closed.
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use turborel::ast::{DropObject, IndexStatement, SchemaStatement, SqlStatement, UserStatement};
 use turborel::lexer::{Tok, lex};
 use turborel::parser::Parser;
 use turborel_client::Splitter;
 
 /// What a statement does, from the least to the most a guard weighs.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum Class {
     /// Reads, and changes nothing.
@@ -60,6 +60,10 @@ pub struct Classified {
     /// Why the assistant may never run it, if the hard floor holds it
     /// (D29): what it is.
     pub floor: Option<String>,
+    /// The object a statement the floor holds names, where it names one:
+    /// a table, schema or extension, which the user types to run a draft
+    /// of the assistant's (D55).
+    pub object: Option<String>,
     /// Whether it makes the next transaction READ WRITE, which a read-only
     /// connection refuses.
     pub read_write: bool,
@@ -87,8 +91,15 @@ pub fn strictest(statements: &[Classified]) -> Class {
 /// is none of them.
 pub fn classify(text: &str) -> Classified {
     let text = text.trim().to_owned();
-    let unclassified =
-        Classified { text: text.clone(), class: Class::Unclassified, destroys: None, floor: None, read_write: false, connects: false };
+    let unclassified = Classified {
+        text: text.clone(),
+        class: Class::Unclassified,
+        destroys: None,
+        floor: None,
+        object: None,
+        read_write: false,
+        connects: false,
+    };
     // A comment the text ends in is ended, as the client ends one its
     // input cuts short ([DOC sql/01-lexical.md Comments]).
     let ended = format!("{text}\n");
@@ -100,9 +111,10 @@ pub fn classify(text: &str) -> Classified {
         return unclassified;
     };
     let (class, destroys, floor) = of(&statement);
+    let object = floor.as_ref().and_then(|_| named(&statement));
     let read_write = matches!(&statement, SqlStatement::SetTransaction(_)) && sets_read_write(&text);
     let connects = matches!(&statement, SqlStatement::Connection(_));
-    Classified { class, destroys, floor, read_write, connects, ..unclassified }
+    Classified { class, destroys, floor, object, read_write, connects, ..unclassified }
 }
 
 /// The class of `text` if it is a query: Read, or WriteRows if it holds a
@@ -227,6 +239,20 @@ fn of(statement: &SqlStatement) -> Judged {
         | SqlStatement::Dynamic(_)
         | SqlStatement::Execute(_)
         | SqlStatement::ExecuteGql(_) => plain(Class::Unclassified),
+    }
+}
+
+/// The object `statement` names, of a DROP of a table, schema or extension,
+/// a TRUNCATE, or a DELETE or UPDATE.
+fn named(statement: &SqlStatement) -> Option<String> {
+    match statement {
+        SqlStatement::Drop { object: DropObject::Table(name), .. } => Some(name.ident.clone()),
+        SqlStatement::Drop { object: DropObject::Schema { name, .. }, .. }
+        | SqlStatement::Drop { object: DropObject::Extension(name, _), .. } => Some(name.clone()),
+        SqlStatement::Truncate { table, .. } | SqlStatement::DeleteSearched { table, .. } | SqlStatement::UpdateSearched { table, .. } => {
+            Some(table.ident.clone())
+        }
+        _ => None,
     }
 }
 

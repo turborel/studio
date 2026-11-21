@@ -4,6 +4,7 @@
 //! without a window, against a live `turboreld` where it needs one.
 
 pub mod analyzer;
+pub mod assistant;
 pub mod catalog;
 pub mod connections;
 pub mod error;

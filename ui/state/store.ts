@@ -17,6 +17,7 @@ import type { FavouriteQuery } from "../ipc/worksheet";
 import type { Chart, ReportList } from "../ipc/analyzer";
 import type { WhatIf } from "../analyzer/whatIf";
 import type { OpenMenu } from "../shell/ContextMenu";
+import { type Chat, newChat } from "../assistant/chat";
 import type { WorksheetState } from "./worksheets";
 
 /** A connection open in this window. */
@@ -61,6 +62,7 @@ export type Dialog =
     }
   | { readonly kind: "whatIf"; readonly whatIf: WhatIf }
   | { readonly kind: "report"; readonly sql: string; readonly chart: Chart | null }
+  | { readonly kind: "assistantSettings" }
   | {
       readonly kind: "prompt";
       readonly title: string;
@@ -104,6 +106,8 @@ export interface StudioState {
   /** The models open, each a tab, and the one active. */
   readonly models: readonly ModelDoc[];
   readonly activeModel: string | null;
+  /** The assistant's conversation. */
+  readonly chat: Chat;
 }
 
 /** The state before anything is loaded. */
@@ -129,6 +133,7 @@ export const INITIAL: StudioState = {
   notices: [],
   models: [],
   activeModel: null,
+  chat: newChat(),
 };
 
 /** The store of a window: its state, and who reads it. */

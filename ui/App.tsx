@@ -29,6 +29,8 @@ import { AnalyzerDialog } from "./analyzer/AnalyzerDialog";
 import { WhatIfDialog } from "./analyzer/PlanFindings";
 import { SaveReportDialog } from "./analyzer/Reports";
 import { PromptDialog } from "./shell/PromptDialog";
+import { AssistantSettingsDialog } from "./assistant/AssistantSettings";
+import { showPanel } from "./shell/layout";
 import { CommandContextOf, ContextMenu } from "./shell/ContextMenu";
 import { applyTheme, DARK_QUERY, resolveTheme } from "./theme/theme";
 import type { ThemeName } from "./theme/tokens";
@@ -149,6 +151,8 @@ function TaskDialogs({ dialog }: { readonly dialog: Dialog | null }) {
       return <SaveReportDialog sql={dialog.sql} chart={dialog.chart} />;
     case "prompt":
       return <PromptDialog {...dialog} />;
+    case "assistantSettings":
+      return <AssistantSettingsDialog />;
     default:
       return null;
   }
@@ -171,6 +175,11 @@ function Window({ store }: { readonly store: Store }) {
       resetLayout: () => {
         if (dock.current !== null) {
           resetLayout(dock.current);
+        }
+      },
+      showPanel: (id) => {
+        if (dock.current !== null) {
+          showPanel(dock.current, id);
         }
       },
     }),

@@ -24,6 +24,7 @@
 )]
 
 mod analyzer;
+mod assistant;
 mod catalog;
 mod certs;
 mod connect;
@@ -151,6 +152,9 @@ const TESTS: &[(&str, Test)] = &[
     ("a_schemas_analysis_finds_what_its_rules_say", analyzer::a_schemas_analysis_finds_what_its_rules_say),
     ("a_what_if_index_changes_the_plan", analyzer::a_what_if_index_changes_the_plan),
     ("the_built_in_reports_run", analyzer::the_built_in_reports_run),
+    ("the_assistants_tools_run_read_only", assistant::the_assistants_tools_run_read_only),
+    ("a_turn_of_the_mock_model_calls_the_server", assistant::a_turn_of_the_mock_model_calls_the_server),
+    ("a_conversation_runs_on_its_own_thread", assistant::a_conversation_runs_on_its_own_thread),
     ("a_running_statement_is_cancelled", session::a_running_statement_is_cancelled),
     ("the_transaction_is_followed", session::the_transaction_is_followed),
     ("a_lost_connection_is_told_and_reconnected", session::a_lost_connection_is_told_and_reconnected),
