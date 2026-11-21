@@ -163,6 +163,7 @@ const TESTS: &[(&str, Test)] = &[
     ("administration_acts_run", admin::administration_acts_run),
     ("a_running_statement_is_cancelled", session::a_running_statement_is_cancelled),
     ("a_query_failed_before_its_rows_is_its_error_alone", session::a_query_failed_before_its_rows_is_its_error_alone),
+    ("a_file_runs_and_is_cancelled_on_a_server", session::a_file_runs_and_is_cancelled_on_a_server),
     ("the_transaction_is_followed", session::the_transaction_is_followed),
     ("a_lost_connection_is_told_and_reconnected", session::a_lost_connection_is_told_and_reconnected),
     ("each_connection_has_a_named_worker", session::each_connection_has_a_named_worker),

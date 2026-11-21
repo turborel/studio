@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-choose-sql-file"
+description = "Enables the choose_sql_file command without any pre-configured scope."
+commands.allow = ["choose_sql_file"]
+
+[[permission]]
+identifier = "deny-choose-sql-file"
+description = "Denies the choose_sql_file command without any pre-configured scope."
+commands.deny = ["choose_sql_file"]

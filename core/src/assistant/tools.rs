@@ -100,7 +100,8 @@ pub fn text<'a>(input: &'a Map<String, Value>, name: &str) -> &'a str {
 mod tests {
     use super::{checked_input, text, tools};
 
-    /// [DESIGN] D55: the tools are listed in a fixed order, each strict.
+    /// [DESIGN] D55 D62: the tools are listed in a fixed order, each strict;
+    /// none runs a `.sql` file or imports one, which the user alone starts.
     #[test]
     fn the_tools_are_fixed_and_strict() {
         let names: Vec<&str> = tools().iter().map(|t| t.name).collect();

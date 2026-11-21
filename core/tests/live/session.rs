@@ -129,3 +129,40 @@ pub fn ping_answers(live: &Live) {
     manager.close(id).unwrap();
     assert_eq!(manager.ping(id).unwrap_err().sqlstate, "TB910");
 }
+
+/// [DESIGN] D62 [CLIENT Running statements]: a `.sql` file runs on a
+/// server as on an embedded database: in one transaction, rolled back
+/// where it stops, its failure logged by its line; and cancelled through
+/// the canceller, the statement running stopped and none run after it.
+pub fn a_file_runs_and_is_cancelled_on_a_server(live: &Live) {
+    use turborel_studio_core::connections::manager::sqlfile::{Ending, FileAnswer, FileOptions, Transactions};
+    let (manager, _) = live.manager();
+    let id = live.owner(&manager);
+    manager.set_autocommit(id, true).unwrap();
+    crate::run(&manager, id, "CREATE TABLE FILED (N INTEGER PRIMARY KEY)").unwrap();
+    let dir = live.server.dir.join("files");
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join("load.sql");
+    std::fs::write(&path, "INSERT INTO FILED VALUES (1);\nINSERT INTO FILED VALUES (1);\nINSERT INTO FILED VALUES (2);\n").unwrap();
+    let whole = FileOptions { transactions: Transactions::Whole, stop_on_error: true };
+    let FileAnswer::Ran { report } = manager.run_file(id, &path, whole, true).unwrap() else { panic!("asked") };
+    assert_eq!((report.ending, report.rolled_back, report.log[0].line), (Ending::Stopped, true, 2));
+    assert_eq!(column(&manager, id, "SELECT COUNT(*) FROM FILED"), [Some("0".to_owned())]);
+    let slow = dir.join("slow.sql");
+    std::fs::write(&slow, format!("INSERT INTO FILED VALUES (1);\n{LONG};\n{LONG};\nINSERT INTO FILED VALUES (2);\n")).unwrap();
+    let report = std::thread::scope(|scope| {
+        let running = scope.spawn(|| manager.run_file(id, &slow, whole, true));
+        let mut tries = 0;
+        while !running.is_finished() && tries < CANCEL_TRIES {
+            let _ = manager.cancel_file(id); // None runs until the run begins.
+            tries += 1;
+            std::thread::sleep(std::time::Duration::from_millis(50));
+        }
+        running.join().unwrap().unwrap()
+    });
+    let FileAnswer::Ran { report } = report else { panic!("asked") };
+    assert_eq!(report.ending, Ending::Cancelled, "{report:?}");
+    assert_eq!(column(&manager, id, "SELECT COUNT(*) FROM FILED"), [Some("0".to_owned())]);
+    crate::run(&manager, id, "DROP TABLE FILED CASCADE").unwrap();
+    manager.close(id).unwrap();
+}

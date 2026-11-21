@@ -394,3 +394,16 @@ fn files_not_chosen_are_refused() {
     let request = serde_json::json!({"connection": 7, "sql": "SELECT 1", "kind": "csv", "name": "a/b"});
     assert_eq!(refusal(&window, "export_query", serde_json::json!({"request": request}))["sqlstate"], "TB910");
 }
+
+/// [DESIGN] D62 [RULE] R-SEC-5: Run SQL File reads only a file the
+/// platform's dialog chose, and cancels only a file that runs.
+#[test]
+fn sql_files_not_chosen_are_refused() {
+    let (_app, window) = window();
+    let elsewhere = std::env::temp_dir().join("studio-not-chosen.sql").display().to_string();
+    assert_eq!(refusal(&window, "scan_sql_file", serde_json::json!({"connection": 7, "path": elsewhere}))["sqlstate"], "TB910");
+    let options = serde_json::json!({"transactions": {"kind": "every", "every": 100}, "stopOnError": true});
+    let run = serde_json::json!({"connection": 7, "path": elsewhere, "options": options, "confirmed": true});
+    assert_eq!(refusal(&window, "run_sql_file", run)["sqlstate"], "TB910");
+    assert_eq!(refusal(&window, "cancel_sql_file", serde_json::json!({"connection": 7}))["sqlstate"], "TB910");
+}

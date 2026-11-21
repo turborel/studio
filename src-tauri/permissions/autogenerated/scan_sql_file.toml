@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-scan-sql-file"
+description = "Enables the scan_sql_file command without any pre-configured scope."
+commands.allow = ["scan_sql_file"]
+
+[[permission]]
+identifier = "deny-scan-sql-file"
+description = "Denies the scan_sql_file command without any pre-configured scope."
+commands.deny = ["scan_sql_file"]

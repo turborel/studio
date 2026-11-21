@@ -105,6 +105,13 @@ export function openMenuOf(store: Store, connection: OpenConnection): MenuItem[]
       icon: "newWorksheet",
       run: () => newWorksheetOn(store, connection.id, null).then(() => undefined),
     },
+    {
+      label: "Run SQL File…",
+      icon: "runScript",
+      run: () => {
+        show(store, { kind: "data", task: { kind: "runSqlFile", connection: connection.id } });
+      },
+    },
     { label: "Refresh Catalog", icon: "reconnect", run: () => loadSchemas(store, connection.id) },
     {
       label: "Analyze Schema…",

@@ -16,6 +16,7 @@ are bound.
 | New In-Memory Database | File | | |
 | New Worksheet | File | Cmd+N | Ctrl+N |
 | Open File… | File | Cmd+O | Ctrl+O |
+| Run SQL File… | File |  |  |
 | New Model | File | | |
 | Open Model… | File | | |
 | Reopen Closed Worksheet | File | Cmd+Shift+T | Ctrl+Shift+T |

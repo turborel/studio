@@ -375,6 +375,8 @@ export function told(store: Store, event: StudioEvent): void {
     assistantAsked(store, event.conversation, event.id, event.question);
   } else if (event.kind === "quitAsked") {
     void quitAsked(store);
+  } else if (event.kind === "sqlFile") {
+    // The dialog of the file's run listens for its progress itself.
   } else if (event.kind === "lost") {
     store.update((now) => ({
       ...now,

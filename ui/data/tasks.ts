@@ -1,7 +1,8 @@
 /**
- * The tasks of data and definitions (RULES.md D42 to D45), each a dialog
- * of a table or schema of an open connection: its rows edited, imported,
- * exported or compared; a table made or altered.
+ * The tasks of data and definitions (RULES.md D42 to D45, D62), each a
+ * dialog of a table, schema or open connection: its rows edited,
+ * imported, exported or compared; a table made or altered; a `.sql` file
+ * run on it.
  */
 
 /** A table of an open connection. */
@@ -20,7 +21,8 @@ export type DataTask =
   | ({ readonly kind: "alterTable" } & TableOf)
   | { readonly kind: "createTable"; readonly connection: number; readonly schema: string }
   | { readonly kind: "generate"; readonly connection: number; readonly schema: string }
-  | { readonly kind: "compareSchemas"; readonly connection: number; readonly schema: string };
+  | { readonly kind: "compareSchemas"; readonly connection: number; readonly schema: string }
+  | { readonly kind: "runSqlFile"; readonly connection: number };
 
 /** A name as a delimited identifier. */
 export function quoted(name: string): string {

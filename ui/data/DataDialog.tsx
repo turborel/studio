@@ -1,11 +1,12 @@
 /**
- * The dialog of a task of data and definitions (RULES.md D42 to D45), by
+ * The dialog of a task of data and definitions (RULES.md D42 to D45, D62), by
  * the task's kind.
  */
 import { EditRowsDialog, ExportDialog } from "./TableTasks";
 import { CompareDialog } from "./CompareDialog";
 import { GenerateDialog } from "./GenerateDialog";
 import { ImportDialog } from "./ImportDialog";
+import { RunSqlFileDialog } from "./RunSqlFileDialog";
 import { SchemaCompareDialog } from "../model/SchemaCompare";
 import { AlterTableDialog, CreateTableDialog } from "./TableDialogs";
 import type { DataTask } from "./tasks";
@@ -29,5 +30,7 @@ export function DataDialog({ task }: { readonly task: DataTask }) {
       return <GenerateDialog connection={task.connection} schema={task.schema} />;
     case "compareSchemas":
       return <SchemaCompareDialog connection={task.connection} schema={task.schema} />;
+    case "runSqlFile":
+      return <RunSqlFileDialog connection={task.connection} />;
   }
 }

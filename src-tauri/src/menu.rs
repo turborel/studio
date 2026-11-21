@@ -23,6 +23,7 @@ pub const MENUS: [(&str, &[Item]); 7] = [
             Some(("database.newInMemory", "New In-Memory Database")),
             Some(("worksheet.new", "New Worksheet")),
             Some(("file.open", "Open File…")),
+            Some(("file.runSql", "Run SQL File…")),
             Some(("model.new", "New Model")),
             Some(("model.open", "Open Model…")),
             Some(("worksheet.save", "Save")),

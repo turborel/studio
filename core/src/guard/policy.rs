@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 use crate::error::{Result, StudioError};
 use crate::guard::classify::{Class, Classified, classify_script};
 use crate::saved::Environment;
+use crate::worksheet::sqlfile::{Listed, Scan};
 
 /// The SQLSTATE a read-only connection refuses a write with, as the
 /// server refuses one in a READ ONLY transaction.
@@ -78,6 +79,46 @@ impl Guards {
         let class = crate::guard::classify::strictest(statements);
         let destroys: Vec<String> = statements.iter().filter_map(|s| s.destroys.clone()).collect();
         let unclassified: Vec<String> = statements.iter().filter(|s| s.class == Class::Unclassified).map(|s| s.text.clone()).collect();
+        let production = self.environment == Environment::Production && class.writes();
+        let asks = production || !destroys.is_empty() || !unclassified.is_empty();
+        Ok(asks.then_some(Confirm { class, destroys, unclassified, production }))
+    }
+
+    /// What the guards make of a `.sql` file, by its scan (RULES.md D62):
+    /// as `judge` of its statements, each destructive one and each Studio
+    /// cannot classify told by its line, so the user is asked once of the
+    /// whole file.
+    ///
+    /// # Errors
+    ///
+    /// As `judge`'s.
+    pub fn judge_scan(&self, scan: &Scan) -> Result<Option<Confirm>> {
+        if let Some(connects) = &scan.connects {
+            return Err(StudioError::misuse(format!(
+                "[DESIGN] a connection of Studio's is bound to its own session: the file's line {} is {}",
+                connects.line, connects.what
+            )));
+        }
+        if self.read_only
+            && let Some(refused) = scan.first_write.as_ref().or(scan.read_write.as_ref())
+        {
+            return Err(StudioError::new(
+                READ_ONLY_SQLCODE,
+                READ_ONLY_REFUSAL,
+                format!("[DESIGN] the connection is read-only, and the file's line {} may write: {}", refused.line, refused.what),
+            ));
+        }
+        let class = scan.strictest();
+        let lines = |list: &[Listed], all: u64| {
+            let mut told: Vec<String> = list.iter().map(|l| format!("line {}: {}", l.line, l.what)).collect();
+            let more = all.saturating_sub(u64::try_from(list.len()).unwrap_or(u64::MAX));
+            if more > 0 {
+                told.push(format!("and {more} more"));
+            }
+            told
+        };
+        let destroys = lines(&scan.destroys, scan.destroys_count);
+        let unclassified = lines(&scan.unclassified, scan.unclassified_count);
         let production = self.environment == Environment::Production && class.writes();
         let asks = production || !destroys.is_empty() || !unclassified.is_empty();
         Ok(asks.then_some(Confirm { class, destroys, unclassified, production }))

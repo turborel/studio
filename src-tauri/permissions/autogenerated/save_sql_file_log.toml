@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-save-sql-file-log"
+description = "Enables the save_sql_file_log command without any pre-configured scope."
+commands.allow = ["save_sql_file_log"]
+
+[[permission]]
+identifier = "deny-save-sql-file-log"
+description = "Denies the save_sql_file_log command without any pre-configured scope."
+commands.deny = ["save_sql_file_log"]

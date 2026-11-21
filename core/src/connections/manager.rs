@@ -118,6 +118,8 @@ pub struct ConnectionManager {
     spool: PathBuf,
     events: Arc<dyn EventSink>,
     key_cache: turborel_client::scram::KeyCache,
+    /// What stops the file each connection runs, if one does (RULES.md D62).
+    files: Mutex<BTreeMap<ConnectionId, Arc<std::sync::atomic::AtomicBool>>>,
 }
 
 impl std::fmt::Debug for ConnectionManager {
@@ -141,7 +143,13 @@ impl ConnectionManager {
             spool,
             events,
             key_cache: turborel_client::scram::KeyCache::new(),
+            files: Mutex::new(BTreeMap::new()),
         }
+    }
+
+    /// What stops the file each connection runs, held.
+    fn files(&self) -> MutexGuard<'_, BTreeMap<ConnectionId, Arc<std::sync::atomic::AtomicBool>>> {
+        self.files.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
     }
 
     /// The handles, held.
@@ -538,3 +546,4 @@ fn unexpected() -> StudioError {
 
 mod embedded;
 mod ending;
+pub mod sqlfile;

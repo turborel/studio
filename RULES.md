@@ -101,6 +101,7 @@ Each is told in full in [§7](#7-the-decisions).
 | D59 | Embedded databases: a second backend behind the connection manager, opened apart from made, never against a lock |
 | D60 | The manual's images: made by the checks tool of the real window and a demo database, never by hand |
 | D61 | Explain Analyze of a data change: said to change data, rolled back to a savepoint unless kept |
+| D62 | Run SQL File: a file streamed, scanned and judged whole, run by its options, never by the assistant |
 
 ---
 
@@ -1546,6 +1547,49 @@ The review checklist:
   and Keep Changes the first choice.
 - *Why:* EXPLAIN ANALYZE of a change is the change; a person asking for
   its plan seldom means to keep it, and must not be surprised by it.
+
+#### D62. Run SQL File: a file streamed, scanned and judged whole, run by its options, never by the assistant
+
+- **What:** **File > Run SQL File…**, or a connection's menu, runs a
+  `.sql` file of any size on a server's connection or an embedded
+  database without loading it into the editor.
+- **Read:** 64 KiB at a time (`core/src/worksheet/sqlfile.rs`); UTF-8,
+  with its byte order mark or without, and UTF-16 of either byte order
+  with its mark; another encoding, or UTF-16 with no mark, refused,
+  saying how to save it. Split by turborel-client's splitter, as a
+  worksheet's script is, each statement with the line its code begins
+  on. Memory holds a chunk and the statement under way; a statement
+  longer than 16 MiB, the most Studio sends, is refused by its line.
+- **Scanned first:** each statement classified (D29), counted by class,
+  each destructive one and each Studio cannot classify listed by its
+  line (the first 200 of each, the rest counted). The guards judge the
+  scan (`Guards::judge_scan`): a read-only connection refuses a file
+  that may write, naming the line; a production one asks once of the
+  whole file; a destructive or unclassified statement asks once; CONNECT
+  is refused. The run scans again before it runs, so it runs what was
+  judged.
+- **Options:** one transaction for the whole file, a commit every N
+  statements (1000 at first), or autocommit; stop at the first failure,
+  what ran since the last commit rolled back, or go on, a statement that
+  fails undone alone (Turborel's `user/10-errors.md`), logging its
+  statement's number, line, SQLSTATE, SQLCODE and message (the first
+  10,000 kept, the rest counted). A failure of class 40, which rolls the
+  transaction back, stops a run that is not autocommit. A file runs only
+  when no transaction of the session is open; the session's autocommit
+  is as it was after.
+- **Progress and cancel:** the event `sqlFile` tells the statements run,
+  the bytes read and the failures, at most every 250 ms and at the end.
+  Cancel stops the statement running through the canceller (D24) and
+  runs none after it; the file's transaction is rolled back.
+- **At the end:** statements run, rows affected, failures and time, and
+  the log, saved where the platform's dialog chooses, beside the file at
+  first. A query's rows are not shown; its result is closed.
+- **Never the assistant:** no tool of the assistant's (D55) runs or
+  imports a file; the command takes a file the user chose this session
+  (R-SEC-5).
+- *Why:* a dump or a migration of many megabytes does not belong in an
+  editor, and a person loading one needs to know, before it runs, what
+  it will do, and after, what it did.
 
 ---
 

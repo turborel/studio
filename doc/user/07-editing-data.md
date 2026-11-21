@@ -6,7 +6,8 @@ A table's rows are edited in a worksheet's results, each change staged
 until it is applied, all of them then in one transaction. A file's rows
 are imported into a table, a table's rows exported to a file, and two
 tables' rows compared. A table is made, or altered, by a dialog that
-writes its DDL as it is filled in. A base table's details, in the
+writes its DDL as it is filled in. A `.sql` file of any size is run on
+a connection without the editor. A base table's details, in the
 explorer, offer each of its tasks, and a schema's details **Create
 Table…** and **Generate Script…**:
 
@@ -117,6 +118,66 @@ as it commits its batches; one that stops says where, why, and how many
 rows were committed and rolled back.
 
 Studio reads only the file chosen in the dialog.
+
+## Running a SQL file
+
+**File > Run SQL File…**, or **Run SQL File…** in an open connection's
+menu in the explorer, runs a `.sql` file on the connection, a server's
+or an embedded database's, without opening it in the editor, so a file
+of any size runs. **Choose File…** opens the platform's dialog, and
+Studio reads the file through once before it runs anything, to say what
+it holds:
+
+```
+3 statements in 2,048 bytes, UTF-8.
+Changes rows: 2 statements
+Changes definitions: 1 statement
+Destroys: 1 statement
+Line 7: DELETE of every row of T, with no WHERE
+```
+
+Its statements are split as a worksheet's script is, each by the line
+its code begins on, counted by what they do, and each statement that
+destroys listed, the first 200, the rest counted. A file of UTF-8, or of
+UTF-16 with a byte order mark, is read; one of another encoding is
+refused, saying so. A statement longer than 16 MiB is refused by its
+line.
+
+The choices of how it runs:
+
+- **One transaction for the whole file**, committed at its end; **Commit
+  every … statements**, 1000 at first; or **Autocommit**, each statement
+  its own.
+- **Stop**, at the first statement that fails, rolling back what ran
+  since the last commit; or **Go on**, logging the statement that fails
+  by its line and SQLSTATE. A statement that fails is undone alone, so
+  the rest of its transaction stands; a failure that rolls the
+  transaction back, of SQLSTATE class 40, stops a run that is not
+  autocommit all the same.
+
+**Run** asks the connection's guards of the whole file at once, as of a
+script ([Worksheets](05-worksheets.md#running-statements)): a read-only
+connection refuses a file that may write, naming its line; a production
+connection asks before a file that may write; a statement that destroys,
+or one Studio cannot classify, asks first on any connection. A file runs
+only when no transaction of the session is open, and leaves autocommit
+as it was. The assistant never runs a file.
+
+While it runs, the dialog shows the statements run, the bytes read of
+the file's, and the failures; **Cancel Run** cancels the statement
+running and runs none after it, rolling back what ran since the last
+commit. At the end it says how the run ended, the statements run, the
+rows affected, the failures and the time, and lists each failure kept,
+the first 10,000:
+
+```
+Finished: 3 statements run, 5 rows affected, 1 failed, in 1.5 s.
+Line 4: 23000 (-201): duplicate key
+```
+
+**Save Log…** saves that log as text where the platform's dialog
+chooses, beside the file at first. A query's rows are not shown: run it
+in a worksheet to see them.
 
 ## Exporting
 

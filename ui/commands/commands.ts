@@ -298,6 +298,17 @@ export const COMMANDS: readonly Command[] = [
     run: ({ store }) => openFile(store),
   },
   {
+    id: "file.runSql",
+    icon: "runScript",
+    title: "Run SQL File…",
+    category: "File",
+    enabled: connected,
+    // Enabled only while a connection is active.
+    run: ({ store }) => {
+      show(store, { kind: "data", task: { kind: "runSqlFile", connection: store.current().active ?? 0 } });
+    },
+  },
+  {
     id: "model.new",
     icon: "graph",
     title: "New Model",

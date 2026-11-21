@@ -27,6 +27,7 @@
 )]
 
 mod child;
+mod files;
 mod opening;
 mod requests;
 
@@ -126,6 +127,10 @@ const TESTS: &[(&str, Test)] = &[
     ("refusals_are_told_and_an_open_transaction_undone", requests::refusals_are_told_and_an_open_transaction_undone),
     ("an_analyzed_change_is_rolled_back", requests::an_analyzed_change_is_rolled_back),
     ("a_38_digit_number_round_trips", requests::a_38_digit_number_round_trips),
+    ("a_file_runs_by_its_transactions_and_error_policy", files::a_file_runs_by_its_transactions_and_error_policy),
+    ("a_file_leaves_autocommit_as_it_was", files::a_file_leaves_autocommit_as_it_was),
+    ("a_file_is_judged_whole_by_the_guards", files::a_file_is_judged_whole_by_the_guards),
+    ("a_file_tells_its_progress_and_is_cancelled", files::a_file_tells_its_progress_and_is_cancelled),
 ];
 
 fn main() -> ExitCode {

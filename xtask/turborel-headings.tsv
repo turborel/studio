@@ -70,3 +70,4 @@ sql/statements/grant.md	SYNOPSIS
 sql/statements/prepare.md	DESCRIPTION
 sql/statements/select.md	SYNOPSIS
 sql/statements/set-transaction.md	DESCRIPTION
+user/10-errors.md	SQLCODE and SQLSTATE

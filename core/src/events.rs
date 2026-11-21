@@ -36,6 +36,14 @@ pub enum Event {
         /// Its session now.
         session: SessionState,
     },
+    /// How far a `.sql` file run on a connection has come (RULES.md D62).
+    #[serde(rename_all = "camelCase")]
+    SqlFile {
+        /// The connection.
+        connection: ConnectionId,
+        /// How far it has come.
+        progress: crate::connections::manager::sqlfile::FileProgress,
+    },
     /// A connection was lost: it takes no more until it is reconnected.
     #[serde(rename_all = "camelCase")]
     Lost {

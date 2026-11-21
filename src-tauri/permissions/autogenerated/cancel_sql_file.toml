@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-cancel-sql-file"
+description = "Enables the cancel_sql_file command without any pre-configured scope."
+commands.allow = ["cancel_sql_file"]
+
+[[permission]]
+identifier = "deny-cancel-sql-file"
+description = "Denies the cancel_sql_file command without any pre-configured scope."
+commands.deny = ["cancel_sql_file"]
