@@ -98,13 +98,15 @@ each as the session's user may see it.
 | S-VIEW-14 | USERS | users | done |
 | S-VIEW-15 | APPLICABLE_ROLES, ENABLED_ROLES, ADMINISTRABLE_ROLE_AUTHORIZATIONS | roles and their grants | done |
 | S-VIEW-16 | TABLE_PRIVILEGES, COLUMN_PRIVILEGES, USAGE_PRIVILEGES, ROUTINE_PRIVILEGES | privileges | done |
-| S-VIEW-17 | SERVER, CONNECTIONS, CONNECTION_ATTRIBUTES | the server and session monitor | done |
+| S-VIEW-17 | SERVER, CONNECTIONS, CONNECTION_ATTRIBUTES | the server and session monitor: each session's statement, its transaction, what it waits on and who holds it ([DOC operator/11-monitoring.md What each session does]) | done |
 | S-VIEW-18 | JOBS, FILES, FILE_FORMATS, MEMORY_RESERVATIONS, BACKUPS, ARCHIVED_SEGMENTS, RESTORE_POINTS | the server's work, files, memory, backups and restore points | done |
 | S-VIEW-19 | SETTINGS | session and database settings, each set or given its default | done |
 | S-VIEW-20 | REPLICAS | replication's status; a node of no replica group, which has not the view, said so | done |
 | S-VIEW-21 | PROPERTY_GRAPHS, PG_ELEMENT_TABLES, PG_LABELS, PG_EDGE_ENDPOINTS | property graphs, drawn in a model's diagram | done |
 | S-VIEW-22 | PARTITIONED_TABLES, PARTITIONS, PARTITION_INDEXES | partitions and their indexes | done |
 | S-VIEW-23 | USER_DEFINED_TYPES, ATTRIBUTES, DIRECT_SUPERTYPES, METHOD_SPECIFICATIONS, METHOD_SPECIFICATION_PARAMETERS | user-defined types, with their supertypes, references and methods | done |
+| S-VIEW-24 | STATEMENT_STATISTICS | the monitor's statements and the analyzer's top statements by total time, each query's plan opened ([DOC operator/11-monitoring.md Statement statistics]) | done |
+| S-VIEW-25 | TABLE_STATISTICS, INDEX_STATISTICS | the monitor's tables and indexes, the analyzer's unused indexes and sizes, and the reports of sizes ([DOC operator/11-monitoring.md Table and index statistics]) | done |
 
 ## turborel-client
 

@@ -10,6 +10,50 @@ afterEach(() => {
 });
 
 describe("the monitor at its edges", () => {
+  it("shows what each session runs and waits on, ends a holder, and shows the statistics [DESIGN] D57", async () => {
+    const asked = catalogBackend({
+      admin_view: (args) =>
+        args["view"] === "connections"
+          ? {
+              columns: [
+                "ID",
+                "USER_NAME",
+                "PEER",
+                "SECURE",
+                "STATE",
+                "APPLICATION",
+                "STATEMENT_TEXT",
+                "STATEMENT_BEGAN",
+                "TRANSACTION_BEGAN",
+                "WAITING_ON",
+                "LOCK_NAME",
+                "LOCK_HOLDER",
+              ],
+              rows: [
+                ["7", "ANN", "local", "YES", "RUNNING", null, "UPDATE T SET K = 1", null, null, "LOCK", "ANN.T", "8"],
+                ["8", "BOB", "local", "YES", "IDLE", null, null, null, null, null, null, null],
+              ],
+              absent: false,
+            }
+          : { columns: ["X"], rows: [[String(args["view"])]], absent: false },
+      admin_act: () => ({ kind: "ran", answer: null }),
+    });
+    const store = await opened();
+    within(store, <MonitorPanel />);
+    await settle();
+    expect(screen.getByRole("list", { name: "Waits" }).textContent).toContain("held by session 8");
+    fireEvent.click(screen.getByRole("button", { name: "End Connection 8" }));
+    await settle();
+    expect(asked.some((a) => a.command === "admin_act" && JSON.stringify(a.args).includes("endConnection"))).toBe(true);
+    fireEvent.click(screen.getByRole("tab", { name: "Statements" }));
+    await settle();
+    expect(screen.getByText("statementStatistics")).toBeTruthy();
+    fireEvent.click(screen.getByRole("tab", { name: "Tables and Indexes" }));
+    await settle();
+    expect(screen.getByText("tableStatistics")).toBeTruthy();
+    expect(screen.getByText("indexStatistics")).toBeTruthy();
+  });
+
   it("tells a server's views absent of an embedded database, and lists its plug-ins [DESIGN] D59", async () => {
     catalogBackend({
       admin_view: (args) => ({ columns: ["ID"], rows: [], absent: args["view"] !== "extensions" }),

@@ -1,8 +1,10 @@
 /**
  * The monitor (RULES.md D57): the active connection's server and
  * database, read of Turborel's own views and read again as often as
- * chosen: its sessions, each cancelled or ended; the server's counters,
- * drawn over the time the panel is open; the jobs; the files; the
+ * chosen: its sessions, the statement each runs and what it waits on, each
+ * cancelled or ended, a session another waits on too; the statements run,
+ * the costliest first; the tables' and indexes' sizes and use; the
+ * server's counters, drawn over the time the panel is open; the jobs; the files; the
  * memory's reservations; the backups, archived segments and restore
  * points; the replica group; the settings, each set for the session or
  * the database, or given its default; and the plug-ins, an embedded
@@ -18,6 +20,7 @@ import { isStudioError } from "../state/actions";
 import { useStore, useStudio } from "../state/store";
 import { runAct } from "./admin";
 import { PlugIns } from "./PlugIns";
+import { Waits } from "./Waits";
 import "./admin.css";
 
 /** The monitor's tabs, each with its name. */
@@ -29,6 +32,8 @@ export const TABS = [
   ["memory", "Memory"],
   ["backups", "Backups"],
   ["replication", "Replication"],
+  ["statements", "Statements"],
+  ["tables", "Tables and Indexes"],
   ["settings", "Settings"],
   ["plugIns", "Plug-ins"],
 ] as const;
@@ -178,8 +183,15 @@ function Sessions({
   return (
     <>
       {told !== "" && <p role="status">{told}</p>}
+      {typeof sessions === "object" && sessions !== null && !sessions.absent && (
+        <Waits
+          sessions={sessions}
+          end={(id) => {
+            act("endConnection", id);
+          }}
+        />
+      )}
       <RowsTable read={sessions} label="Sessions" acts={(row) => <SessionActs row={row} onAct={act} />} />
-      <p className="hint">The server tells each session&apos;s state, not the statement it runs.</p>
       <h4>Attributes of the clients</h4>
       <RowsTable read={attributes} label="Attributes" />
     </>
@@ -397,6 +409,12 @@ function Settings({
   );
 }
 
+/** The views of the tables' tab. */
+const TABLE_VIEWS: readonly (readonly [ViewName, string])[] = [
+  ["tableStatistics", "Tables"],
+  ["indexStatistics", "Indexes"],
+];
+
 /** The views of the backups' tab. */
 const BACKUP_VIEWS: readonly (readonly [ViewName, string])[] = [
   ["backups", "Backups"],
@@ -440,6 +458,10 @@ function TabContent({
       return <Views connection={connection} tick={tick} views={BACKUP_VIEWS} />;
     case "replication":
       return <Views connection={connection} tick={tick} views={[["replicas", "Replica group"]]} />;
+    case "statements":
+      return <Views connection={connection} tick={tick} views={[["statementStatistics", "Statements"]]} />;
+    case "tables":
+      return <Views connection={connection} tick={tick} views={TABLE_VIEWS} />;
     case "settings":
       return <Settings connection={connection} tick={tick} onAct={onAct} />;
     case "plugIns":

@@ -49,13 +49,21 @@ pub enum View {
     Settings,
     /// The extensions created, and their plug-ins' processes and calls.
     Extensions,
+    /// The statements run since the database opened, the costliest first.
+    StatementStatistics,
+    /// Each base table's engine, rows, bytes and last change.
+    TableStatistics,
+    /// Each index's method, searches, entries, height and bytes.
+    IndexStatistics,
 }
 
 impl View {
     /// The view's query: its columns, in order, of every row.
     pub fn query(self) -> &'static str {
         match self {
-            View::Connections => "SELECT ID, USER_NAME, PEER, SECURE, STATE, APPLICATION FROM INFORMATION_SCHEMA.CONNECTIONS ORDER BY ID",
+            View::Connections => {
+                "SELECT ID, USER_NAME, PEER, SECURE, STATE, APPLICATION, STATEMENT_TEXT, STATEMENT_BEGAN, TRANSACTION_BEGAN, WAITING_ON, LOCK_NAME, LOCK_HOLDER FROM INFORMATION_SCHEMA.CONNECTIONS ORDER BY ID"
+            }
             View::ConnectionAttributes => {
                 "SELECT CONNECTION_ID, ATTRIBUTE_NAME, ATTRIBUTE_VALUE FROM INFORMATION_SCHEMA.CONNECTION_ATTRIBUTES ORDER BY CONNECTION_ID, ATTRIBUTE_NAME"
             }
@@ -78,6 +86,15 @@ impl View {
             }
             View::Settings => {
                 "SELECT SETTING_NAME, SETTING_VALUE, VALUE_SOURCE, DEFAULT_VALUE, VALUE_KIND, IS_SESSION_SETTABLE, TAKES_EFFECT, DESCRIPTION, STARTED_VALUE, IS_PENDING FROM INFORMATION_SCHEMA.SETTINGS ORDER BY SETTING_NAME"
+            }
+            View::StatementStatistics => {
+                "SELECT STATEMENT_TEXT, USER_NAME, CALLS, TOTAL_MICROS, MEAN_MICROS, MAX_MICROS, ROW_COUNT, ROWS_READ, BYTES_SPILLED, LAST_RUN, STATEMENT_ID FROM INFORMATION_SCHEMA.STATEMENT_STATISTICS ORDER BY TOTAL_MICROS DESC, STATEMENT_ID"
+            }
+            View::TableStatistics => {
+                "SELECT TABLE_SCHEMA, TABLE_NAME, ENGINE_NAME, ROW_COUNT, BYTES, BYTES_ESTIMATED, LAST_CHANGED, LAST_COMPACTED FROM INFORMATION_SCHEMA.TABLE_STATISTICS ORDER BY TABLE_SCHEMA, TABLE_NAME"
+            }
+            View::IndexStatistics => {
+                "SELECT TABLE_SCHEMA, TABLE_NAME, INDEX_NAME, METHOD_NAME, SEARCHES, ENTRIES_READ, ENTRY_COUNT, HEIGHT, BYTES FROM INFORMATION_SCHEMA.INDEX_STATISTICS ORDER BY TABLE_SCHEMA, TABLE_NAME, INDEX_NAME"
             }
             View::Extensions => {
                 "SELECT EXTENSION_NAME, VERSION, DIRECTORY, SIGNER, PROCESSES_RUNNING, PROCESSES_STARTED, PROCESSES_FAILED, CALLS, CALLS_FAILED FROM INFORMATION_SCHEMA.EXTENSIONS ORDER BY EXTENSION_NAME"

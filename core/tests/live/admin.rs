@@ -24,6 +24,10 @@ pub fn the_monitors_views_are_read(live: &Live) {
         View::RestorePoints,
         View::Replicas,
         View::Settings,
+        View::Extensions,
+        View::StatementStatistics,
+        View::TableStatistics,
+        View::IndexStatistics,
     ] {
         let rows = read(&manager, id, view).unwrap_or_else(|e| panic!("{view:?}: {}", e.message));
         assert!(rows.rows.iter().all(|r| r.len() == rows.columns.len()), "{view:?}");
@@ -33,6 +37,11 @@ pub fn the_monitors_views_are_read(live: &Live) {
     assert_eq!(read(&manager, id, View::Server).unwrap().rows.len(), 1);
     assert!(read(&manager, id, View::Replicas).unwrap().absent, "the tests' server is in no replica group");
     assert!(read(&manager, id, View::Jobs).unwrap().rows.iter().any(|r| r[0].as_deref() == Some("turborel-checkpoint")));
+    let mine = connections.rows.iter().find(|r| r[4].as_deref() == Some("RUNNING")).expect("the reading connection runs");
+    assert!(mine[6].as_deref().is_some_and(|t| t.contains("INFORMATION_SCHEMA.CONNECTIONS")), "{mine:?}");
+    crate::run(&manager, id, "VALUES (1)").unwrap();
+    let statements = read(&manager, id, View::StatementStatistics).unwrap();
+    assert!(statements.rows.iter().any(|r| r[0].as_deref() == Some("VALUES (?)")), "{:?}", statements.rows);
     manager.close(id).unwrap();
 }
 

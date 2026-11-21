@@ -84,7 +84,8 @@ fn what_does_not_fit_is_refused() {
 /// each view's columns are those its query reads.
 #[test]
 fn each_view_names_its_columns() {
-    assert_eq!(View::Connections.columns(), ["ID", "USER_NAME", "PEER", "SECURE", "STATE", "APPLICATION"]);
+    assert_eq!(&View::Connections.columns()[..6], ["ID", "USER_NAME", "PEER", "SECURE", "STATE", "APPLICATION"]);
+    assert_eq!(&View::Connections.columns()[9..], ["WAITING_ON", "LOCK_NAME", "LOCK_HOLDER"]);
     assert_eq!(View::Settings.columns().len(), 10);
     for view in [
         View::ConnectionAttributes,
@@ -98,6 +99,9 @@ fn each_view_names_its_columns() {
         View::RestorePoints,
         View::Replicas,
         View::Extensions,
+        View::StatementStatistics,
+        View::TableStatistics,
+        View::IndexStatistics,
     ] {
         assert!(view.query().starts_with("SELECT ") && !view.columns().is_empty(), "{view:?}");
     }

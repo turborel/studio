@@ -11,9 +11,31 @@ through the connection's guards, as any statement runs
 ([Connections](03-connections.md)): a statement that destroys asks
 first, and a production connection asks before any write.
 
-The server shows the rows of these views to the database's owner
-alone; to another user, the monitor shows none, and says so
+The server shows the rows of most of these views to the database's
+owner alone; to another user, the monitor shows none, and says so
 ([The Information Schema](https://github.com/turborel/turborel/blob/main/doc/sql/07-information-schema.md)).
+The sessions, the statements and the tables' and indexes' statistics it
+shows as the next section says.
+
+## Who sees the sessions and statements
+
+Statement texts carry the values written in them, so the server narrows
+who sees them
+([Monitoring](https://github.com/turborel/turborel/blob/main/doc/operator/11-monitoring.md)).
+The database's owner sees every session, statement and table. So does a
+user granted the role MONITOR, if the owner made that role:
+
+```sql
+CREATE ROLE MONITOR;
+GRANT MONITOR TO BOB;
+```
+
+**Users and Roles > New Role…** makes it, and **Grant a Role…** grants
+it ([Users, roles and privileges](#users-roles-and-privileges)); REVOKE
+MONITOR FROM BOB takes it back. A role named MONITOR that another user
+made gives nothing. Any other user sees their own sessions, every
+statement with other users' texts empty, and the tables they hold a
+privilege on, with those tables' indexes.
 
 ## The monitor
 
@@ -23,7 +45,9 @@ reads them each 1, 2, 5, 10 or 30 seconds, 5 at first, or never.
 
 | Tab | What it shows | Of the view |
 |---|---|---|
-| **Sessions** | each connection the server serves: its ID, user, where it came from, whether it is secure, its state (LOGIN, IDLE or RUNNING) and its application; and the attributes each client gave | CONNECTIONS, CONNECTION_ATTRIBUTES |
+| **Sessions** | each connection the server serves: its ID, user, where it came from, whether it is secure, its state (LOGIN, IDLE or RUNNING), its application, the statement it runs and when it began, when its transaction began, and what it waits on, the lock and the session holding it; above them, each session that waits, in a line; and the attributes each client gave | CONNECTIONS, CONNECTION_ATTRIBUTES |
+| **Statements** | each statement run since the database opened, by its text, its literals written `?`, and its user, the costliest by total time first: its calls, its total, mean and longest time in microseconds, the rows it gave or changed, read and spilled, and when it last ran | STATEMENT_STATISTICS |
+| **Tables and Indexes** | each base table's engine, rows, bytes, whether they are estimated, and when it last changed and was compacted; each index's method, searches and the entries they read since the database opened, its entries, height and bytes | TABLE_STATISTICS, INDEX_STATISTICS |
 | **Server** | the workers running a statement, the statements waiting for one, the connections, those refused and closed untold, and the transactions committed and rolled back; drawn over the time the panel is open | SERVER |
 | **Jobs** | each job of the database's background work: its state, whether a thread of its own runs it, its runs, restarts and last error | JOBS |
 | **Files** | each file of the database: its kind, class of durability, whether it is open, its reads, writes and syncs; and whether each kind of file is in the formats the settings name | FILES, FILE_FORMATS |
@@ -39,8 +63,12 @@ views: the monitor says so in those tabs, and shows the rest.
 The **Server** tab draws the workers busy, the statements waiting and
 the connections, read by read, the last 120 readings, once read twice.
 
-The server tells a session's state, but not the statement it runs, nor
-each statement's figures: Studio shows them once the server does.
+A session that waits on another's lock is told above the sessions,
+"Session 7 waits on a lock of ANN.T, held by session 8", with **End
+Connection 8**, which ends the session that holds it, asked about first
+as every End Connection is. STATEMENTS.KEPT bounds the statements kept,
+1000 unless set otherwise; setting it to 0 in **Settings** forgets them
+all.
 
 ### Ending and cancelling a session
 

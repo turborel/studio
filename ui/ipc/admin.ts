@@ -20,7 +20,10 @@ export type ViewName =
   | "restorePoints"
   | "replicas"
   | "settings"
-  | "extensions";
+  | "extensions"
+  | "statementStatistics"
+  | "tableStatistics"
+  | "indexStatistics";
 
 /** A view's rows, each cell as text, a null null. */
 export interface ViewRows {

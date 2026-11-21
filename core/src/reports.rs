@@ -76,9 +76,52 @@ fn built_in(id: &str, name: &str, sql: &str, chart: Option<Chart>) -> Report {
     Report { id: format!("built-in:{id}"), name: name.to_owned(), sql: sql.to_owned(), chart }
 }
 
+/// The built-in reports of the server's sessions and statistics: what
+/// each session runs and waits on, the costliest statements, and the
+/// tables' and indexes' sizes and use.
+fn statistics_reports() -> Vec<Report> {
+    vec![
+        built_in(
+            "sessions",
+            "Sessions",
+            "SELECT ID, USER_NAME, PEER, STATE, APPLICATION, STATEMENT_TEXT, STATEMENT_BEGAN, TRANSACTION_BEGAN, WAITING_ON, LOCK_NAME, LOCK_HOLDER\n\
+             FROM INFORMATION_SCHEMA.CONNECTIONS ORDER BY ID",
+            None,
+        ),
+        built_in(
+            "statements",
+            "Top Statements by Total Time",
+            "SELECT STATEMENT_TEXT, USER_NAME, CALLS, TOTAL_MICROS, MEAN_MICROS, MAX_MICROS, ROW_COUNT, ROWS_READ, BYTES_SPILLED, LAST_RUN\n\
+             FROM INFORMATION_SCHEMA.STATEMENT_STATISTICS ORDER BY TOTAL_MICROS DESC",
+            None,
+        ),
+        built_in(
+            "table-sizes",
+            "Table Sizes",
+            "SELECT TABLE_SCHEMA, TABLE_NAME, ENGINE_NAME, ROW_COUNT, BYTES, BYTES_ESTIMATED, LAST_CHANGED\n\
+             FROM INFORMATION_SCHEMA.TABLE_STATISTICS ORDER BY BYTES DESC, TABLE_SCHEMA, TABLE_NAME",
+            None,
+        ),
+        built_in(
+            "index-sizes",
+            "Index Sizes",
+            "SELECT TABLE_SCHEMA, TABLE_NAME, INDEX_NAME, METHOD_NAME, ENTRY_COUNT, HEIGHT, BYTES\n\
+             FROM INFORMATION_SCHEMA.INDEX_STATISTICS ORDER BY BYTES DESC, TABLE_SCHEMA, INDEX_NAME",
+            None,
+        ),
+        built_in(
+            "unused-indexes",
+            "Indexes Unused since the Database Opened",
+            "SELECT TABLE_SCHEMA, TABLE_NAME, INDEX_NAME, METHOD_NAME, ENTRY_COUNT, BYTES\n\
+             FROM INFORMATION_SCHEMA.INDEX_STATISTICS WHERE SEARCHES = 0 ORDER BY TABLE_SCHEMA, TABLE_NAME, INDEX_NAME",
+            None,
+        ),
+    ]
+}
+
 /// The built-in reports, of the Information Schema.
 pub fn built_in_reports() -> Vec<Report> {
-    vec![
+    let mut reports = vec![
         built_in(
             "objects",
             "Objects by Schema",
@@ -115,19 +158,15 @@ pub fn built_in_reports() -> Vec<Report> {
             None,
         ),
         built_in(
-            "sessions",
-            "Sessions",
-            "SELECT ID, USER_NAME, PEER, SECURE, STATE, APPLICATION FROM INFORMATION_SCHEMA.CONNECTIONS ORDER BY ID",
-            None,
-        ),
-        built_in(
             "settings",
             "Settings Changed",
             "SELECT SETTING_NAME, SETTING_VALUE, DEFAULT_VALUE, VALUE_SOURCE, TAKES_EFFECT, IS_PENDING\n\
              FROM INFORMATION_SCHEMA.SETTINGS WHERE VALUE_SOURCE <> 'DEFAULT' ORDER BY SETTING_NAME",
             None,
         ),
-    ]
+    ];
+    reports.extend(statistics_reports());
+    reports
 }
 
 /// `value` refused if empty, longer than `MAX_NAME_CHARS` characters, or

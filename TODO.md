@@ -16,10 +16,8 @@ Code never cites this file (R-DOC-5).
 
 - The plan viewer: a warning of a sort or hash that spilled, once
   Turborel's EXPLAIN ANALYZE tells it.
-- Reports: built-in reports of sizes, once Turborel shows them.
-- Waiting on the server, each shown as unavailable, with a line saying
-  why, until Turborel exposes it: per-statement statistics; table and
-  index statistics; the planner's column statistics; object sizes.
+- Waiting on the server, shown as unavailable, with a line saying why,
+  until Turborel exposes it: the planner's column statistics.
 
 ## M9 Assistant
 
@@ -51,11 +49,6 @@ Code never cites this file (R-DOC-5).
   `studio-relay` on a third, reached by its address and fingerprint.
 - Whether Turborel runs a public relay, and its address, is the owner's
   decision; until then no relay is set.
-
-## M11 Administration
-
-- Waiting on the server, shown as unavailable until Turborel has it:
-  each session's current statement, and per-statement statistics.
 
 ## M12 Polish and the security audit
 

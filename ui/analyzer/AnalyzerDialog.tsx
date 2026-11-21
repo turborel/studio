@@ -5,6 +5,7 @@
  * differ from their defaults; and what waits on the server, each saying
  * why it cannot be shown yet.
  */
+import { TopStatements, Usage } from "./Usage";
 import { useEffect, useState } from "react";
 import { changeLive } from "../live/live";
 import { type Analysis, catalogAnalysis, type Finding } from "../ipc/analyzer";
@@ -17,22 +18,18 @@ import { thrownText } from "../model/ModelDialogs";
 
 /** What waits on the server: each, and why it cannot be shown yet. */
 export const WAITING: readonly (readonly [string, string])[] = [
-  ["Statement statistics", "Turborel keeps no counts of the statements run, their calls, rows and times, in a view."],
-  [
-    "Table and index statistics",
-    "Turborel shows no table's rows, sizes or scans, nor any index's size or use, in a view.",
-  ],
   ["Column statistics", "Turborel shows not the planner's statistics of a column: its distinct values and nulls."],
-  ["Sizes of objects", "Turborel shows no table's or index's size on disk in a view."],
 ];
 
 /** The tabs of the analyzer. */
-export type Tab = "findings" | "indexes" | "settings" | "waiting";
+export type Tab = "findings" | "indexes" | "statements" | "usage" | "settings" | "waiting";
 
 /** The tabs, each with its name. */
 const TABS: readonly (readonly [Tab, string])[] = [
   ["findings", "Findings"],
   ["indexes", "Indexes"],
+  ["statements", "Top Statements"],
+  ["usage", "Usage and Sizes"],
   ["settings", "Settings"],
   ["waiting", "Waiting on the Server"],
 ];
@@ -218,10 +215,18 @@ function AnalyzerBody(props: {
   readonly found: Analysis | string | null;
   readonly tab: Tab;
   readonly onOpen: (sql: string) => void;
+  readonly of: { readonly connection: number; readonly schema: string };
 }) {
   const { found, tab } = props;
-  if (tab === "waiting") {
-    return <Waiting />;
+  switch (tab) {
+    case "waiting":
+      return <Waiting />;
+    case "statements":
+      return <TopStatements connection={props.of.connection} />;
+    case "usage":
+      return <Usage connection={props.of.connection} schema={props.of.schema} />;
+    default:
+      break;
   }
   if (found === null) {
     return <p className="hint">Reading the schema…</p>;
@@ -301,7 +306,7 @@ export function AnalyzerDialog(props: {
           </button>
         ))}
       </div>
-      <AnalyzerBody found={found} tab={tab} onOpen={open} />
+      <AnalyzerBody found={found} tab={tab} onOpen={open} of={{ connection, schema }} />
       <div className="dialog-buttons">
         <ShareFindings connection={connection} title={`Findings of ${of}`} found={found} />
         <button type="button" onClick={close}>

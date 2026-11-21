@@ -16,18 +16,49 @@ the user's own queries, as tables or charts.
 **Connection > Analyze Schema…** analyzes the session's schema; a
 schema's details, in the explorer, offer **Analyze Schema…** of it. The
 analyzer reads each base table of the schema whole, and the database's
-settings, and shows four tabs:
+settings, and shows six tabs:
 
 | Tab | What it shows |
 |---|---|
 | **Findings** | each finding: its rule, what it is of, what it says, and its fix |
 | **Indexes** | each index of the schema: its table, name, method, whether it is unique, its columns, its options, and the PRIMARY KEY or UNIQUE constraint it was made for |
 | **Settings** | each setting whose value is not its default: its value, its default, where the value comes from, and when a change takes effect |
-| **Waiting on the Server** | what the analyzer cannot show yet, and why |
+| **Top Statements** | the 25 statements run since the database opened that took the most time in all ([Top statements](#top-statements)) |
+| **Usage and Sizes** | of the schema, the indexes no search used, and each table's and index's size ([Usage and sizes](#usage-and-sizes)) |
+| **Waiting on the Server** | what the analyzer cannot show yet, and why: the planner's statistics of a column |
 
 Each finding is chosen at first; **Open Fixes in Worksheet** opens the
 fixes of those chosen in a worksheet of the connection, a blank line
 between each.
+
+## Top statements
+
+**Top Statements** reads the statements the database has run since it
+opened, by their text, each literal written `?`, and their user
+([Monitoring](https://github.com/turborel/turborel/blob/main/doc/operator/11-monitoring.md#statement-statistics)):
+each one's calls, the microseconds of their work in all, on average and
+at most, the rows it gave or changed, read and spilled. The costliest
+in all come first. **Explain** of a query opens it in a worksheet as
+`EXPLAIN`, where the plan viewer shows its plan; a statement written
+with `?` asks for its values first. Another user's text is shown only
+to the database's owner and a holder of the role MONITOR
+([Administration](12-administration.md#who-sees-the-sessions-and-statements)).
+
+## Usage and sizes
+
+**Usage and Sizes** reads TABLE_STATISTICS and INDEX_STATISTICS of the
+schema:
+
+- **Indexes unused:** each index whose searches are 0. The count is of
+  the time since the database opened, or the index was made, so an index
+  a workload uses that has not run since shows 0 too: judge one of a
+  whole workload before dropping it. Each costs its writes.
+- **Tables:** each base table's engine, rows and bytes, whether some
+  are estimated, and when it last changed.
+- **Indexes:** each index's method, searches, entries, height and bytes.
+
+A row store table's bytes are unknown until its statistics are first
+gathered, which reading the view asks for.
 
 ## The rules
 
@@ -146,8 +177,12 @@ rows are shown as a table, or in the chart view as its chart says.
 | **Files** | the database's files by kind and class: how many, and their reads, writes and syncs; a bar chart of the reads, writes and syncs |
 | **Indexes** | each index: its table, name, method, whether it is unique, and its columns |
 | **Table Privileges** | each privilege on a table: who holds it, of which table, which, whether it may be granted on, and by whom |
-| **Sessions** | each connection the server serves: its user, where it came from, whether it is secure, its state and its application |
 | **Settings Changed** | each setting not of its default: its value, default and source, when a change takes effect, and whether one waits for a restart |
+| **Sessions** | each connection the server serves: its user, where it came from, its state and application, the statement it runs, when it and its transaction began, and what it waits on, the lock and the session holding it |
+| **Top Statements by Total Time** | each statement run since the database opened, by its text and user: its calls, total, mean and longest microseconds, rows given or changed, read and spilled, and its last run |
+| **Table Sizes** | each base table's engine, rows and bytes, whether they are estimated, and when it last changed, the largest first |
+| **Index Sizes** | each index's method, entries, height and bytes, the largest first |
+| **Indexes Unused since the Database Opened** | each index no search used since the database opened or it was made, its entries and bytes |
 
 A result's **Save as Report…** keeps its query as a report of the
 user's, under a name: shown in the chart view as it is drawn, if the

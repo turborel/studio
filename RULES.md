@@ -1156,8 +1156,12 @@ The review checklist:
   ON.
 - **Fixes:** opened in a worksheet, never run by the analyzer; a
   constraint's index never dropped.
-- **Waiting on the server:** statement, table, index and column
-  statistics and sizes, each shown unavailable, saying why.
+- **Statistics:** the costliest statements by total time, each query's
+  plan opened by EXPLAIN in a worksheet; of a schema, its indexes no
+  search used since the database opened, said to be counted from then,
+  and its tables' and indexes' sizes; and reports of the same.
+- **Waiting on the server:** the planner's column statistics, shown
+  unavailable, saying why.
 - *Why:* each change explained and reviewed before it runs; the same
   catalog, the same findings.
 
@@ -1373,7 +1377,8 @@ The review checklist:
 #### D57. Administration: the server read of its own views, each act written by the backend and run through the guards
 
 - **Monitor:** a dock panel of the active connection, its tabs Sessions,
-  Server, Jobs, Files, Memory, Backups, Replication and Settings, each
+  Statements, Tables and Indexes, Server, Jobs, Files, Memory, Backups,
+  Replication, Settings and Plug-ins (D59), each
   read of Turborel's own views by a fixed query (`core/src/admin.rs`),
   again each 1, 2, 5, 10 or 30 seconds, 5 at first, or as asked. The
   server's counters are drawn over the time the panel is open, the last
@@ -1390,8 +1395,14 @@ The review checklist:
   and SET DATABASE of a setting, or its DEFAULT; CREATE, ALTER (its
   password, its leave to create roles) and DROP USER; CREATE and DROP
   ROLE; GRANT and REVOKE of a role, and of a table's privileges.
-- **Waiting on the server:** the statement each session runs, and each
-  statement's statistics: CONNECTIONS tells a session's state alone.
+- **Sessions and statements:** CONNECTIONS tells the statement each
+  session runs, its transaction, and what it waits on; each session that
+  waits is told in a line above them, with End Connection of the session
+  holding its lock, asked first as every End Connection is.
+  STATEMENT_STATISTICS gives the Statements tab, the costliest by total
+  time first; TABLE_STATISTICS and INDEX_STATISTICS the tables' and
+  indexes' sizes and use. The owner and a holder of the role MONITOR
+  see every row; another user what the server shows them.
 - *Why:* an administrator watches and changes the server from Studio,
   with nothing typed that could be mistyped into another statement, and
   each act asks first where any statement would.
