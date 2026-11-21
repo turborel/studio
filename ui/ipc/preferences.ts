@@ -20,7 +20,12 @@ export interface Settings {
   readonly formatIndent: number;
   readonly formatLineWidth: number;
   readonly notifyAfterSeconds: number;
+  /** How a plan is first shown: drawn, or as EXPLAIN's text. */
+  readonly planView: PlanViewChoice;
 }
+
+/** How a plan is first shown. */
+export type PlanViewChoice = "visual" | "raw";
 
 /** How the formatter writes key words. */
 export type KeyWordCase = "upper" | "lower" | "keep";
@@ -40,6 +45,7 @@ export const DEFAULT_SETTINGS: Settings = {
   formatIndent: 4,
   formatLineWidth: 100,
   notifyAfterSeconds: 10,
+  planView: "visual",
 };
 
 /** The formatter's bounds: indentation in spaces, and line width in characters. */

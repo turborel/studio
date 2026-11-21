@@ -6,8 +6,6 @@ import { worksheetOf } from "../state/worksheets";
 import { SESSION } from "../test/backend";
 import { catalogBackend, must, opened, settle, within } from "../test/catalog";
 import { CLASS_NAMES, FavouriteDialog, GuardDialog, HistoryDialog, ValuesDialog } from "./dialogs";
-import { parsePlan } from "./plan";
-import { figuresOf, PlanView } from "./PlanView";
 
 const ENTRY: HistoryEntry = {
   sql: "SELECT * FROM STAFF",
@@ -135,39 +133,5 @@ describe("the favourite's dialog", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
     expect(store.current().dialog).toBeNull();
-  });
-});
-
-describe("the plan view", () => {
-  it("shows a plan's stages, its figures, a misestimate and a full scan marked, and compares two [DOC sql/statements/explain.md EXPLAIN ANALYZE]", async () => {
-    catalogBackend();
-    const store = await opened();
-    const before = parsePlan([
-      "-- bound:",
-      "Project A",
-      "-- rules: none",
-      "-- physical:",
-      "SeqScan ANN.T  (rows=1000, cost=900.0)",
-    ]);
-    const after = parsePlan([
-      "-- physical:",
-      "Project A  (est. rows=1000)  (actual rows=3)",
-      "  IndexScan ANN.T using I [btree]: A = 1  (est. rows=3, cost=2.0)  (actual rows=3, loops=2, probes=4, time=1.5 ms)",
-      "  Filter B  (never run)",
-      "  HashJoin X  (hashed on X)",
-      "-- counted by storage: ANN.T",
-      "-- rules: push_filter_into_product",
-      "-- ran: 3 rows",
-    ]);
-    within(store, <PlanView plans={[before, after]} />);
-    expect(screen.getByText("estimate off by ten times or more")).toBeTruthy();
-    expect(screen.getByText("est. 3 · actual 3 · loops 2 · probes 4 · 1.5 ms")).toBeTruthy();
-    expect(screen.getByText("never run")).toBeTruthy();
-    expect(screen.getByText("(hashed on X)")).toBeTruthy();
-    expect(screen.getByText("Rules: push_filter_into_product · counted by storage: ANN.T · ran: 3 rows")).toBeTruthy();
-    fireEvent.click(screen.getByLabelText("Compare with the plan before"));
-    expect(screen.getByLabelText("The plan before")).toBeTruthy();
-    expect(figuresOf(must(must(before.stages[1]).roots[0]))).toBe("est. 1000");
-    fireEvent.click(screen.getByRole("tab", { name: "physical" }));
   });
 });

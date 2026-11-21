@@ -93,6 +93,7 @@ Each is told in full in [§7](#7-the-decisions).
 | D51 | What-if indexes: made, explained and dropped, only when asked |
 | D52 | Reports and charts: queries shown as tables or charts, the user's kept |
 | D53 | Context menus everywhere, of the registry, and a new worksheet a click away |
+| D54 | The plan viewer: a summary, a flow, a tree-table, the stages, the raw text last |
 
 ---
 
@@ -131,6 +132,7 @@ Each is told in full in [§7](#7-the-decisions).
 | `ui/builder/` | the query builder (D48) |
 | `core/src/analyzer.rs` | the analyzer's rules of the catalog and the settings (D50) |
 | `core/src/reports.rs` | the built-in reports, and the user's kept (D52) |
+| `ui/plan/` | the plan's parser, summary, flow, tree-table and viewer (D54) |
 | `ui/shell/ContextMenu.tsx` | the context menus, their items of the command registry (D53) |
 | `ui/analyzer/` | the analyzer's dialog, the plan's rule and findings, what-if indexes and reports (D50, D51, D52) |
 | `ui/data/` | the dialogs of a table's data and definitions: its rows edited, imported, exported and compared, and tables made and altered (D42 to D45) |
@@ -1193,6 +1195,29 @@ The review checklist:
 - *Why:* the owner asked for right-click everywhere and one-click
   worksheets; one registry keeps the menus, the palette and the menu bar
   the same.
+
+#### D54. The plan viewer: a summary, a flow, a tree-table, the stages, the raw text last
+
+- **Opened:** by Explain, Explain Analyze, and an EXPLAIN written in a
+  script, whose PLAN rows stay the result's; never as raw text first
+  unless the setting `planView` says `raw`.
+- **Parser:** tolerant: an unknown line an operator of its first word,
+  lines before any header a stage of their own; cost, degree, the join
+  order, the query's time and each line kept. Tested on Turborel's
+  EXPLAIN page's examples and a plan the server gave.
+- **Summary:** rows and time; the three costliest by own time, else
+  cost; warnings of rules PLAN-FULL-SCAN (10,000 rows), PLAN-SERIAL
+  (65,536, EXECUTOR.PARALLEL_MIN_ROWS's default), PLAN-MISESTIMATE (ten
+  times), PLAN-MANY-PROBES (10,000) and SCAN-NO-INDEX (D50) with its fix
+  and what-if (D51). EXPLAIN tells no spill, so none is warned of.
+- **Flow:** React Flow and dagre (D15), bottom to top, lines as thick as
+  the logarithm of their rows, heat as a share of the time in the
+  second series colour (D52); collapse, search, zoom and fit.
+- **Tree-table:** sortable by estimate, actual, loops, probes and time.
+- **Compare:** two tree-tables side by side, operators matched by name
+  and detail, their figures aside.
+- *Why:* the owner found the raw plan too raw; a plan read at a glance,
+  its raw text a tab away.
 
 ---
 

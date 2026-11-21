@@ -225,7 +225,26 @@ function Worksheets({ settings, change }: PartProps) {
           change({ ...settings, notifyAfterSeconds: n });
         }}
       />
+      <PlanViewChoice settings={settings} change={change} />
     </>
+  );
+}
+
+/** How a plan is first shown. */
+function PlanViewChoice({ settings, change }: PartProps) {
+  return (
+    <label className="field">
+      <span>Open plans as</span>
+      <select
+        value={settings.planView}
+        onChange={(e) => {
+          change({ ...settings, planView: e.target.value === "raw" ? "raw" : "visual" });
+        }}
+      >
+        <option value="visual">Visual</option>
+        <option value="raw">Raw</option>
+      </select>
+    </label>
   );
 }
 

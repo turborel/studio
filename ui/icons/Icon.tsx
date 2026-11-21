@@ -9,6 +9,11 @@ import type { Icon as PhosphorIcon } from "@phosphor-icons/react";
 import { FileSqlIcon } from "@phosphor-icons/react/dist/csr/FileSql";
 import { ChartBarIcon } from "@phosphor-icons/react/dist/csr/ChartBar";
 import { StethoscopeIcon } from "@phosphor-icons/react/dist/csr/Stethoscope";
+import { SigmaIcon } from "@phosphor-icons/react/dist/csr/Sigma";
+import { ArrowsSplitIcon } from "@phosphor-icons/react/dist/csr/ArrowsSplit";
+import { ScissorsIcon } from "@phosphor-icons/react/dist/csr/Scissors";
+import { ArrowsMergeIcon } from "@phosphor-icons/react/dist/csr/ArrowsMerge";
+import { TreeViewIcon } from "@phosphor-icons/react/dist/csr/TreeView";
 import { PlayIcon } from "@phosphor-icons/react/dist/csr/Play";
 import { PlayCircleIcon } from "@phosphor-icons/react/dist/csr/PlayCircle";
 import { StopIcon } from "@phosphor-icons/react/dist/csr/Stop";
@@ -188,6 +193,11 @@ const ICONS = {
   review: [ListChecksIcon, "plain"],
   chart: [ChartBarIcon, "plain"],
   analyze: [StethoscopeIcon, "plain"],
+  aggregate: [SigmaIcon, "plain"],
+  parallel: [ArrowsSplitIcon, "plain"],
+  limit: [ScissorsIcon, "plain"],
+  join: [ArrowsMergeIcon, "plain"],
+  tree: [TreeViewIcon, "plain"],
 } as const satisfies Record<string, readonly [PhosphorIcon, Tone]>;
 
 /** An icon's name. */

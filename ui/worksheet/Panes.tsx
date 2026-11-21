@@ -11,7 +11,7 @@ import { useStore, useStudio } from "../state/store";
 import { changeWorksheet, type Pane, type RunResult, worksheetOf } from "../state/worksheets";
 import { showFailure } from "./editor/actions";
 import { viewOf } from "./editor/views";
-import { PlanPane } from "../analyzer/PlanFindings";
+import { PlanViewer } from "../plan/PlanViewer";
 import { Icon } from "../icons/Icon";
 
 /** A result's tab's name: its number, after its connection's name where the results are of several. */
@@ -129,6 +129,7 @@ export function Panes({ id }: { readonly id: string }) {
   const store = useStore();
   const pane = useStudio((s) => worksheetOf(s, id)?.pane ?? "results");
   const plans = useStudio((s) => worksheetOf(s, id)?.plans);
+  const whatIf = useStudio((s) => worksheetOf(s, id)?.whatIf ?? null);
   const choose = (next: Pane) => () => {
     changeWorksheet(store, id, (w) => ({ ...w, pane: next }));
   };
@@ -155,7 +156,9 @@ export function Panes({ id }: { readonly id: string }) {
       <div role="tabpanel" className="pane">
         {pane === "results" && <Results id={id} />}
         {pane === "messages" && <Messages id={id} />}
-        {pane === "plan" && <PlanPane id={id} plans={plans ?? []} />}
+        {pane === "plan" && (
+          <PlanViewer key={`${String(plans?.length ?? 0)}.${whatIf ?? ""}`} id={id} plans={plans ?? []} />
+        )}
         {pane === "timings" && <Timings id={id} />}
       </div>
     </div>

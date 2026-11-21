@@ -49,6 +49,17 @@ pub enum KeyWordCase {
     Keep,
 }
 
+/// How a plan is first shown.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum PlanView {
+    /// Drawn: its summary, its flow and its tree-table.
+    #[default]
+    Visual,
+    /// As EXPLAIN's text.
+    Raw,
+}
+
 /// The theme chosen.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -96,6 +107,8 @@ pub struct Settings {
     /// How long a run lasts, in seconds, before its end is notified while
     /// the window is in the background; 0 for never.
     pub notify_after_seconds: u16,
+    /// How a plan is first shown.
+    pub plan_view: PlanView,
 }
 
 impl Default for Settings {
@@ -114,6 +127,7 @@ impl Default for Settings {
             format_indent: FORMAT_INDENT.1,
             format_line_width: FORMAT_LINE_WIDTH.1,
             notify_after_seconds: NOTIFY_AFTER_SECONDS.1,
+            plan_view: PlanView::Visual,
         }
     }
 }

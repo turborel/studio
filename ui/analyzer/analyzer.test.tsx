@@ -7,9 +7,10 @@ import type { Piece } from "../ipc/worksheet";
 import { changeWorksheet, openWorksheet, worksheetOf } from "../state/worksheets";
 import { SESSION } from "../test/backend";
 import { catalogBackend, must, opened, refused, settle, STAFF, within } from "../test/catalog";
-import { parsePlan } from "../worksheet/plan";
+import { parsePlan } from "../plan/plan";
 import { AnalyzerDialog, ofTable, WAITING } from "./AnalyzerDialog";
-import { PlanPane, WhatIfDialog } from "./PlanFindings";
+import { WhatIfDialog } from "./PlanFindings";
+import { PlanViewer } from "../plan/PlanViewer";
 import { comparedColumn, conjuncts, scanFindings, scannedTables } from "./planRules";
 import { openReport, Reports, SaveReportDialog } from "./Reports";
 import { runWhatIf, type WhatIf } from "./whatIf";
@@ -179,9 +180,9 @@ describe("a what-if index", () => {
       ...SESSION,
       transaction: { ...SESSION.transaction, autocommit: true },
     });
-    within(store, <PlanPane id={id} plans={[SCANNED]} />);
+    within(store, <PlanViewer id={id} plans={[SCANNED]} />);
     await settle();
-    expect(screen.getByRole("region", { name: "Findings of the plan" }).textContent).toContain("SCAN-NO-INDEX");
+    expect(screen.getByRole("list", { name: "Warnings" }).textContent).toContain("SCAN-NO-INDEX");
     fireEvent.click(screen.getByRole("button", { name: "What If…" }));
     expect(store.current().dialog?.kind).toBe("whatIf");
     await act(() => runWhatIf(store, whatIf));
@@ -214,7 +215,7 @@ describe("a what-if index", () => {
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
     expect(store.current().dialog).toBeNull();
     cleanup();
-    within(store, <PlanPane id={id} plans={[SCANNED]} />);
+    within(store, <PlanViewer id={id} plans={[SCANNED]} />);
     await settle();
     fireEvent.click(screen.getByRole("button", { name: "Open Fix in Worksheet" }));
     expect(store.current().worksheets.at(-1)?.text).toBe("CREATE INDEX PARTS_NAME_INDEX ON ANN.PARTS (NAME);");

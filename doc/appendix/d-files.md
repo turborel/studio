@@ -101,7 +101,8 @@ it may be left out, for none.
   "formatKeyWords": "upper",
   "formatIndent": 4,
   "formatLineWidth": 100,
-  "notifyAfterSeconds": 10
+  "notifyAfterSeconds": 10,
+  "planView": "visual"
 }
 ```
 

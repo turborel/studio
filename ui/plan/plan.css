@@ -1,0 +1,179 @@
+/* The plan viewer (D54): its tools, summary, tabs, flow, tree-table, details and raw text. */
+.plan-viewer {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  height: 100%;
+  min-height: 0;
+}
+
+.plan-tools {
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.plan-summary {
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.plan-summary p {
+  margin: 2px 0;
+}
+
+.plan-costliest,
+.plan-warnings {
+  margin: 2px 0;
+  padding-left: 20px;
+}
+
+.plan-warnings strong {
+  color: var(--warning);
+  margin-right: 4px;
+}
+
+.plan-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.plan-main {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+}
+
+.plan-graph {
+  height: 100%;
+  min-height: 320px;
+}
+
+.plan-details {
+  width: 280px;
+  padding: 8px;
+  overflow: auto;
+  border-left: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.plan-details dt {
+  font-weight: 600;
+}
+
+.plan-details dd {
+  margin: 0 0 6px;
+  overflow-wrap: anywhere;
+}
+
+.plan-raw pre {
+  margin: 0;
+  padding: 8px;
+  font-family: var(--editor-font, ui-monospace, Menlo, Consolas, monospace);
+  font-size: 12px;
+  white-space: pre;
+}
+
+.plan-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.plan-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.plan-table th,
+.plan-table td {
+  padding: 2px 6px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.plan-table td:nth-child(n + 3) {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.plan-table tr.plan-chosen {
+  background: var(--selection);
+  color: var(--on-selection);
+}
+
+.plan-table tr.plan-changed {
+  box-shadow: inset 3px 0 0 var(--accent-text);
+  background: color-mix(in oklab, var(--accent-text) 12%, transparent);
+}
+
+/* A flow's node: its heat, its share of the time, a wash of the second series colour. */
+.flow-node {
+  width: 220px;
+  height: 92px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  background: color-mix(in oklab, var(--series2) var(--heat, 0%), var(--background));
+  font-size: 11px;
+  overflow: hidden;
+}
+
+.flow-chosen {
+  outline: 2px solid var(--focus);
+}
+
+.flow-matched {
+  border-color: var(--accent-text);
+  border-width: 2px;
+}
+
+.flow-never {
+  color: var(--text-muted);
+  border-style: dashed;
+}
+
+.flow-head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.flow-collapse {
+  margin-left: auto;
+  padding: 0 6px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.flow-reads,
+.flow-figures {
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.flow-bars {
+  display: grid;
+  gap: 2px;
+  margin-top: 3px;
+}
+
+.flow-bar {
+  display: block;
+  height: 4px;
+  border-radius: 0 2px 2px 0;
+}
+
+.flow-bar-estimate {
+  background: var(--series1);
+}
+
+.flow-bar-actual {
+  background: var(--series3);
+}

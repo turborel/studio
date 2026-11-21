@@ -4,19 +4,28 @@ import type { Ran, StudioError } from "../ipc/connections";
 import { SESSION } from "../test/backend";
 import { catalogBackend, opened } from "../test/catalog";
 import { told } from "./actions";
-import { explain, failureText, fetchMore, FETCH_ROWS, runStatements, stopRun, type ToRun } from "./running";
+import {
+  explain,
+  explainedOf,
+  failureText,
+  fetchMore,
+  FETCH_ROWS,
+  runStatements,
+  stopRun,
+  type ToRun,
+} from "./running";
 import type { Store } from "./store";
 import { changeWorksheet, openWorksheet, worksheetOf } from "./worksheets";
 
 /** What running a statement gave: rows of `rows`, complete or not. */
-function rowsRan(rows: (string | null)[][], complete = true): { kind: "ran"; answer: Ran } {
+function rowsRan(rows: (string | null)[][], complete = true, column = "N"): { kind: "ran"; answer: Ran } {
   return {
     kind: "ran",
     answer: {
       outcome: {
         kind: "rows",
         result: 3,
-        columns: [{ name: "N", typeWritten: "INTEGER", typeName: "INTEGER", notNull: false }],
+        columns: [{ name: column, typeWritten: "INTEGER", typeName: "INTEGER", notNull: false }],
         page: { from: 0, rows, rowsRead: rows.length, complete, lobs: [] },
       },
       warnings: [],
@@ -279,7 +288,7 @@ describe("a run", () => {
 
   it("of EXPLAIN shows its plan, each page of it read, and keeps the plan before to compare [DOC sql/statements/explain.md EXPLAIN ANALYZE]", async () => {
     const asked = catalogBackend({
-      run_statement: () => rowsRan([["-- physical:"]], false),
+      run_statement: () => rowsRan([["-- physical:"]], false, "PLAN"),
       fetch_rows: () => ({
         from: 1,
         rows: [["SeqScan ANN.T  (rows=4, cost=3.7)  (actual rows=4)"], ["-- ran: 4 rows"]],
@@ -302,6 +311,21 @@ describe("a run", () => {
     catalogBackend({ run_statement: () => DONE });
     await explain(store, id, whole("VALUES (1)"), false);
     expect(worksheetOf(store.current(), id)?.plans).toHaveLength(2);
+  });
+
+  it("of an EXPLAIN typed in a script opens its plan too, its PLAN rows kept as the result's [DESIGN] D54", async () => {
+    catalogBackend({
+      run_statement: () => rowsRan([["-- physical:"], ["SeqScan ANN.T  (rows=4, cost=3.7)"]], true, "PLAN"),
+    });
+    const [store, id] = await sheet("");
+    await runStatements(store, id, [whole("-- a plan\nEXPLAIN ANALYZE SELECT * FROM T")]);
+    const w = worksheetOf(store.current(), id);
+    expect(w?.pane).toBe("plan");
+    expect(w?.explained?.sql).toBe("SELECT * FROM T");
+    expect(w?.runs.at(-1)?.rows).toHaveLength(2);
+    expect(explainedOf("explain (VALUES 1)")).toBe("(VALUES 1)");
+    expect(explainedOf("EXPLAIN DELETE FROM T")).toBeNull();
+    expect(explainedOf("SELECT EXPLAIN FROM T")).toBeNull();
   });
 
   it("tells a notice in the messages of the worksheet that runs on its connection [CLIENT What the server tells]", async () => {

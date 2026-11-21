@@ -20,7 +20,7 @@ import {
 import { judgeScript, notifyFinished, recordHistory, statementParameters } from "../ipc/worksheet";
 import { showFailure } from "../worksheet/editor/actions";
 import { viewOf } from "../worksheet/editor/views";
-import { parsePlan } from "../worksheet/plan";
+import { parsePlan } from "../plan/plan";
 import { bound, substituted, variableNames } from "../worksheet/variables";
 import { isStudioError, session } from "./actions";
 import { loadSchemas } from "./catalog";
@@ -356,6 +356,7 @@ async function runOne(store: Store, id: string, connection: number, statement: T
       return false;
     }
     await finished(store, id, base, answer.answer, performance.now() - clock);
+    await readPlan(store, id, runId, statement);
     return true;
   } catch (thrown: unknown) {
     await failed(store, id, base, thrown, performance.now() - clock);
@@ -531,12 +532,25 @@ export async function fetchMore(store: Store, id: string, runId: number): Promis
   }
 }
 
-/** Runs EXPLAIN of `statement`, or EXPLAIN ANALYZE, which runs it, and shows its plan in worksheet `id`'s plan view. */
+/** Runs EXPLAIN of `statement`, or EXPLAIN ANALYZE, which runs it, and shows its plan in worksheet `id`'s plan viewer. */
 export async function explain(store: Store, id: string, statement: ToRun, analyze: boolean): Promise<void> {
-  const explained: ToRun = { ...statement, sql: `EXPLAIN ${analyze ? "ANALYZE " : ""}${statement.sql}` };
-  await runStatements(store, id, [explained]);
-  const run = worksheetOf(store.current(), id)?.runs.at(-1);
-  if (run?.outcome?.kind !== "rows") {
+  await runStatements(store, id, [{ ...statement, sql: `EXPLAIN ${analyze ? "ANALYZE " : ""}${statement.sql}` }]);
+}
+
+/** EXPLAIN, or EXPLAIN ANALYZE, before a query, as Turborel reads it, comments and spaces before it: what it explains. */
+const EXPLAINED =
+  /^(?:\s+|--[^\n]*\n|\/\*[\s\S]*?\*\/)*EXPLAIN\s+(?:ANALYZE\s+)?((?:SELECT|VALUES|TABLE|WITH|\()[\s\S]*)$/iu;
+
+/** The statement `sql` explains, if it is EXPLAIN or EXPLAIN ANALYZE of one. */
+export function explainedOf(sql: string): string | null {
+  return EXPLAINED.exec(sql)?.[1]?.trim() ?? null;
+}
+
+/** Reads run `runId`'s plan whole, of EXPLAIN `statement`, and shows it in the plan viewer; its rows stay the result's. */
+async function readPlan(store: Store, id: string, runId: number, statement: ToRun): Promise<void> {
+  const run = worksheetOf(store.current(), id)?.runs.find((r) => r.id === runId);
+  const explained = explainedOf(statement.sql);
+  if (run?.outcome?.kind !== "rows" || explained === null || run.columns[0]?.name !== "PLAN") {
     return;
   }
   let rows = run.rows;
@@ -549,9 +563,9 @@ export async function explain(store: Store, id: string, statement: ToRun, analyz
   const plan = parsePlan(rows.map((r) => r[0] ?? ""));
   changeWorksheet(store, id, (x) => ({
     ...x,
-    runs: x.runs.map((r) => (r.id === run.id ? { ...r, rows, complete, plan } : r)),
+    runs: x.runs.map((r) => (r.id === runId ? { ...r, rows, complete, plan } : r)),
     plans: [...x.plans, plan].slice(-2),
-    explained: statement,
+    explained: { ...statement, sql: explained },
     whatIf: null,
     pane: "plan",
   }));

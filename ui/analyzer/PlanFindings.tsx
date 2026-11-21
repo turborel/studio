@@ -1,18 +1,17 @@
 /**
- * The plan pane (RULES.md D36, D50, D51): the plan view, and below it the
- * findings of SCAN-NO-INDEX of its physical stage, each with its fix,
- * opened in a worksheet, and a what-if of the index it proposes.
+ * The plan's findings (RULES.md D50, D51): those of SCAN-NO-INDEX of its
+ * physical stage, of the tables it scans read of the catalog, each with
+ * its fix, and the dialog that asks before a what-if of the index one
+ * proposes.
  */
 import { useEffect, useState } from "react";
 import { namer } from "../data/ddl";
-import { openDdl } from "../data/ddlActions";
 import { catalogTable, type TableDetail } from "../ipc/catalog";
 import { show } from "../state/actions";
 import { useStore, useStudio } from "../state/store";
 import { worksheetOf } from "../state/worksheets";
-import type { Plan } from "../worksheet/plan";
-import { PlanView } from "../worksheet/PlanView";
-import { scanFindings, scannedTables } from "./planRules";
+import type { Plan } from "../plan/plan";
+import { type ScanFinding, scanFindings, scannedTables } from "./planRules";
 import { Modal } from "../shell/Modal";
 import type { WhatIf } from "./whatIf";
 import { runWhatIf } from "./whatIf";
@@ -40,63 +39,12 @@ function useScanned(connection: number | null, plan: Plan | undefined): readonly
   return read.of === plan ? read.tables : [];
 }
 
-/** The findings of the latest plan of worksheet `id`. */
-function Findings({ id, plan }: { readonly id: string; readonly plan: Plan | undefined }) {
-  const store = useStore();
+/** The findings of SCAN-NO-INDEX of `plan`, of worksheet `id`'s connection's catalog. */
+export function usePlanFindings(id: string, plan: Plan | undefined): readonly ScanFinding[] {
   const connection = useStudio((s) => worksheetOf(s, id)?.connection ?? null);
-  const explained = useStudio((s) => worksheetOf(s, id)?.explained ?? null);
   const reserved = useStudio((s) => s.reservedWords);
   const tables = useScanned(connection, plan);
-  const found = plan === undefined ? [] : scanFindings(plan, tables, namer(reserved));
-  if (found.length === 0 || connection === null) {
-    return null;
-  }
-  return (
-    <section className="plan-findings" aria-label="Findings of the plan">
-      <h4>Findings</h4>
-      <ul className="findings">
-        {found.map((f) => (
-          <li key={`${f.schema}.${f.table}.${f.column}`}>
-            <strong>{f.rule}</strong> {f.schema}.{f.table}
-            <p>{f.says}</p>
-            <pre className="definition-text">{`${f.create};`}</pre>
-            <button
-              type="button"
-              onClick={() =>
-                void openDdl(store, connection, { sql: `${f.create};`, title: `Index of ${f.table}` }, false)
-              }
-            >
-              Open Fix in Worksheet
-            </button>
-            {explained !== null && (
-              <button
-                type="button"
-                onClick={() => {
-                  show(store, {
-                    kind: "whatIf",
-                    whatIf: { worksheet: id, statement: explained, index: f.index, create: f.create, drop: f.drop },
-                  });
-                }}
-              >
-                What If…
-              </button>
-            )}
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
-
-/** The plan pane of worksheet `id`. */
-export function PlanPane({ id, plans }: { readonly id: string; readonly plans: readonly Plan[] }) {
-  const whatIf = useStudio((s) => worksheetOf(s, id)?.whatIf ?? null);
-  return (
-    <>
-      <PlanView key={`${String(plans.length)}.${whatIf ?? ""}`} plans={plans} whatIf={whatIf} />
-      <Findings id={id} plan={plans.at(-1)} />
-    </>
-  );
+  return plan === undefined || connection === null ? [] : scanFindings(plan, tables, namer(reserved));
 }
 
 /** Asks before what-if `whatIf` runs, saying what it does. */

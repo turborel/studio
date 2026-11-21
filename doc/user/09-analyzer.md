@@ -40,6 +40,10 @@ between each.
 | `SETTING-ADVISED` | a setting of a value the manual warns of ([Settings](https://github.com/turborel/turborel/blob/main/doc/appendix/c-settings.md)) | the setting given its default, by SET of a session's value, or SET DATABASE of the database's |
 | `SCAN-NO-INDEX` | a table the plan reads whole to compare a column with a constant, where no index leads the column ([The plan's findings](#the-plans-findings)) | `CREATE INDEX` of the column |
 
+The plan's own warnings, `PLAN-FULL-SCAN`, `PLAN-SERIAL`,
+`PLAN-MISESTIMATE` and `PLAN-MANY-PROBES`, are told by the plan viewer
+([Worksheets](05-worksheets.md#the-plan)); none has a fix of SQL.
+
 A constraint's index is never dropped by a fix. A partition is judged
 with its partitioned table, not apart. `SETTING-ADVISED` finds:
 
@@ -85,8 +89,8 @@ analyzer shows each as unavailable, saying why:
 
 ## The plan's findings
 
-Below the plan of a statement Explain or Explain Analyze ran
-([Worksheets](05-worksheets.md#the-plan)), the findings of
+Among the warnings of the plan of a statement Explain or Explain Analyze
+ran ([Worksheets](05-worksheets.md#the-plan)), the findings of
 `SCAN-NO-INDEX` of its physical stage are listed: of each table the plan
 reads whole under a filter comparing one of its columns with a constant,
 by `=`, `<`, `>`, `<=`, `>=`, BETWEEN, IN or LIKE of a pattern that

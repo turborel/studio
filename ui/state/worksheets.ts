@@ -7,7 +7,7 @@ import type { EditTarget, Edits } from "../results/edits";
 import type { Query } from "../results/requery";
 import type { Cell, ColumnInfo, Outcome, ServerTime, StudioError } from "../ipc/connections";
 import { keepWorksheets, type KeptWorksheet, loadWorksheets, type Piece } from "../ipc/worksheet";
-import type { Plan } from "../worksheet/plan";
+import type { Plan } from "../plan/plan";
 import type { ToRun } from "./running";
 import type { Chart } from "../ipc/analyzer";
 import type { StudioState, Store } from "./store";

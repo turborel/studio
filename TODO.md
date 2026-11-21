@@ -14,10 +14,8 @@ Code never cites this file (R-DOC-5).
 
 ## M8 Analyzer
 
-- The plan viewer: EXPLAIN and EXPLAIN ANALYZE opened in a viewer of a
-  summary, a graphical flow, a tree-table, the stages as tabs, two plans
-  compared, and the raw text last; its warnings linked to the analyzer's
-  rules.
+- The plan viewer: a warning of a sort or hash that spilled, once
+  Turborel's EXPLAIN ANALYZE tells it.
 - Reports: built-in reports of sizes, once Turborel shows them.
 - Waiting on the server, each shown as unavailable, with a line saying
   why, until Turborel exposes it: per-statement statistics; table and

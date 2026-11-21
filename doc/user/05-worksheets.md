@@ -208,24 +208,58 @@ message moves it there again.
 ## The plan
 
 **Plan** shows the plan of the statement Explain or Explain Analyze ran,
-read from EXPLAIN's text ([EXPLAIN](https://github.com/turborel/turborel/blob/main/doc/sql/statements/explain.md)):
+or of an EXPLAIN written in the script, read from EXPLAIN's text
+([EXPLAIN](https://github.com/turborel/turborel/blob/main/doc/sql/statements/explain.md));
+the statement's PLAN rows stay its result, in **Results**, for its grid
+and text views. Its toolbar holds **Explain** and **Explain Analyze**,
+which says that it runs the statement; **Flow** or **Tree-Table**;
+**Show raw**; **Compare with the plan before**, where there is one; and a
+search of its operators.
 
-- a tab of each stage, bound, optimized and physical, the physical shown
-  first;
-- each stage a tree of its operators, each with its name, what it reads
-  and its figures: its estimated rows and, of Explain Analyze, its
-  actual rows, its loops, its probes and its time, where the server
-  gives them;
-- an operator whose estimate is off its actual rows by ten times or more
-  marked, a scan of a table not by an index underlined, and one that
-  never ran greyed;
-- the rules the rewrite applied, the tables storage counted, and, of
-  Explain Analyze, the rows the query gave.
+Its summary says the rows the query gave and its time, of Explain
+Analyze, or that the plan is of estimates alone; the join order and the
+algorithm that found it; the rewrite rules applied; the tables storage
+counted; the three operators that cost most, by their own time, their
+time but their inputs', where the clock moved, else by the planner's
+cost, each with its share; and the warnings, each of its rule:
 
-Explain Analyze runs the statement, so it runs only when asked, through
-the guards as any other run. **Compare with the plan before** shows the
-plan explained before beside the last, of the same stage, as after an
-index is made.
+| Rule | What it warns of |
+|---|---|
+| `PLAN-FULL-SCAN` | a table of about 10,000 rows or more read whole |
+| `PLAN-SERIAL` | a table of 65,536 rows or more, EXECUTOR.PARALLEL_MIN_ROWS's default, read on one thread where no part of the plan runs in parallel |
+| `PLAN-MISESTIMATE` | an operator whose estimate is off its actual rows by ten times or more |
+| `PLAN-MANY-PROBES` | an index nested loop of 10,000 probes or more, or a nested loop of as many loops |
+| `SCAN-NO-INDEX` | a column the plan compares with a constant, of a table read whole, that no index leads, with its fix and a what-if ([The Analyzer](09-analyzer.md#the-plans-findings)) |
+
+EXPLAIN does not tell whether an operator spilled to disk, so the plan
+cannot warn of it.
+
+Below are a tab of each stage, physical first, then optimized and bound,
+**rewrites**, which lists the rules, and **raw**, EXPLAIN's text, with
+**Copy**. A stage is drawn as a flow or a tree-table:
+
+- **Flow:** each operator a node, its inputs below it, the rows moving
+  up its lines toward the result, each line as thick as the rows it
+  carries. A node shows its kind's icon, its name, the table and index it
+  reads, and its estimate; of Explain Analyze its actual rows, loops,
+  probes and time, a bar of its estimate against its actual rows, and a
+  heat of its share of the time. A node's **−** collapses the operators
+  below it, and **+** shows them again. The controls zoom and fit, and
+  the search fits the operators it finds in view.
+- **Tree-Table:** each operator a row, indented by its depth, with its
+  estimate, actual rows, loops, probes, own time and share; a column's
+  heading sorts by it, descending, then ascending, then as the plan is.
+
+A click on an operator shows every detail of it beside the plan: what it
+is of, its figures, its cost and degree, its notes, and the line it came
+of. A line EXPLAIN gives that the viewer does not know is shown as an
+operator of its first word.
+
+**Compare with the plan before** shows the plan explained before beside
+the latest, each as a tree-table, of the same stage, the operators one
+has and the other lacks marked, as after an index is made; a what-if
+shows them so at once. The setting **Open plans as** opens a plan on its
+raw text instead ([Appendix B](../appendix/b-settings.md)).
 
 ## Formatting
 

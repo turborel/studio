@@ -9,7 +9,7 @@
  */
 import type { Namer } from "../data/ddl";
 import type { TableDetail } from "../ipc/catalog";
-import { type Plan, type PlanNode } from "../worksheet/plan";
+import { type Plan, type PlanNode } from "../plan/plan";
 
 /** The rule's identifier. */
 export const SCAN_UNINDEXED = "SCAN-NO-INDEX";

@@ -20,6 +20,7 @@ file `settings.json`, in Studio's folder of the user's configuration
 | `formatIndent` | The formatter's indentation, in spaces | 1 to 8 | 4 |
 | `formatLineWidth` | The width the formatter keeps lines within, in characters | 40 to 240 | 100 |
 | `notifyAfterSeconds` | How long a run lasts, in seconds, before its end is notified while the window is in the background; 0 for never | 0 to 3600 | 10 |
+| `planView` | How a plan is first shown: drawn, or as EXPLAIN's text | `visual` or `raw` | `visual` |
 
 A setting the file lacks takes its default. A setting outside its values is refused, and the file is left as it was.
 A file Studio cannot read, or of another format, is refused: the window

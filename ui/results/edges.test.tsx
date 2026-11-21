@@ -60,7 +60,13 @@ describe("the results' actions at their edges", () => {
     const asked = catalogBackend({ session_state: () => ({ ...SESSION, authorization: "BOB" }) });
     const { store, id } = await holding(run([["x", "1"]], { sql: "CALL P()" }));
     expect(requeryable(run([]))).toBe(true);
-    expect(requeryable(run([], { plan: { stages: [], counted: [], rules: [], ran: null } }))).toBe(false);
+    expect(
+      requeryable(
+        run([], {
+          plan: { stages: [], counted: [], rules: [], ran: null, ranMillis: null, joinOrder: null, lines: [] },
+        }),
+      ),
+    ).toBe(false);
     expect(requeryable(run([], { outcome: null }))).toBe(false);
     await requery(store, id, 1, (q) => q);
     await requery(store, id, 9, (q) => q);

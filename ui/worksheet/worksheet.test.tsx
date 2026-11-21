@@ -383,7 +383,7 @@ describe("a worksheet's panel", () => {
     });
     expect(screen.getByText("No messages yet.")).toBeTruthy();
     fireEvent.click(screen.getByRole("tab", { name: "Plan" }));
-    expect(screen.getByText("No plan yet: Explain shows the plan of the statement at the cursor.")).toBeTruthy();
+    expect(screen.getByText(/^No plan yet: Explain shows the plan of the statement at the cursor/u)).toBeTruthy();
     fireEvent.click(screen.getByRole("tab", { name: "Results" }));
   });
 });

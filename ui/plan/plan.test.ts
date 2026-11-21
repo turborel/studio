@@ -62,6 +62,9 @@ describe("a plan", () => {
     const [project] = plan.stages[0]?.roots ?? [];
     expect([project?.estimated, project?.actual]).toEqual([4, 4]);
     expect(project?.children[0]?.probes).toBe(4);
+  });
+
+  it("marks a misestimate and an operator never run, and reads loops and time [DOC sql/statements/explain.md EXPLAIN ANALYZE]", () => {
     const limited = parsePlan(
       lines(` -- physical:
  Limit fetch 3  (est. rows=3)  (actual rows=3)
@@ -74,6 +77,38 @@ describe("a plan", () => {
     expect(nodes[3]?.neverRun).toBe(true);
     const timed = parsePlan(["-- physical:", "SeqScan T  (actual rows=2, loops=3, time=1.5 ms)", ""]);
     expect([timed.stages[0]?.roots[0]?.loops, timed.stages[0]?.roots[0]?.millis]).toEqual([3, 1.5]);
-    expect(parsePlan(["Project stray"]).stages).toEqual([]);
+    const stray = parsePlan(["Project stray", "  Wonder (what=1)"]);
+    expect(stray.stages.map((st) => st.name)).toEqual(["plan"]);
+    expect(stray.stages[0]?.roots[0]?.children[0]?.operator).toBe("Wonder");
+  });
+
+  it("reads a live plan of the server, its query's time, a sort, a hash join and a filter [DESIGN] D54", () => {
+    // EXPLAIN ANALYZE of a join, as turboreld gave it, the clock moving.
+    const plan = parsePlan(
+      lines(` -- physical:
+ Limit fetch 5  (est. rows=5)  (actual rows=5, time=1.040 ms)
+   Sort B.NAME  (est. rows=100)  (actual rows=5, time=1.039 ms)
+     Project A.ID, B.NAME  (est. rows=100)  (actual rows=111, time=0.825 ms)
+       HashJoin A.B = B.ID  (est. rows=100)  (actual rows=111, time=0.823 ms)
+         SeqScan ANN.LP_A  (rows=300, cost=300.0)  (actual rows=300, time=0.013 ms)
+         Filter B.NAME LIKE 'n1%'  (est. rows=100)  (actual rows=111, time=0.368 ms)
+           SeqScan ANN.LP_B  (rows=300, cost=300.0)  (actual rows=300, time=0.022 ms)
+ -- ran: 5 rows in 1.049 ms`),
+    );
+    expect([plan.ran, plan.ranMillis]).toEqual([5, 1.049]);
+    const nodes = operators(plan.stages[0]?.roots ?? []);
+    expect(nodes.map((n) => n.operator)).toEqual([
+      "Limit",
+      "Sort",
+      "Project",
+      "HashJoin",
+      "SeqScan",
+      "Filter",
+      "SeqScan",
+    ]);
+    expect(nodes[4]?.cost).toBe(300);
+    expect(nodes[6]?.millis).toBe(0.022);
+    expect(parsePlan(["-- ran: 1 row"]).ranMillis).toBeNull();
+    expect(parsePlan(["-- ran: something"]).ran).toBeNull();
   });
 });
