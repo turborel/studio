@@ -10,7 +10,7 @@
 /// Every command the application defines, as `src/commands.rs` registers
 /// them and `capabilities/main.json` grants them; the checks tool holds the
 /// three lists equal.
-const COMMANDS: [&str; 61] = [
+const COMMANDS: [&str; 64] = [
     "app_info",
     "open_connection",
     "close_connection",
@@ -41,6 +41,7 @@ const COMMANDS: [&str; 61] = [
     "catalog_table",
     "catalog_routine",
     "catalog_type",
+    "catalog_graphs",
     "catalog_usage",
     "catalog_security",
     "catalog_dependencies",
@@ -48,6 +49,8 @@ const COMMANDS: [&str; 61] = [
     "catalog_definition",
     "save_text_file",
     "export_query",
+    "save_binary_file",
+    "open_model_file",
     "choose_import_file",
     "preview_import",
     "import_rows",

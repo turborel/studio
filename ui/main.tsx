@@ -9,6 +9,7 @@ import "dockview-react/dist/styles/dockview.css";
 import "./styles.css";
 import "./worksheet/worksheet.css";
 import "./results/results.css";
+import "./model/model.css";
 import { App } from "./App";
 import { FailureBoundary, watchFailures } from "./shell/Failure";
 import { Store } from "./state/store";

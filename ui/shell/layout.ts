@@ -1,6 +1,7 @@
 /**
  * The dock's panels and their first layout (RULES.md D14): the Object
- * Explorer on the left, worksheets in the centre, details on the right.
+ * Explorer on the left, worksheets and models in the centre, details on
+ * the right.
  */
 import type { DockviewApi } from "dockview-react";
 
@@ -10,6 +11,7 @@ export const PANELS = {
   welcome: { id: "welcome", title: "Start" },
   details: { id: "details", title: "Details" },
   worksheet: { id: "worksheet", title: "Worksheet" },
+  model: { id: "model", title: "Model" },
 } as const;
 
 /** The width of the side panels as the layout first opens, in pixels. */

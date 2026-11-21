@@ -100,9 +100,9 @@ each as the session's user may see it.
 | S-VIEW-18 | JOBS, FILES, MEMORY_RESERVATIONS | the server's work, files and memory | not yet |
 | S-VIEW-19 | SETTINGS | session and database settings | not yet |
 | S-VIEW-20 | REPLICAS | replication's status | not yet |
-| S-VIEW-21 | PROPERTY_GRAPHS, PG_ELEMENT_TABLES, PG_EDGE_ENDPOINTS | property graphs, drawn as diagrams | not yet |
+| S-VIEW-21 | PROPERTY_GRAPHS, PG_ELEMENT_TABLES, PG_LABELS, PG_EDGE_ENDPOINTS | property graphs, drawn in a model's diagram | done |
 | S-VIEW-22 | PARTITIONED_TABLES, PARTITIONS, PARTITION_INDEXES | partitions and their indexes | done |
-| S-VIEW-23 | USER_DEFINED_TYPES, ATTRIBUTES | user-defined types | done |
+| S-VIEW-23 | USER_DEFINED_TYPES, ATTRIBUTES, DIRECT_SUPERTYPES, METHOD_SPECIFICATIONS, METHOD_SPECIFICATION_PARAMETERS | user-defined types, with their supertypes, references and methods | done |
 
 ## turborel-client
 
@@ -175,7 +175,7 @@ the manual.
 
 | ID | File | Status |
 |---|---|---|
-| S-FILE-1 | A schema model, the user's own file | not yet |
+| S-FILE-1 | A schema model, the user's own file | done |
 | S-FILE-2 | Saved connections, with no password | done |
 | S-FILE-3 | Studio's settings | done |
 | S-FILE-4 | The dock's layout | done |

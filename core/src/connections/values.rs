@@ -127,13 +127,41 @@ pub fn base64(bytes: &[u8]) -> String {
     out
 }
 
+/// The octets of `text`, padded Base64 [RFC 4648 §4]: SQLCODE -910 if it
+/// is not.
+///
+/// # Errors
+///
+/// SQLCODE -910 for text that is not padded Base64.
+pub fn from_base64(text: &str) -> Result<Vec<u8>> {
+    let bad = || StudioError::misuse("[DESIGN] the octets are not Base64");
+    let digit = |c: u8| ALPHABET.iter().position(|&a| a == c).and_then(|p| u32::try_from(p).ok());
+    if !text.len().is_multiple_of(4) {
+        return Err(bad());
+    }
+    let mut out = Vec::with_capacity(text.len());
+    for chunk in text.as_bytes().chunks(4) {
+        let pads = chunk.iter().rev().take_while(|&&c| c == b'=').count();
+        let kept = chunk.len().saturating_sub(pads);
+        let mut n: u32 = 0;
+        for (i, &c) in chunk.iter().enumerate() {
+            let value = if i >= kept { Some(0) } else { digit(c) };
+            n = (n << 6) | value.ok_or_else(bad)?;
+        }
+        let [_, a, b, c] = n.to_be_bytes();
+        let octets = [a, b, c];
+        out.extend_from_slice(octets.get(..kept.saturating_sub(1)).ok_or_else(bad)?);
+    }
+    Ok(out)
+}
+
 #[cfg(test)]
 mod tests {
     use turborel::value::lob::{Lob, LobKind};
 
     use turborel::value::{CharUnits, DataType, Value};
 
-    use super::{INLINE_BYTES, MAX_VALUE_BYTES, ValueRead, base64, octets_of_hex, parameter_value, read, wanted};
+    use super::{INLINE_BYTES, MAX_VALUE_BYTES, ValueRead, base64, from_base64, octets_of_hex, parameter_value, read, wanted};
 
     /// [DESIGN] D39: a large object is read whole up to 16 MiB, a
     /// character one as text, a binary one in Base64, a longer one cut and
@@ -185,6 +213,18 @@ mod tests {
         assert!(matches!(parameter_value(&clob, &"x".repeat(INLINE_BYTES + 1), &mut write).unwrap(), Value::Lob(_)));
         assert!(matches!(parameter_value(&DataType::Boolean, "TRUE", &mut write).unwrap(), Value::Bool(true)));
         assert_eq!(written, [INLINE_BYTES + 1]);
+    }
+
+    /// [DESIGN] D46: Base64 is read back as written, and text that is not
+    /// padded Base64 refused.
+    #[test]
+    fn base64_is_read_back() {
+        for plain in ["", "f", "fo", "foo", "foob", "fooba", "foobar"] {
+            assert_eq!(from_base64(&base64(plain.as_bytes())).unwrap(), plain.as_bytes());
+        }
+        for bad in ["Zg=", "Z!==", "Zm9v!A=="] {
+            assert!(from_base64(bad).is_err(), "{bad}");
+        }
     }
 
     /// [DESIGN] D39: Base64 is written as RFC 4648's test vectors give it.

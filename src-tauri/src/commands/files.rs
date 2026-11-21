@@ -11,9 +11,10 @@ use std::sync::Arc;
 use tauri::{AppHandle, Runtime, State};
 use tauri_plugin_dialog::DialogExt;
 use turborel_studio_core::connections::manager::MAX_SQL_BYTES;
-use turborel_studio_core::connections::values::ExportFormat;
+use turborel_studio_core::connections::values::{ExportFormat, from_base64};
 use turborel_studio_core::error::{Result, StudioError};
 use turborel_studio_core::events::ConnectionId;
+use turborel_studio_core::worksheet::folders::Opened;
 
 use crate::state::Studio;
 
@@ -45,6 +46,54 @@ pub(crate) async fn save_text_file<R: Runtime>(
         std::fs::write(&path, text).map_err(|e| StudioError::misuse(format!("[DESIGN] cannot write {}: {e}", path.display())))?;
         files.choose(&path)?;
         Ok(Some(path.display().to_string()))
+    })
+    .await
+    .map_err(|e| StudioError::misuse(format!("[DESIGN] the request did not finish: {e}")))?
+}
+
+/// The extension of a model's file, and its filter's name (RULES.md D46).
+const MODEL_FILES: (&str, &str) = ("json", "Turborel Studio model");
+/// The longest file of octets saved at once, in bytes.
+const MAX_OCTETS_BYTES: usize = 64 * 1024 * 1024;
+
+/// Asks where to save `octets`, Base64, suggesting `name`, and writes them
+/// there, as an image of a diagram is saved: the path written, or none if
+/// the user cancelled.
+#[tauri::command]
+pub(crate) async fn save_binary_file<R: Runtime>(
+    app: AppHandle<R>,
+    studio: State<'_, Studio>,
+    name: String,
+    octets: String,
+) -> Result<Option<String>> {
+    if octets.len() > MAX_OCTETS_BYTES || name.chars().count() > MAX_NAME_CHARS || name.contains(['/', '\\', '\0']) {
+        return Err(StudioError::misuse(format!("[DESIGN] a file saved is at most {MAX_OCTETS_BYTES} bytes, its name a name alone")));
+    }
+    let bytes = from_base64(&octets)?;
+    let files = Arc::clone(&studio.files);
+    tauri::async_runtime::spawn_blocking(move || {
+        let Some(chosen) = app.dialog().file().set_file_name(name).blocking_save_file() else {
+            return Ok(None);
+        };
+        let path = chosen.into_path().map_err(|e| StudioError::misuse(format!("[DESIGN] the path chosen is not a file's: {e}")))?;
+        std::fs::write(&path, bytes).map_err(|e| StudioError::misuse(format!("[DESIGN] cannot write {}: {e}", path.display())))?;
+        files.choose(&path)?;
+        Ok(Some(path.display().to_string()))
+    })
+    .await
+    .map_err(|e| StudioError::misuse(format!("[DESIGN] the request did not finish: {e}")))?
+}
+
+/// Asks which model to open, and reads it: none if the user cancelled.
+#[tauri::command]
+pub(crate) async fn open_model_file<R: Runtime>(app: AppHandle<R>, studio: State<'_, Studio>) -> Result<Option<Opened>> {
+    let files = Arc::clone(&studio.files);
+    tauri::async_runtime::spawn_blocking(move || {
+        let (extension, label) = MODEL_FILES;
+        let Some(path) = app.dialog().file().add_filter(label, &[extension]).blocking_pick_file() else { return Ok(None) };
+        let path = path.into_path().map_err(|e| StudioError::misuse(format!("[DESIGN] the path chosen is not a file's: {e}")))?;
+        files.choose(&path)?;
+        files.read(&path).map(Some)
     })
     .await
     .map_err(|e| StudioError::misuse(format!("[DESIGN] the request did not finish: {e}")))?

@@ -85,6 +85,9 @@ Each is told in full in [§7](#7-the-decisions).
 | D43 | Imports and exports of a table, through the backend |
 | D44 | Tables made and altered by dialogs that write their DDL |
 | D45 | Rows compared by the target's key, synced by a script |
+| D46 | Models: a schema's tables as a diagram, kept as a file of their own |
+| D47 | A schema taken to a model, or to another schema, by a script |
+| D48 | The query builder: a query written into a worksheet as it is built |
 | D49 | A window that never goes blank: failures shown and logged, files that do not fit set aside, a smoke test of the real window |
 
 ---
@@ -120,6 +123,8 @@ Each is told in full in [§7](#7-the-decisions).
 | `ui/worksheet/` | the worksheet, its editor, panes, plan view, formatter and dialogs (D36, D37) |
 | `ui/worksheet/complete/` | completion, and the copy of Turborel's built-in functions (D40) |
 | `ui/results/` | a result's grid, its views and viewers, its copies, exports and comparisons, the timings (D39), and its rows edited (D42) |
+| `ui/model/` | models: their diagram, file, tables designed, and comparisons with schemas (D46, D47) |
+| `ui/builder/` | the query builder (D48) |
 | `ui/data/` | the dialogs of a table's data and definitions: its rows edited, imported, exported and compared, and tables made and altered (D42 to D45) |
 | `ui/state/` | the window's store and its actions (D31) |
 | `ui/commands/` | the commands and their keys (D30) |
@@ -526,8 +531,8 @@ The review checklist:
 - **Chosen:** `@xyflow/react` 12.12.1 and `@dagrejs/dagre` 3.1.3, MIT,
   from M5.
 - **Readiness:** each its makers' stable major release.
-- **Use:** a result's rows as nodes and edges (D39), and, from M7, tables
-  as nodes and foreign keys as edges, laid out by dagre. Its attribution
+- **Use:** a result's rows as nodes and edges (D39), and a model's
+  tables as nodes and foreign keys as edges (D46), laid out by dagre. Its attribution
   link is hidden, as its MIT license allows: a link would lead the
   webview to a remote page (R-SEC-4).
 - *Why:* diagrams of many tables, laid out automatically.
@@ -1023,6 +1028,49 @@ The review checklist:
   opened in a worksheet of the target's connection, never run by the
   comparison.
 - *Why:* two tables made the same by statements read before they run.
+
+#### D46. Models: a schema's tables as a diagram, kept as a file of their own
+
+- **Read:** each base table chosen of a schema, whole, from the catalog
+  (D33): its columns, primary key, unique constraints, checks but NOT
+  NULL's, foreign keys, and indexes not made for keys; and the schema's
+  property graphs, of PROPERTY_GRAPHS, PG_ELEMENT_TABLES, PG_LABELS and
+  PG_EDGE_ENDPOINTS.
+- **Drawn:** React Flow (D15), each table a node of its columns and
+  marks, each foreign key an edge, each graph's edge table a dashed edge
+  to its vertex tables; laid out by dagre from left to right, a table
+  placed kept; filtered, searched, grouped by schema.
+- **Designed:** a table's form of the table dialogs' columns and
+  constraints (D44), and its indexes.
+- **File:** JSON, `format` `turborel-studio-model`, `version` 1, written
+  and read whole, a file of another format, version or shape refused;
+  the user's own, where the platform's dialog puts it.
+- **Images:** SVG written of the model; PNG of that SVG drawn on a
+  canvas, saved through the backend.
+- *Why:* a schema seen, and designed, as a picture that is also data.
+
+#### D47. A schema taken to a model, or to another schema, by a script
+
+- **Matched:** tables by schema and name, columns by name, types by their
+  standard names, constraints and indexes by what they are, not their
+  names.
+- **Script:** of Turborel's own statements: CREATE TABLE, ALTER TABLE of
+  each form a change needs, DROP TABLE RESTRICT, CREATE INDEX and DROP
+  INDEX; ordered so it runs; opened in a worksheet, never run by the
+  comparison.
+- **Two schemas:** the source's tables taken as the target schema's, and
+  the script makes the target match.
+- *Why:* every change read before it runs, as Turborel would run it.
+
+#### D48. The query builder: a query written into a worksheet as it is built
+
+- **Parts:** tables picked, each aliased by its first letter and a
+  number; joins the foreign keys imply, inner or left; columns, each a
+  value or of an aggregate; conditions by AND, each value a literal of
+  its column's type; grouping by the columns of no aggregate; order.
+- **Written:** into a new worksheet as each part changes, through its
+  editor; the worksheet's to edit once the builder closes.
+- *Why:* a query begun by pointing, finished as SQL.
 
 #### D49. A window that never goes blank
 

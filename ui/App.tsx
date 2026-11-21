@@ -21,6 +21,7 @@ import { StatusBar } from "./shell/StatusBar";
 import { Toolbar } from "./shell/Toolbar";
 import { checkAfterWake, loadAll, told } from "./state/actions";
 import { keepAsChanged, restoreWorksheets } from "./state/worksheets";
+import { BuilderDialog } from "./builder/BuilderDialog";
 import { DataDialog } from "./data/DataDialog";
 import { FavouriteDialog, FoldersDialog, GuardDialog, HistoryDialog, ValuesDialog } from "./worksheet/dialogs";
 import { openConnection, type Store, StoreContext, useStudio } from "./state/store";
@@ -125,6 +126,8 @@ function Dialogs({ context }: { readonly context: CommandContext }) {
       return <FavouriteDialog sql={dialog.sql} />;
     case "data":
       return <DataDialog task={dialog.task} />;
+    case "builder":
+      return <BuilderDialog worksheet={dialog.worksheet} connection={dialog.connection} schema={dialog.schema} />;
     case undefined:
       return null;
   }

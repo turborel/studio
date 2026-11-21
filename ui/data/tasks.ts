@@ -19,7 +19,8 @@ export type DataTask =
   | ({ readonly kind: "compare" } & TableOf)
   | ({ readonly kind: "alterTable" } & TableOf)
   | { readonly kind: "createTable"; readonly connection: number; readonly schema: string }
-  | { readonly kind: "generate"; readonly connection: number; readonly schema: string };
+  | { readonly kind: "generate"; readonly connection: number; readonly schema: string }
+  | { readonly kind: "compareSchemas"; readonly connection: number; readonly schema: string };
 
 /** A name as a delimited identifier. */
 export function quoted(name: string): string {

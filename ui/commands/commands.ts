@@ -4,10 +4,11 @@
  * palette all run them by name, so each is in one place.
  */
 import { ZOOM } from "../ipc/preferences";
-import { cancel, changeSettings, disconnect, endTransaction, reconnectOpen, show } from "../state/actions";
+import { attempt, cancel, changeSettings, disconnect, endTransaction, reconnectOpen, show } from "../state/actions";
 import type { IconName } from "../icons/Icon";
 import type { Store } from "../state/store";
 import { loadSchemas } from "../state/catalog";
+import { newModel, openModelFrom } from "../model/models";
 import { openWorksheet } from "../state/worksheets";
 import {
   EDITOR_ACTS,
@@ -163,6 +164,26 @@ const WORKSHEET_COMMANDS: readonly Command[] = [
   onWorksheet("worksheet.explainAnalyze", "Explain Analyze", "Mod+Shift+E", (store) => explainCurrent(store, true)),
   onWorksheet("worksheet.runToCsv", "Run to CSV File…", undefined, (store) => runToFile(store, "csv")),
   onWorksheet("worksheet.runToNative", "Run to Native Rows File…", undefined, (store) => runToFile(store, "native")),
+  {
+    id: "worksheet.queryBuilder",
+    icon: "graph",
+    title: "Query Builder…",
+    category: "Worksheet",
+    enabled: connected,
+    run: ({ store }) => {
+      const now = store.current();
+      const open = now.open.find((c) => c.id === now.active);
+      if (open !== undefined) {
+        const worksheet = openWorksheet(store, "", "Query");
+        show(store, {
+          kind: "builder",
+          worksheet,
+          connection: open.id,
+          schema: open.session.schema ?? open.session.authorization,
+        });
+      }
+    },
+  },
   onWorksheet("worksheet.format", "Format", "Mod+Shift+F", formatCurrent),
   onWorksheet("worksheet.comment", "Toggle Comment", "Mod+/", EDITOR_ACTS.comment),
   onWorksheet("worksheet.upperCase", "Upper Case", "Mod+Shift+U", EDITOR_ACTS.upper),
@@ -216,6 +237,24 @@ export const COMMANDS: readonly Command[] = [
     key: "Mod+O",
     enabled: always,
     run: ({ store }) => openFile(store),
+  },
+  {
+    id: "model.new",
+    icon: "graph",
+    title: "New Model",
+    category: "File",
+    enabled: always,
+    run: ({ store }) => {
+      newModel(store);
+    },
+  },
+  {
+    id: "model.open",
+    icon: "open",
+    title: "Open Model…",
+    category: "File",
+    enabled: always,
+    run: ({ store }) => attempt(store, () => openModelFrom(store)).then(() => undefined),
   },
   {
     id: "worksheet.reopen",

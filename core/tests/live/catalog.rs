@@ -185,7 +185,8 @@ pub fn partitions_and_index_options_are_read(live: &Live) {
 
 /// [DOC sql/07-information-schema.md The views] [DOC sql/statements/create-type.md SYNOPSIS] [DESIGN] D33:
 /// a distinct type is read with its source and a structured type with its
-/// attributes, and each is made again of the definition Studio writes.
+/// attributes, its supertype, its references' type and its methods, and
+/// each is made again of the definition Studio writes.
 pub fn types_are_read_and_made_again(live: &Live) {
     let (manager, _) = live.manager();
     let id = live.owner(&manager);
@@ -211,6 +212,27 @@ pub fn types_are_read_and_made_again(live: &Live) {
         "{script}"
     );
     run_script(&manager, id, "DROP TYPE CAT_MONEY CASCADE; DROP TYPE CAT_ADDR CASCADE");
+    run_script(
+        &manager,
+        id,
+        "CREATE TYPE CAT_PERSON AS (NAME VARCHAR(20)) NOT FINAL REF USING INTEGER \
+         METHOD GREET (P VARCHAR(10)) RETURNS VARCHAR(40) CONTAINS SQL; \
+         CREATE TYPE CAT_STUDENT UNDER CAT_PERSON AS (SCHOOL VARCHAR(20)) NOT FINAL \
+         OVERRIDING METHOD GREET (P VARCHAR(10)) RETURNS VARCHAR(40)",
+    );
+    let person = catalog.user_type(OWNER, "CAT_PERSON").unwrap();
+    let student = catalog.user_type(OWNER, "CAT_STUDENT").unwrap();
+    assert_eq!((person.reference.as_deref(), person.reference_using.as_deref()), (Some("USER GENERATED"), Some("INTEGER")));
+    assert_eq!((student.supertype.as_deref(), student.inherited), (Some("ANN.CAT_PERSON"), 1));
+    let [greet] = person.methods.as_slice() else { panic!("{:?}", person.methods) };
+    assert!(greet.starts_with("METHOD GREET(P CHARACTER VARYING(10)) RETURNS CHARACTER VARYING(40) SPECIFIC CAT_PERSON_GREET_"), "{greet}");
+    assert!(greet.ends_with(" CONTAINS SQL"), "{greet}");
+    assert_eq!(student.methods, ["OVERRIDING METHOD GREET(P CHARACTER VARYING(10)) RETURNS CHARACTER VARYING(40)"]);
+    let script = format!("{}{}", create_type(&person), create_type(&student));
+    run_script(&manager, id, "DROP TYPE CAT_STUDENT CASCADE; DROP TYPE CAT_PERSON CASCADE");
+    run_script(&manager, id, &script);
+    assert_eq!(catalog.user_type(OWNER, "CAT_STUDENT").unwrap().attributes, student.attributes, "{script}");
+    run_script(&manager, id, "DROP TYPE CAT_STUDENT CASCADE; DROP TYPE CAT_PERSON CASCADE");
     manager.close(id).unwrap();
 }
 
@@ -248,5 +270,35 @@ pub fn privileges_and_roles_are_read(live: &Live) {
         id,
         "DROP TABLE CAT_P CASCADE; DROP FUNCTION CAT_PF CASCADE; DROP DOMAIN CAT_PD CASCADE; DROP SEQUENCE CAT_PS CASCADE; DROP USER CAT_BOB; DROP ROLE CAT_CLERK CASCADE",
     );
+    manager.close(id).unwrap();
+}
+
+/// [DOC sql/07-information-schema.md The views] [DOC sql/20-property-graphs.md Functions]
+/// [DESIGN] D46: a schema's property graphs are read for their diagrams:
+/// each vertex and edge table, its labels, and the columns joining each
+/// edge table's ends to its vertex tables.
+pub fn property_graphs_are_read(live: &Live) {
+    let (manager, _) = live.manager();
+    let id = live.owner(&manager);
+    run_script(
+        &manager,
+        id,
+        "CREATE TABLE PG_ACCOUNT (ID VARCHAR(4) PRIMARY KEY, OWNER VARCHAR(10)); \
+         CREATE TABLE PG_TRANSFER (ID VARCHAR(4) PRIMARY KEY, SRC VARCHAR(4) REFERENCES PG_ACCOUNT, DST VARCHAR(4) REFERENCES PG_ACCOUNT); \
+         CREATE PROPERTY GRAPH PG_BANK VERTEX TABLES (PG_ACCOUNT LABEL ACCOUNT) EDGE TABLES (PG_TRANSFER \
+         SOURCE KEY (SRC) REFERENCES PG_ACCOUNT (ID) DESTINATION KEY (DST) REFERENCES PG_ACCOUNT (ID) LABEL TRANSFER)",
+    );
+    let graphs = Catalog::of(&manager, id).graphs(OWNER).unwrap();
+    let bank = graphs.iter().find(|g| g.name == "PG_BANK").unwrap();
+    let kinds: Vec<(&str, &str)> = bank.elements.iter().map(|e| (e.alias.as_str(), e.kind.as_str())).collect();
+    assert_eq!(kinds, [("PG_ACCOUNT", "VERTEX"), ("PG_TRANSFER", "EDGE")]);
+    let account = &bank.elements[0];
+    assert_eq!(
+        (account.schema.as_deref(), account.table.as_deref(), account.labels.as_slice()),
+        (Some(OWNER), Some("PG_ACCOUNT"), ["ACCOUNT".to_owned()].as_slice())
+    );
+    let ends: Vec<String> = bank.elements[1].ends.iter().map(|e| format!("{} {} {:?}", e.end, e.vertex, e.columns)).collect();
+    assert_eq!(ends, [r#"DESTINATION PG_ACCOUNT [("DST", "ID")]"#, r#"SOURCE PG_ACCOUNT [("SRC", "ID")]"#]);
+    run_script(&manager, id, "DROP PROPERTY GRAPH PG_BANK CASCADE; DROP TABLE PG_TRANSFER CASCADE; DROP TABLE PG_ACCOUNT CASCADE");
     manager.close(id).unwrap();
 }

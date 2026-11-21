@@ -13,6 +13,8 @@ are bound.
 | New Connection… | File | Cmd+Shift+N | Ctrl+Shift+N |
 | New Worksheet | File | Cmd+T | Ctrl+T |
 | Open File… | File | Cmd+O | Ctrl+O |
+| New Model | File | | |
+| Open Model… | File | | |
 | Reopen Closed Worksheet | File | Cmd+Shift+T | Ctrl+Shift+T |
 | History… | File | Cmd+Shift+H | Ctrl+Shift+H |
 | Disconnect | Connection | | |
@@ -28,6 +30,7 @@ are bound.
 | Explain Analyze | Worksheet | Cmd+Shift+E | Ctrl+Shift+E |
 | Run to CSV File… | Worksheet | | |
 | Run to Native Rows File… | Worksheet | | |
+| Query Builder… | Worksheet | | |
 | Format | Worksheet | Cmd+Shift+F | Ctrl+Shift+F |
 | Toggle Comment | Worksheet | Cmd+/ | Ctrl+/ |
 | Upper Case | Worksheet | Cmd+Shift+U | Ctrl+Shift+U |

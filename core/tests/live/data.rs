@@ -136,3 +136,68 @@ pub fn a_comparisons_script_syncs_the_target(live: &Live) {
     }
     manager.close(id).unwrap();
 }
+
+/// [DOC sql/statements/alter-table.md SYNOPSIS] [DOC sql/statements/create-index.md SYNOPSIS]
+/// [DOC sql/statements/drop-index.md SYNOPSIS] [DESIGN] D47: the script a
+/// model's comparison writes takes the schema to the model: an index
+/// dropped and one made, constraints dropped and one added, a column's
+/// type widened, its default and NOT NULL set, a column added and one
+/// dropped, each statement under autocommit, as DROP INDEX must be.
+pub fn a_models_script_migrates_the_schema(live: &Live) {
+    let (manager, _) = live.manager();
+    let id = live.owner(&manager);
+    manager.set_autocommit(id, true).unwrap();
+    for sql in [
+        "CREATE TABLE ANN.DEPT (ID INTEGER NOT NULL, NAME VARCHAR(20) DEFAULT 'none', CONSTRAINT DEPT_PRIMARY1 PRIMARY KEY (ID))",
+        "CREATE TABLE ANN.STAFF (ID INTEGER NOT NULL, DEPT INTEGER, AGE INTEGER, CONSTRAINT STAFF_PRIMARY1 PRIMARY KEY (ID), \
+         CONSTRAINT STAFF_UNIQUE1 UNIQUE (DEPT, AGE), CONSTRAINT STAFF_AGE CHECK (AGE > 0), \
+         CONSTRAINT STAFF_DEPT FOREIGN KEY (DEPT) REFERENCES ANN.DEPT (ID) ON DELETE SET NULL)",
+        "CREATE INDEX STAFF_BY_DEPT ON ANN.STAFF (DEPT)",
+        "DROP INDEX STAFF_BY_DEPT",
+        "ALTER TABLE ANN.STAFF DROP CONSTRAINT STAFF_UNIQUE1 RESTRICT",
+        "ALTER TABLE ANN.STAFF DROP CONSTRAINT STAFF_AGE RESTRICT",
+        "ALTER TABLE ANN.STAFF ALTER COLUMN ID SET DATA TYPE BIGINT",
+        "ALTER TABLE ANN.STAFF ALTER COLUMN DEPT SET DEFAULT 1",
+        "ALTER TABLE ANN.STAFF ALTER COLUMN DEPT SET NOT NULL",
+        "ALTER TABLE ANN.STAFF ADD COLUMN NOTE VARCHAR(40)",
+        "ALTER TABLE ANN.STAFF DROP COLUMN AGE RESTRICT",
+        "ALTER TABLE ANN.STAFF ADD CONSTRAINT STAFF_NOTE CHECK (NOTE <> '')",
+        "CREATE INDEX STAFF_BY_NOTE ON ANN.STAFF (NOTE) USING hash",
+    ] {
+        let RunAnswer::Ran(_) = manager.run(id, sql, true).unwrap_or_else(|e| panic!("{sql}: {}", e.message)) else { panic!("asked") };
+    }
+    let table = turborel_studio_core::catalog::Catalog::of(&manager, id).table("ANN", "STAFF").unwrap();
+    let columns: Vec<(&str, &str, bool)> = table.columns.iter().map(|c| (c.name.as_str(), c.type_written.as_str(), c.nullable)).collect();
+    assert_eq!(columns, [("ID", "BIGINT", false), ("DEPT", "INTEGER", false), ("NOTE", "CHARACTER VARYING(40)", true)]);
+    assert!(table.indexes.iter().any(|i| i.name == "STAFF_BY_NOTE" && i.method == "hash"));
+    for sql in ["DROP TABLE ANN.STAFF CASCADE", "DROP TABLE ANN.DEPT CASCADE"] {
+        let RunAnswer::Ran(_) = manager.run(id, sql, true).unwrap() else { panic!("asked") };
+    }
+    manager.close(id).unwrap();
+}
+
+/// [DOC sql/statements/select.md SYNOPSIS] [DESIGN] D48: the query the
+/// query builder writes runs as written: a join a foreign key implies,
+/// left, a condition, an aggregate grouped by the other column, and order.
+pub fn a_built_query_runs(live: &Live) {
+    let (manager, _) = live.manager();
+    let id = live.owner(&manager);
+    manager.set_autocommit(id, true).unwrap();
+    for sql in [
+        "CREATE TABLE ANN.DEPTS (ID INTEGER PRIMARY KEY, TITLE VARCHAR(20))",
+        "CREATE TABLE ANN.STAFF (ID INTEGER PRIMARY KEY, NAME VARCHAR(20), DEPT INTEGER REFERENCES ANN.DEPTS)",
+        "INSERT INTO ANN.DEPTS VALUES (1, 'Sales'), (2, 'Ops')",
+        "INSERT INTO ANN.STAFF VALUES (1, 'Ada', 1), (2, 'Alan', 1), (3, 'Amy', 2), (4, 'Bob', 2), (5, 'Ann', NULL)",
+    ] {
+        run(&manager, id, sql).unwrap_or_else(|e| panic!("{sql}: {}", e.message));
+    }
+    let built = "SELECT D1.TITLE, COUNT(S1.ID)\nFROM ANN.STAFF S1\nLEFT JOIN ANN.DEPTS D1 ON D1.ID = S1.DEPT\nWHERE S1.NAME LIKE 'A%'\nGROUP BY D1.TITLE\nORDER BY D1.TITLE DESC";
+    let Outcome::Rows { page, .. } = run(&manager, id, built).unwrap().outcome else { panic!("no rows") };
+    let rows: Vec<Vec<Option<&str>>> = page.rows.iter().map(|r| r.iter().map(Option::as_deref).collect()).collect();
+    // A null sorts as the greatest value, so first in DESC order.
+    assert_eq!(rows, [vec![None, Some("1")], vec![Some("Sales"), Some("2")], vec![Some("Ops"), Some("1")]]);
+    for sql in ["DROP TABLE ANN.STAFF CASCADE", "DROP TABLE ANN.DEPTS CASCADE"] {
+        let RunAnswer::Ran(_) = manager.run(id, sql, true).unwrap() else { panic!("asked") };
+    }
+    manager.close(id).unwrap();
+}

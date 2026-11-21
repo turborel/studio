@@ -4,6 +4,7 @@
  * and read in React through `useStudio`, so each component renders again
  * when what it reads changes.
  */
+import type { ModelDoc } from "../model/models";
 import type { DataTask } from "../data/tasks";
 import { createContext, useContext, useSyncExternalStore } from "react";
 import type { Guards, ServerTime, SessionState, StudioError } from "../ipc/connections";
@@ -45,7 +46,8 @@ export type Dialog =
   | { readonly kind: "history" }
   | { readonly kind: "folders" }
   | { readonly kind: "favourite"; readonly sql: string }
-  | { readonly kind: "data"; readonly task: DataTask };
+  | { readonly kind: "data"; readonly task: DataTask }
+  | { readonly kind: "builder"; readonly worksheet: string; readonly connection: number; readonly schema: string };
 
 /** The values a statement's markers are given: its parameters' and its script variables'. */
 export interface Given {
@@ -75,6 +77,9 @@ export interface StudioState {
   readonly cellSummary: string | null;
   /** What Studio tells of its files set aside, until each is dismissed. */
   readonly notices: readonly string[];
+  /** The models open, each a tab, and the one active. */
+  readonly models: readonly ModelDoc[];
+  readonly activeModel: string | null;
 }
 
 /** The state before anything is loaded. */
@@ -96,6 +101,8 @@ export const INITIAL: StudioState = {
   projects: [],
   cellSummary: null,
   notices: [],
+  models: [],
+  activeModel: null,
 };
 
 /** The store of a window: its state, and who reads it. */

@@ -1,6 +1,7 @@
 /**
  * The dock (RULES.md D14, R-FMT-1): its panels laid out as they were left,
- * the layout saved as it changes, and laid out afresh on Reset Layout.
+ * the layout saved as it changes, and laid out afresh on Reset Layout; a
+ * tab of each worksheet and of each model open.
  */
 import {
   DockviewDefaultTab,
@@ -20,6 +21,8 @@ import type { ThemeName } from "../theme/tokens";
 import { loadLayout, saveLayout } from "../ipc/preferences";
 import { defaultLayout, PANELS } from "./layout";
 import { DetailsPanel, ExplorerPanel, WelcomePanel } from "./panels";
+import { activateModel, closeModel, type ModelDoc } from "../model/models";
+import { ModelView } from "../model/ModelView";
 
 /** The dock's theme of each of Studio's, its colours from Studio's own. */
 const DOCK_THEMES: Readonly<Record<ThemeName, DockviewTheme>> = {
@@ -32,11 +35,17 @@ function WorksheetPanel({ params }: IDockviewPanelProps<{ id: string }>) {
   return <Worksheet id={params.id} />;
 }
 
+/** A model's panel, by the identifier its parameters give. */
+function ModelPanel({ params }: IDockviewPanelProps<{ id: string }>) {
+  return <ModelView id={params.id} />;
+}
+
 const COMPONENTS = {
   [PANELS.explorer.id]: ExplorerPanel,
   [PANELS.welcome.id]: WelcomePanel,
   [PANELS.details.id]: DetailsPanel,
   [PANELS.worksheet.id]: WorksheetPanel,
+  [PANELS.model.id]: ModelPanel,
 };
 
 /** The icon of each panel's tab, by its component. */
@@ -45,6 +54,7 @@ export const TAB_ICONS: Readonly<Record<string, IconName>> = {
   [PANELS.welcome.id]: "start",
   [PANELS.details.id]: "details",
   [PANELS.worksheet.id]: "worksheet",
+  [PANELS.model.id]: "graph",
 };
 
 /** A panel's tab: its icon, then dockview's own tab of its title. */
@@ -123,6 +133,76 @@ export function syncWorksheets(api: DockviewApi, store: Store): () => void {
   };
 }
 
+/** The prefix of a model's panel's identifier. */
+export const MODEL_PANEL = "model:";
+
+/** The title of model `m`'s tab: its name, marked if changed since saved. */
+export function modelTitle(m: ModelDoc): string {
+  return `${m.model.name}${m.modified ? " •" : ""}`;
+}
+
+/** Adds model `m`'s panel to `api` beside the worksheets and models, or titles it anew. */
+function placeModel(api: DockviewApi, m: ModelDoc): void {
+  const id = MODEL_PANEL + m.id;
+  const panel = api.getPanel(id);
+  if (panel !== undefined) {
+    if (panel.title !== modelTitle(m)) {
+      panel.api.setTitle(modelTitle(m));
+    }
+    return;
+  }
+  const beside =
+    api.panels.find((p) => p.id.startsWith(WORKSHEET_PANEL) || p.id.startsWith(MODEL_PANEL)) ??
+    api.getPanel(PANELS.welcome.id);
+  api.addPanel({
+    id,
+    component: PANELS.model.id,
+    title: modelTitle(m),
+    params: { id: m.id },
+    ...(beside === undefined ? {} : { position: { referencePanel: beside.id, direction: "within" as const } }),
+  });
+}
+
+/** Keeps `api`'s model panels as `store`'s models are: each opened, titled, shown when active, and closed: what stops it. */
+export function syncModels(api: DockviewApi, store: Store): () => void {
+  let closing = false;
+  let shownBefore: string | null = null;
+  const sync = () => {
+    const now = store.current();
+    const ids = new Set(now.models.map((m) => MODEL_PANEL + m.id));
+    closing = true;
+    for (const panel of api.panels.filter((p) => p.id.startsWith(MODEL_PANEL) && !ids.has(p.id))) {
+      api.removePanel(panel);
+    }
+    closing = false;
+    for (const m of now.models) {
+      placeModel(api, m);
+    }
+    if (now.activeModel !== shownBefore) {
+      shownBefore = now.activeModel;
+      api.getPanel(MODEL_PANEL + (now.activeModel ?? ""))?.api.setActive();
+    }
+  };
+  const removed = api.onDidRemovePanel((panel) => {
+    if (!closing && panel.id.startsWith(MODEL_PANEL)) {
+      closeModel(store, panel.id.slice(MODEL_PANEL.length));
+    }
+  });
+  const activated = api.onDidActivePanelChange(({ panel }) => {
+    if (panel?.id.startsWith(MODEL_PANEL) === true) {
+      shownBefore = panel.id.slice(MODEL_PANEL.length);
+      activateModel(store, shownBefore);
+    }
+  });
+  sync();
+  const stop = store.subscribe(sync);
+  return () => {
+    stop();
+    removed.dispose();
+    activated.dispose();
+  };
+}
+
 /** How long the layout waits, unchanged, before it is saved, in milliseconds. */
 export const SAVE_AFTER_MS = 500;
 
@@ -159,7 +239,10 @@ export function Dock({ theme, onApi }: { readonly theme: ThemeName; readonly onA
   const store = useStore();
   const ready = (event: DockviewReadyEvent) => {
     onApi(event.api);
-    void restore(event.api).then(() => syncWorksheets(event.api, store));
+    void restore(event.api).then(() => {
+      syncWorksheets(event.api, store);
+      syncModels(event.api, store);
+    });
   };
   return <DockviewReact components={COMPONENTS} defaultTabComponent={Tab} onReady={ready} theme={DOCK_THEMES[theme]} />;
 }

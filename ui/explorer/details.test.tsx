@@ -209,7 +209,7 @@ describe("partitions and types", () => {
     expect(screen.getByText("A partition of ANN.SALES: DEFAULT")).toBeTruthy();
   });
 
-  it("show a type's attributes, or its source, and its definition [DESIGN] D33", async () => {
+  it("show a type's attributes, supertype, references and methods, or its source, and its definition [DESIGN] D33", async () => {
     const address = {
       schema: "ANN",
       name: "ADDRESS",
@@ -218,6 +218,11 @@ describe("partitions and types", () => {
       isFinal: false,
       source: null,
       attributes: [{ name: "CITY", typeWritten: "CHARACTER VARYING(20)", default: "'Rome'" }],
+      supertype: "ANN.PLACE",
+      inherited: 0,
+      reference: "USER GENERATED",
+      referenceUsing: "INTEGER",
+      methods: ["METHOD DISTANCE() RETURNS INTEGER SPECIFIC ADDRESS_DISTANCE_1"],
     };
     const money = {
       ...address,
@@ -227,6 +232,10 @@ describe("partitions and types", () => {
       isFinal: true,
       source: "NUMERIC(10,2)",
       attributes: [],
+      supertype: null,
+      reference: null,
+      referenceUsing: null,
+      methods: [],
     };
     const asked = catalogBackend({ catalog_type: (args) => (args["name"] === "MONEY" ? money : address) });
     const store = await opened();
@@ -237,7 +246,12 @@ describe("partitions and types", () => {
     await select(store, 1, { kind: "type", schema: "ANN", name: "ADDRESS" });
     within(store, <Details />);
     await settle();
-    expect(screen.getByText("STRUCTURED type, not final, not instantiable")).toBeTruthy();
+    expect(
+      screen.getByText(
+        "STRUCTURED type, not final, not instantiable, under ANN.PLACE, its references user generated of INTEGER",
+      ),
+    ).toBeTruthy();
+    expect(screen.getByText("METHOD DISTANCE() RETURNS INTEGER SPECIFIC ADDRESS_DISTANCE_1")).toBeTruthy();
     expect(screen.getByText("'Rome'")).toBeTruthy();
     await act(() => select(store, 1, { kind: "type", schema: "ANN", name: "MONEY" }));
     await settle();

@@ -5,6 +5,7 @@
 //! definitions.
 
 pub mod ddl;
+pub mod graphs;
 pub mod model;
 pub mod names;
 mod partitions;

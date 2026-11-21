@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-catalog-graphs"
+description = "Enables the catalog_graphs command without any pre-configured scope."
+commands.allow = ["catalog_graphs"]
+
+[[permission]]
+identifier = "deny-catalog-graphs"
+description = "Denies the catalog_graphs command without any pre-configured scope."
+commands.deny = ["catalog_graphs"]

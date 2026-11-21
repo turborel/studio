@@ -37,7 +37,7 @@ export function isStudioError(thrown: unknown): thrown is StudioError {
 }
 
 /** Runs `work`, keeping its failure as the state's error. */
-async function attempt<T>(store: Store, work: () => Promise<T>): Promise<T | undefined> {
+export async function attempt<T>(store: Store, work: () => Promise<T>): Promise<T | undefined> {
   try {
     return await work();
   } catch (thrown: unknown) {

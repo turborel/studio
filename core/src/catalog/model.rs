@@ -345,8 +345,20 @@ pub struct UserType {
     pub is_final: bool,
     /// A distinct type's source type, as SQL writes it.
     pub source: Option<String>,
-    /// A structured type's attributes, in order.
+    /// A structured type's attributes, in order, those it inherits first.
     pub attributes: Vec<Attribute>,
+    /// A structured type's direct supertype, qualified, if it has one.
+    pub supertype: Option<String>,
+    /// How many of `attributes`, first, it inherits of its supertype.
+    pub inherited: usize,
+    /// How a structured type's references are represented: SYSTEM
+    /// GENERATED, USER GENERATED or DERIVED.
+    pub reference: Option<String>,
+    /// Of USER GENERATED, the type its references are represented by.
+    pub reference_using: Option<String>,
+    /// Its method specifications, as CREATE TYPE writes them; not the
+    /// observers and mutators of its attributes, which the type makes.
+    pub methods: Vec<String>,
 }
 
 /// A user, as the Information Schema shows them.

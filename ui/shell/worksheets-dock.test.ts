@@ -2,7 +2,9 @@ import type { DockviewApi } from "dockview-react";
 import { Store } from "../state/store";
 import { must } from "../test/catalog";
 import { changeWorksheet, openWorksheet } from "../state/worksheets";
-import { syncWorksheets, tabTitle, WORKSHEET_PANEL } from "./Dock";
+import { MODEL_PANEL, modelTitle, syncModels, syncWorksheets, tabTitle, WORKSHEET_PANEL } from "./Dock";
+import { changeModel, closeModel, modelOf, openModel } from "../model/models";
+import { emptyModel } from "../model/model";
 
 /** A panel of the fake dock. */
 interface FakePanel {
@@ -84,6 +86,45 @@ describe("the dock's worksheets", () => {
     store.update((now) => ({ ...now, worksheets: [] }));
     expect(dock.panels.map((p) => p.id)).toEqual(["welcome"]);
     expect(tabTitle({ ...must(store.current().closedWorksheets[0]), modified: false, pinned: false })).toBe("B");
+    stop();
+  });
+});
+
+describe("the dock's models", () => {
+  it("are a panel each, titled, shown when active, and closed with the model or by its tab [DESIGN] D46", () => {
+    const store = new Store();
+    const { dock, closeByHand, activate } = fakeDock();
+    const a = openModel(store, emptyModel("Sales"));
+    const stop = syncModels(dock as unknown as DockviewApi, store);
+    const b = openModel(store, emptyModel("Stock"));
+    expect(dock.panels.map((p) => p.id)).toEqual(["welcome", MODEL_PANEL + a, MODEL_PANEL + b]);
+    expect(dock.activePanel?.id).toBe(MODEL_PANEL + b);
+    changeModel(store, a, (m) => ({ ...m, modified: true }));
+    expect(dock.getPanel(MODEL_PANEL + a)?.title).toBe("Sales •");
+    activate(dock.getPanel(MODEL_PANEL + a));
+    expect(store.current().activeModel).toBe(a);
+    activate(dock.getPanel("welcome"));
+    activate(undefined);
+    const panelB = dock.getPanel(MODEL_PANEL + b);
+    if (panelB !== undefined) {
+      closeByHand(panelB);
+    }
+    expect(store.current().models.map((m) => m.id)).toEqual([a]);
+    closeModel(store, a);
+    expect(dock.panels.map((p) => p.id)).toEqual(["welcome"]);
+    const closed = {
+      id: a,
+      model: emptyModel("X"),
+      path: null,
+      modified: false,
+      connection: null,
+      filter: "",
+      grouped: false,
+      selected: null,
+      told: "",
+    };
+    expect(modelTitle(closed)).toBe("X");
+    expect(modelOf(store.current(), a)).toBeUndefined();
     stop();
   });
 });

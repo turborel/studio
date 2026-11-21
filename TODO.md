@@ -12,19 +12,6 @@ Code never cites this file (R-DOC-5).
 - Waiting on the server, shown as unavailable until Turborel has it: a
   debugger of SQL routines, with breakpoints and stepping.
 
-## M7 Schema modeling
-
-- ER diagrams of a live schema and of property graphs, laid out, saved
-  and exported (S-VIEW-21).
-- Models designed offline (S-FILE-1), compared with a live schema, and
-  their DDL script; schema compare.
-- A structured type's definition with its supertype, its reference
-  type's options and its methods, which the explorer's definition does
-  not yet write.
-- A visual query builder: tables picked, joins from their foreign keys,
-  columns, filters, grouping and order, its SQL written live in a
-  worksheet.
-
 ## M8 Analyzer
 
 - Index views, the plan view, and the analyzer's rules, each with its

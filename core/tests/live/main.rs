@@ -145,6 +145,8 @@ const TESTS: &[(&str, Test)] = &[
     ("rows_are_imported_from_a_file", data::rows_are_imported_from_a_file),
     ("the_table_dialogs_ddl_runs", data::the_table_dialogs_ddl_runs),
     ("a_comparisons_script_syncs_the_target", data::a_comparisons_script_syncs_the_target),
+    ("a_models_script_migrates_the_schema", data::a_models_script_migrates_the_schema),
+    ("a_built_query_runs", data::a_built_query_runs),
     ("a_running_statement_is_cancelled", session::a_running_statement_is_cancelled),
     ("the_transaction_is_followed", session::the_transaction_is_followed),
     ("a_lost_connection_is_told_and_reconnected", session::a_lost_connection_is_told_and_reconnected),
@@ -161,6 +163,7 @@ const TESTS: &[(&str, Test)] = &[
     ("partitions_and_index_options_are_read", catalog::partitions_and_index_options_are_read),
     ("types_are_read_and_made_again", catalog::types_are_read_and_made_again),
     ("privileges_and_roles_are_read", catalog::privileges_and_roles_are_read),
+    ("property_graphs_are_read", catalog::property_graphs_are_read),
 ];
 
 fn main() -> ExitCode {

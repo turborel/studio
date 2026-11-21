@@ -11,6 +11,7 @@ use serde::Deserialize;
 use tauri::State;
 use turborel_studio_core::catalog::Catalog;
 use turborel_studio_core::catalog::ddl::{self, ScriptAs};
+use turborel_studio_core::catalog::graphs::Graph;
 use turborel_studio_core::catalog::model::{
     Dependencies, Found, Privilege, RoutineDetail, Schema, SchemaObjects, Security, TableDetail, UserType,
 };
@@ -98,6 +99,13 @@ pub(crate) async fn catalog_type(studio: State<'_, Studio>, connection: Connecti
     bounded("a schema", &schema, MAX_NAME_CHARS)?;
     bounded("a type", &name, MAX_NAME_CHARS)?;
     blocking(&studio, move |m| Catalog::of(m, connection).user_type(&schema, &name)).await
+}
+
+/// The property graphs of `schema` (RULES.md D46).
+#[tauri::command]
+pub(crate) async fn catalog_graphs(studio: State<'_, Studio>, connection: ConnectionId, schema: String) -> Result<Vec<Graph>> {
+    bounded("a schema", &schema, MAX_NAME_CHARS)?;
+    blocking(&studio, move |m| Catalog::of(m, connection).graphs(&schema)).await
 }
 
 /// What USAGE is read of.

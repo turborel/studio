@@ -195,3 +195,125 @@ The project folders, at most 100:
   "folders": ["/home/ann/sql"]
 }
 ```
+
+## A model's file
+
+A model ([Schema Modeling](../user/08-modeling.md)) is a file of the
+user's own, where **Save Model As…** puts it, not in Studio's folder. It
+is a JSON document whose `format` is `turborel-studio-model` and whose
+`version` is 1; a file of another format or version, or whose tables are
+not of the shape below, is refused, saying why.
+
+```json
+{
+  "format": "turborel-studio-model",
+  "version": 1,
+  "name": "Sales",
+  "tables": [
+    {
+      "schema": "ANN",
+      "name": "DEPT",
+      "columns": [
+        {
+          "name": "ID",
+          "type": "INTEGER",
+          "notNull": true,
+          "default": null
+        },
+        {
+          "name": "NAME",
+          "type": "VARCHAR(20)",
+          "notNull": false,
+          "default": "'none'"
+        }
+      ],
+      "primaryKey": {
+        "name": "DEPT_PRIMARY1",
+        "columns": [
+          "ID"
+        ]
+      },
+      "uniques": [],
+      "checks": [],
+      "foreignKeys": [],
+      "indexes": [],
+      "position": {
+        "x": 300,
+        "y": 0
+      }
+    },
+    {
+      "schema": "ANN",
+      "name": "STAFF",
+      "columns": [
+        {
+          "name": "ID",
+          "type": "INTEGER",
+          "notNull": true,
+          "default": null
+        },
+        {
+          "name": "DEPT",
+          "type": "INTEGER",
+          "notNull": false,
+          "default": null
+        }
+      ],
+      "primaryKey": {
+        "name": null,
+        "columns": [
+          "ID"
+        ]
+      },
+      "uniques": [],
+      "checks": [
+        {
+          "name": "STAFF_ID",
+          "condition": "ID > 0"
+        }
+      ],
+      "foreignKeys": [
+        {
+          "name": "STAFF_DEPT",
+          "columns": [
+            "DEPT"
+          ],
+          "references": {
+            "schema": "ANN",
+            "table": "DEPT",
+            "columns": [
+              "ID"
+            ]
+          },
+          "onDelete": "SET NULL",
+          "onUpdate": "NO ACTION"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "STAFF_BY_DEPT",
+          "columns": [
+            "DEPT"
+          ],
+          "method": "btree"
+        }
+      ],
+      "position": {
+        "x": 0,
+        "y": 0
+      }
+    }
+  ],
+  "graphs": []
+}
+```
+
+Each table has its schema and name; its columns, each with its type as
+SQL writes it, whether it is NOT NULL, and its default as SQL writes it,
+or null; its primary key, or null, and its unique constraints, each of
+its name, or null, and its columns; its checks, each of its name and
+condition; its foreign keys, each of its name, its columns, the table and
+columns it references, and its rules; its indexes, each of its name, its
+columns and its method; and its place in the diagram, or null where it
+has none. `graphs` holds the property graphs read with the tables, each
+of its schema, name and element tables.

@@ -5,6 +5,9 @@
  */
 import type { DataTask } from "../data/tasks";
 import { Icon, type IconName } from "../icons/Icon";
+import { baseTables, readModel } from "../model/live";
+import { openModel } from "../model/models";
+import { attempt } from "../state/actions";
 import { useStore } from "../state/store";
 
 /** An action's button: its icon and name. */
@@ -46,12 +49,37 @@ export function TableActions(props: {
   );
 }
 
-/** The actions of schema `schema` on `connection`: a table made in it. */
+/** The action that opens a model of schema `schema`'s tables, read whole. */
+function ModelAction({ connection, schema }: { readonly connection: number; readonly schema: string }) {
+  const store = useStore();
+  return (
+    <button
+      type="button"
+      className="tool"
+      onClick={() =>
+        void attempt(store, async () => {
+          const model = await readModel(connection, schema, {
+            tables: await baseTables(connection, schema),
+            name: schema,
+          });
+          openModel(store, model, { connection });
+        })
+      }
+    >
+      <Icon name="graph" />
+      Open Model
+    </button>
+  );
+}
+
+/** The actions of schema `schema` on `connection`: a table made in it, its script, its comparison and its model. */
 export function SchemaActions({ connection, schema }: { readonly connection: number; readonly schema: string }) {
   return (
     <div className="details-actions" role="group" aria-label="Schema actions">
       <Action icon="table" name="Create Table…" task={{ kind: "createTable", connection, schema }} />
       <Action icon="definition" name="Generate Script…" task={{ kind: "generate", connection, schema }} />
+      <Action icon="compare" name="Compare Schema…" task={{ kind: "compareSchemas", connection, schema }} />
+      <ModelAction connection={connection} schema={schema} />
     </div>
   );
 }

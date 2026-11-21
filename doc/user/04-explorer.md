@@ -103,7 +103,9 @@ Above a base table's tabs, **Edit Rows…**, **Import…**, **Export…**,
 into it, export its rows, compare them with another table's, and alter
 it; above a schema's definition, **Create Table…** makes a table in it,
 and **Generate Script…** writes the definitions of the objects chosen
-of it ([Editing Data](07-editing-data.md)).
+of it ([Editing Data](07-editing-data.md)); **Compare Schema…** compares
+it with another, and **Open Model** opens a model of its tables
+([Schema Modeling](08-modeling.md)).
 
 **Partitions** is shown only of a partitioned table or a partition. The
 index a partitioned table's index made on a partition is named by the
@@ -114,7 +116,8 @@ which only the owner of its schema sees; the privileges granted on it;
 and its definition. Its **Debug** tab is unavailable: Turborel does not
 yet give a debugger of SQL routines, with breakpoints and stepping. A type
 shows its category; a distinct type its source type, and a structured
-type its attributes, and whether it is final and instantiable; and its
+type its attributes, whether it is final and instantiable, its
+supertype, how its references are represented, and its methods; and its
 definition. A sequence and a domain show their definitions and, under
 **Usage**, who is granted USAGE on them; a schema shows its definition.
 A user shows the roles granted to it, and a role the users and roles it

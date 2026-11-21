@@ -113,7 +113,7 @@ describe("every command", () => {
     )) {
       await runCommand(c.id, ctx);
     }
-    expect(["history", "folders"]).toContain(store.current().dialog?.kind);
+    expect(["history", "folders", "builder"]).toContain(store.current().dialog?.kind);
     store.update((now) => ({ ...now, dialog: null }));
     expect(store.current().worksheets.length).toBeGreaterThanOrEqual(1);
     expect(sheet).not.toBe("");

@@ -314,7 +314,12 @@ function TypeDetails({ connection, schema, name }: { connection: number; schema:
       <p>
         {found.category} type, {shape}
         {found.instantiable ? "" : ", not instantiable"}
+        {found.supertype === null ? "" : `, under ${found.supertype}`}
+        {found.reference === null
+          ? ""
+          : `, its references ${found.reference.toLowerCase()}${found.referenceUsing === null ? "" : ` of ${found.referenceUsing}`}`}
       </p>
+      {found.methods.length > 0 && <Table label="Methods" headings={["Method"]} rows={found.methods.map((m) => [m])} />}
       {found.source === null && (
         <Table
           label="Attributes"
