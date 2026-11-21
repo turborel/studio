@@ -23,7 +23,14 @@ What counts, for Studio:
 - the webview reaching more than the application's own commands, or
   loading anything from the network;
 - data sent to an assistant's provider that the user did not choose to
-  send.
+  send;
+- in a Live Session: a connection's setting or secret in what is shared;
+  a value shared that the settings keep back; a viewer admitted who was
+  not approved, or who reaches the presenter's connection; a relay, or
+  anyone between, reading what is shared; an invitation used twice or
+  after it expired;
+- an act of administration run that the user did not choose, or a
+  password of one kept anywhere.
 
 A wrong value shown, a lost connection with no attacker, or a crash only
 Studio's own misuse can cause is a bug: report it with the **Bug** form,
@@ -60,7 +67,11 @@ named.
 - **The data:** row values stay between Studio and the server. They are
   never logged, and reach an assistant's provider only when the user
   includes them, request by request.
-- **The user's machine:** from what a server, a file or a model sends.
+- **The user's machine:** from what a server, a file, a model or a Live
+  Session's peer sends.
+- **What a presenter shares:** only the tabs picked, filtered by the
+  backend before they leave: never a connection, its settings or a
+  secret; of production, no values unless the session says.
 
 ### From whom
 
@@ -75,6 +86,16 @@ named.
 - **A model's answers:** the assistant's tools read, or propose SQL for
   the user to run; none runs a statement that writes, and none acts
   without the user.
+- **A Live Session's network and relay:** QUIC with TLS 1.3, the
+  certificate made for the session pinned by the invitation's
+  fingerprint; through a relay, a TLS 1.3 session of the two ends inside
+  what the relay passes, which it cannot read.
+- **Someone with an invitation who is not invited:** an invitation is
+  used once and expires; each viewer is admitted by name after the two
+  safety codes are compared, and may be removed at any time.
+- **A viewer:** it is shown what is shared and nothing more: it has no
+  session on the database, and its suggestions run only as the
+  presenter runs them.
 
 ### What Studio trusts
 
@@ -86,7 +107,25 @@ named.
   user asks for them.
 - The libraries it is built from, checked by `cargo deny` and
   `npm audit`, with their versions pinned and their lock files committed.
+- A viewer of a Live Session, with what it is shown: what reaches a
+  viewer's screen can be kept, by a photograph if not by copying. The
+  setting that stops copying stops it in Studio, no more.
+- The channel an invitation is sent over, for as long as the invitation
+  lives: whoever has it may ask to join, and is refused unless the
+  presenter admits them by name and safety code.
+
+### What it keeps, and where
+
+- The history keeps the statements run, unless **Keep a history of what runs** is
+  off; no statement of security, such as one with a password, is kept.
+- A worksheet keeps its text, as the user wrote it, in `worksheets.json`.
+- `failures.log` keeps what the window told of a failure it did not
+  handle, which may quote a server's message.
+- The assistant's log and Live Sessions' log keep what was asked, done
+  and shared, never a key, a secret, a row's value nor a workspace.
 
 Studio sends nothing anywhere of its own accord: no telemetry, no
 analytics, no updates. The network is touched only by the user's
-connections and, when it is turned on, the assistant's provider.
+connections, the assistant's provider when it is turned on, and a Live
+Session the user presents or joins, directly or through the relay the
+settings name.
