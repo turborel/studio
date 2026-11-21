@@ -8,7 +8,7 @@
  * copied. A node chosen shows every detail in a side panel. Two plans are
  * compared side by side, the operators changed marked.
  */
-import { useContext, useMemo, useState } from "react";
+import { Fragment, useContext, useMemo, useState } from "react";
 import { openDdl } from "../data/ddlActions";
 import { show } from "../state/actions";
 import { useStore, useStudio } from "../state/store";
@@ -34,7 +34,7 @@ function Summary(props: { readonly plan: Plan; readonly summary: PlanSummary; re
     <section className="plan-summary" aria-label="Summary of the plan">
       <p>
         {summary.analyzed
-          ? `Ran: ${summary.rows === null ? "?" : String(summary.rows)} rows`
+          ? `Ran: ${summary.rows === null ? "?" : String(summary.rows)} rows${plan.ranChanged ? " changed" : ""}`
           : "Not run: estimates alone"}
         {summary.millis !== null && ` in ${String(summary.millis)} ms`}
         {plan.joinOrder !== null && ` · join order ${plan.joinOrder.order}, found by ${plan.joinOrder.algorithm}`}
@@ -137,6 +137,44 @@ function RangeDetails({ node }: { readonly node: PlanNode }) {
   );
 }
 
+/** What `node` did beyond its rows: the rows it changed, its batches, its spill and its reads of an index. */
+function DoneDetails({ node }: { readonly node: PlanNode }) {
+  const told: (readonly [string, string])[] = [];
+  if (node.changed !== null) {
+    told.push(["Rows changed", String(node.changed)]);
+  }
+  if (node.batches !== null) {
+    told.push(["Batches", `${String(node.batches.count)}, of ${String(node.batches.meanRows)} rows on average`]);
+  }
+  if (node.spilled !== null) {
+    const { bytes, partitions, passes } = node.spilled;
+    told.push([
+      "Spilled",
+      `${String(bytes)} bytes, to ${String(partitions)} partitions, read back in ${String(passes)} passes`,
+    ]);
+  }
+  const reads = node.reads;
+  if (reads !== null) {
+    const parts: (readonly [string, number | null])[] = [
+      ["entries", reads.entries],
+      ["fetched", reads.fetched],
+      ["rechecked", reads.rechecked],
+      ["leaf pages", reads.leafPages],
+    ];
+    told.push(["Read", parts.flatMap(([name, n]) => (n === null ? [] : [`${name} ${String(n)}`])).join(", ")]);
+  }
+  return (
+    <>
+      {told.map(([name, value]) => (
+        <Fragment key={name}>
+          <dt>{name}</dt>
+          <dd>{value}</dd>
+        </Fragment>
+      ))}
+    </>
+  );
+}
+
 /** How semi join or antijoin `node` joins: what of its left it keeps, and how it searches its right. */
 function SemiDetails({ node }: { readonly node: PlanNode }) {
   const semi = semiOf(node);
@@ -216,6 +254,7 @@ function Details({ node, onClose }: { readonly node: PlanNode; readonly onClose:
         <RangeDetails node={node} />
         <GroupingDetails node={node} />
         <SemiDetails node={node} />
+        <DoneDetails node={node} />
         <dt>Notes</dt>
         <dd>{node.notes.length === 0 ? "none" : node.notes.join("; ")}</dd>
         <dt>Line</dt>

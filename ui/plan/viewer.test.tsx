@@ -36,6 +36,25 @@ const PARALLEL = parsePlan([
 ]);
 
 describe("a plan's summary", () => {
+  it("warns of a spill and of an index mostly judged again, and tells a data change's rows [DESIGN] D54", () => {
+    const changed = parsePlan([
+      "-- physical:",
+      "Delete ANN.OFFERS  (actual rows changed=40)",
+      "  Sort OFFERS.PRICE  (est. rows=50)  (actual rows=40, spilled=4096 bytes, partitions=2, passes=1)",
+      "    IndexScan ANN.OFFERS using OFFERS_SHAPE [rtree]: OFFERS.AREA && 'x'  (est. rows=50, cost=9.0)  (actual rows=40, entries=100, fetched=100, rechecked=60)",
+      "-- ran: 40 rows changed",
+    ]);
+    const s = summarize(changed, []);
+    expect(s.warnings.map((w) => w.rule)).toEqual(["PLAN-SPILL", "PLAN-RECHECK"]);
+    expect(s.warnings[0]?.says).toContain("MEMORY.WORK_BYTES");
+    expect(s.warnings[1]?.says).toContain("60 of the 100 rows");
+    const few = parsePlan([
+      "-- physical:",
+      "IndexScan ANN.T using T_K [btree]: T.K = 1  (actual rows=9, entries=10, fetched=10, rechecked=2)",
+    ]);
+    expect(summarize(few, []).warnings).toEqual([]);
+  });
+
   it("tells the rows and time, the costliest operators by their own time, and the warnings of their rules [DESIGN] D54", () => {
     const s = summarize(ANALYZED, []);
     expect([s.analyzed, s.rows, s.millis]).toEqual([true, 4, 9]);
@@ -289,6 +308,33 @@ describe("the plan viewer", () => {
     expect(screen.getByRole("complementary", { name: "Operator" }).textContent).toContain("Degree2");
     fireEvent.click(screen.getAllByRole("row")[4] ?? document.body);
     expect(screen.getByRole("complementary", { name: "Operator" }).textContent).toContain("Cost3.7");
+  });
+
+  it("tells a data change's rows, an operator's batches, spill and index reads in its details [DOC sql/statements/explain.md EXPLAIN ANALYZE]", async () => {
+    catalogBackend({ catalog_table: () => refused() });
+    const store = await opened();
+    const id = openWorksheet(store, "SELECT 1");
+    const plan = parsePlan([
+      "-- physical:",
+      "Update ANN.OFFERS  (actual rows changed=50)",
+      "  Sort OFFERS.PRICE  (est. rows=50)  (actual rows=50, batches=2, mean rows=25, spilled=4096 bytes, partitions=2, passes=1)",
+      "    IndexScan ANN.OFFERS using OFFERS_PRICE [btree]: OFFERS.PRICE <= 50  (est. rows=51, cost=9.0)  (actual rows=50, entries=50, leaf pages=1, fetched=50)",
+      "-- ran: 50 rows changed",
+    ]);
+    within(store, <PlanViewer id={id} plans={[plan]} />);
+    await settle();
+    expect(screen.getByRole("region", { name: "Summary of the plan" }).textContent).toContain("Ran: 50 rows changed");
+    fireEvent.click(screen.getByRole("radio", { name: "Tree-Table" }));
+    fireEvent.click(screen.getAllByRole("row")[1] ?? document.body);
+    expect(screen.getByRole("complementary", { name: "Operator" }).textContent).toContain("Rows changed50");
+    fireEvent.click(screen.getAllByRole("row")[2] ?? document.body);
+    const sort = screen.getByRole("complementary", { name: "Operator" }).textContent;
+    expect(sort).toContain("Batches2, of 25 rows on average");
+    expect(sort).toContain("Spilled4096 bytes, to 2 partitions, read back in 1 passes");
+    fireEvent.click(screen.getAllByRole("row")[3] ?? document.body);
+    expect(screen.getByRole("complementary", { name: "Operator" }).textContent).toContain(
+      "Readentries 50, fetched 50, leaf pages 1",
+    );
   });
 
   it("tells a semi join and an antijoin, their notes, and how each searches its right [DOC sql/06-queries.md Correlated subqueries]", async () => {

@@ -1,6 +1,6 @@
 /**
  * An operator's kind (RULES.md D54), of its name as EXPLAIN writes it:
- * a scan, a scan by an index, a join, a semi join, an antijoin, a range
+ * a data change, a scan, a scan by an index, a join, a semi join, an antijoin, a range
  * join, a sort, an aggregate,
  * a limit, a part run in parallel, a filter, a projection or another; and
  * its icon. A range join's search is read of its note: the value its right
@@ -15,6 +15,7 @@ import type { PlanNode } from "./plan";
 
 /** An operator's kind. */
 export type OperatorKind =
+  | "change"
   | "scan"
   | "indexScan"
   | "join"
@@ -31,6 +32,7 @@ export type OperatorKind =
 
 /** The icon of each kind. */
 export const KIND_ICONS: Readonly<Record<OperatorKind, IconName>> = {
+  change: "edit",
   scan: "table",
   indexScan: "index",
   join: "join",
@@ -48,6 +50,7 @@ export const KIND_ICONS: Readonly<Record<OperatorKind, IconName>> = {
 
 /** The kinds, each of the names it is known by: the first that a name holds is its kind. */
 const KNOWN: readonly (readonly [OperatorKind, RegExp])[] = [
+  ["change", /^(Insert|Update|Delete|Merge)$/u],
   ["indexScan", /^Index(Scan|Only)/u],
   ["rangeJoin", /^(Left)?RangeJoin$/u],
   ["semiJoin", /SemiJoin$|^Semi(?=[A-Z]|$)/u],

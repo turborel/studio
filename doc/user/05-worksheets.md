@@ -241,6 +241,8 @@ cost, each with its share; and the warnings, each of its rule:
 | `PLAN-SERIAL` | a table of 65,536 rows or more, EXECUTOR.PARALLEL_MIN_ROWS's default, read on one thread where no part of the plan runs in parallel |
 | `PLAN-MISESTIMATE` | an operator whose estimate is off its actual rows by ten times or more |
 | `PLAN-MANY-PROBES` | an index nested loop of 10,000 probes or more, or a nested loop of as many loops |
+| `PLAN-SPILL` | an operator that held more than its work area, MEMORY.WORK_BYTES, and spilled: its bytes, the partitions it wrote and the passes it read them back in |
+| `PLAN-RECHECK` | a read of an index whose rows were judged again, half or more of those it gave, as the index could not decide its condition |
 | `SCAN-NO-INDEX` | a column the plan compares with a constant, of a table read whole, that no index leads, with its fix and a what-if ([The Analyzer](09-analyzer.md#the-plans-findings)) |
 
 Above the warnings are the notes, of what is well:
@@ -250,8 +252,12 @@ Above the warnings are the notes, of what is well:
 | `PLAN-SEMI-JOIN` | a semi join, which keeps each row of its left at its first match and reads its right no more for it: an EXISTS or IN subquery, or a join only MIN and MAX read, made one; nothing to change |
 | `PLAN-ANTIJOIN` | an antijoin, which keeps each row of its left that its right does not match: a NOT EXISTS or NOT IN subquery made one; NOT IN keeps its meaning with nulls, a row kept only if no value of the subquery equals it or may equal it |
 
-EXPLAIN does not tell whether an operator spilled to disk, so the plan
-cannot warn of it.
+An operator's details tell, beside its rows, what else EXPLAIN ANALYZE
+told it did: its batches and their mean rows, what it spilled, and what
+it read of an index, its entries, the rows fetched by them, those
+rechecked, and the leaf pages. Of a data change, the top node, `Insert`,
+`Update`, `Delete` or `Merge`, has an icon of its own and tells the rows
+it changed, and the summary says the rows changed.
 
 Below are a tab of each stage, physical first, then optimized and bound,
 **rewrites**, which lists the rules, and **raw**, EXPLAIN's text, with

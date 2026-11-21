@@ -63,7 +63,16 @@ describe("the results' actions at their edges", () => {
     expect(
       requeryable(
         run([], {
-          plan: { stages: [], counted: [], rules: [], ran: null, ranMillis: null, joinOrder: null, lines: [] },
+          plan: {
+            stages: [],
+            counted: [],
+            rules: [],
+            ran: null,
+            ranChanged: false,
+            ranMillis: null,
+            joinOrder: null,
+            lines: [],
+          },
         }),
       ),
     ).toBe(false);

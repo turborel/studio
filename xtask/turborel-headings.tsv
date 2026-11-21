@@ -63,6 +63,7 @@ sql/statements/drop-index.md	SYNOPSIS
 sql/statements/end-connection.md	DESCRIPTION
 sql/statements/explain.md	DESCRIPTION
 sql/statements/explain.md	EXPLAIN ANALYZE
+sql/statements/explain.md	EXPLAIN ANALYZE of a data change
 sql/statements/explain.md	EXAMPLES
 sql/statements/grant.md	SYNOPSIS
 sql/statements/prepare.md	DESCRIPTION

@@ -268,3 +268,73 @@ describe("semi joins and antijoins", () => {
     expect(node === undefined ? null : groupingOf(node)).toEqual({ streamed: true, keys: [], computing: [] });
   });
 });
+
+/** EXPLAIN ANALYZE's examples of the manual, at the commit Studio is pinned to: each as it prints it. */
+const MANUAL: Readonly<Record<string, readonly string[]>> = {
+  join: [
+    "-- physical:",
+    "Project S.REGION, P.NAME  (est. rows=4)  (actual rows=4)",
+    "  IndexNestedLoop ANN.PARTS using ANN.PARTS.UNIQUE1 [btree]: S.CUSTOMER = P.ID  (est. rows each=1, cost=82.4)  (actual rows=4, probes=4, entries=4, leaf pages=4, fetched=4)",
+    "    SeqScan ANN.SALES  (rows=4, cost=3.7)  (actual rows=4, leaf pages=1)",
+    "-- ran: 4 rows",
+  ],
+  fetched: [
+    "-- physical:",
+    "Limit fetch 3  (est. rows=3)  (actual rows=3)",
+    "  Project PARTS.ID  (est. rows=1000)  (actual rows=3)",
+    "    SeqScan ANN.PARTS  (rows=1000, cost=900.0)  (actual rows=16, batches=1, mean rows=16)",
+    "-- ran: 3 rows",
+  ],
+  sorted: [
+    "-- physical:",
+    "Sort OFFERS.PRICE DESC  (est. rows=5000)  (actual rows=5000, spilled=250783 bytes, partitions=5, passes=3)",
+    "  Project OFFERS.PART, OFFERS.PRICE  (est. rows=5000)  (actual rows=5000, batches=9, mean rows=556)",
+    "    SeqScan ANN.OFFERS  (rows=5000, cost=4666.7)  (actual rows=5000, batches=9, mean rows=556)",
+    "-- ran: 5000 rows",
+  ],
+  updated: [
+    "-- physical:",
+    "Update ANN.OFFERS  (actual rows changed=50)",
+    "  Filter OFFERS.PRICE <= 50  (est. rows=51)  (actual rows=50)",
+    "    SeqScan ANN.OFFERS  (rows=5000, cost=1024.0)  (actual rows=1024, leaf pages=8)",
+    "-- ran: 50 rows changed",
+  ],
+};
+
+/** The physical operators of the manual's example `name`, depth first. */
+function physical(name: string) {
+  const plan = parsePlan(MANUAL[name] ?? []);
+  return { plan, nodes: operators(plan.stages[0]?.roots ?? []) };
+}
+
+describe("what EXPLAIN ANALYZE tells an operator did", () => {
+  it("reads an index's entries, leaves and rows fetched, and a scan's leaves [DOC sql/statements/explain.md EXPLAIN ANALYZE]", () => {
+    const [, join, scan] = physical("join").nodes;
+    expect([join?.probes, join?.reads]).toEqual([4, { entries: 4, fetched: 4, rechecked: null, leafPages: 4 }]);
+    expect(scan?.reads).toEqual({ entries: null, fetched: null, rechecked: null, leafPages: 1 });
+    expect(join?.estimated).toBe(1);
+  });
+
+  it("reads batches and their mean rows, never as the estimate [DOC sql/statements/explain.md EXPLAIN ANALYZE]", () => {
+    const scan = physical("fetched").nodes.at(-1);
+    expect([scan?.batches, scan?.estimated, scan?.actual]).toEqual([{ count: 1, meanRows: 16 }, 1000, 16]);
+    const [limit] = physical("fetched").nodes;
+    expect([limit?.batches, limit?.spilled, limit?.reads, limit?.changed]).toEqual([null, null, null, null]);
+  });
+
+  it("reads a spill's bytes, partitions and passes [DOC sql/statements/explain.md EXPLAIN ANALYZE]", () => {
+    const [sort] = physical("sorted").nodes;
+    expect(sort?.spilled).toEqual({ bytes: 250783, partitions: 5, passes: 3 });
+    expect(sort?.actual).toBe(5000);
+  });
+
+  it("reads a data change's rows changed, its top node a change [DOC sql/statements/explain.md EXPLAIN ANALYZE of a data change]", () => {
+    const { plan, nodes } = physical("updated");
+    const [update] = nodes;
+    expect([update?.operator, update?.changed, update?.actual]).toEqual(["Update", 50, null]);
+    expect(update === undefined ? null : kindOf(update)).toBe("change");
+    expect([plan.ran, plan.ranChanged]).toEqual([50, true]);
+    expect(nodes.at(-1)?.reads?.leafPages).toBe(8);
+    expect(physical("join").plan.ranChanged).toBe(false);
+  });
+});

@@ -557,13 +557,14 @@ export async function explain(store: Store, id: string, statement: ToRun, analyz
   await runStatements(store, id, [{ ...statement, sql: `EXPLAIN ${analyze ? "ANALYZE " : ""}${statement.sql}` }]);
 }
 
-/** EXPLAIN, or EXPLAIN ANALYZE, before a query, as Turborel reads it, comments and spaces before it: what it explains. */
+/** EXPLAIN, or EXPLAIN ANALYZE, before a query, or EXPLAIN ANALYZE before a data change, as Turborel reads it, comments and spaces before it: what it explains. */
 const EXPLAINED =
-  /^(?:\s+|--[^\n]*\n|\/\*[\s\S]*?\*\/)*EXPLAIN\s+(?:ANALYZE\s+)?((?:SELECT|VALUES|TABLE|WITH|\()[\s\S]*)$/iu;
+  /^(?:\s+|--[^\n]*\n|\/\*[\s\S]*?\*\/)*EXPLAIN\s+(?:ANALYZE\s+((?:INSERT|UPDATE|DELETE|MERGE)\b[\s\S]*)|(?:ANALYZE\s+)?((?:SELECT|VALUES|TABLE|WITH|\()[\s\S]*))$/iu;
 
 /** The statement `sql` explains, if it is EXPLAIN or EXPLAIN ANALYZE of one. */
 export function explainedOf(sql: string): string | null {
-  return EXPLAINED.exec(sql)?.[1]?.trim() ?? null;
+  const found = EXPLAINED.exec(sql);
+  return (found?.[1] ?? found?.[2])?.trim() ?? null;
 }
 
 /** Reads run `runId`'s plan whole, of EXPLAIN `statement`, and shows it in the plan viewer; its rows stay the result's. */

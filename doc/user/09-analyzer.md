@@ -72,7 +72,8 @@ gathered, which reading the view asks for.
 | `SCAN-NO-INDEX` | a table the plan reads whole to compare a column with a constant, where no index leads the column ([The plan's findings](#the-plans-findings)) | `CREATE INDEX` of the column |
 
 The plan's own warnings, `PLAN-FULL-SCAN`, `PLAN-SERIAL`,
-`PLAN-MISESTIMATE` and `PLAN-MANY-PROBES`, are told by the plan viewer
+`PLAN-MISESTIMATE`, `PLAN-MANY-PROBES`, `PLAN-SPILL` and `PLAN-RECHECK`,
+are told by the plan viewer
 ([Worksheets](05-worksheets.md#the-plan)); none has a fix of SQL. So are
 its notes of what is well: `PLAN-SEMI-JOIN`, a subquery made a semi
 join, and `PLAN-ANTIJOIN`, NOT EXISTS or NOT IN made an antijoin, NOT

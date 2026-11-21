@@ -325,6 +325,7 @@ describe("a run", () => {
     expect(w?.runs.at(-1)?.rows).toHaveLength(2);
     expect(explainedOf("explain (VALUES 1)")).toBe("(VALUES 1)");
     expect(explainedOf("EXPLAIN DELETE FROM T")).toBeNull();
+    expect(explainedOf("EXPLAIN ANALYZE UPDATE T SET A = 1 WHERE A = 2")).toBe("UPDATE T SET A = 1 WHERE A = 2");
     expect(explainedOf("SELECT EXPLAIN FROM T")).toBeNull();
   });
 

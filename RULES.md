@@ -1246,8 +1246,14 @@ The review checklist:
 - **Summary:** rows and time; the three costliest by own time, else
   cost; warnings of rules PLAN-FULL-SCAN (10,000 rows), PLAN-SERIAL
   (65,536, EXECUTOR.PARALLEL_MIN_ROWS's default), PLAN-MISESTIMATE (ten
-  times), PLAN-MANY-PROBES (10,000) and SCAN-NO-INDEX (D50) with its fix
-  and what-if (D51). EXPLAIN tells no spill, so none is warned of.
+  times), PLAN-MANY-PROBES (10,000), PLAN-SPILL (an operator that
+  spilled past MEMORY.WORK_BYTES, its bytes, partitions and passes),
+  PLAN-RECHECK (an index read whose rows were judged again, half or
+  more) and SCAN-NO-INDEX (D50) with its fix and what-if (D51); a data
+  change's rows changed. Each operator's details tell its batches, its
+  spill, and its reads of an index (entries, fetched, rechecked, leaf
+  pages), and a data change's top node, `Insert`, `Update`, `Delete` or
+  `Merge`, is a kind of its own.
 - **Flow:** React Flow and dagre (D15), bottom to top, lines as thick as
   the logarithm of their rows, heat as a share of the time in the
   second series colour (D52); collapse, search, zoom and fit.

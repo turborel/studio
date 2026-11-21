@@ -14,8 +14,6 @@ Code never cites this file (R-DOC-5).
 
 ## M8 Analyzer
 
-- The plan viewer: a warning of a sort or hash that spilled, once
-  Turborel's EXPLAIN ANALYZE tells it.
 - Waiting on the server, shown as unavailable, with a line saying why,
   until Turborel exposes it: the planner's column statistics.
 

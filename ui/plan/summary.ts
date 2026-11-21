@@ -5,10 +5,11 @@
  * each of a rule of the analyzer's (D50), with its fix as SQL where one
  * would mend it: a large table read whole, an estimate off by ten times or
  * more, a nested loop of many probes, a large table read on one thread,
- * and a column compared with a constant that no index leads (SCAN-NO-INDEX);
+ * an operator that spilled past its work area, an index read whose rows
+ * were mostly judged again, and a column compared with a constant that no
+ * index leads (SCAN-NO-INDEX);
  * and its notes of what is well: a subquery made a semi join, and an
- * antijoin, NOT IN's meaning with nulls kept. EXPLAIN tells no spill, so
- * none is warned of.
+ * antijoin, NOT IN's meaning with nulls kept.
  */
 import type { ScanFinding } from "../analyzer/planRules";
 import { kindOf } from "./kinds";
@@ -24,7 +25,17 @@ export const PARALLEL_MIN_ROWS = 65_536;
 export const COSTLIEST = 3;
 
 /** A rule of a plan's warnings. */
-export type PlanRule = "PLAN-FULL-SCAN" | "PLAN-MISESTIMATE" | "PLAN-MANY-PROBES" | "PLAN-SERIAL" | "SCAN-NO-INDEX";
+export type PlanRule =
+  | "PLAN-FULL-SCAN"
+  | "PLAN-MISESTIMATE"
+  | "PLAN-MANY-PROBES"
+  | "PLAN-SERIAL"
+  | "PLAN-SPILL"
+  | "PLAN-RECHECK"
+  | "SCAN-NO-INDEX";
+
+/** The share of an index's rows judged again past which a read of it is warned of. */
+export const RECHECK_SHARE = 0.5;
 
 /** A warning: its rule, what it says, the operator it is of, and the finding whose fix mends it. */
 export interface PlanWarning {
@@ -131,6 +142,32 @@ function costliest(nodes: readonly PlanNode[], total: number | null): Costly[] {
     .map((m) => ({ ...m, by: timed ? ("time" as const) : ("cost" as const), share: whole > 0 ? m.value / whole : 0 }));
 }
 
+/** The warnings of what `node` did beyond its rows: a spill past its work area, and an index read mostly judged again. */
+function readWarnings(node: PlanNode): PlanWarning[] {
+  const found: PlanWarning[] = [];
+  const spill = node.spilled;
+  if (spill !== null) {
+    found.push({
+      rule: "PLAN-SPILL",
+      says: `${node.operator} spilled ${String(spill.bytes)} bytes past its work area, to ${String(spill.partitions)} partitions read back in ${String(spill.passes)} passes: MEMORY.WORK_BYTES held too little of it.`,
+      node,
+      finding: null,
+    });
+  }
+  const reads = node.reads;
+  const read = Math.max(reads?.fetched ?? 0, reads?.entries ?? 0);
+  const rechecked = reads?.rechecked ?? 0;
+  if (rechecked > 0 && read > 0 && rechecked >= read * RECHECK_SHARE) {
+    found.push({
+      rule: "PLAN-RECHECK",
+      says: `${node.operator} judged its condition again of ${String(rechecked)} of the ${String(read)} rows its index gave: the index decides little of it.`,
+      node,
+      finding: null,
+    });
+  }
+  return found;
+}
+
 /** The warnings of `nodes`, of a plan that runs a part in parallel if `parallel`. */
 function warningsOf(nodes: readonly PlanNode[], parallel: boolean): PlanWarning[] {
   return nodes.flatMap((node): PlanWarning[] => {
@@ -161,6 +198,7 @@ function warningsOf(nodes: readonly PlanNode[], parallel: boolean): PlanWarning[
         finding: null,
       });
     }
+    found.push(...readWarnings(node));
     const many = Math.max(node.probes ?? 0, node.operator.includes("NestedLoop") ? (node.loops ?? 0) : 0);
     if (many >= MANY_PROBES) {
       found.push({
