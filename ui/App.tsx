@@ -68,6 +68,7 @@ function useSystemDark(): boolean {
 function useWiring(context: CommandContext): void {
   const { store } = context;
   const keyBindings = useStudio((s) => s.settings.keyBindings);
+  const keyScheme = useStudio((s) => s.settings.keyScheme);
   useEffect(() => {
     void loadAll(store);
     void takeLink(store);
@@ -97,7 +98,7 @@ function useWiring(context: CommandContext): void {
     };
   }, [store, context]);
   useEffect(() => {
-    const keys = bindings(defaultKeys(), keyBindings);
+    const keys = bindings(defaultKeys(keyScheme), keyBindings);
     const pressed = (event: KeyboardEvent) => {
       const key = keyOf(event);
       const id = key === null ? undefined : keys.get(key);
@@ -113,7 +114,7 @@ function useWiring(context: CommandContext): void {
     return () => {
       window.removeEventListener("keydown", pressed, { capture: true });
     };
-  }, [keyBindings, context, store]);
+  }, [keyBindings, keyScheme, context, store]);
 }
 
 /** The dialog shown, if any. */

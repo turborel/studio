@@ -3,10 +3,17 @@
 [Contents](README.md)
 
 Each of Studio's commands, its menu, and its key by default, on macOS and
-on Linux and Windows. **File > Settings… > Keys** binds a command to
-another key, or to none ([The Window](../user/02-window.md#keys)); the
-command palette and **Help > Keyboard Shortcuts** show the keys as they
-are bound.
+on Linux and Windows, in the scheme **Default**. **File > Settings… >
+Keys** chooses another scheme, and binds a command to another key, or to
+none ([The Window](../user/02-window.md#keys)); the command palette and
+**Help > Keyboard Shortcuts** show the keys as they are bound.
+
+The scheme **Function keys** gives three commands keys of their own, the
+others keeping those below, on every platform:
+
+- **Run Script**: F5;
+- **Run Statement**: F9;
+- **Explain**: F6.
 
 | Command | Menu | macOS | Linux, Windows |
 |---|---|---|---|

@@ -1,8 +1,22 @@
 /**
  * Keys (RULES.md D30, R-UI-1): a key written as `Mod+Shift+P`, where `Mod`
  * is Cmd on macOS and Ctrl elsewhere; a key event read the same way; and
- * each command's key, its default or the one the settings give.
+ * each command's key, its default, the scheme's (D69), or the one the
+ * settings give.
  */
+import type { KeyScheme } from "../ipc/preferences";
+
+/** The keys each scheme gives commands over their own defaults, by command (RULES.md D69). */
+export const SCHEME_KEYS: Readonly<Record<KeyScheme, Readonly<Record<string, string>>>> = {
+  default: {},
+  functionKeys: { "worksheet.runScript": "F5", "worksheet.run": "F9", "worksheet.explain": "F6" },
+};
+
+/** The schemes, as the settings name them. */
+export const SCHEME_NAMES: readonly (readonly [KeyScheme, string])[] = [
+  ["default", "Default"],
+  ["functionKeys", "Function keys"],
+];
 
 /** The modifiers, in the order a key is written. */
 const MODIFIERS = ["Mod", "Alt", "Shift"] as const;

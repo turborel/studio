@@ -53,7 +53,9 @@ person who works with the database one window for it:
 - a [monitor](doc/user/12-administration.md) of the server or the
   database: its sessions, what each runs and waits on, the statements
   run and the tables' and indexes' sizes and use, its settings, plug-ins,
-  users and replication.
+  users and replication;
+- every command on the keyboard, in Studio's own keys or the function
+  keys' scheme, any key rebound ([Appendix A](doc/appendix/a-keyboard.md)).
 
 <p align="center">
     <picture>

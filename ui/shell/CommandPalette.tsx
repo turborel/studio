@@ -3,6 +3,7 @@
  * filtered as typed, with its key; Enter runs the one chosen, the arrows
  * choose, Escape closes.
  */
+import { SCHEME_KEYS } from "../commands/keys";
 import { type KeyboardEvent, useState } from "react";
 import { type Command, type CommandContext, COMMANDS, runCommand } from "../commands/commands";
 import { Icon } from "../icons/Icon";
@@ -23,10 +24,11 @@ export function matches(title: string, query: string): boolean {
 /** The commands found, the chosen one marked, each run by a click. */
 function PaletteList({ found, chosen, run }: { found: readonly Command[]; chosen: number; run: (id: string) => void }) {
   const keys = useStudio((s) => s.settings.keyBindings);
+  const scheme = useStudio((s) => s.settings.keyScheme);
   return (
     <ul id="palette-list" className="palette-list" role="listbox" aria-label="Commands">
       {found.map((c, i) => {
-        const key = keys[c.id] ?? c.key;
+        const key = keys[c.id] ?? SCHEME_KEYS[scheme][c.id] ?? c.key;
         return (
           <li
             key={c.id}

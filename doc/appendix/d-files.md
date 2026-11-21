@@ -128,6 +128,7 @@ for the database's owner. Its `spec` is empty. A connection with no
   "editorFontFamily": "",
   "editorFontPoints": 13,
   "keyBindings": { "zoom.in": "Mod+Shift+=" },
+  "keyScheme": "default",
   "reconnectOnWake": true,
   "toolbarLabels": false,
   "historyKept": true,

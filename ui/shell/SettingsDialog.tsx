@@ -4,6 +4,7 @@
  * worksheet's history, formatter and notification, and each command's
  * key, saved as they change.
  */
+import { SCHEME_KEYS, SCHEME_NAMES } from "../commands/keys";
 import { COMMANDS } from "../commands/commands";
 import { normalize } from "../commands/keys";
 import { FORMAT_BOUNDS, type KeyWordCase, NOTIFY_BOUNDS, type Settings, ZOOM } from "../ipc/preferences";
@@ -27,23 +28,43 @@ export function rebound(
   return written === fallback ? others : { ...others, [command]: written };
 }
 
-/** The key bindings' table. */
+/** The key bindings' table: the scheme, then each command's key, bound apart where it is not the scheme's. */
 function Keys({ settings, change }: { settings: Settings; change: (s: Settings) => void }) {
+  const scheme = settings.keyScheme;
   return (
     <details className="field-group">
       <summary>Keys</summary>
-      {COMMANDS.map((c) => (
-        <label key={c.id} className="field">
-          <span>{c.title}</span>
-          <input
-            defaultValue={settings.keyBindings[c.id] ?? c.key ?? ""}
-            placeholder="none"
-            onBlur={(e) => {
-              change({ ...settings, keyBindings: rebound(settings.keyBindings, c.id, e.target.value, c.key ?? "") });
-            }}
-          />
-        </label>
-      ))}
+      <label className="field">
+        <span>Scheme</span>
+        <select
+          value={scheme}
+          onChange={(e) => {
+            const chosen = SCHEME_NAMES.find(([s]) => s === e.target.value)?.[0] ?? "default";
+            change({ ...settings, keyScheme: chosen });
+          }}
+        >
+          {SCHEME_NAMES.map(([s, name]) => (
+            <option key={s} value={s}>
+              {name}
+            </option>
+          ))}
+        </select>
+      </label>
+      {COMMANDS.map((c) => {
+        const fallback = SCHEME_KEYS[scheme][c.id] ?? c.key ?? "";
+        return (
+          <label key={`${scheme}.${c.id}`} className="field">
+            <span>{c.title}</span>
+            <input
+              defaultValue={settings.keyBindings[c.id] ?? fallback}
+              placeholder="none"
+              onBlur={(e) => {
+                change({ ...settings, keyBindings: rebound(settings.keyBindings, c.id, e.target.value, fallback) });
+              }}
+            />
+          </label>
+        );
+      })}
     </details>
   );
 }

@@ -177,12 +177,17 @@ describes each setting, and the file it is kept in.
 
 ## Keys
 
+**Settings > Keys > Scheme** chooses the keys commands take: **Default**,
+Studio's own, or **Function keys**, where F5 runs the script, F9 the
+statement and F6 explains, and the others keep Studio's own. A command
+bound to a key of its own below keeps it in either scheme.
+
 A key is written as Studio shows it: Cmd, on macOS, or Ctrl, then Alt
 and Shift, then the key itself, joined by `+`, as `Ctrl+Shift+P`. In
 **Settings > Keys**, a command's key is typed the same way, with `Mod`
 for Cmd on macOS and Ctrl elsewhere, so `Mod+Shift+P` is the same key on
 every platform. A key left empty unbinds the command; one typed as the
-default goes back to it. [Appendix A](../appendix/a-keyboard.md) lists
+default, the scheme's, goes back to it. [Appendix A](../appendix/a-keyboard.md) lists
 every command and its key.
 
 Every dialog keeps the focus within it: Tab and Shift+Tab move between

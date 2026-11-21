@@ -1,3 +1,4 @@
+import { defaultKeys } from "./commands";
 import { bindings, isMac, keyOf, normalize, shown } from "./keys";
 
 /** A key event of `key`, with `mods`. */
@@ -31,5 +32,20 @@ describe("keys", () => {
     expect(keys.get("Mod+Shift+P")).toBe("palette.open");
     expect(keys.get("Mod+=")).toBeUndefined();
     expect(keys.get("F1")).toBe("help.about");
+  });
+
+  it("give the function keys' scheme F5 to run the script, F9 the statement and F6 to explain, a key bound apart on top [DESIGN] D69", () => {
+    const studio = bindings(defaultKeys("default"), {});
+    expect(studio.get("Mod+Enter")).toBe("worksheet.run");
+    expect(studio.get("F5")).toBeUndefined();
+    const keys = bindings(defaultKeys("functionKeys"), { "worksheet.run": "F8" });
+    expect([keys.get("F5"), keys.get("F6"), keys.get("F9"), keys.get("F8")]).toEqual([
+      "worksheet.runScript",
+      "worksheet.explain",
+      undefined,
+      "worksheet.run",
+    ]);
+    expect(keys.get("Mod+Enter")).toBeUndefined();
+    expect(keys.get("Mod+Shift+P")).toBe("palette.open");
   });
 });

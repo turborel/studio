@@ -180,10 +180,10 @@ export function language(bridge: Bridge): Extension {
 
 /** The keys of the Tab commands, as the settings bind them, else by default. */
 export function tabKeysOf(store: Store): { complete: string; back: string } {
-  const bound = store.current().settings.keyBindings;
+  const { keyBindings: bound, keyScheme } = store.current().settings;
   return {
-    complete: bound[TAB_COMMANDS.complete] ?? defaultKeys()[TAB_COMMANDS.complete] ?? "",
-    back: bound[TAB_COMMANDS.back] ?? defaultKeys()[TAB_COMMANDS.back] ?? "",
+    complete: bound[TAB_COMMANDS.complete] ?? defaultKeys(keyScheme)[TAB_COMMANDS.complete] ?? "",
+    back: bound[TAB_COMMANDS.back] ?? defaultKeys(keyScheme)[TAB_COMMANDS.back] ?? "",
   };
 }
 

@@ -4,6 +4,7 @@
  * engine are built from, and
  * each command's key as it is bound now.
  */
+import { SCHEME_KEYS } from "../commands/keys";
 import { useEffect, useState } from "react";
 import { COMMANDS } from "../commands/commands";
 import { shown } from "../commands/keys";
@@ -47,6 +48,7 @@ export function AboutDialog() {
 export function ShortcutsDialog() {
   const store = useStore();
   const keys = useStudio((s) => s.settings.keyBindings);
+  const scheme = useStudio((s) => s.settings.keyScheme);
   const close = () => {
     show(store, null);
   };
@@ -61,7 +63,7 @@ export function ShortcutsDialog() {
         </thead>
         <tbody>
           {COMMANDS.map((c) => {
-            const key = keys[c.id] ?? c.key ?? "";
+            const key = keys[c.id] ?? SCHEME_KEYS[scheme][c.id] ?? c.key ?? "";
             return (
               <tr key={c.id}>
                 <td className="with-icon">

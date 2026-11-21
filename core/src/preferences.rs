@@ -60,6 +60,17 @@ pub enum PlanView {
     Raw,
 }
 
+/// The keys commands take before any is bound apart (RULES.md D69).
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum KeyScheme {
+    /// Studio's own keys.
+    #[default]
+    Default,
+    /// Function keys: F5 runs the script, F9 the statement, F6 explains.
+    FunctionKeys,
+}
+
 /// The theme chosen.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -92,6 +103,9 @@ pub struct Settings {
     /// Each command's key, where it is not the default: the command's
     /// name, and its key as `Mod+Shift+K`, or empty for none.
     pub key_bindings: BTreeMap<String, String>,
+    /// The scheme of keys commands take, a command bound apart in
+    /// `key_bindings` taking its own.
+    pub key_scheme: KeyScheme,
     /// Whether open connections are checked, and lost ones connected
     /// again, as the computer wakes.
     pub reconnect_on_wake: bool,
@@ -124,6 +138,7 @@ impl Default for Settings {
             editor_font_family: String::new(),
             editor_font_points: FONT_POINTS.1,
             key_bindings: BTreeMap::new(),
+            key_scheme: KeyScheme::Default,
             reconnect_on_wake: true,
             toolbar_labels: false,
             history_kept: true,
@@ -252,7 +267,7 @@ impl Layout {
 
 #[cfg(test)]
 mod tests {
-    use super::{Layout, Settings, ThemeChoice};
+    use super::{KeyScheme, Layout, Settings, ThemeChoice};
 
     /// [RULE] R-FMT-1: settings saved are read back, and none saved are the
     /// defaults, as is one a file lacks.
@@ -266,6 +281,17 @@ mod tests {
         settings.key_bindings.insert("worksheet.run".into(), "Mod+Enter".into());
         settings.save(&dir).unwrap();
         assert_eq!(Settings::load(&dir).unwrap(), settings);
+    }
+
+    /// [DESIGN] D69: the scheme of keys is Studio's own at first, and the
+    /// function keys' is kept and read back by its generic name.
+    #[test]
+    fn the_key_scheme_is_kept() {
+        let dir = crate::testing::scratch("preferences/scheme");
+        assert_eq!(Settings::default().key_scheme, KeyScheme::Default);
+        Settings { key_scheme: KeyScheme::FunctionKeys, ..Settings::default() }.save(&dir).unwrap();
+        assert!(std::fs::read_to_string(dir.join(super::SETTINGS_FILE)).unwrap().contains(r#""keyScheme": "functionKeys""#));
+        assert_eq!(Settings::load(&dir).unwrap().key_scheme, KeyScheme::FunctionKeys);
     }
 
     /// [RULE] R-SEC-6 [DESIGN] D49: a setting outside its bounds is refused

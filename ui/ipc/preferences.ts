@@ -5,6 +5,9 @@
 import { invoke } from "@tauri-apps/api/core";
 import type { ThemeChoice } from "../theme/theme";
 
+/** The schemes of keys: Studio's own, or the function keys'. */
+export type KeyScheme = "default" | "functionKeys";
+
 /** Studio's settings, each named after what it controls. */
 export interface Settings {
   readonly format: 1;
@@ -13,6 +16,8 @@ export interface Settings {
   readonly editorFontFamily: string;
   readonly editorFontPoints: number;
   readonly keyBindings: Readonly<Record<string, string>>;
+  /** The scheme of keys commands take, a command bound apart taking its own (RULES.md D69). */
+  readonly keyScheme: KeyScheme;
   readonly reconnectOnWake: boolean;
   readonly toolbarLabels: boolean;
   readonly historyKept: boolean;
@@ -40,6 +45,7 @@ export const DEFAULT_SETTINGS: Settings = {
   editorFontFamily: "",
   editorFontPoints: 13,
   keyBindings: {},
+  keyScheme: "default",
   reconnectOnWake: true,
   toolbarLabels: false,
   historyKept: true,

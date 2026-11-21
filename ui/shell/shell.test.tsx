@@ -151,6 +151,26 @@ describe("the settings", () => {
     await settle();
     expect(asked.find((a) => a.command === "save_settings")?.args["settings"]).toMatchObject({ theme: "dark" });
   });
+
+  it("choose the function keys' scheme, each command showing the scheme's key, a key bound apart kept [DESIGN] D69", async () => {
+    const asked = mockBackend();
+    const store = new Store();
+    store.update((now) => ({
+      ...now,
+      settings: { ...now.settings, keyBindings: { "worksheet.explain": "Mod+Alt+E" } },
+    }));
+    within(store, <SettingsDialog />);
+    fireEvent.change(screen.getByLabelText("Scheme"), { target: { value: "functionKeys" } });
+    await settle();
+    expect(asked.find((a) => a.command === "save_settings")?.args["settings"]).toMatchObject({
+      keyScheme: "functionKeys",
+      keyBindings: { "worksheet.explain": "Mod+Alt+E" },
+    });
+    expect(screen.getByLabelText<HTMLInputElement>("Run Script").value).toBe("F5");
+    expect(screen.getByLabelText<HTMLInputElement>("Explain").value).toBe("Mod+Alt+E");
+    fireEvent.blur(screen.getByLabelText("Run Statement"), { target: { value: "F9" } });
+    expect(store.current().settings.keyBindings).toEqual({ "worksheet.explain": "Mod+Alt+E" });
+  });
 });
 
 describe("the explorer's connections", () => {

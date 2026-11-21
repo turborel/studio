@@ -107,6 +107,7 @@ Each is told in full in [§7](#7-the-decisions).
 | D65 | A generated script with its data: INSERTs Run SQL File loads back, or CSV files the import loads back |
 | D66 | Invitation links: Studio's scheme, a link of the invitation alone, the join dialog filled in, never joined unasked |
 | D67 | Session records: what was shared, kept by the presenter alone, sealed if asked, replayed and summed up for a ticket |
+| D69 | Keyboard schemes: Studio's own keys, or the function keys', a key bound apart on top |
 
 ---
 
@@ -1783,6 +1784,22 @@ The review checklist:
 - *Why:* a session that replaced SQL pasted into a chat or a ticket
   should leave what was found on the presenter's machine, and only
   what the viewers saw.
+
+#### D69. Keyboard schemes: Studio's own keys, or the function keys', a key bound apart on top
+
+- **Schemes**, of generic names: **Default**, Studio's own keys (D30);
+  **Function keys**, F5 to run the script, F9 the statement and F6 to
+  explain, the other commands keeping Studio's own
+  (`ui/commands/keys.ts`, `SCHEME_KEYS`).
+- **The setting:** `keyScheme` of `settings.json`, `default` at first or
+  `functionKeys`, chosen under **Settings > Keys > Scheme**; approved as
+  a new setting on 2026-11-21 (R-SAFE-6).
+- **On top:** a command's key in `keyBindings` is kept whatever the
+  scheme; a key typed as the scheme's own unbinds it apart. The palette
+  and **Keyboard Shortcuts** show the keys as they are.
+- *Why:* those who know the function keys of a database IDE's classic
+  layout work in Studio without learning another, and those who do not
+  keep Studio's own.
 ---
 
 ## 8. References

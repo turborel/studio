@@ -57,8 +57,6 @@ Code never cites this file (R-DOC-5).
 
 ## M12 Polish and the security audit
 
-- Keyboard schemes: sets of key bindings to choose among, beside each
-  command's own key, which Settings already rebinds.
 - The keychain checked by hand on Windows and Linux, as on macOS, by the
   test STUDIO_TEST_KEYCHAIN runs.
 - Signing and notarization of the installers, once the maintainers'

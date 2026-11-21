@@ -3,7 +3,8 @@
  * default key and what it does. The menus, the keys and the command
  * palette all run them by name, so each is in one place.
  */
-import { ZOOM } from "../ipc/preferences";
+import { type KeyScheme, ZOOM } from "../ipc/preferences";
+import { SCHEME_KEYS } from "./keys";
 import {
   attempt,
   cancel,
@@ -571,9 +572,12 @@ export const COMMANDS: readonly Command[] = [
   },
 ];
 
-/** Each command's default key, by its name. */
-export function defaultKeys(): Record<string, string> {
-  return Object.fromEntries(COMMANDS.filter((c) => c.key !== undefined).map((c) => [c.id, c.key ?? ""]));
+/** Each command's key before any is bound apart, of `scheme`, by its name. */
+export function defaultKeys(scheme: KeyScheme = "default"): Record<string, string> {
+  return {
+    ...Object.fromEntries(COMMANDS.filter((c) => c.key !== undefined).map((c) => [c.id, c.key ?? ""])),
+    ...SCHEME_KEYS[scheme],
+  };
 }
 
 /** The command named `id`, if there is one. */
