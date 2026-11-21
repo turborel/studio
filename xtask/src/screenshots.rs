@@ -42,6 +42,23 @@ window.studioMenu = (element) => {
 };
 ";
 
+/// The page's script that takes its call to save a text file, keeping the
+/// text in `window.studioSaved`: what it replaced to take it.
+const TAKE_SAVE: &str = r"
+const internals = window.__TAURI_INTERNALS__;
+const call = internals.invoke.bind(internals);
+window.studioSaved = null;
+const taken = (cmd, args, options) => (cmd === 'save_text_file' ? ((window.studioSaved = args.text), Promise.resolve(null)) : call(cmd, args, options));
+try { internals.invoke = taken; } catch (e) {}
+if (internals.invoke === taken) { return 'the call'; }
+try { Object.defineProperty(internals, 'invoke', { value: taken, writable: true, configurable: true }); } catch (e) {}
+if (internals.invoke === taken) { return 'the call, defined'; }
+const held = new Proxy(internals, { get: (target, name) => (name === 'invoke' ? taken : target[name]) });
+try { window.__TAURI_INTERNALS__ = held; } catch (e) {}
+try { Object.defineProperty(window, '__TAURI_INTERNALS__', { value: held, configurable: true }); } catch (e) {}
+return window.__TAURI_INTERNALS__ === held ? 'the object' : 'nothing';
+";
+
 /// Makes the demo database in `dir`, of the seed's statements, owned by `DEMO_USER`.
 fn demo_database(dir: &Path) -> Result<()> {
     let failed = |e: turborel::error::SqlError| Error(format!("the demo database: {e}"));
@@ -270,13 +287,20 @@ fn diagram_scene(scene: &Scene<'_>) -> Result<()> {
     if scene.theme != "light" {
         return Ok(());
     }
-    scene.session.script(
-        "const i = window.__TAURI_INTERNALS__; const call = i.invoke; window.studioSaved = null; i.invoke = (cmd, args, options) => cmd === 'save_text_file' ? (window.studioSaved = args.text, Promise.resolve(null)) : call(cmd, args, options);",
-    )?;
+    // The page's call of the backend taken, as it is made: by the call
+    // itself, or by the object that holds it, whichever the page lets be
+    // replaced; the save dialog never opened.
+    let how = scene.session.script(TAKE_SAVE)?;
     scene.session.click("button[aria-label=\"Export as SVG…\"]")?;
-    std::thread::sleep(SETTLE);
-    let svg = scene.session.script("return window.studioSaved")?;
-    let Some(svg) = svg.as_str() else { return fail("the diagram was not exported") };
+    let mut svg = serde_json::Value::Null;
+    for _ in 0..10 {
+        std::thread::sleep(SETTLE);
+        svg = scene.session.script("return window.studioSaved")?;
+        if svg.is_string() {
+            break;
+        }
+    }
+    let Some(svg) = svg.as_str() else { return fail(format!("the diagram was not exported, its call taken by {how}")) };
     std::fs::write(scene.out.join("er-diagram.svg"), svg).map_err(|e| Error(format!("er-diagram.svg: {e}")))
 }
 
