@@ -16,6 +16,13 @@ serde_json.workspace = true
 turborel.workspace = true
 png.workspace = true
 gif.workspace = true
+# The screenshots' demo server, by Turborel's own client; the assistant's
+# model of the scenes' own, core's mock; and a Live Sessions viewer, by
+# Studio's own guest on the runtime it runs on.
+turborel-client.workspace = true
+turborel-studio-core = { path = "../core" }
+turborel-studio-live = { path = "../live" }
+tokio.workspace = true
 
 [lints]
 workspace = true

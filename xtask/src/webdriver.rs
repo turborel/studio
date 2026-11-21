@@ -102,9 +102,10 @@ impl Driver {
         Ok((code, value.unwrap_or(serde_json::Value::Null)))
     }
 
-    /// A session of the application at `application`.
-    pub fn session(&self, application: &Path) -> Result<Session<'_>> {
-        let capabilities = serde_json::json!({"capabilities": {"alwaysMatch": {"tauri:options": {"application": application}}}});
+    /// A session of the application at `application`, begun with `args`.
+    pub fn session(&self, application: &Path, args: &[&str]) -> Result<Session<'_>> {
+        let capabilities =
+            serde_json::json!({"capabilities": {"alwaysMatch": {"tauri:options": {"application": application, "args": args}}}});
         let (code, answer) = self.request("POST", "/session", Some(&capabilities))?;
         let id = answer.pointer("/value/sessionId").and_then(serde_json::Value::as_str).map(str::to_owned);
         let Some(id) = id.filter(|_| code == 200) else { return fail(format!("no WebDriver session: {answer}")) };

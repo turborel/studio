@@ -77,6 +77,38 @@ pub fn crop(image: &Pixels, (x, y, width, height): (u32, u32, u32, u32)) -> Pixe
     Pixels { width, height, rgba }
 }
 
+/// `images` one below another, `gap` pixels apart, on `background`: each
+/// as wide as the widest, its own right filled with `background`.
+pub fn stack(images: &[Pixels], gap: u32, background: [u8; 4]) -> Pixels {
+    let width = images.iter().map(|i| i.width).max().unwrap_or(0);
+    let mut rgba = Vec::new();
+    let filled = |n: u32| background.iter().copied().cycle().take(usize::try_from(n).unwrap_or(0).saturating_mul(4)).collect::<Vec<u8>>();
+    let mut height = 0u32;
+    for (at, image) in images.iter().enumerate() {
+        if at > 0 {
+            rgba.extend(filled(width.saturating_mul(gap)));
+            height = height.saturating_add(gap);
+        }
+        let stride = usize::try_from(image.width).unwrap_or(0).saturating_mul(4);
+        for row in image.rgba.chunks(stride.max(1)) {
+            rgba.extend_from_slice(row);
+            rgba.extend(filled(width.saturating_sub(image.width)));
+        }
+        height = height.saturating_add(image.height);
+    }
+    Pixels { width, height, rgba }
+}
+
+/// The colour of `image`'s pixel at its top left, its background as a
+/// window's edge shows it.
+pub fn corner(image: &Pixels) -> [u8; 4] {
+    let mut out = [0, 0, 0, 255];
+    for (o, c) in out.iter_mut().zip(image.rgba.iter()) {
+        *o = *c;
+    }
+    out
+}
+
 /// Writes `image` to `path` as a PNG, compressed as far as it goes,
 /// losslessly, with no metadata, so the same pixels make the same file.
 ///
@@ -96,14 +128,42 @@ pub fn write_png(image: &Pixels, path: &Path) -> Result<()> {
     std::fs::write(path, out).map_err(|e| Error(format!("{}: {e}", path.display())))
 }
 
+/// The most bytes an animation may take, so the manual and the README load
+/// fast (R-DOC-7).
+pub const MAX_GIF_BYTES: u64 = 2 * 1024 * 1024;
+
+/// Refuses an animation of `bytes` for `path` past `MAX_GIF_BYTES`.
+fn bounded(bytes: usize, path: &Path) -> Result<()> {
+    if u64::try_from(bytes).unwrap_or(u64::MAX) > MAX_GIF_BYTES {
+        return fail(format!("{}: {bytes} bytes, more than an animation may take, {MAX_GIF_BYTES}", path.display()));
+    }
+    Ok(())
+}
+
+/// `frames` with each frame the same as the one before it merged into it,
+/// its time added to that one's.
+fn merged(frames: &[(Pixels, u16)]) -> Vec<(Pixels, u16)> {
+    let mut out: Vec<(Pixels, u16)> = Vec::new();
+    for (frame, hundredths) in frames {
+        match out.last_mut() {
+            Some((last, shown)) if last == frame => *shown = shown.saturating_add(*hundredths),
+            _ => out.push((frame.clone(), *hundredths)),
+        }
+    }
+    out
+}
+
 /// Writes `frames`, each shown for its hundredths of a second, to `path`
-/// as an animated GIF that repeats, each frame's colours quantized.
+/// as an animated GIF that repeats, each frame's colours quantized, a
+/// frame the same as the one before merged into it.
 ///
 /// # Errors
 ///
-/// No frame, frames of different sizes, a frame too large for a GIF, or
-/// a file that cannot be written.
+/// No frame, frames of different sizes, a frame too large for a GIF, an
+/// animation of more than `MAX_GIF_BYTES`, or a file that cannot be
+/// written.
 pub fn write_gif(frames: &[(Pixels, u16)], path: &Path) -> Result<()> {
+    let frames = merged(frames);
     let Some((first, _)) = frames.first() else { return fail("an animation of no frame") };
     let too_large = || Error(format!("{}: a GIF is at most 65535 pixels a side", path.display()));
     let (width, height) = (u16::try_from(first.width).map_err(|_| too_large())?, u16::try_from(first.height).map_err(|_| too_large())?);
@@ -112,7 +172,7 @@ pub fn write_gif(frames: &[(Pixels, u16)], path: &Path) -> Result<()> {
     {
         let mut encoder = gif::Encoder::new(&mut out, width, height, &[]).map_err(failed)?;
         encoder.set_repeat(gif::Repeat::Infinite).map_err(failed)?;
-        for (frame, hundredths) in frames {
+        for (frame, hundredths) in &frames {
             if (frame.width, frame.height) != (first.width, first.height) {
                 return fail(format!("{}: the frames differ in size", path.display()));
             }
@@ -122,12 +182,13 @@ pub fn write_gif(frames: &[(Pixels, u16)], path: &Path) -> Result<()> {
             encoder.write_frame(&made).map_err(failed)?;
         }
     }
+    bounded(out.len(), path)?;
     std::fs::write(path, out).map_err(|e| Error(format!("{}: {e}", path.display())))
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{Pixels, crop, decode, from_base64, write_gif, write_png};
+    use super::{Pixels, bounded, corner, crop, decode, from_base64, merged, stack, write_gif, write_png};
 
     /// [DESIGN] D60: Base64 is read, padded or not.
     #[test]
@@ -153,6 +214,24 @@ mod tests {
         write_gif(&[(part.clone(), 50), (part, 100)], &dir.join("part.gif")).unwrap();
         assert!(std::fs::read(dir.join("part.gif")).unwrap().starts_with(b"GIF89a"));
         assert!(write_gif(&[], &dir.join("none.gif")).is_err());
+        assert!(bounded(2 * 1024 * 1024, &dir.join("a.gif")).is_ok());
+        assert!(bounded(2 * 1024 * 1024 + 1, &dir.join("a.gif")).is_err());
         std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    /// [DESIGN] D60: images are stacked, each as wide as the widest, the
+    /// rest of a narrower one and the gaps of the background; frames the
+    /// same in turn are merged, their times added.
+    #[test]
+    fn images_are_stacked_and_frames_merged() {
+        let red = Pixels { width: 2, height: 1, rgba: vec![255, 0, 0, 255, 255, 0, 0, 255] };
+        let blue = Pixels { width: 1, height: 1, rgba: vec![0, 0, 255, 255] };
+        let both = stack(&[red.clone(), blue.clone()], 1, [9, 9, 9, 255]);
+        assert_eq!((both.width, both.height), (2, 3));
+        assert_eq!(both.rgba.get(8..16), Some(&[9, 9, 9, 255, 9, 9, 9, 255][..]));
+        assert_eq!(both.rgba.get(16..24), Some(&[0, 0, 255, 255, 9, 9, 9, 255][..]));
+        assert_eq!(corner(&red), [255, 0, 0, 255]);
+        let frames = merged(&[(red.clone(), 10), (red.clone(), 20), (blue.clone(), 5), (red.clone(), 1)]);
+        assert_eq!(frames.iter().map(|(_, h)| *h).collect::<Vec<_>>(), [30, 5, 1]);
     }
 }

@@ -1,6 +1,6 @@
 //! The manual's checks, against pages made for each case.
 
-use super::{anchors, image_problems, images, links, page_problems, readme_problems, slug};
+use super::{anchors, animation_problems, image_problems, images, links, page_problems, readme_problems, slug};
 
 /// [RULE] R-DOC-7: a chapter opens with its title, then its Contents line.
 #[test]
@@ -30,15 +30,19 @@ fn an_image_is_kept_in_its_folder_alone() {
 }
 
 /// [RULE] R-DOC-7 [DESIGN] D60: an image says what it shows, and is
-/// known as the file it links.
+/// known as the file it links, as is a theme's other picture linked
+/// beside it; an animation is bounded in size.
 #[test]
 fn an_image_says_what_it_shows() {
-    let text = "![The window](../images/w.png) and ![](../images/x.gif)\n```\n![no](y.png)\n```\n";
+    let text = "![The window](../images/w.png) and ![](../images/x.gif), [dark](../images/w-dark.png)\n```\n![no](y.png)\n```\n";
     assert_eq!(images(text), [("The window".to_owned(), "../images/w.png".to_owned()), (String::new(), "../images/x.gif".to_owned())]);
     let mut linked = Vec::new();
     let problems = image_problems("doc/user/02-window.md", text, &mut linked);
     assert_eq!(problems.len(), 1);
-    assert_eq!(linked, ["doc/images/w.png", "doc/images/x.gif"]);
+    assert_eq!(linked, ["doc/images/w.png", "doc/images/x.gif", "doc/images/w-dark.png"]);
+    assert_eq!(animation_problems("doc/images/x.gif", 2 * 1024 * 1024), Vec::<String>::new());
+    assert_eq!(animation_problems("doc/images/x.gif", 2 * 1024 * 1024 + 1).len(), 1);
+    assert_eq!(animation_problems("doc/images/x.png", 9 * 1024 * 1024), Vec::<String>::new());
 }
 
 /// [RULE] R-DOC-7: links in fenced code are not links, and web addresses

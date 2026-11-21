@@ -11,7 +11,16 @@ name: screenshots
 on:
   push:
     branches: [main]
-    paths: ["ui/**", "src-tauri/**", "xtask/src/screenshots.rs", "xtask/src/webdriver.rs", "xtask/screenshots/**"]
+    paths:
+      - "ui/**"
+      - "src-tauri/**"
+      - "core/**"
+      - "live/**"
+      - "xtask/src/screenshots.rs"
+      - "xtask/src/screenshots/**"
+      - "xtask/src/images.rs"
+      - "xtask/src/webdriver.rs"
+      - "xtask/screenshots/**"
   workflow_dispatch:
 
 # A newer push replaces a run still waiting; one started finishes.
@@ -30,7 +39,7 @@ env:
 jobs:
   screenshots:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -52,6 +61,9 @@ jobs:
         run: |
           cargo install tauri-driver --version 2.1.0 --locked
           xvfb-run -a -s "-screen 0 1920x1080x24" cargo xtask screenshots target/debug/turborel-studio
+        env:
+          # The demo server of the monitor's scenes, as the live tests' is.
+          TURBOREL_TEST_SERVER: docker:ghcr.io/turborel/turborel:nightly
       - name: Keep the images
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

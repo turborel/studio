@@ -206,7 +206,7 @@ The tools named by "the formatter", "the linters", "the type checker" and
 | R-DOC-4 | Behaviour Turborel governs **shall** cite Turborel's manual by its heading; Studio's own choices cite their decision (D6). Code cites RULES.md, CONFORMANCE.md and Turborel's manual, never TODO.md. | review; the checks tool |
 | R-DOC-5 | No commented-out code, and no open-work markers in code: open work goes in TODO.md, which code never names. | the checks tool |
 | R-DOC-6 | Every Rust source file **shall** begin with a doc comment giving its responsibility; every TypeScript module with a TSDoc block. | the checks tool; review |
-| R-DOC-7 | A change a user can see **shall** update the manual, `doc/`, in the same commit; every claim is checked against the code, and every example and step is run. The manual keeps Turborel's layout, which turborel.com's documentation site reads: each page opens with its `# Title` and a line holding only `[Contents](README.md)`, each volume's README.md lists its pages, links within `doc/` and to this repository's files are relative links that resolve, a link to Turborel's own manual is its GitHub address, `user/01-installing.md` keeps its name, and `doc/` holds no file but its pages and, in `doc/images/`, the images `cargo xtask screenshots` makes (D60): PNG, GIF or SVG, each linked by a page, each link's alt text saying what it shows. | review; the checks tool |
+| R-DOC-7 | A change a user can see **shall** update the manual, `doc/`, in the same commit; every claim is checked against the code, and every example and step is run. The manual keeps Turborel's layout, which turborel.com's documentation site reads: each page opens with its `# Title` and a line holding only `[Contents](README.md)`, each volume's README.md lists its pages, links within `doc/` and to this repository's files are relative links that resolve, a link to Turborel's own manual is its GitHub address, `user/01-installing.md` keeps its name, and `doc/` holds no file but its pages and, in `doc/images/`, the images `cargo xtask screenshots` makes (D60): PNG, GIF or SVG, each shown or linked by a page, each picture's alt text saying what it shows, an animation at most 2 MiB. | review; the checks tool |
 | R-DOC-8 | No document or comment gives timings or speedups; figures go in TODO.md or a commit message. | review |
 | R-DOC-9 | The README is never stale: a commit that changes what Studio does, needs or supports (a feature, a mode, a requirement, building or installing, its status) **shall** update README.md, and the pages of the manual it touches, in that same commit; each is read against the change before it is pushed. The README's feature list links the chapter of the User's Guide of each feature, so a chapter of a new feature fails the check until the README names it. | review; the checks tool |
 
@@ -1520,27 +1520,42 @@ The review checklist:
 #### D60. The manual's images: made by the checks tool of the real window and a demo database, never by hand
 
 - **What:** `cargo xtask screenshots <application>` makes a demo
-  database of `xtask/screenshots/demo.sql`, made-up data of a demo user
+  database of `xtask/screenshots/demo.sql`, made-up data of demo users
   alone, and drives the built application under tauri-driver, the smoke
-  test's harness (`xtask/src/webdriver.rs`), at one window size, in the
-  light theme and the dark: the window, completion, the plan viewer,
-  the ER diagram, a context menu, the guard rails asking before a DROP,
-  and Live Sessions. Each goes to `doc/images/`: a PNG of the window,
-  compressed losslessly; a short GIF of what moves, of the `gif` crate,
-  MIT or Apache-2.0; the ER diagram also as SVG, written by Studio's own
-  Export as SVG, its file named in the platform's save dialog by keys
-  `xdotool` types. A scene that fails is pictured beside the images and
-  the run fails.
+  test's harness (`xtask/src/webdriver.rs`), at one window size, 1280 by
+  800, in the light theme and the dark: a scene, or more, of every
+  chapter of the user's guide, each in a module of
+  `xtask/src/screenshots/` of its chapters, each driving the window as a
+  person does, by its controls and its command palette.
+- **Its company:** where `TURBOREL_TEST_SERVER` names a server, as the
+  live tests' does (R-TEST-8), a demo server of the same statements, on
+  a Unix socket its demo user is trusted on, so no password is made or
+  kept, for the scenes of a server: its status, and the monitor of a
+  session waiting on a lock another of this program's holds. The
+  assistant asks core's mock model, never a real one; a Live Sessions'
+  viewer is this program, through Studio's own guest; the files a scene
+  opens are of `xtask/screenshots/`, chosen in the platform's dialog by
+  keys `xdotool` types.
+- **The images:** each goes to `doc/images/`, its theme in its name: a
+  PNG of the window or of the part a scene shows, compressed losslessly,
+  parts stacked where a picture compares them; a GIF of a few seconds of
+  what moves, of the `gif` crate, MIT or Apache-2.0, cropped to its part,
+  a frame the same as the one before merged into it, and at most 2 MiB;
+  the ER diagram also as SVG, written by Studio's own Export as SVG. A
+  page shows the light picture, and links the dark one beside it. A scene
+  that fails is pictured beside the images, and the run fails.
 - **Where it runs:** where tauri-driver runs, Linux under a display
   server: the workflow `screenshots` runs it as the window's code changes
-  on main, or by hand, and keeps the images as an artifact, which a
-  person commits; it never commits, and holds no change back.
+  on main, or by hand, with the nightly image's server, and keeps the
+  images as an artifact, which a person commits; it never commits, and
+  holds no change back.
 - **Kept current:** the images are made again as the window changes;
-  the manual's check refuses an image no page links, a link to an image
-  that is not there, and an image of no alt text (R-DOC-7).
+  the manual's check refuses an image no page shows or links, a link to
+  an image that is not there, an image of no alt text, and an animation
+  past 2 MiB (R-DOC-7).
 - *Why:* the manual shows pictures, made of the real window and nothing
-  personal, so they are the same each time and can be
-  made again whenever the window changes.
+  personal, so they are the same each time and can be made again
+  whenever the window changes; small, so its pages load fast.
 
 #### D61. Explain Analyze of a data change: said to change data, rolled back to a savepoint unless kept
 

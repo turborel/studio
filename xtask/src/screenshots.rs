@@ -1,392 +1,298 @@
 //! The manual's screenshots and animations (RULES.md D60), made by this
 //! program, never by hand: a demo database made of
-//! `xtask/screenshots/demo.sql`, of made-up data and a demo user alone;
-//! the built application driven under tauri-driver, the smoke test's
-//! harness, in each theme at one window size; and each scene written to
-//! `doc/images/`: PNG screenshots of the window, compressed losslessly,
-//! short GIF animations, and the ER diagram as Studio's own SVG export.
+//! `xtask/screenshots/demo.sql`, of made-up data and demo users alone,
+//! and, where `TURBOREL_TEST_SERVER` names a server, a demo server of the
+//! same statements; a model of the scenes' own for the assistant, and a
+//! viewer of their own for Live Sessions; the built application driven
+//! under tauri-driver, the smoke test's harness, in each theme at one
+//! window size; and each scene written to `doc/images/`: PNG screenshots
+//! of the window or a part of it, compressed losslessly, short GIF
+//! animations of a part, and the ER diagram as Studio's own SVG export.
 //! A scene that fails is told and the rest go on; the run fails if any
-//! did. It runs where tauri-driver runs: Linux, under a display server.
+//! did. It runs where tauri-driver runs, under a display server: Linux.
+
+mod admin;
+mod analyzer;
+mod assistant;
+mod connections;
+mod editing;
+mod live;
+mod modeling;
+mod results;
+mod scene;
+#[cfg(unix)]
+mod server;
+mod worksheets;
 
 use std::path::{Path, PathBuf};
-use std::time::Duration;
+use std::sync::Mutex;
 
 use turborel::db::{Database, OpenOptions};
+use turborel_studio_core::assistant::mock::MockModel;
 
 use crate::command::{root, say};
 use crate::error::{Error, Result, fail};
-use crate::images::{Pixels, crop, decode, write_gif, write_png};
-use crate::webdriver::{BACKSPACE, CONTROL, DOWN, Driver, ESCAPE, Session, TAB, config};
+use crate::images::write_png;
+use crate::screenshots::connections::{DEMO_NAME, SERVER_NAME};
+use crate::screenshots::scene::Scene;
+use crate::webdriver::{Driver, config};
 
 /// The window's size in every image, in pixels.
 const WINDOW: (u32, u32) = (1280, 800);
 /// The demo database's owner, the user every image shows.
 const DEMO_USER: &str = "DEMO";
-/// The saved connection of the demo database, as the explorer names it.
-const DEMO_NAME: &str = "Demo shop";
+/// The demo's other users, made with no password, beside its owner.
+const OTHER_USERS: [&str; 2] = ["ANN", "BEN"];
 /// The ports of each theme's tauri-driver and its WebDriver.
 const THEMES: [(&str, (u16, u16)); 2] = [("light", (4464, 4465)), ("dark", (4474, 4475))];
-/// The query the window, its plan and its completion show.
-const QUERY: &str = "SELECT C.NAME, COUNT(*) AS ORDERS, SUM(O.TOTAL) AS TOTAL FROM CUSTOMERS C JOIN ORDERS O ON O.CUSTOMER_ID = C.ID GROUP BY C.NAME ORDER BY TOTAL DESC";
-/// How long a scene's drawing is let settle before it is taken.
-const SETTLE: Duration = Duration::from_millis(700);
 
-/// The page's helpers, defined once a scene needs them: a row of the
-/// catalog by its label, and a context menu opened on an element.
-const HELPERS: &str = r"
-window.studioRow = (label) => [...document.querySelectorAll('[role=tree][aria-label=Catalog] [role=treeitem]')]
-  .find((e) => [...e.querySelectorAll('span')].some((s) => s.textContent === label));
-window.studioMenu = (element) => {
-  const r = element.getBoundingClientRect();
-  element.dispatchEvent(new MouseEvent('contextmenu', {bubbles: true, cancelable: true, clientX: r.left + 40, clientY: r.top + r.height / 2}));
-};
-";
-
-/// Makes the demo database in `dir`, of the seed's statements, owned by `DEMO_USER`.
-fn demo_database(dir: &Path) -> Result<()> {
-    let failed = |e: turborel::error::SqlError| Error(format!("the demo database: {e}"));
+/// The demo's statements, each on lines of its own ended by a semicolon.
+fn statements() -> Result<Vec<String>> {
     let seed = std::fs::read_to_string(root().join("xtask").join("screenshots").join("demo.sql"))
         .map_err(|e| Error(format!("xtask/screenshots/demo.sql: {e}")))?;
-    let db = Database::new();
-    let fs = db.file_system().map_err(failed)?;
-    db.open_files(&fs, dir, &OpenOptions::default()).map_err(failed)?;
-    db.create_user(DEMO_USER, b"").map_err(failed)?;
-    let session = db.session(DEMO_USER);
+    let mut out = Vec::new();
     let mut statement = String::new();
     for line in seed.lines().filter(|l| !l.trim_start().starts_with("--")) {
         statement.push_str(line);
         statement.push('\n');
         if line.trim_end().ends_with(';') {
-            let sql = statement.trim().trim_end_matches(';');
-            // A <schema> is the database's to make, a statement of a schema the session's.
-            let ran = if sql.starts_with("CREATE SCHEMA") { db.schema(sql).map(drop) } else { session.run(sql).map(drop) };
-            ran.map_err(|e| Error(format!("the demo database, at {sql}: {e}")))?;
-            session.commit().map_err(failed)?;
+            out.push(statement.trim().trim_end_matches(';').to_owned());
             statement.clear();
         }
+    }
+    Ok(out)
+}
+
+/// Makes the demo database in `dir`, of the seed's statements, owned by `DEMO_USER`.
+fn demo_database(dir: &Path) -> Result<()> {
+    let failed = |e: turborel::error::SqlError| Error(format!("the demo database: {e}"));
+    let db = Database::new();
+    let fs = db.file_system().map_err(failed)?;
+    db.open_files(&fs, dir, &OpenOptions::default()).map_err(failed)?;
+    for user in std::iter::once(DEMO_USER).chain(OTHER_USERS) {
+        db.create_user(user, b"").map_err(failed)?;
+    }
+    let session = db.session(DEMO_USER);
+    for sql in statements()? {
+        // A <schema> is the database's to make, a statement of a schema the session's.
+        let ran = if sql.starts_with("CREATE SCHEMA") { db.schema(&sql).map(drop) } else { session.run(&sql).map(drop) };
+        ran.map_err(|e| Error(format!("the demo database, at {sql}: {e}")))?;
+        session.commit().map_err(failed)?;
     }
     db.close().map_err(failed)
 }
 
-/// Writes the app data of `home`: the settings of `theme`, and the demo
-/// database saved as a connection, its folder `demo`.
-fn app_data(home: &Path, theme: &str, demo: &Path) -> Result<()> {
+/// A saved connection of `id` and `name`, of `spec` and `embedded`.
+fn saved(id: &str, name: &str, spec: &serde_json::Value, embedded: Option<serde_json::Value>) -> serde_json::Value {
+    let mut connection = serde_json::json!({
+        "id": id, "name": name, "folder": [], "spec": spec, "environment": "development",
+        "colour": null, "readOnly": false, "pinned": false, "favourites": []
+    });
+    if let (Some(embedded), Some(object)) = (embedded, connection.as_object_mut()) {
+        object.insert("embedded".to_owned(), embedded);
+    }
+    connection
+}
+
+/// Writes the app data of `home`: the settings of `theme`; the demo
+/// database, of the folder `demo`, saved as a connection, and the demo
+/// server, of the socket `socket`, if one runs; Live Sessions on, under
+/// the demo presenter's name, a column masked and each session recorded;
+/// and the assistant on, of the scenes' model at `model`.
+fn app_data(home: &Path, theme: &str, demo: &Path, (socket, model): (Option<&Path>, &str)) -> Result<PathBuf> {
     let dir = config(home);
     std::fs::create_dir_all(&dir).map_err(|e| Error(format!("{}: {e}", dir.display())))?;
     let settings = serde_json::json!({"format": 1, "theme": theme});
-    // Live Sessions on, under the demo's own name, as a presenter's are.
-    let live = serde_json::json!({"format": 1, "enabled": true, "name": "Demo presenter"});
-    let connections = serde_json::json!({
-        "format": 1,
-        "connections": [{
-            "id": "0d3e40c5a1b2c3d4e5f60718293a4b5c",
-            "name": DEMO_NAME,
-            "folder": [],
-            "spec": {},
-            "environment": "development",
-            "colour": null,
-            "readOnly": false,
-            "pinned": false,
-            "favourites": [],
-            "embedded": {"directory": demo.display().to_string(), "keys": null, "checksumKey": null, "pluginDirectories": null, "user": null}
-        }],
-        "recent": []
+    let live = serde_json::json!({
+        "format": 1, "enabled": true, "name": "Demo presenter", "maskedColumns": ["TOTAL"],
+        "connectivity": {"direct": true, "port": 0, "advertise": ["127.0.0.1"]},
+        "records": {"allowed": true, "byDefault": true, "sealed": false}
     });
+    let embedded = serde_json::json!({"directory": demo.display().to_string(), "keys": null, "checksumKey": null, "pluginDirectories": null, "user": null});
+    let mut connections = vec![saved("0d3e40c5a1b2c3d4e5f60718293a4b5c", DEMO_NAME, &serde_json::json!({}), Some(embedded))];
+    if let Some(socket) = socket {
+        let spec = serde_json::json!({"host": socket.display().to_string(), "user": DEMO_USER});
+        connections.push(saved("5e1f2a3b4c5d6e7f8091a2b3c4d5e6f7", SERVER_NAME, &spec, None));
+    }
+    let connections = serde_json::json!({"format": 1, "connections": connections, "recent": []});
     for (name, json) in [("settings.json", settings), ("connections.json", connections), ("live-sessions.json", live)] {
         std::fs::write(dir.join(name), json.to_string()).map_err(|e| Error(format!("{name}: {e}")))?;
     }
-    Ok(())
-}
-
-/// What a scene makes: its images, written to `out`.
-struct Scene<'s> {
-    session: &'s Session<'s>,
-    theme: &'s str,
-    out: &'s Path,
-}
-
-impl Scene<'_> {
-    /// The window as it is now.
-    fn shot(&self) -> Result<Pixels> {
-        std::thread::sleep(SETTLE);
-        decode(&self.session.screenshot()?)
-    }
-
-    /// Writes the window as it is now as `name`, of this theme.
-    fn save(&self, name: &str) -> Result<()> {
-        write_png(&self.shot()?, &self.out.join(format!("{name}-{}.png", self.theme)))
-    }
-
-    /// The rectangle, in the screenshot's pixels, of the element `selector` finds.
-    fn rect(&self, selector: &str) -> Result<(u32, u32, u32, u32)> {
-        let script = format!(
-            "const r = document.querySelector('{selector}').getBoundingClientRect(); const d = window.devicePixelRatio; return [r.left * d, r.top * d, r.width * d, r.height * d].map(Math.round);"
-        );
-        self.session.wait_for(selector)?;
-        let got = self.session.script(&script)?;
-        let n = |i: usize| got.get(i).and_then(serde_json::Value::as_u64).and_then(|v| u32::try_from(v).ok()).unwrap_or(0);
-        Ok((n(0), n(1), n(2), n(3)))
-    }
-
-    /// The worksheet, its editor focused and emptied: the scenes' one
-    /// worksheet, opened by the first.
-    fn worksheet(&self) -> Result<()> {
-        if !self.session.found(".worksheet-body .cm-content")? {
-            self.session.click("[role=\"toolbar\"][aria-label=\"Toolbar\"] button[aria-label=\"New Worksheet\"]")?;
-            self.session.wait_for(".worksheet-body .cm-content")?;
-        }
-        self.focus_editor()?;
-        self.session.press(&[CONTROL], &["a"])?;
-        self.session.press(&[], &[BACKSPACE])
-    }
-
-    /// Clicks the worksheet's toolbar button `name`: the completion list,
-    /// if one is open, closed first.
-    fn tool(&self, name: &str) -> Result<()> {
-        self.session.press(&[], &[ESCAPE])?;
-        // The worksheet's toolbar is drawn again as the scene before leaves it.
-        let button = format!("[role=\"toolbar\"][aria-label=\"Worksheet\"] button[aria-label=\"{name}\"]");
-        self.session.wait_for(&button)?;
-        self.session.click(&button)
-    }
-
-    /// Clicks, as a person does, the element `selector` finds whose text
-    /// holds `text`, once the window draws it: marked for the driver to find.
-    fn click_text(&self, selector: &str, text: &str) -> Result<()> {
-        let script = format!(
-            "document.getElementById('studio-target')?.removeAttribute('id'); const e = [...document.querySelectorAll('{selector}')].find((e) => e.textContent.includes('{text}')); if (e) {{ e.id = 'studio-target'; }} return e !== undefined;"
-        );
-        let start = std::time::Instant::now();
-        while !self.session.script(&script)?.as_bool().unwrap_or(false) {
-            if start.elapsed() > crate::webdriver::DRAWN_WITHIN {
-                return fail(format!("the window drew no {selector} of {text}"));
-            }
-            std::thread::sleep(SETTLE);
-        }
-        self.session.click("#studio-target")
-    }
-
-    /// A new worksheet, its editor focused, apart from the one the other scenes share.
-    fn new_worksheet(&self) -> Result<()> {
-        let before = self.session.script("return document.querySelectorAll('.worksheet-body .cm-content').length")?;
-        self.session.click("[role=\"toolbar\"][aria-label=\"Toolbar\"] button[aria-label=\"New Worksheet\"]")?;
-        std::thread::sleep(SETTLE);
-        let after = self.session.script("return document.querySelectorAll('.worksheet-body .cm-content').length")?;
-        if after == before {
-            self.session.wait_for(".worksheet-body .cm-content")?;
-        }
-        self.focus_editor()
-    }
-
-    /// Focuses the editor of the worksheet shown, marked for the driver
-    /// to type into: of several worksheets, the one drawn.
-    fn focus_editor(&self) -> Result<()> {
-        let script = "document.getElementById('studio-editor')?.removeAttribute('id'); const e = [...document.querySelectorAll('.worksheet-body .cm-content')].find((e) => e.offsetParent !== null); if (e) { e.id = 'studio-editor'; e.focus(); } return e !== undefined;";
-        // The window may still be laying out the worksheet the last scene left.
-        let start = std::time::Instant::now();
-        while !self.session.script(script)?.as_bool().unwrap_or(false) {
-            if start.elapsed() > crate::webdriver::DRAWN_WITHIN {
-                return fail("no worksheet is shown");
-            }
-            std::thread::sleep(SETTLE);
-        }
-        // Focused by the page already; a click, where one lands, puts the cursor too.
-        let _ = self.session.click("#studio-editor");
-        Ok(())
-    }
-
-    /// Waits until the catalog draws a row of `label`.
-    fn wait_row(&self, label: &str) -> Result<()> {
-        let start = std::time::Instant::now();
-        while !self.session.script(&format!("return window.studioRow('{label}') !== undefined"))?.as_bool().unwrap_or(false) {
-            if start.elapsed() > crate::webdriver::DRAWN_WITHIN {
-                return fail(format!("the catalog drew no row {label}"));
-            }
-            std::thread::sleep(SETTLE);
-        }
-        Ok(())
-    }
-
-    /// Types `text` into the worksheet's editor.
-    fn write(&self, text: &str) -> Result<()> {
-        self.session.type_into("#studio-editor", text)
-    }
-}
-
-/// The window: the demo shop open, its catalog shown, a query and its rows.
-fn window_scene(scene: &Scene<'_>) -> Result<()> {
-    scene.worksheet()?;
-    scene.write(QUERY)?;
-    scene.tool("Run Statement")?;
-    scene.session.wait_for("[role=\"grid\"], .result-grid, canvas")?;
-    scene.save("window")
-}
-
-/// Completion: a table's name begun, the list offered, the arrows moving
-/// through it and Tab taking one; an animation of the editor alone.
-fn completion_scene(scene: &Scene<'_>) -> Result<()> {
-    scene.worksheet()?;
-    let area = scene.rect(".worksheet-body")?;
-    let area = (area.0, area.1, area.2, area.3.min(260));
-    let mut frames = Vec::new();
-    let mut frame = |hundredths: u16| -> Result<()> {
-        frames.push((crop(&scene.shot()?, area), hundredths));
-        Ok(())
-    };
-    for word in ["SELECT ", "NAME ", "FROM ", "C", "U"] {
-        scene.write(word)?;
-        frame(40)?;
-    }
-    scene.session.wait_for(".cm-tooltip-autocomplete")?;
-    frame(120)?;
-    scene.session.press(&[], &[DOWN])?;
-    frame(80)?;
-    scene.session.press(&[], &[DOWN])?;
-    frame(80)?;
-    scene.session.press(&[], &[TAB])?;
-    frame(250)?;
-    write_gif(&frames, &scene.out.join(format!("completion-{}.gif", scene.theme)))
-}
-
-/// The plan viewer: the query explained and analyzed.
-fn plan_scene(scene: &Scene<'_>) -> Result<()> {
-    scene.worksheet()?;
-    scene.write(QUERY)?;
-    scene.tool("Explain Analyze")?;
-    scene.session.wait_for("[aria-label=\"Summary of the plan\"]")?;
-    scene.save("plan-viewer")
-}
-
-/// A context menu: a table's, in the explorer.
-fn menu_scene(scene: &Scene<'_>) -> Result<()> {
-    scene.session.script(HELPERS)?;
-    if scene.session.script("return window.studioRow('Tables') === undefined")?.as_bool().unwrap_or(true) {
-        scene.session.script("window.studioRow('DEMO')?.dispatchEvent(new MouseEvent('dblclick', {bubbles: true}))")?;
-    }
-    scene.wait_row("Tables")?;
-    if scene.session.script("return window.studioRow('ORDERS') === undefined")?.as_bool().unwrap_or(true) {
-        scene.session.script("window.studioRow('Tables')?.dispatchEvent(new MouseEvent('dblclick', {bubbles: true}))")?;
-    }
-    scene.wait_row("ORDERS")?;
-    scene.session.script("window.studioMenu(window.studioRow('ORDERS'));")?;
-    scene.session.wait_for("[role=\"menu\"] [role=\"menuitem\"]")?;
-    scene.save("context-menu")?;
-    scene.session.press(&[], &[ESCAPE])
-}
-
-/// The guard rails: a DROP asked about before it runs.
-fn guard_scene(scene: &Scene<'_>) -> Result<()> {
-    scene.new_worksheet()?;
-    scene.write("DROP TABLE ORDER_LINES CASCADE")?;
-    scene.tool("Run Statement")?;
-    scene.session.wait_for("[role=\"dialog\"]")?;
-    scene.save("guard-drop")?;
-    scene.session.press(&[], &[ESCAPE])
-}
-
-/// The ER diagram: the schema's model, and, of the light theme, its SVG,
-/// as Studio's own Export as SVG writes it, taken from the page's call.
-fn diagram_scene(scene: &Scene<'_>) -> Result<()> {
-    scene.session.script(HELPERS)?;
-    scene.session.script("window.studioRow('DEMO')?.click()")?;
-    scene.session.wait_for("[aria-label=\"Schema actions\"]")?;
-    scene.click_text("[aria-label=\"Schema actions\"] button", "Open Model")?;
-    // The model opens in a tab of its own, shown as it opens.
-    scene.session.wait_for(".react-flow__node")?;
-    scene.save("er-diagram")?;
-    if scene.theme != "light" {
-        return Ok(());
-    }
-    // Studio's own Export as SVG, its file named in the platform's save
-    // dialog as a person names it, by keys typed into the dialog.
-    let file = scene.out.join("er-diagram.svg");
-    let _ = std::fs::remove_file(&file); // One of a run before is made again.
-    scene.session.click("button[aria-label=\"Export as SVG…\"]")?;
-    name_in_save_dialog(&file)?;
-    for _ in 0..20 {
-        if file.is_file() {
-            return Ok(());
-        }
-        std::thread::sleep(SETTLE);
-    }
-    fail(format!("the diagram was not exported to {}", file.display()))
-}
-
-/// Names `file` in the platform's save dialog open now, as a person does:
-/// the dialog found by its title, the name typed, and Return, by
-/// `xdotool` of the display the window is on.
-fn name_in_save_dialog(file: &Path) -> Result<()> {
-    let typed = |args: &[&str]| -> Result<()> {
-        let done = std::process::Command::new("timeout")
-            .arg("30")
-            .arg("xdotool")
-            .args(args)
-            .status()
-            .map_err(|e| Error(format!("cannot run xdotool: {e}")))?;
-        if done.success() { Ok(()) } else { fail(format!("xdotool {} failed", args.join(" "))) }
-    };
-    let path = file.display().to_string();
-    // A virtual display has no window manager to activate a window: the
-    // dialog is given the keyboard's focus instead.
-    typed(&["search", "--sync", "--onlyvisible", "--name", "Save", "windowfocus", "--sync"])?;
-    std::thread::sleep(SETTLE);
-    typed(&["key", "ctrl+a"])?;
-    typed(&["type", "--delay", "20", &path])?;
-    typed(&["key", "Return"])
-}
-
-/// Live Sessions: a session presented, its panel shown.
-fn live_scene(scene: &Scene<'_>) -> Result<()> {
-    scene.session.click("[role=\"toolbar\"][aria-label=\"Toolbar\"] button[aria-label=\"Present\"]")?;
-    scene.session.wait_for("[role=\"region\"][aria-label=\"Live Session\"] [aria-label=\"Participants\"]")?;
-    scene.save("live-session")
+    assistant::write_settings(&dir, model)?;
+    Ok(dir)
 }
 
 /// A scene, by its name.
 type Act = fn(&Scene<'_>) -> Result<()>;
 
-/// Every scene, in the order they are taken.
-const SCENES: [(&str, Act); 7] = [
-    ("window", window_scene),
-    ("completion", completion_scene),
-    ("plan viewer", plan_scene),
-    ("context menu", menu_scene),
-    ("guard rails", guard_scene),
-    ("ER diagram", diagram_scene),
-    ("Live Sessions", live_scene),
+/// The scenes of the window, its connections, worksheets and results, in
+/// the order they are taken: connecting first, as the window opens.
+const FIRST: [(&str, Act); 27] = [
+    ("connecting", connections::connect_scene),
+    ("about", connections::about_scene),
+    ("window", worksheets::window_scene),
+    ("completion", worksheets::completion_scene),
+    ("plan viewer", worksheets::plan_scene),
+    ("context menu", worksheets::menu_scene),
+    ("guard rails", worksheets::guard_scene),
+    ("connection dialog", connections::connection_dialog_scene),
+    ("embedded dialogs", connections::embedded_dialogs_scene),
+    ("in memory", connections::in_memory_scene),
+    ("tree", connections::tree_scene),
+    ("filter", connections::filter_scene),
+    ("details", connections::details_scene),
+    ("script as", connections::script_as_scene),
+    ("snippet and format", worksheets::snippet_format_scene),
+    ("analyze a change", worksheets::analyze_change_scene),
+    ("keys", worksheets::keys_scene),
+    ("grid", results::grid_scene),
+    ("record view", results::record_scene),
+    ("selection's sums", results::aggregates_scene),
+    ("copy as", results::copy_scene),
+    ("viewers", results::viewers_scene),
+    ("spatial", results::spatial_scene),
+    ("graph", results::graph_scene),
+    ("result compare", results::compare_scene),
+    ("history", worksheets::history_scene),
+    ("plan warnings", analyzer::warnings_scene),
 ];
 
-/// Takes every scene of `theme`, of the application at `application`, of
-/// a demo database of its own, so none is opened after another left it:
-/// the names of those that failed, and why.
-fn theme_scenes(application: &Path, (theme, ports): (&str, (u16, u16)), (homes, out): (&Path, &Path)) -> Result<Vec<String>> {
-    let home = homes.join(theme);
-    let demo = homes.join(format!("demo-database-{theme}"));
+/// The scenes of the analyzer, modeling, the assistant and users.
+const MIDDLE: [(&str, Act); 13] = [
+    ("analyzer", analyzer::analyzer_scene),
+    ("report", analyzer::report_scene),
+    ("plan compare", analyzer::plan_compare_scene),
+    ("ER diagram", modeling::diagram_scene),
+    ("query builder", modeling::builder_scene),
+    ("schema compare", modeling::schema_compare_scene),
+    ("import DDL", modeling::import_ddl_scene),
+    ("assistant settings", assistant::settings_scene),
+    ("assistant question", assistant::question_scene),
+    ("assistant approval", assistant::approval_scene),
+    ("assistant blocked", assistant::blocked_scene),
+    ("assistant log", assistant::log_scene),
+    ("users", admin::users_scene),
+];
+
+/// The scenes of Live Sessions, and those that change the demo database,
+/// last.
+const LAST: [(&str, Act); 10] = [
+    ("Live Sessions", live::present_scene),
+    ("live suggestion", live::suggestion_scene),
+    ("live settings", live::settings_scene),
+    ("live records", live::records_scene),
+    ("table dialogs", editing::table_dialogs_scene),
+    ("compare rows", editing::compare_rows_scene),
+    ("generate script", editing::generate_scene),
+    ("edit rows", editing::edit_rows_scene),
+    ("import", editing::import_scene),
+    ("run SQL file", editing::sql_file_scene),
+];
+
+/// Every scene, in the order they are taken; the monitor's where a
+/// demo server may run.
+fn scenes() -> Vec<(&'static str, Act)> {
+    let mut all: Vec<(&'static str, Act)> = FIRST.into_iter().chain(MIDDLE).collect();
+    #[cfg(unix)]
+    all.push(("monitor", admin::monitor_scene));
+    all.extend(LAST);
+    all
+}
+
+/// Takes `act`, named `name`: its failure told, the window as it was
+/// pictured in `homes`, and whatever it left open closed.
+fn take(scene: &Scene<'_>, (name, act): (&str, Act), homes: &Path) -> Option<String> {
+    say(&format!("==> screenshots: {name}, {}", scene.theme));
+    let Err(e) = act(scene) else { return None };
+    let _ = scene.escape(); // Whatever it left open is closed.
+    if let Ok(shown) = scene.shot() {
+        let _ = write_png(&shown, &homes.join(format!("failed-{}-{}.png", name.replace(' ', "-"), scene.theme))); // A failure's picture helps alone.
+    }
+    Some(format!("{name}, {}: {e}", scene.theme))
+}
+
+/// What every theme's scenes share: the application, the folders, the
+/// model's address and the demo server.
+struct Run<'r> {
+    application: &'r Path,
+    homes: &'r Path,
+    out: &'r Path,
+    model: &'r str,
+    #[cfg(unix)]
+    server: Option<&'r server::DemoServer>,
+}
+
+impl Run<'_> {
+    /// A scene of `session`, of `theme`, its settings in `config`, its
+    /// invitation's link kept in `link`.
+    fn scene<'s>(
+        &'s self,
+        session: &'s crate::webdriver::Session<'s>,
+        (theme, config): (&'s str, &'s Path),
+        link: &'s Mutex<Option<String>>,
+    ) -> Scene<'s> {
+        Scene {
+            session,
+            theme,
+            out: self.out,
+            config,
+            model: self.model,
+            link,
+            #[cfg(unix)]
+            server: self.server,
+        }
+    }
+}
+
+/// Takes every scene of `theme`, of a demo database of its own, so none is
+/// opened after another left it; then the scene of a link, of a window
+/// begun by the presenter's invitation's link alone: the names of those
+/// that failed, and why.
+fn theme_scenes(run: &Run<'_>, (theme, ports): (&str, (u16, u16))) -> Result<Vec<String>> {
+    let home = run.homes.join(theme);
+    let demo = run.homes.join(format!("demo-database-{theme}"));
     std::fs::create_dir_all(&demo).map_err(|e| Error(format!("{}: {e}", demo.display())))?;
     say(&format!("==> screenshots: the demo database, {theme}"));
     demo_database(&demo)?;
-    app_data(&home, theme, &demo)?;
+    #[cfg(unix)]
+    let socket = run.server.map(|s| s.socket.as_path());
+    #[cfg(not(unix))]
+    let socket = None;
+    let config = app_data(&home, theme, &demo, (socket, run.model))?;
     let driver = Driver::start(&home, ports)?;
-    let session = driver.session(application)?;
-    session.size(WINDOW)?;
-    // The saved connections are read after the toolbar is drawn.
-    let connect = format!("button[aria-label=\"Connect to {DEMO_NAME}\"]");
-    session.wait_for(&connect)?;
-    session.click(&connect)?;
-    session.wait_for("[role=\"tree\"][aria-label=\"Catalog\"] [role=\"treeitem\"]")?;
-    let scene = Scene { session: &session, theme, out };
+    let link = Mutex::new(None);
     let mut failed = Vec::new();
-    for (name, act) in SCENES {
-        say(&format!("==> screenshots: {name}, {theme}"));
-        if let Err(e) = act(&scene) {
-            let _ = scene.session.press(&[], &[ESCAPE]); // Whatever it left open is closed.
-            if let Ok(shown) = scene.shot() {
-                let _ = write_png(&shown, &homes.join(format!("failed-{}-{theme}.png", name.replace(' ', "-")))); // A failure's picture helps alone.
+    {
+        let session = driver.session(run.application, &[])?;
+        session.size(WINDOW)?;
+        let scene = run.scene(&session, (theme, &config), &link);
+        for (name, act) in scenes() {
+            failed.extend(take(&scene, (name, act), run.homes));
+            if name == "connecting" {
+                connections::connected(&scene)?;
             }
-            failed.push(format!("{name}, {theme}: {e}"));
         }
     }
+    let Some(link) = link.lock().ok().and_then(|l| l.clone()) else { return Ok(failed) };
+    let session = driver.session(run.application, &[link.as_str()])?;
+    session.size(WINDOW)?;
+    let none = Mutex::new(None);
+    let scene = run.scene(&session, (theme, &config), &none);
+    failed.extend(take(&scene, ("join from a link", live::link_scene), run.homes));
     Ok(failed)
+}
+
+/// The demo server, of the demo's statements, if `TURBOREL_TEST_SERVER`
+/// names one; told and left out if it cannot start.
+#[cfg(unix)]
+fn demo_server(homes: &Path) -> Option<server::DemoServer> {
+    let spec = std::env::var(server::SERVER_VARIABLE).ok().filter(|s| !s.is_empty())?;
+    say("==> screenshots: the demo server");
+    let started = server::DemoServer::start(&spec, &homes.join("server"), (DEMO_USER, &OTHER_USERS)).and_then(|server| {
+        server.seed(DEMO_USER, &statements()?)?;
+        Ok(server)
+    });
+    started.map_err(|e| say(&format!("screenshots: the demo server: {e}"))).ok()
 }
 
 /// Makes every image of the manual of the application at `application`.
@@ -395,11 +301,28 @@ pub fn screenshots(application: Option<&str>) -> Result<()> {
     let application = std::fs::canonicalize(application).map_err(|e| Error(format!("{application}: {e}")))?;
     let homes: PathBuf = root().join("target").join("screenshots");
     let _ = std::fs::remove_dir_all(&homes); // One of a run before is replaced.
+    std::fs::create_dir_all(&homes).map_err(|e| Error(format!("{}: {e}", homes.display())))?;
     let out = root().join("doc").join("images");
     std::fs::create_dir_all(&out).map_err(|e| Error(format!("{}: {e}", out.display())))?;
+    #[cfg(unix)]
+    let server = demo_server(&homes);
     let mut failed = Vec::new();
     for theme in THEMES {
-        failed.extend(theme_scenes(&application, theme, (&homes, &out))?);
+        // Each theme's model, its answers given afresh.
+        let model = MockModel::start(assistant::answers());
+        let run = Run {
+            application: &application,
+            homes: &homes,
+            out: &out,
+            model: &model.url,
+            #[cfg(unix)]
+            server: server.as_ref(),
+        };
+        failed.extend(theme_scenes(&run, theme)?);
+    }
+    #[cfg(unix)]
+    if let Some(server) = server {
+        server.stop();
     }
     if failed.is_empty() {
         say(&format!("screenshots: every scene written to {}", out.display()));

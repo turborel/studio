@@ -37,7 +37,7 @@ fn worksheet_and_menu(session: &Session<'_>) -> Result<()> {
 /// logged, and, if `told` is some, a notice that holds it.
 fn scenario(application: &Path, (home, ports): (&Path, (u16, u16)), told: Option<&str>) -> Result<()> {
     let driver = Driver::start(home, ports)?;
-    let session = driver.session(application)?;
+    let session = driver.session(application, &[])?;
     session.wait_for("[role=\"toolbar\"]")?;
     session.wait_for("[aria-label=\"Object Explorer\"]")?;
     if session.found(".failure-panel")? {

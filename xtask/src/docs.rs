@@ -8,6 +8,7 @@ use std::path::{Path, PathBuf};
 use crate::command::root;
 use crate::error::{Result, fail};
 use crate::files::ext_is;
+use crate::images::MAX_GIF_BYTES;
 
 /// The line that follows a chapter's title (R-DOC-7).
 const CONTENTS: &str = "[Contents](README.md)";
@@ -32,6 +33,7 @@ pub fn check_manual(paths: &[String]) -> Result<()> {
         if !linked.iter().any(|l| l == image) {
             problems.push(format!("{image}: no page links the image (R-DOC-7)"));
         }
+        problems.extend(animation_problems(image, std::fs::metadata(root().join(image)).map_or(0, |m| m.len())));
     }
     if problems.is_empty() { Ok(()) } else { fail(problems.join("\n")) }
 }
@@ -147,9 +149,25 @@ pub fn images(text: &str) -> Vec<(String, String)> {
     found
 }
 
+/// `target`, a link of a file in `base`, as a path from the root.
+fn resolved(base: &Path, target: &str) -> String {
+    let mut parts: Vec<String> = Vec::new();
+    for part in base.join(target).components() {
+        match part {
+            std::path::Component::ParentDir => {
+                parts.pop();
+            }
+            std::path::Component::Normal(p) => parts.push(p.to_string_lossy().into_owned()),
+            _ => {}
+        }
+    }
+    parts.join("/")
+}
+
 /// What is wrong with the images of the Markdown file `path`, of `text`:
-/// an alt text that is empty. Each image it shows, as a path from the
-/// root, is added to `linked`.
+/// an alt text that is empty. Each image it shows, and each it links, as
+/// a theme's other picture is linked beside the one shown, as a path from
+/// the root, is added to `linked`.
 fn image_problems(path: &str, text: &str, linked: &mut Vec<String>) -> Vec<String> {
     let base = Path::new(path).parent().map_or_else(PathBuf::new, Path::to_path_buf);
     let mut problems = Vec::new();
@@ -157,19 +175,25 @@ fn image_problems(path: &str, text: &str, linked: &mut Vec<String>) -> Vec<Strin
         if alt.trim().is_empty() {
             problems.push(format!("{path}: the image {target} says not what it shows: its alt text is empty (R-DOC-7)"));
         }
-        let mut parts: Vec<String> = Vec::new();
-        for part in base.join(&target).components() {
-            match part {
-                std::path::Component::ParentDir => {
-                    parts.pop();
-                }
-                std::path::Component::Normal(p) => parts.push(p.to_string_lossy().into_owned()),
-                _ => {}
-            }
+        linked.push(resolved(&base, &target));
+    }
+    for link in links(text).iter().filter(|l| IMAGE_KINDS.iter().any(|k| ext_is(l, k))) {
+        let image = resolved(&base, link);
+        if !linked.contains(&image) {
+            linked.push(image);
         }
-        linked.push(parts.join("/"));
     }
     problems
+}
+
+/// What is wrong with the manual's animation `path`, of `bytes`: more
+/// than an animation may take, so the pages load fast (R-DOC-7).
+pub fn animation_problems(path: &str, bytes: u64) -> Vec<String> {
+    if ext_is(path, "gif") && bytes > MAX_GIF_BYTES {
+        vec![format!("{path}: {bytes} bytes, more than an animation may take, {MAX_GIF_BYTES} (R-DOC-7)")]
+    } else {
+        Vec::new()
+    }
 }
 
 /// What is wrong with the links of the Markdown file `path`, of `text`.

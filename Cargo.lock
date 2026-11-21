@@ -6173,7 +6173,11 @@ dependencies = [
  "gif",
  "png",
  "serde_json",
+ "tokio",
  "turborel",
+ "turborel-client",
+ "turborel-studio-core",
+ "turborel-studio-live",
 ]
 
 [[package]]
