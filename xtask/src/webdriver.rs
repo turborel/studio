@@ -23,14 +23,10 @@ pub const TAB: &str = "\u{E004}";
 pub const DOWN: &str = "\u{E015}";
 /// The key WebDriver names Control by.
 pub const CONTROL: &str = "\u{E009}";
-/// The key WebDriver names Enter by.
-pub const ENTER: &str = "\u{E007}";
 /// The key WebDriver names Escape by.
 pub const ESCAPE: &str = "\u{E00C}";
 /// The key WebDriver names Backspace by.
 pub const BACKSPACE: &str = "\u{E003}";
-/// The key WebDriver names Shift by.
-pub const SHIFT: &str = "\u{E008}";
 
 /// tauri-driver, listening on a port, started with a home of its own, so
 /// the application's folders are under it; stopped as it is dropped.

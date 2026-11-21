@@ -16,7 +16,7 @@ use turborel::db::{Database, OpenOptions};
 use crate::command::{root, say};
 use crate::error::{Error, Result, fail};
 use crate::images::{Pixels, crop, decode, write_gif, write_png};
-use crate::webdriver::{BACKSPACE, CONTROL, DOWN, Driver, ENTER, ESCAPE, SHIFT, Session, TAB, config};
+use crate::webdriver::{BACKSPACE, CONTROL, DOWN, Driver, ESCAPE, Session, TAB, config};
 
 /// The window's size in every image, in pixels.
 const WINDOW: (u32, u32) = (1280, 800);
@@ -139,11 +139,21 @@ impl Scene<'_> {
         self.session.press(&[], &[BACKSPACE])
     }
 
-    /// Runs `keys`, held with Control, as a shortcut does: the completion
-    /// list, if one is open, closed first.
-    fn shortcut(&self, keys: &[&str]) -> Result<()> {
+    /// Clicks the worksheet's toolbar button `name`: the completion list,
+    /// if one is open, closed first.
+    fn tool(&self, name: &str) -> Result<()> {
         self.session.press(&[], &[ESCAPE])?;
-        self.session.press(&[CONTROL], keys)
+        self.session.click(&format!("[role=\"toolbar\"][aria-label=\"Worksheet\"] button[aria-label=\"{name}\"]"))
+    }
+
+    /// Clicks, as a person does, the element `selector` finds whose text
+    /// holds `text`: marked for the driver to find.
+    fn click_text(&self, selector: &str, text: &str) -> Result<()> {
+        let script = format!(
+            "document.getElementById('studio-target')?.removeAttribute('id'); const e = [...document.querySelectorAll('{selector}')].find((e) => e.textContent.includes('{text}')); if (!e) throw new Error('no {selector} of {text}'); e.id = 'studio-target';"
+        );
+        self.session.script(&script)?;
+        self.session.click("#studio-target")
     }
 
     /// Types `text` into the worksheet's editor.
@@ -156,7 +166,7 @@ impl Scene<'_> {
 fn window_scene(scene: &Scene<'_>) -> Result<()> {
     scene.worksheet()?;
     scene.write(QUERY)?;
-    scene.shortcut(&[ENTER])?;
+    scene.tool("Run Statement")?;
     scene.session.wait_for("[role=\"grid\"], .result-grid, canvas")?;
     scene.save("window")
 }
@@ -191,8 +201,7 @@ fn completion_scene(scene: &Scene<'_>) -> Result<()> {
 fn plan_scene(scene: &Scene<'_>) -> Result<()> {
     scene.worksheet()?;
     scene.write(QUERY)?;
-    scene.session.press(&[], &[ESCAPE])?;
-    scene.session.press(&[CONTROL, SHIFT], &["e"])?;
+    scene.tool("Explain Analyze")?;
     scene.session.wait_for("[aria-label=\"Summary of the plan\"]")?;
     scene.save("plan-viewer")
 }
@@ -214,7 +223,7 @@ fn menu_scene(scene: &Scene<'_>) -> Result<()> {
 fn guard_scene(scene: &Scene<'_>) -> Result<()> {
     scene.worksheet()?;
     scene.write("DROP TABLE ORDER_LINES CASCADE")?;
-    scene.shortcut(&[ENTER])?;
+    scene.tool("Run Statement")?;
     scene.session.wait_for("[role=\"dialog\"]")?;
     scene.save("guard-drop")?;
     scene.session.press(&[], &[ESCAPE])
@@ -226,11 +235,10 @@ fn diagram_scene(scene: &Scene<'_>) -> Result<()> {
     scene.session.script(HELPERS)?;
     scene.session.script("window.studioRow('DEMO')?.click()")?;
     scene.session.wait_for("[aria-label=\"Schema actions\"]")?;
-    scene.session.script(
-        "[...document.querySelectorAll('[aria-label=\"Schema actions\"] button')].find((b) => b.textContent.includes('Open Model'))?.click()",
-    )?;
+    scene.click_text("[aria-label=\"Schema actions\"] button", "Open Model")?;
+    std::thread::sleep(SETTLE);
     // The model opens in a tab of its own, which is shown.
-    scene.session.script("[...document.querySelectorAll('.dv-tab')].find((t) => t.textContent.includes('DEMO'))?.click()")?;
+    scene.click_text(".dock-tab", "DEMO")?;
     scene.session.wait_for(".react-flow__node")?;
     scene.save("er-diagram")?;
     if scene.theme != "light" {
