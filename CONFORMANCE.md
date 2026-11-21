@@ -35,7 +35,8 @@ shows what it gives. These rows say how each kind is shown.
 | S-STMT-4 | CREATE, ALTER and DROP of each object Turborel defines | run as typed; a DROP confirmed first; the explorer read again after | done |
 | S-STMT-5 | COMMIT, ROLLBACK, SAVEPOINT, RELEASE SAVEPOINT, START TRANSACTION, SET TRANSACTION, SET CONSTRAINTS | the transaction's state in the status bar after each | done |
 | S-STMT-6 | SET SCHEMA, SET CATALOG, SET TIME ZONE, SET ROLE, SET SESSION AUTHORIZATION, and SET of a setting | the session's status as the server tells it, at once | done |
-| S-STMT-7 | GRANT, REVOKE, and CREATE, ALTER and DROP of a user or role | run as typed; the explorer's users, roles and privileges read again | done |
+| S-STMT-7 | GRANT, REVOKE, and CREATE, ALTER and DROP of a user or role | run as typed, or written by the dialogs of users, roles and privileges; the explorer's users, roles and privileges read again | done |
+| S-STMT-13 | END CONNECTION, CANCEL CONNECTION, SET DATABASE | written by the monitor of a session's or a setting's row, through the guards | done |
 | S-STMT-8 | EXPLAIN | its text, and the plan view of its stages | done |
 | S-STMT-9 | CALL | a procedure's output parameters, as one row | done |
 | S-STMT-10 | PREPARE, EXECUTE, EXECUTE IMMEDIATE, DEALLOCATE PREPARE, DESCRIBE, descriptors, and cursors declared in SQL | sent to the server as typed, their outcomes shown | done |
@@ -96,10 +97,10 @@ each as the session's user may see it.
 | S-VIEW-14 | USERS | users | done |
 | S-VIEW-15 | APPLICABLE_ROLES, ENABLED_ROLES, ADMINISTRABLE_ROLE_AUTHORIZATIONS | roles and their grants | done |
 | S-VIEW-16 | TABLE_PRIVILEGES, COLUMN_PRIVILEGES, USAGE_PRIVILEGES, ROUTINE_PRIVILEGES | privileges | done |
-| S-VIEW-17 | SERVER, CONNECTIONS, CONNECTION_ATTRIBUTES | the server and session monitor | not yet |
-| S-VIEW-18 | JOBS, FILES, MEMORY_RESERVATIONS | the server's work, files and memory | not yet |
-| S-VIEW-19 | SETTINGS | session and database settings | not yet |
-| S-VIEW-20 | REPLICAS | replication's status | not yet |
+| S-VIEW-17 | SERVER, CONNECTIONS, CONNECTION_ATTRIBUTES | the server and session monitor | done |
+| S-VIEW-18 | JOBS, FILES, FILE_FORMATS, MEMORY_RESERVATIONS, BACKUPS, ARCHIVED_SEGMENTS, RESTORE_POINTS | the server's work, files, memory, backups and restore points | done |
+| S-VIEW-19 | SETTINGS | session and database settings, each set or given its default | done |
+| S-VIEW-20 | REPLICAS | replication's status; a node of no replica group, which has not the view, said so | done |
 | S-VIEW-21 | PROPERTY_GRAPHS, PG_ELEMENT_TABLES, PG_LABELS, PG_EDGE_ENDPOINTS | property graphs, drawn in a model's diagram | done |
 | S-VIEW-22 | PARTITIONED_TABLES, PARTITIONS, PARTITION_INDEXES | partitions and their indexes | done |
 | S-VIEW-23 | USER_DEFINED_TYPES, ATTRIBUTES, DIRECT_SUPERTYPES, METHOD_SPECIFICATIONS, METHOD_SPECIFICATION_PARAMETERS | user-defined types, with their supertypes, references and methods | done |

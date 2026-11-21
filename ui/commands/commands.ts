@@ -34,7 +34,7 @@ export interface CommandContext {
   readonly store: Store;
   readonly resetLayout: () => void;
   /** Shows a panel of the dock, added if the layout has it not. */
-  readonly showPanel?: (id: "assistant" | "details" | "live") => void;
+  readonly showPanel?: (id: "assistant" | "details" | "live" | "monitor") => void;
 }
 
 /** A command. */
@@ -340,6 +340,16 @@ export const COMMANDS: readonly Command[] = [
     category: "Connection",
     enabled: connected,
     run: onActive(loadSchemas),
+  },
+  {
+    id: "admin.monitor",
+    icon: "monitor",
+    title: "Monitor",
+    category: "Connection",
+    enabled: connected,
+    run: ({ showPanel }) => {
+      showPanel?.("monitor");
+    },
   },
   {
     id: "analyzer.open",

@@ -14,10 +14,11 @@ import type { ObjectRef } from "../ipc/catalog";
 import { type Store, useStore, useStudio } from "../state/store";
 import { EMPTY_CATALOG, type Selected } from "./catalogState";
 import { Favourites } from "./Favourites";
-import { iconOf, type TreeRow, treeRows } from "./tree";
+import { iconOf, type TreeRow, treeRows, nodeId } from "./tree";
 import { Icon } from "../icons/Icon";
 import { type MenuItem, useMenu } from "../shell/ContextMenu";
 import { objectMenu, type PartOf, partMenu, schemaMenu, tableMenu } from "./menus";
+import { accountMenu, securityMenu } from "../admin/menus";
 import { SEP } from "./tree";
 
 /** The rows of the tree, each focused in turn by the arrow keys. */
@@ -94,9 +95,17 @@ function Twisty({ row, open }: { row: TreeRow; open: () => void }) {
 /** The kinds of a table's parts, which have menus of their own. */
 const PARTS: readonly string[] = ["column", "constraint", "index", "trigger"];
 
+/** The menu of a row that selects nothing: a part of a table's, or the users and roles'. */
+function partRowMenu(store: Store, connection: number, row: TreeRow): MenuItem[] {
+  if (row.id === nodeId("security")) {
+    return securityMenu(store, connection);
+  }
+  const [kind = "", schema = "", table = "", name = ""] = row.id.split(SEP);
+  return PARTS.includes(kind) ? partMenu(store, connection, { kind: kind as PartOf["kind"], schema, table, name }) : [];
+}
+
 /** The menu of `row`, by its kind: none of a folder or a note. */
 export function rowMenu(store: Store, connection: number, row: TreeRow): MenuItem[] {
-  const [kind = "", schema = "", table = "", name = ""] = row.id.split(SEP);
   const select = row.select;
   switch (select?.kind) {
     case "schema":
@@ -108,10 +117,11 @@ export function rowMenu(store: Store, connection: number, row: TreeRow): MenuIte
     case "domain":
     case "type":
       return objectMenu(store, connection, select);
+    case "user":
+    case "role":
+      return accountMenu(store, connection, select);
     default:
-      return PARTS.includes(kind)
-        ? partMenu(store, connection, { kind: kind as PartOf["kind"], schema, table, name })
-        : [];
+      return partRowMenu(store, connection, row);
   }
 }
 

@@ -32,6 +32,7 @@ import { activateModel, closeModel, type ModelDoc } from "../model/models";
 import { ModelView } from "../model/ModelView";
 import { AssistantPanel } from "../assistant/AssistantPanel";
 import { LivePanel } from "../live/LivePanel";
+import { MonitorPanel } from "../admin/MonitorPanel";
 import { useMenu } from "./ContextMenu";
 import { tabMenu } from "../worksheet/menus";
 
@@ -59,6 +60,7 @@ const COMPONENTS = {
   [PANELS.model.id]: ModelPanel,
   [PANELS.assistant.id]: AssistantPanel,
   [PANELS.live.id]: LivePanel,
+  [PANELS.monitor.id]: MonitorPanel,
 };
 
 /** The icon of each panel's tab, by its component. */
@@ -70,6 +72,7 @@ export const TAB_ICONS: Readonly<Record<string, IconName>> = {
   [PANELS.model.id]: "graph",
   [PANELS.assistant.id]: "assistant",
   [PANELS.live.id]: "present",
+  [PANELS.monitor.id]: "monitor",
 };
 
 /** A panel's tab: its icon, then dockview's own tab of its title. */

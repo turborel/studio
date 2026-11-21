@@ -21,6 +21,7 @@ are bound.
 | Reconnect | Connection | | |
 | Cancel Statement | Connection | Cmd+. | Ctrl+. |
 | Refresh Catalog | Connection | | |
+| Monitor | Connection | | |
 | Analyze Schema… | Connection | | |
 | Commit | Connection | | |
 | Rollback | Connection | | |

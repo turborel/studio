@@ -110,6 +110,10 @@ describe("the window's parts", () => {
       ],
       [{ kind: "report", sql: "SELECT 1", chart: null }, "Save as Report"],
       [{ kind: "prompt", title: "Rename T", label: "New name", initial: "T", answer: () => undefined }, "Rename T"],
+      [{ kind: "assistantSettings" }, "Assistant Settings"],
+      [{ kind: "liveSettings" }, "Live Sessions Settings"],
+      [{ kind: "liveJoin" }, "Join a Live Session"],
+      [{ kind: "security", connection: 1, form: { kind: "createRole" } }, "New Role"],
     ];
     for (const [dialog, name] of dialogs) {
       act(() => {

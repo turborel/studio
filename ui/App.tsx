@@ -31,6 +31,7 @@ import { SaveReportDialog } from "./analyzer/Reports";
 import { PromptDialog } from "./shell/PromptDialog";
 import { AssistantSettingsDialog } from "./assistant/AssistantSettings";
 import { JoinDialog, LiveSettingsDialog } from "./live/LiveDialogs";
+import { SecurityDialog } from "./admin/SecurityDialog";
 import { useLiveSync } from "./live/sync";
 import { showPanel } from "./shell/layout";
 import { CommandContextOf, ContextMenu } from "./shell/ContextMenu";
@@ -159,6 +160,8 @@ function TaskDialogs({ dialog }: { readonly dialog: Dialog | null }) {
       return <LiveSettingsDialog />;
     case "liveJoin":
       return <JoinDialog />;
+    case "security":
+      return <SecurityDialog connection={dialog.connection} form={dialog.form} />;
     default:
       return null;
   }

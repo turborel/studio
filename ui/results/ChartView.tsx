@@ -141,7 +141,7 @@ function Lines({ data, y }: { readonly data: ChartData; readonly y: (v: number) 
 }
 
 /** The chart of `data`, of `kind`. */
-function Drawing({ data, kind }: { readonly data: ChartData; readonly kind: ChartKind }) {
+export function Drawing({ data, kind }: { readonly data: ChartData; readonly kind: ChartKind }) {
   const { marks, y } = scaleOf(data);
   const band = (WIDTH - LEFT - RIGHT) / data.labels.length;
   const every = Math.ceil(data.labels.length / MAX_LABELS);
@@ -242,7 +242,7 @@ function ValueChoice(props: {
 }
 
 /** The legend of two series or more: each its colour's mark and its name. */
-function Legend({ data }: { readonly data: ChartData }) {
+export function Legend({ data }: { readonly data: ChartData }) {
   if (data.series.length < 2) {
     return null;
   }

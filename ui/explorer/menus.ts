@@ -19,6 +19,7 @@ import type { MenuEntry, MenuItem } from "../shell/ContextMenu";
 import { prompted } from "../shell/PromptDialog";
 import { baseTables, readModel } from "../model/live";
 import { openModel } from "../model/models";
+import { openSecurity } from "../admin/menus";
 
 /** The rows a table's data opens with. */
 export const OPEN_ROWS = 200;
@@ -239,6 +240,11 @@ export function tableMenu(store: Store, connection: number, schema: string, name
     "separator",
     ...copyItems(store, name, schema),
     ...(view ? [] : [renameTable(store, connection, table, name)]),
+    {
+      label: "Privileges…",
+      icon: "key",
+      run: openSecurity(store, connection, { kind: "privileges", table, title: `${schema}.${name}` }),
+    },
     dropItem(store, connection, view ? "Drop View" : "Drop Table", `DROP ${view ? "VIEW" : "TABLE"} ${table} RESTRICT`),
     "separator",
     { label: "Dependencies", icon: "foreignKey", run: selected },

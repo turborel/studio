@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-admin-act"
+description = "Enables the admin_act command without any pre-configured scope."
+commands.allow = ["admin_act"]
+
+[[permission]]
+identifier = "deny-admin-act"
+description = "Denies the admin_act command without any pre-configured scope."
+commands.deny = ["admin_act"]

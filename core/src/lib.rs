@@ -3,6 +3,7 @@
 //! layer of commands over this crate, so what it does is tested here,
 //! without a window, against a live `turboreld` where it needs one.
 
+pub mod admin;
 pub mod analyzer;
 pub mod assistant;
 pub mod catalog;

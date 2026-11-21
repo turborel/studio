@@ -23,6 +23,7 @@
     reason = "a test program, whose failures are panics (R-TEST-4)"
 )]
 
+mod admin;
 mod analyzer;
 mod assistant;
 mod catalog;
@@ -157,6 +158,8 @@ const TESTS: &[(&str, Test)] = &[
     ("a_turn_of_the_mock_model_calls_the_server", assistant::a_turn_of_the_mock_model_calls_the_server),
     ("a_conversation_runs_on_its_own_thread", assistant::a_conversation_runs_on_its_own_thread),
     ("no_setting_nor_secret_is_shared", sessions::no_setting_nor_secret_is_shared),
+    ("the_monitors_views_are_read", admin::the_monitors_views_are_read),
+    ("administration_acts_run", admin::administration_acts_run),
     ("a_running_statement_is_cancelled", session::a_running_statement_is_cancelled),
     ("the_transaction_is_followed", session::the_transaction_is_followed),
     ("a_lost_connection_is_told_and_reconnected", session::a_lost_connection_is_told_and_reconnected),

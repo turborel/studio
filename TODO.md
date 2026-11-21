@@ -54,14 +54,8 @@ Code never cites this file (R-DOC-5).
 
 ## M11 Administration
 
-- The server and session monitor, END and CANCEL CONNECTION, users,
-  roles and privileges, settings and replication status (S-VIEW-17 to
-  S-VIEW-20).
 - Waiting on the server, shown as unavailable until Turborel has it:
-  each session's current statement.
-- The server's counters from SERVER over time, JOBS, FILES and
-  MEMORY_RESERVATIONS; backups and restore points from BACKUPS and
-  RESTORE_POINTS.
+  each session's current statement, and per-statement statistics.
 
 ## M12 Polish and the security audit
 

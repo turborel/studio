@@ -7,6 +7,8 @@
     "core:event:allow-listen",
     "core:event:allow-unlisten",
     "allow-app-info",
+    "allow-admin-view",
+    "allow-admin-act",
     "allow-live-settings",
     "allow-save-live-settings",
     "allow-live-status",

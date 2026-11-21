@@ -19,6 +19,7 @@ import type { WhatIf } from "../analyzer/whatIf";
 import type { OpenMenu } from "../shell/ContextMenu";
 import { type Chat, newChat } from "../assistant/chat";
 import { type LiveState, NO_LIVE } from "../live/live";
+import type { SecurityForm } from "../admin/SecurityDialog";
 import type { WorksheetState } from "./worksheets";
 
 /** A connection open in this window. */
@@ -65,6 +66,7 @@ export type Dialog =
   | { readonly kind: "report"; readonly sql: string; readonly chart: Chart | null }
   | { readonly kind: "assistantSettings" }
   | { readonly kind: "liveSettings" }
+  | { readonly kind: "security"; readonly connection: number; readonly form: SecurityForm }
   | { readonly kind: "liveJoin" }
   | {
       readonly kind: "prompt";

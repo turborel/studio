@@ -73,6 +73,7 @@ pub const MENUS: [(&str, &[Item]); 7] = [
             None,
             Some(("statement.cancel", "Cancel Statement")),
             Some(("catalog.refresh", "Refresh Catalog")),
+            Some(("admin.monitor", "Monitor")),
             Some(("analyzer.open", "Analyze Schema…")),
             Some(("transaction.commit", "Commit")),
             Some(("transaction.rollback", "Rollback")),

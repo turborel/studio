@@ -96,6 +96,7 @@ Each is told in full in [§7](#7-the-decisions).
 | D54 | The plan viewer: a summary, a flow, a tree-table, the stages, the raw text last |
 | D55 | The assistant: off until turned on, called by the backend, its guard rails in code and the database |
 | D56 | Live Sessions: a workspace's state shared, filtered, end to end over QUIC, each viewer admitted |
+| D57 | Administration: the server read of its own views, each act written by the backend and run through the guards |
 
 ---
 
@@ -115,6 +116,7 @@ Each is told in full in [§7](#7-the-decisions).
 | `core/src/jsonl.rs` | the logs of JSON lines: the assistant's and Live Sessions' (D55, D56) |
 | `core/src/assistant/` | the assistant: its settings, policies and guard rails, wire formats, tools, turns and conversations (D55) |
 | `core/src/live/` | Live Sessions in the backend: their settings, the workspace filtered, the log and the sessions (D56) |
+| `core/src/admin.rs` | administration: the monitor's views and the acts' statements (D57) |
 | `live/` | `turborel-studio-live`: invitations, the transport over QUIC, the host, the guest, and the relay, `studio-relay` (D56) |
 | `xtask/smoke/earlier/` | an earlier build's app data, for the smoke test of the real window (D49) |
 | `core/tests/live/` | the live tests, their harness and server (D27) |
@@ -137,6 +139,7 @@ Each is told in full in [§7](#7-the-decisions).
 | `ui/model/` | models: their diagram, file, tables designed, and comparisons with schemas (D46, D47) |
 | `ui/builder/` | the query builder (D48) |
 | `ui/assistant/` | the assistant's panel and settings (D55) |
+| `ui/admin/` | the monitor, and the dialogs and menus of users, roles and privileges (D57) |
 | `ui/live/` | Live Sessions' panel, dialogs, the workspace shown and the workspace kept shared (D56) |
 | `core/src/analyzer.rs` | the analyzer's rules of the catalog and the settings (D50) |
 | `core/src/reports.rs` | the built-in reports, and the user's kept (D52) |
@@ -1358,6 +1361,32 @@ The review checklist:
 - *Why:* the owner asked that a presenter show their Studio to others,
   securely, with nothing copied and pasted; what leaves is decided by
   the backend, and no relay, nor anyone who is not admitted, reads it.
+
+#### D57. Administration: the server read of its own views, each act written by the backend and run through the guards
+
+- **Monitor:** a dock panel of the active connection, its tabs Sessions,
+  Server, Jobs, Files, Memory, Backups, Replication and Settings, each
+  read of Turborel's own views by a fixed query (`core/src/admin.rs`),
+  again each 1, 2, 5, 10 or 30 seconds, 5 at first, or as asked. The
+  server's counters are drawn over the time the panel is open, the last
+  120 readings, by the reports' chart (D52). A non-owner, who sees no
+  rows of these views, is told so; REPLICAS, which a node of no replica
+  group has not (SQLCODE -103), is told as no group.
+- **Acts:** the window asks an act, `Act`, of names as SQL writes them,
+  values and a password; the backend writes its statement, each name
+  checked as one to three identifiers by Turborel's lexer, each value a
+  literal, an integer setting's a whole number, and runs it through the
+  connection's guards (D29), what they ask confirmed as any statement's
+  is. A password is a secret: in no file, history, log nor `Debug`.
+- **Acts there are:** END and CANCEL CONNECTION of a session's row; SET
+  and SET DATABASE of a setting, or its DEFAULT; CREATE, ALTER (its
+  password, its leave to create roles) and DROP USER; CREATE and DROP
+  ROLE; GRANT and REVOKE of a role, and of a table's privileges.
+- **Waiting on the server:** the statement each session runs, and each
+  statement's statistics: CONNECTIONS tells a session's state alone.
+- *Why:* an administrator watches and changes the server from Studio,
+  with nothing typed that could be mistyped into another statement, and
+  each act asks first where any statement would.
 
 ---
 

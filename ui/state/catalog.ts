@@ -71,6 +71,14 @@ async function loadUnder(store: Store, id: number, node: string): Promise<void> 
   }
 }
 
+/** Reads connection `id`'s users and roles again, as after an act of administration. */
+export async function reloadSecurity(store: Store, id: number): Promise<void> {
+  await reading(store, async () => {
+    const security = await catalogSecurity(id);
+    changeCatalog(store, id, (c) => ({ ...c, security }));
+  });
+}
+
 /** Opens node `node` of connection `id`'s tree, reading what it holds, or closes it. */
 export async function toggle(store: Store, id: number, node: string): Promise<void> {
   const open = (store.current().catalogs[id] ?? EMPTY_CATALOG).expanded.includes(node);
