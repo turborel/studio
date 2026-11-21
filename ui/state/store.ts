@@ -55,6 +55,12 @@ export type Dialog =
   | { readonly kind: "shortcuts" }
   | { readonly kind: "guard"; readonly confirm: Confirm; readonly answer: (run: boolean) => void }
   | {
+      /** Explain Analyze of a data change, which runs it for real: analyzed then rolled back, kept, or not run (RULES.md D61). */
+      readonly kind: "analyzeChange";
+      readonly sql: string;
+      readonly answer: (choice: "rollBack" | "keep" | null) => void;
+    }
+  | {
       readonly kind: "values";
       readonly names: readonly string[];
       readonly types: readonly string[];

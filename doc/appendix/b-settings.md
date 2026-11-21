@@ -16,6 +16,7 @@ file `settings.json`, in Studio's folder of the user's configuration
 | `reconnectOnWake` | Whether open connections are checked as the window is shown again, or the network comes back, and those lost connected again | `true` or `false` | `true` |
 | `toolbarLabels` | Whether the toolbar's buttons show their labels beside their icons | `true` or `false` | `false` |
 | `historyKept` | Whether each statement run is kept in the history ([Worksheets](../user/05-worksheets.md#the-history)) | `true` or `false` | `true` |
+| `analyzeKeepsChanges` | Whether Explain Analyze of an INSERT, UPDATE, DELETE or MERGE keeps its changes at first, rather than rolling them back after ([Worksheets](../user/05-worksheets.md#explain-analyze-of-a-data-change)) | `true` or `false` | `false` |
 | `formatKeyWords` | The case the formatter writes key words in | `upper`, `lower` or `keep` | `upper` |
 | `formatIndent` | The formatter's indentation, in spaces | 1 to 8 | 4 |
 | `formatLineWidth` | The width the formatter keeps lines within, in characters | 40 to 240 | 100 |

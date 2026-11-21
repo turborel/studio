@@ -16,6 +16,8 @@ export interface Settings {
   readonly reconnectOnWake: boolean;
   readonly toolbarLabels: boolean;
   readonly historyKept: boolean;
+  /** Whether Explain Analyze of a data change keeps its changes at first, rather than rolling them back after. */
+  readonly analyzeKeepsChanges: boolean;
   readonly formatKeyWords: KeyWordCase;
   readonly formatIndent: number;
   readonly formatLineWidth: number;
@@ -41,6 +43,7 @@ export const DEFAULT_SETTINGS: Settings = {
   reconnectOnWake: true,
   toolbarLabels: false,
   historyKept: true,
+  analyzeKeepsChanges: false,
   formatKeyWords: "upper",
   formatIndent: 4,
   formatLineWidth: 100,

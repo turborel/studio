@@ -100,6 +100,7 @@ Each is told in full in [§7](#7-the-decisions).
 | D58 | The nightly: unsigned installers of each platform, one pre-release, by hand until its trigger is turned on |
 | D59 | Embedded databases: a second backend behind the connection manager, opened apart from made, never against a lock |
 | D60 | The manual's images: made by the checks tool of the real window and a demo database, never by hand |
+| D61 | Explain Analyze of a data change: said to change data, rolled back to a savepoint unless kept |
 
 ---
 
@@ -1525,6 +1526,23 @@ The review checklist:
 - *Why:* the owner asked for pictures in the manual, made of the real
   window and nothing personal, so they are the same each time and can be
   made again whenever the window changes.
+
+#### D61. Explain Analyze of a data change: said to change data, rolled back to a savepoint unless kept
+
+- **What:** main's EXPLAIN ANALYZE runs an INSERT, a searched UPDATE or
+  DELETE, or a MERGE for real (Turborel's `sql/statements/explain.md`).
+  Studio's Explain Analyze of one asks first, saying so: Analyze, Then
+  Roll Back; Analyze and Keep Changes; or Cancel.
+- **Rolled back:** autocommit held off while it runs; the savepoint
+  STUDIO_ANALYZE set; EXPLAIN ANALYZE run through the guards (D29), its
+  plan shown; then ROLLBACK TO SAVEPOINT, and RELEASE SAVEPOINT inside a
+  transaction the user had open, or ROLLBACK of the one it began; and
+  autocommit as it was. By statements a server and an embedded database
+  both run, so the same on each.
+- **The setting:** `analyzeKeepsChanges`, off at first, makes Analyze
+  and Keep Changes the first choice.
+- *Why:* EXPLAIN ANALYZE of a change is the change; a person asking for
+  its plan seldom means to keep it, and must not be surprised by it.
 
 ---
 

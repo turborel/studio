@@ -134,7 +134,8 @@ for the database's owner. Its `spec` is empty. A connection with no
   "formatIndent": 4,
   "formatLineWidth": 100,
   "notifyAfterSeconds": 10,
-  "planView": "visual"
+  "planView": "visual",
+  "analyzeKeepsChanges": false
 }
 ```
 

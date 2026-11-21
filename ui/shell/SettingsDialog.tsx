@@ -186,20 +186,44 @@ function KeyWords({ settings, change }: PartProps) {
   );
 }
 
-/** The worksheet's settings: its history, its formatter and its notification. */
+/** A setting of a box ticked or not. */
+function Toggle(props: {
+  readonly label: string;
+  readonly checked: boolean;
+  readonly onChange: (on: boolean) => void;
+}) {
+  return (
+    <label className="check">
+      <input
+        type="checkbox"
+        checked={props.checked}
+        onChange={(e) => {
+          props.onChange(e.target.checked);
+        }}
+      />
+      <span>{props.label}</span>
+    </label>
+  );
+}
+
+/** The worksheet's settings: its history, Explain Analyze's changes, its formatter and its notification. */
 function Worksheets({ settings, change }: PartProps) {
   return (
     <>
-      <label className="check">
-        <input
-          type="checkbox"
-          checked={settings.historyKept}
-          onChange={(e) => {
-            change({ ...settings, historyKept: e.target.checked });
-          }}
-        />
-        <span>Keep a history of what runs</span>
-      </label>
+      <Toggle
+        label="Keep a history of what runs"
+        checked={settings.historyKept}
+        onChange={(historyKept) => {
+          change({ ...settings, historyKept });
+        }}
+      />
+      <Toggle
+        label="Explain Analyze of a data change keeps its changes, rather than rolling them back"
+        checked={settings.analyzeKeepsChanges}
+        onChange={(analyzeKeepsChanges) => {
+          change({ ...settings, analyzeKeepsChanges });
+        }}
+      />
       <KeyWords settings={settings} change={change} />
       <NumberField
         label="Format with an indentation of (spaces)"

@@ -288,3 +288,21 @@ pub fn refusals_are_told_and_an_open_transaction_undone(scratch: &Scratch) {
     assert_eq!(column(&manager, again, "SELECT COUNT(*) FROM KEPT"), [Some("0".to_owned())]);
     manager.close(again).unwrap();
 }
+
+/// [DESIGN] D61 [DOC sql/statements/explain.md EXPLAIN ANALYZE of a data
+/// change] EXPLAIN ANALYZE runs a data change for real; rolled back to a
+/// savepoint set before it, as Studio rolls it back, it leaves nothing.
+pub fn an_analyzed_change_is_rolled_back(scratch: &Scratch) {
+    let (manager, _) = scratch.manager();
+    let id = connected(scratch, &manager);
+    run(&manager, id, "CREATE TABLE OFFERS (ID INTEGER, PRICE INTEGER)").unwrap();
+    run(&manager, id, "INSERT INTO OFFERS VALUES (1, 10), (2, 60)").unwrap();
+    manager.set_autocommit(id, false).unwrap();
+    run(&manager, id, "SAVEPOINT STUDIO_ANALYZE").unwrap();
+    let plan = column(&manager, id, "EXPLAIN ANALYZE UPDATE OFFERS SET PRICE = PRICE + 1 WHERE PRICE <= 50");
+    assert!(plan.iter().flatten().any(|l| l.contains("actual rows changed=1")), "{plan:?}");
+    run(&manager, id, "ROLLBACK TO SAVEPOINT STUDIO_ANALYZE").unwrap();
+    run(&manager, id, "ROLLBACK").unwrap();
+    assert_eq!(column(&manager, id, "SELECT PRICE FROM OFFERS WHERE ID = 1"), [Some("10".to_owned())]);
+    manager.close(id).unwrap();
+}

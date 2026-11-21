@@ -13,6 +13,7 @@ import { connectSaved, isStudioError, session, show } from "../state/actions";
 import { select } from "../state/catalog";
 import type { ExportKind } from "../ipc/results";
 import { exportRows } from "../results/actions";
+import { analyzeChange, changesData } from "../state/analyzeChange";
 import { explain, message, runOnConnections, runStatements, stopRun, type ToRun } from "../state/running";
 import type { Store } from "../state/store";
 import {
@@ -92,9 +93,20 @@ export async function explainCurrent(store: Store, analyze: boolean): Promise<vo
   const chosen = selected(at.view);
   const [first] = chosen === null ? [] : await statementsOf(chosen.text, chosen.from);
   const statement = first ?? (await atCursor(at.view));
-  if (statement !== undefined) {
-    await explain(store, at.id, statement, analyze);
+  if (statement === undefined) {
+    return;
   }
+  if (analyze && changesData(statement)) {
+    const choice = await new Promise<"rollBack" | "keep" | null>((answer) => {
+      show(store, { kind: "analyzeChange", sql: statement.sql, answer });
+    });
+    show(store, null);
+    if (choice !== null) {
+      await analyzeChange(store, at.id, statement, choice === "keep");
+    }
+    return;
+  }
+  await explain(store, at.id, statement, analyze);
 }
 
 /**

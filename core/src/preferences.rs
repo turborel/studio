@@ -77,6 +77,7 @@ pub enum ThemeChoice {
 /// lacks is its default.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields, default)]
+#[expect(clippy::struct_excessive_bools, reason = "a settings file's switches, each a choice its page shows apart")]
 pub struct Settings {
     /// The file's format version.
     pub format: u32,
@@ -109,6 +110,9 @@ pub struct Settings {
     pub notify_after_seconds: u16,
     /// How a plan is first shown.
     pub plan_view: PlanView,
+    /// Whether Explain Analyze of a data change keeps its changes at first,
+    /// rather than rolling them back after (RULES.md D61).
+    pub analyze_keeps_changes: bool,
 }
 
 impl Default for Settings {
@@ -128,6 +132,7 @@ impl Default for Settings {
             format_line_width: FORMAT_LINE_WIDTH.1,
             notify_after_seconds: NOTIFY_AFTER_SECONDS.1,
             plan_view: PlanView::Visual,
+            analyze_keeps_changes: false,
         }
     }
 }

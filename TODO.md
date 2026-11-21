@@ -15,7 +15,9 @@ Code never cites this file (R-DOC-5).
 ## M8 Analyzer
 
 - Waiting on the server, shown as unavailable, with a line saying why,
-  until Turborel exposes it: the planner's column statistics.
+  until Turborel exposes it: the planner's column statistics; and EXPLAIN
+  without ANALYZE of a data change, a plan of it that runs nothing, for
+  the assistant's estimate of an UPDATE or DELETE and its Explain.
 
 ## M9 Assistant
 

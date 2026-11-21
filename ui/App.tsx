@@ -10,6 +10,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { type CommandContext, command, defaultKeys, runCommand } from "./commands/commands";
 import { bindings, keyOf } from "./commands/keys";
 import { onStudioEvent } from "./ipc/events";
+import { AnalyzeChangeDialog } from "./worksheet/AnalyzeChangeDialog";
 import { EmbeddedDialog } from "./shell/EmbeddedDialog";
 import { OpenTransactionsDialog } from "./shell/OpenTransactionsDialog";
 import { ConnectionDialog } from "./shell/ConnectionDialog";
@@ -170,6 +171,8 @@ function TaskDialogs({ dialog }: { readonly dialog: Dialog | null }) {
       return <EmbeddedDialog mode={dialog.mode} editing={dialog.editing} />;
     case "openTransactions":
       return <OpenTransactionsDialog connections={dialog.connections} quitting={dialog.quitting} />;
+    case "analyzeChange":
+      return <AnalyzeChangeDialog sql={dialog.sql} answer={dialog.answer} />;
     default:
       return null;
   }

@@ -1,7 +1,7 @@
 /**
  * A modal dialog (RULES.md R-UI-1, R-UI-3): its title its accessible name,
- * the first field focused as it opens, Tab kept within it, and Escape
- * closing it.
+ * the control it marks `data-first` focused as it opens, else its first
+ * field, Tab kept within it, and Escape closing it.
  */
 import { type KeyboardEvent, type ReactNode, useEffect, useId, useRef } from "react";
 
@@ -44,7 +44,7 @@ export function Modal({ title, onClose, children, wide = false }: ModalProps) {
   const root = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (root.current !== null) {
-      focusable(root.current)[0]?.focus();
+      (root.current.querySelector<HTMLElement>("[data-first]") ?? focusable(root.current)[0])?.focus();
     }
   }, []);
   const keyDown = (event: KeyboardEvent<HTMLDivElement>) => {

@@ -298,6 +298,27 @@ has and the other lacks marked, as after an index is made; a what-if
 shows them so at once. The setting **Open plans as** opens a plan on its
 raw text instead ([Appendix B](../appendix/b-settings.md)).
 
+### Explain Analyze of a data change
+
+EXPLAIN ANALYZE runs an INSERT, a searched UPDATE or DELETE, or a MERGE
+for real, in the session's transaction. **Explain Analyze** of one says
+so before it runs, and asks:
+
+| Choice | What Studio does |
+|---|---|
+| **Analyze, Then Roll Back** | sets the savepoint STUDIO_ANALYZE, runs EXPLAIN ANALYZE, shows the plan, then rolls back to the savepoint: inside the transaction open, which goes on, or, with none open, in a transaction of its own, rolled back; autocommit held off meanwhile, so nothing is committed |
+| **Analyze and Keep Changes** | runs EXPLAIN ANALYZE, its changes kept in the transaction, for Commit or Rollback, or committed by autocommit |
+| **Cancel** | runs nothing |
+
+The first choice is Analyze, Then Roll Back, unless the setting **Explain
+Analyze of a data change keeps its changes** is on
+([Appendix B](../appendix/b-settings.md)). It is the same on a server's
+connection and an embedded database. EXPLAIN ANALYZE of a data change is
+judged as the change itself by the guards
+([Connections](03-connections.md#environments-and-guards)), so a
+production connection asks first, and a read-only one refuses it. EXPLAIN
+without ANALYZE takes a query alone.
+
 ## Formatting
 
 **Format** lays out the selection, or the whole script if nothing is

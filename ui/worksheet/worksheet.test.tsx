@@ -33,7 +33,14 @@ function piece(text: string, from: number): Piece {
   return {
     from,
     to: from + text.length,
-    statement: { text, class: "read", destroys: null, floor: null, readWrite: false, connects: false },
+    statement: {
+      text,
+      class: /^(?:INSERT|UPDATE|DELETE|MERGE)\b/iu.test(text) ? "writeRows" : "read",
+      destroys: null,
+      floor: null,
+      readWrite: false,
+      connects: false,
+    },
   };
 }
 
@@ -107,6 +114,53 @@ describe("a worksheet's commands", () => {
     await act(() => explainCurrent(store, true));
     expect(sent().at(-1)).toBe("EXPLAIN ANALYZE VALUES (3)");
     await act(() => stopCurrent(store));
+  });
+
+  it("explain and analyze a data change only as asked, rolled back after unless kept [DESIGN] D61", async () => {
+    const change = "UPDATE T SET A = 1 WHERE A = 2";
+    const { asked, store, view } = await shown(change, {
+      set_autocommit: (args) => ({
+        ...SESSION,
+        transaction: { ...SESSION.transaction, autocommit: args["on"] === true },
+      }),
+      session_state: () => SESSION,
+    });
+    store.update((now) => ({
+      ...now,
+      open: now.open.map((c) => ({
+        ...c,
+        session: { ...c.session, transaction: { active: false, autocommit: true, readOnly: false } },
+      })),
+    }));
+    const sent = () =>
+      asked
+        .filter((a) => a.command === "run_statement" || a.command === "set_autocommit")
+        .map((a) => a.args["sql"] ?? `autocommit ${String(a.args["on"])}`);
+    act(() => view?.dispatch({ selection: EditorSelection.cursor(1) }));
+    const choose = async (choice: "rollBack" | "keep" | null) => {
+      const running = explainCurrent(store, true);
+      await settle();
+      const dialog = store.current().dialog;
+      expect(dialog?.kind).toBe("analyzeChange");
+      if (dialog?.kind === "analyzeChange") {
+        dialog.answer(choice);
+      }
+      await act(() => running);
+    };
+    await choose(null);
+    expect(sent()).toEqual([]);
+    await choose("rollBack");
+    expect(sent()).toEqual([
+      "autocommit false",
+      "SAVEPOINT STUDIO_ANALYZE",
+      `EXPLAIN ANALYZE ${change}`,
+      "ROLLBACK TO SAVEPOINT STUDIO_ANALYZE",
+      "ROLLBACK",
+      "autocommit true",
+    ]);
+    await choose("keep");
+    expect(sent().at(-1)).toBe(`EXPLAIN ANALYZE ${change}`);
+    expect(store.current().dialog).toBeNull();
   });
 
   it("format, comment, change case, bookmark, find and describe in the editor [DESIGN] D36", async () => {
