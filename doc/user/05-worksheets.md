@@ -71,6 +71,10 @@ read by Turborel's own parser, with a name put where one is being typed
 so that a statement being written parses; one that does not parse even
 so is read by its words.
 
+![Completion in the light theme: SELECT NAME FROM CU typed, the list of the tables beginning CU offered, the arrow keys moving through it, and Tab taking CUSTOMERS](../images/completion-light.gif)
+
+![The same, in the dark theme](../images/completion-dark.gif)
+
 | Where | What is offered |
 |---|---|
 | a statement's start | the words that begin a statement, and the snippets |
@@ -118,6 +122,10 @@ Turborel's manual, at the commit Studio is built with.
 A table dragged from the explorer's tree into the editor writes a SELECT
 of its columns where it is dropped, or an INSERT of them, each value a
 `?`, if Shift is held as it is dropped.
+
+![The guard rails in the light theme: DROP TABLE ORDER_LINES CASCADE asked about before it runs: the script changes definitions and destroys a table, with Run and Don't Run](../images/guard-drop-light.png)
+
+![The same, in the dark theme](../images/guard-drop-dark.png)
 
 ## Running statements
 
@@ -215,6 +223,10 @@ and text views. Its toolbar holds **Explain** and **Explain Analyze**,
 which says that it runs the statement; **Flow** or **Tree-Table**;
 **Show raw**; **Compare with the plan before**, where there is one; and a
 search of its operators.
+
+![The plan viewer in the light theme: a join of the demo shop's customers and orders explained and analyzed, its summary, costliest operators and warnings above its flow](../images/plan-viewer-light.png)
+
+![The same, in the dark theme](../images/plan-viewer-dark.png)
 
 Its summary says the rows the query gave and its time, of Explain
 Analyze, or that the plan is of estimates alone; the join order and the

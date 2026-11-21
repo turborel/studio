@@ -46,6 +46,13 @@ person who works with the database one window for it:
   run and the tables' and indexes' sizes and use, its settings, plug-ins,
   users and replication.
 
+<p align="center">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="doc/images/window-dark.png">
+      <img src="doc/images/window-light.png" alt="The Studio window: the explorer of a demo database's connections and catalog, a worksheet of a query and its rows, and the status bar" width="800">
+    </picture>
+</p>
+
 It runs on Linux, macOS and Windows, built with Tauri: a Rust backend
 over turborel-client and the `turborel` crate, and a front end in
 TypeScript and React. Passwords

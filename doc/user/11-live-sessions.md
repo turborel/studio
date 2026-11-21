@@ -33,6 +33,10 @@ address, and, where the settings name one, through a relay
 ([Relays](#relays)). The panel names the session, the start of its
 certificate's fingerprint, and the addresses it is reached at.
 
+![Live Sessions in the light theme: a session presented by Demo presenter, its invitation and participants in the Live Session panel](../images/live-session-light.png)
+
+![The same, in the dark theme](../images/live-session-dark.png)
+
 ### Inviting
 
 **New Invitation** makes an invitation, a code that begins

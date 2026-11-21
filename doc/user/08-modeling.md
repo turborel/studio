@@ -52,6 +52,10 @@ and its end, SOURCE or DESTINATION, where both tables are in the model.
 The property graphs are also listed beside the diagram, each with its
 element tables.
 
+![The model of the demo shop's schema in the light theme: its four tables, their columns and keys, joined by their foreign keys](../images/er-diagram-light.png)
+
+![The same, in the dark theme](../images/er-diagram-dark.png)
+
 Tables are laid out from left to right along their foreign keys; a table
 already placed keeps its place, and a table dragged keeps the place it is
 dropped at. A table's menu, by the secondary button, or Shift+F10 on the
