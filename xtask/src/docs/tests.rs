@@ -1,6 +1,6 @@
 //! The manual's checks, against pages made for each case.
 
-use super::{anchors, links, page_problems, slug};
+use super::{anchors, image_problems, images, links, page_problems, slug};
 
 /// [RULE] R-DOC-7: a chapter opens with its title, then its Contents line.
 #[test]
@@ -19,10 +19,26 @@ fn a_volume_lists_each_of_its_pages() {
     assert_eq!(page_problems("doc/user/README.md", text, &paths), ["doc/user/README.md: does not list 02-b.md (R-DOC-7)"]);
 }
 
-/// [RULE] R-DOC-7: doc/ holds no images.
+/// [RULE] R-DOC-7 [DESIGN] D60: doc/ holds its images in doc/images/
+/// alone, PNG, GIF or SVG.
 #[test]
-fn an_image_in_the_manual_is_refused() {
+fn an_image_is_kept_in_its_folder_alone() {
     assert_eq!(page_problems("doc/user/shot.png", "", &[]).len(), 1);
+    assert_eq!(page_problems("doc/images/shot.bmp", "", &[]).len(), 1);
+    assert_eq!(page_problems("doc/images/shot-light.png", "", &[]), Vec::<String>::new());
+    assert_eq!(page_problems("doc/images/shot.svg", "", &[]), Vec::<String>::new());
+}
+
+/// [RULE] R-DOC-7 [DESIGN] D60: an image says what it shows, and is
+/// known as the file it links.
+#[test]
+fn an_image_says_what_it_shows() {
+    let text = "![The window](../images/w.png) and ![](../images/x.gif)\n```\n![no](y.png)\n```\n";
+    assert_eq!(images(text), [("The window".to_owned(), "../images/w.png".to_owned()), (String::new(), "../images/x.gif".to_owned())]);
+    let mut linked = Vec::new();
+    let problems = image_problems("doc/user/02-window.md", text, &mut linked);
+    assert_eq!(problems.len(), 1);
+    assert_eq!(linked, ["doc/images/w.png", "doc/images/x.gif"]);
 }
 
 /// [RULE] R-DOC-7: links in fenced code are not links, and web addresses

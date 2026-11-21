@@ -14,6 +14,10 @@ repository = "https://github.com/turborel/studio"
 publish = false
 
 [workspace.dependencies]
+# The manual's images (RULES.md D60), of the checks tool alone: PNG and
+# GIF, MIT or Apache-2.0.
+png = "0.18.1"
+gif = "0.14.2"
 # Turborel's own client library, at a pinned commit of Turborel's main
 # (RULES.md D10). The crates.io 0.0.0 crates are frozen and never used.
 turborel-client = { git = "https://github.com/turborel/turborel", rev = "ba8c845f27f24b736572e8aaf462b0adade9be29", features = ["tls", "scram", "system-roots"] }

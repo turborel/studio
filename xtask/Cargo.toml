@@ -10,6 +10,12 @@ publish.workspace = true
 
 [dependencies]
 serde_json.workspace = true
+# The manual's images (RULES.md D60): the demo database made by the engine
+# Studio embeds; screenshots written as PNG, animations as GIF, each
+# crate MIT or Apache-2.0.
+turborel.workspace = true
+png.workspace = true
+gif.workspace = true
 
 [lints]
 workspace = true

@@ -1,0 +1,63 @@
+# The manual's images, made again (RULES.md D60): the application built
+# and driven under tauri-driver on a virtual display, against a demo
+# database, by `cargo xtask screenshots`, in each theme. The images are
+# kept as an artifact, to be committed under doc/images/ by a person,
+# with any scene that failed pictured beside them. It runs when the
+# window's code changes on main, or by hand; it never commits, and a
+# failure here holds no change back. Every action is pinned by its full
+# commit SHA, its version in a comment.
+name: screenshots
+
+on:
+  push:
+    branches: [main]
+    paths: ["ui/**", "src-tauri/**", "xtask/src/screenshots.rs", "xtask/src/webdriver.rs", "xtask/screenshots/**"]
+  workflow_dispatch:
+
+# A newer push replaces a run still waiting; one started finishes.
+concurrency:
+  group: screenshots
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  # Tauri's webview on Linux, and what its build needs.
+  LINUX_PACKAGES: libwebkit2gtk-4.1-dev build-essential pkg-config libxdo-dev librsvg2-dev file
+
+jobs:
+  screenshots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "26"
+          cache: npm
+      - name: Tauri's Linux packages, WebKit's WebDriver and a virtual display
+        run: sudo apt-get update && sudo apt-get install -y $LINUX_PACKAGES webkitgtk-webdriver xvfb fonts-dejavu-core
+      - name: Install the pinned toolchain
+        run: rustup toolchain install
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+      - name: The front end's packages
+        run: npm ci --no-fund --no-audit
+      - name: The application builds
+        run: npm exec -- tauri build --debug --no-bundle
+      - name: The images
+        run: |
+          cargo install tauri-driver --version 2.1.0 --locked
+          xvfb-run -a -s "-screen 0 1920x1080x24" cargo xtask screenshots target/debug/turborel-studio
+      - name: Keep the images
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: manual-images
+          path: |
+            doc/images/
+            target/screenshots/failed-*.png
+          if-no-files-found: warn

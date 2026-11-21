@@ -99,6 +99,7 @@ Each is told in full in [§7](#7-the-decisions).
 | D57 | Administration: the server read of its own views, each act written by the backend and run through the guards |
 | D58 | The nightly: unsigned installers of each platform, one pre-release, by hand until its trigger is turned on |
 | D59 | Embedded databases: a second backend behind the connection manager, opened apart from made, never against a lock |
+| D60 | The manual's images: made by the checks tool of the real window and a demo database, never by hand |
 
 ---
 
@@ -196,7 +197,7 @@ The tools named by "the formatter", "the linters", "the type checker" and
 | R-DOC-4 | Behaviour Turborel governs **shall** cite Turborel's manual by its heading; Studio's own choices cite their decision (D6). Code cites RULES.md, CONFORMANCE.md and Turborel's manual, never TODO.md. | review; the checks tool |
 | R-DOC-5 | No commented-out code, and no open-work markers in code: open work goes in TODO.md, which code never names. | the checks tool |
 | R-DOC-6 | Every Rust source file **shall** begin with a doc comment giving its responsibility; every TypeScript module with a TSDoc block. | the checks tool; review |
-| R-DOC-7 | A change a user can see **shall** update the manual, `doc/`, in the same commit; every claim is checked against the code, and every example and step is run. The manual keeps Turborel's layout, which turborel.com's documentation site reads: each page opens with its `# Title` and a line holding only `[Contents](README.md)`, each volume's README.md lists its pages, links within `doc/` and to this repository's files are relative links that resolve, a link to Turborel's own manual is its GitHub address, `user/01-installing.md` keeps its name, and `doc/` holds no images. | review; the checks tool |
+| R-DOC-7 | A change a user can see **shall** update the manual, `doc/`, in the same commit; every claim is checked against the code, and every example and step is run. The manual keeps Turborel's layout, which turborel.com's documentation site reads: each page opens with its `# Title` and a line holding only `[Contents](README.md)`, each volume's README.md lists its pages, links within `doc/` and to this repository's files are relative links that resolve, a link to Turborel's own manual is its GitHub address, `user/01-installing.md` keeps its name, and `doc/` holds no file but its pages and, in `doc/images/`, the images `cargo xtask screenshots` makes (D60): PNG, GIF or SVG, each linked by a page, each link's alt text saying what it shows. | review; the checks tool |
 | R-DOC-8 | No document or comment gives timings or speedups; figures go in TODO.md or a commit message. | review |
 
 ### R-CONST: no magic numbers or strings
@@ -1469,6 +1470,30 @@ The review checklist:
   naming the engine's commit.
 - *Why:* Turborel runs as a server and as an embedded library; the owner
   asked for Studio to open both (2026-11-21).
+
+#### D60. The manual's images: made by the checks tool of the real window and a demo database, never by hand
+
+- **What:** `cargo xtask screenshots <application>` makes a demo
+  database of `xtask/screenshots/demo.sql`, made-up data of a demo user
+  alone, and drives the built application under tauri-driver, the smoke
+  test's harness (`xtask/src/webdriver.rs`), at one window size, in the
+  light theme and the dark: the window, completion, the plan viewer,
+  the ER diagram, a context menu, the guard rails asking before a DROP,
+  and Live Sessions. Each goes to `doc/images/`: a PNG of the window,
+  compressed losslessly; a short GIF of what moves, of the `gif` crate,
+  MIT or Apache-2.0; the ER diagram also as SVG, Studio's own Export as
+  SVG taken from the page's call. A scene that fails is pictured beside
+  the images and the run fails.
+- **Where it runs:** where tauri-driver runs, Linux under a display
+  server: the workflow `screenshots` runs it as the window's code changes
+  on main, or by hand, and keeps the images as an artifact, which a
+  person commits; it never commits, and holds no change back.
+- **Kept current:** the images are made again as the window changes;
+  the manual's check refuses an image no page links, a link to an image
+  that is not there, and an image of no alt text (R-DOC-7).
+- *Why:* the owner asked for pictures in the manual, made of the real
+  window and nothing personal, so they are the same each time and can be
+  made again whenever the window changes.
 
 ---
 

@@ -17,6 +17,7 @@ const THE_SET: &str = "](../README.md)";
 /// Checks the manual, and the links of every Markdown file of `paths`.
 pub fn check_manual(paths: &[String]) -> Result<()> {
     let mut problems = Vec::new();
+    let mut linked = Vec::new();
     for path in paths.iter().filter(|p| p.starts_with("doc/")) {
         let text = if ext_is(path, "md") { std::fs::read_to_string(root().join(path))? } else { String::new() };
         problems.extend(page_problems(path, &text, paths));
@@ -24,14 +25,23 @@ pub fn check_manual(paths: &[String]) -> Result<()> {
     for path in paths.iter().filter(|p| ext_is(p, "md")) {
         let text = std::fs::read_to_string(root().join(path))?;
         problems.extend(link_problems(path, &text));
+        problems.extend(image_problems(path, &text, &mut linked));
+    }
+    for image in paths.iter().filter(|p| p.starts_with(IMAGES)) {
+        if !linked.iter().any(|l| l == image) {
+            problems.push(format!("{image}: no page links the image (R-DOC-7)"));
+        }
     }
     if problems.is_empty() { Ok(()) } else { fail(problems.join("\n")) }
 }
 
 /// What is wrong with the manual's page `path`, of `text`, among `paths`.
 pub fn page_problems(path: &str, text: &str, paths: &[String]) -> Vec<String> {
+    if path.starts_with(IMAGES) && IMAGE_KINDS.iter().any(|k| ext_is(path, k)) {
+        return Vec::new();
+    }
     if !ext_is(path, "md") {
-        return vec![format!("{path}: doc/ holds Markdown pages alone, no images or other files (R-DOC-7)")];
+        return vec![format!("{path}: doc/ holds its pages and, in {IMAGES}, PNG, GIF and SVG images alone (R-DOC-7)")];
     }
     let lines: Vec<&str> = text.lines().collect();
     let mut problems = Vec::new();
@@ -86,6 +96,59 @@ pub fn links(text: &str) -> Vec<String> {
     }
     found.retain(|l| !l.starts_with("http://") && !l.starts_with("https://") && !l.starts_with("mailto:"));
     found
+}
+
+/// The folder of the manual's images (RULES.md D60).
+const IMAGES: &str = "doc/images/";
+/// The kinds of image the manual holds.
+const IMAGE_KINDS: [&str; 3] = ["png", "gif", "svg"];
+
+/// The images `text` shows, outside fenced code: each one's alt text and target.
+pub fn images(text: &str) -> Vec<(String, String)> {
+    let mut found = Vec::new();
+    let mut fenced = false;
+    for line in text.lines() {
+        if line.trim_start().starts_with("```") {
+            fenced = !fenced;
+            continue;
+        }
+        let mut rest = line;
+        while !fenced && let Some(at) = rest.find("![") {
+            let after = rest.get(at.saturating_add(2)..).unwrap_or_default();
+            let Some(close) = after.find("](") else { break };
+            let alt = after.get(..close).unwrap_or_default().to_owned();
+            let target = after.get(close.saturating_add(2)..).unwrap_or_default();
+            let end = target.find(')').unwrap_or(target.len());
+            found.push((alt, target.get(..end).unwrap_or_default().to_owned()));
+            rest = target.get(end..).unwrap_or_default();
+        }
+    }
+    found
+}
+
+/// What is wrong with the images of the Markdown file `path`, of `text`:
+/// an alt text that is empty. Each image it shows, as a path from the
+/// root, is added to `linked`.
+fn image_problems(path: &str, text: &str, linked: &mut Vec<String>) -> Vec<String> {
+    let base = Path::new(path).parent().map_or_else(PathBuf::new, Path::to_path_buf);
+    let mut problems = Vec::new();
+    for (alt, target) in images(text) {
+        if alt.trim().is_empty() {
+            problems.push(format!("{path}: the image {target} says not what it shows: its alt text is empty (R-DOC-7)"));
+        }
+        let mut parts: Vec<String> = Vec::new();
+        for part in base.join(&target).components() {
+            match part {
+                std::path::Component::ParentDir => {
+                    parts.pop();
+                }
+                std::path::Component::Normal(p) => parts.push(p.to_string_lossy().into_owned()),
+                _ => {}
+            }
+        }
+        linked.push(parts.join("/"));
+    }
+    problems
 }
 
 /// What is wrong with the links of the Markdown file `path`, of `text`.

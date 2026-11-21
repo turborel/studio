@@ -11,15 +11,18 @@ mod error;
 mod files;
 mod functions;
 mod icon;
+mod images;
 mod ipc;
+mod screenshots;
 mod smoke;
+mod webdriver;
 
 use std::process::ExitCode;
 
 use crate::error::Result;
 
 /// The commands, each with what it does, as `cargo xtask` lists them.
-const COMMANDS: [(&str, &str); 8] = [
+const COMMANDS: [(&str, &str); 9] = [
     ("verify", "every check a change must pass: formatting, lints, types, the repository's rules and every test"),
     ("coverage", "the Rust and TypeScript tests' coverage, held to their floors (RULES.md D7); --files shows each file's"),
     ("audit", "the supply chain: cargo deny, npm audit of the shipped packages, and no ring in the tree"),
@@ -34,6 +37,10 @@ const COMMANDS: [(&str, &str); 8] = [
         "smoke",
         "the built application's window, launched under tauri-driver, drawn with no failure, of no app data and of an earlier build's",
     ),
+    (
+        "screenshots",
+        "the manual's images of the built application, driven under tauri-driver against a demo database, in each theme, into doc/images",
+    ),
 ];
 
 fn main() -> ExitCode {
@@ -47,6 +54,7 @@ fn main() -> ExitCode {
         Some("icons") => icon::icons(),
         Some("install-hooks") => command::install_hooks(),
         Some("smoke") => smoke::smoke(args.get(1).map(String::as_str)),
+        Some("screenshots") => screenshots::screenshots(args.get(1).map(String::as_str)),
         _ => {
             usage();
             return ExitCode::FAILURE;
