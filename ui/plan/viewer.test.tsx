@@ -291,6 +291,32 @@ describe("the plan viewer", () => {
     expect(screen.getByRole("complementary", { name: "Operator" }).textContent).toContain("Cost3.7");
   });
 
+  it("tells a semi join and an antijoin, their notes, and how each searches its right [DOC sql/06-queries.md Correlated subqueries]", async () => {
+    catalogBackend({ catalog_table: () => refused() });
+    const store = await opened();
+    const id = openWorksheet(store, "SELECT 1");
+    const plan = parsePlan([
+      "-- physical:",
+      "HashAntiJoin S.DEPT = D.DEPT  (hashed on S.DEPT = D.DEPT)",
+      "  HashSemiJoin S.ID = T.ID  (hashed on S.ID = T.ID)",
+      "    SeqScan ANN.STAFF  (rows=10)",
+      "    SeqScan ANN.TEAMS  (rows=5)",
+      "  SeqScan ANN.DEPT  (rows=3)",
+    ]);
+    within(store, <PlanViewer id={id} plans={[plan]} />);
+    await settle();
+    const notes = screen.getByRole("list", { name: "Notes" }).textContent;
+    expect(notes).toContain("PLAN-SEMI-JOIN");
+    expect(notes).toContain("NOT IN keeps its meaning with nulls");
+    fireEvent.click(screen.getByRole("radio", { name: "Tree-Table" }));
+    fireEvent.click(screen.getAllByRole("row")[1] ?? document.body);
+    const anti = screen.getByRole("complementary", { name: "Operator" }).textContent;
+    expect(anti).toContain("JoinAntijoin: each row of its left that no row of its right matches");
+    expect(anti).toContain("Byits right hashed, its left read against it");
+    fireEvent.click(screen.getAllByRole("row")[2] ?? document.body);
+    expect(screen.getByRole("complementary", { name: "Operator" }).textContent).toContain("JoinSemi join");
+  });
+
   it("tells a streamed grouping, its keys and what it computes, in an aggregate's details [DOC sql/statements/explain.md EXAMPLES]", async () => {
     catalogBackend({ catalog_table: () => refused() });
     const store = await opened();

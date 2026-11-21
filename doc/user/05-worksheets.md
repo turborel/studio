@@ -243,6 +243,13 @@ cost, each with its share; and the warnings, each of its rule:
 | `PLAN-MANY-PROBES` | an index nested loop of 10,000 probes or more, or a nested loop of as many loops |
 | `SCAN-NO-INDEX` | a column the plan compares with a constant, of a table read whole, that no index leads, with its fix and a what-if ([The Analyzer](09-analyzer.md#the-plans-findings)) |
 
+Above the warnings are the notes, of what is well:
+
+| Rule | What it notes |
+|---|---|
+| `PLAN-SEMI-JOIN` | a semi join, which keeps each row of its left at its first match and reads its right no more for it: an EXISTS or IN subquery, or a join only MIN and MAX read, made one; nothing to change |
+| `PLAN-ANTIJOIN` | an antijoin, which keeps each row of its left that its right does not match: a NOT EXISTS or NOT IN subquery made one; NOT IN keeps its meaning with nulls, a row kept only if no value of the subquery equals it or may equal it |
+
 EXPLAIN does not tell whether an operator spilled to disk, so the plan
 cannot warn of it.
 
@@ -266,7 +273,11 @@ A click on an operator shows every detail of it beside the plan: what it
 is of, its figures, its cost and degree, its notes, and the line it came
 of. A range join, `RangeJoin` or `LeftRangeJoin`, has an icon of its own,
 and its details say what its right operand is sorted on, the equalities
-that group those rows, and the comparison it is pruned by. An
+that group those rows, and the comparison it is pruned by. A semi join,
+as `HashSemiJoin`, `HashRightSemiJoin`, `NestedLoopSemiJoin` or
+`SemiIndexNestedLoop`, and an antijoin, as `HashAntiJoin` and its kin,
+each have an icon of their own, and their details say which it is and
+how it searches its right: hashed, a nested loop, or an index probed. An
 aggregate's details say how it groups: **Streamed**, a group made at a
 time over its input in the order of its keys, as `Aggregate streamed
 group by [...]` is, or of its input in any order; and the keys it groups

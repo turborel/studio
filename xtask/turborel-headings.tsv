@@ -41,6 +41,7 @@ sql/02-data-types.md	Data Types
 sql/03-names.md	Names and Qualification
 sql/04-expressions.md	String expressions
 sql/06-queries.md	Query Expressions
+sql/06-queries.md	Correlated subqueries
 sql/07-information-schema.md	The Information Schema
 sql/07-information-schema.md	The views
 sql/07-information-schema.md	This implementation's own views *(extension)*

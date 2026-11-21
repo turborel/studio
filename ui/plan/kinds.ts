@@ -1,6 +1,7 @@
 /**
  * An operator's kind (RULES.md D54), of its name as EXPLAIN writes it:
- * a scan, a scan by an index, a join, a range join, a sort, an aggregate,
+ * a scan, a scan by an index, a join, a semi join, an antijoin, a range
+ * join, a sort, an aggregate,
  * a limit, a part run in parallel, a filter, a projection or another; and
  * its icon. A range join's search is read of its note: the value its right
  * operand is sorted on, the equalities that group those rows, and the one
@@ -17,6 +18,8 @@ export type OperatorKind =
   | "scan"
   | "indexScan"
   | "join"
+  | "semiJoin"
+  | "antiJoin"
   | "rangeJoin"
   | "sort"
   | "aggregate"
@@ -31,6 +34,8 @@ export const KIND_ICONS: Readonly<Record<OperatorKind, IconName>> = {
   scan: "table",
   indexScan: "index",
   join: "join",
+  semiJoin: "semiJoin",
+  antiJoin: "antiJoin",
   rangeJoin: "rangeJoin",
   sort: "sort",
   aggregate: "aggregate",
@@ -45,6 +50,8 @@ export const KIND_ICONS: Readonly<Record<OperatorKind, IconName>> = {
 const KNOWN: readonly (readonly [OperatorKind, RegExp])[] = [
   ["indexScan", /^Index(Scan|Only)/u],
   ["rangeJoin", /^(Left)?RangeJoin$/u],
+  ["semiJoin", /SemiJoin$|^Semi(?=[A-Z]|$)/u],
+  ["antiJoin", /AntiJoin$|^Anti(?=[A-Z]|$)/u],
   ["join", /(Join|NestedLoop|Product|join)$|^(Left|Right|Full|Inner|Semi|Anti)\b/u],
   ["scan", /Scan$/u],
   ["sort", /^(Sort|TopN|Order)/u],
@@ -70,6 +77,30 @@ export interface RangeSearch {
   readonly sorted: string;
   readonly within: readonly string[];
   readonly pruned: string | null;
+}
+
+/** How a semi join or an antijoin joins: of each left row, kept at its first match or kept for having none; and how its right is searched, if told. */
+export interface SemiSearch {
+  readonly anti: boolean;
+  readonly method: string | null;
+}
+
+/** The ways of a semi join or an antijoin, by its name as EXPLAIN writes it. */
+const SEMI_METHODS: readonly (readonly [RegExp, string])[] = [
+  [/^HashRight/u, "its left hashed, its right read against it"],
+  [/^Hash/u, "its right hashed, its left read against it"],
+  [/^NestedLoop/u, "a nested loop"],
+  [/IndexNestedLoop$/u, "an index of its right probed, a left row at a time"],
+  [/SynchronizedSpatialJoin$/u, "two spatial indexes read together"],
+];
+
+/** How semi join or antijoin `node` joins; none of another operator. */
+export function semiOf(node: PlanNode): SemiSearch | null {
+  const kind = kindOf(node);
+  if (kind !== "semiJoin" && kind !== "antiJoin") {
+    return null;
+  }
+  return { anti: kind === "antiJoin", method: SEMI_METHODS.find(([test]) => test.test(node.operator))?.[1] ?? null };
 }
 
 /** How an aggregate groups: whether streamed, its keys, and what it computes. */
@@ -105,11 +136,11 @@ function listAfter(detail: string, word: string): string[] {
 
 /** The grouping of aggregate `node`, of `[streamed] group by [...] computing [...]`; none of another operator. */
 export function groupingOf(node: PlanNode): Grouping | null {
-  if (kindOf(node) !== "aggregate" || !/^(?:streamed )?(?:group by|computing) \[/u.test(node.detail)) {
+  if (kindOf(node) !== "aggregate" || !/^(?:streamed\b|(?:group by|computing) \[)/u.test(node.detail)) {
     return null;
   }
   return {
-    streamed: node.detail.startsWith("streamed "),
+    streamed: /^streamed\b/u.test(node.detail),
     keys: listAfter(node.detail, "group by"),
     computing: listAfter(node.detail, "computing"),
   };

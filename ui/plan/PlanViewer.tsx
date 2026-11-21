@@ -21,7 +21,7 @@ import { placed } from "./flow";
 import type { Plan, PlanNode, Stage } from "./plan";
 import { PlanGraph, nodeFigures } from "./PlanGraph";
 import { PlanTable } from "./PlanTable";
-import { groupingOf, rangeOf } from "./kinds";
+import { groupingOf, rangeOf, semiOf } from "./kinds";
 import { type PlanSummary, type PlanWarning, summarize } from "./summary";
 
 /** How a stage is drawn. */
@@ -51,6 +51,15 @@ function Summary(props: { readonly plan: Plan; readonly summary: PlanSummary; re
             </li>
           ))}
         </ol>
+      )}
+      {summary.notes.length > 0 && (
+        <ul className="plan-notes" aria-label="Notes">
+          {summary.notes.map((n, i) => (
+            <li key={`${String(i)}.${n.rule}`}>
+              <strong>{n.rule}</strong> {n.says}
+            </li>
+          ))}
+        </ul>
       )}
       {summary.warnings.length > 0 && (
         <ul className="plan-warnings" aria-label="Warnings">
@@ -128,6 +137,30 @@ function RangeDetails({ node }: { readonly node: PlanNode }) {
   );
 }
 
+/** How semi join or antijoin `node` joins: what of its left it keeps, and how it searches its right. */
+function SemiDetails({ node }: { readonly node: PlanNode }) {
+  const semi = semiOf(node);
+  if (semi === null) {
+    return null;
+  }
+  return (
+    <>
+      <dt>Join</dt>
+      <dd>
+        {semi.anti
+          ? "Antijoin: each row of its left that no row of its right matches"
+          : "Semi join: each row of its left at its first match on its right, once"}
+      </dd>
+      {semi.method !== null && (
+        <>
+          <dt>By</dt>
+          <dd>{semi.method}</dd>
+        </>
+      )}
+    </>
+  );
+}
+
 /** How aggregate `node` groups: streamed or not, by which keys, computing what. */
 function GroupingDetails({ node }: { readonly node: PlanNode }) {
   const grouping = groupingOf(node);
@@ -182,6 +215,7 @@ function Details({ node, onClose }: { readonly node: PlanNode; readonly onClose:
         )}
         <RangeDetails node={node} />
         <GroupingDetails node={node} />
+        <SemiDetails node={node} />
         <dt>Notes</dt>
         <dd>{node.notes.length === 0 ? "none" : node.notes.join("; ")}</dd>
         <dt>Line</dt>

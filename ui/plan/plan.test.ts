@@ -1,5 +1,5 @@
 import { misestimated, operators, parsePlan } from "./plan";
-import { groupingOf, kindOf, rangeOf } from "./kinds";
+import { groupingOf, kindOf, rangeOf, semiOf } from "./kinds";
 import { ownTime } from "./summary";
 
 /** The lines of a plan as EXPLAIN gives them, one row each, the result's left margin taken off. */
@@ -221,5 +221,50 @@ Limit fetch 3
       keys: [],
       computing: ["SUM(A)", "COALESCE(MAX(B), 0)"],
     });
+  });
+});
+
+describe("semi joins and antijoins", () => {
+  it("are known by each name EXPLAIN gives them, each with how it searches its right [DOC sql/06-queries.md Correlated subqueries]", () => {
+    const cases: readonly (readonly [string, "semiJoin" | "antiJoin", string | null])[] = [
+      [
+        "HashSemiJoin S.DEPT = DEPT.DEPT  (hashed on S.DEPT = DEPT.DEPT)",
+        "semiJoin",
+        "its right hashed, its left read against it",
+      ],
+      [
+        "HashAntiJoin S.DEPT = DEPT.DEPT  (hashed on S.DEPT = DEPT.DEPT)",
+        "antiJoin",
+        "its right hashed, its left read against it",
+      ],
+      ["HashRightSemiJoin S.DEPT = DEPT.DEPT", "semiJoin", "its left hashed, its right read against it"],
+      ["HashRightAntiJoin S.DEPT = DEPT.DEPT", "antiJoin", "its left hashed, its right read against it"],
+      ["NestedLoopSemiJoin S.N < T.N", "semiJoin", "a nested loop"],
+      ["NestedLoopAntiJoin S.N < T.N", "antiJoin", "a nested loop"],
+      [
+        "SemiIndexNestedLoop DEMO.ORDERS using ORDERS_BY_CUSTOMER [btree]: O.CUSTOMER_ID = C.ID  (est. rows each=1, cost=2.0)",
+        "semiJoin",
+        "an index of its right probed, a left row at a time",
+      ],
+      [
+        "AntiIndexNestedLoop DEMO.ORDERS using ORDERS_BY_CUSTOMER [btree]: O.CUSTOMER_ID = C.ID  (est. rows each=1, cost=2.0)",
+        "antiJoin",
+        "an index of its right probed, a left row at a time",
+      ],
+      ["Semi join on S.DEPT = DEPT.DEPT", "semiJoin", null],
+      ["Anti join on S.DEPT = DEPT.DEPT", "antiJoin", null],
+    ];
+    for (const [line, kind, method] of cases) {
+      const [node] = parsePlan(["-- physical:", line, ""]).stages[0]?.roots ?? [];
+      expect(node === undefined ? null : kindOf(node)).toBe(kind);
+      expect(node === undefined ? null : semiOf(node)).toEqual({ anti: kind === "antiJoin", method });
+    }
+    const [join] = parsePlan(["-- physical:", "HashJoin A.K = B.K", ""]).stages[0]?.roots ?? [];
+    expect(join === undefined ? null : [kindOf(join), semiOf(join)]).toEqual(["join", null]);
+  });
+
+  it("a DISTINCT made in key order is a streamed grouping of no keys [DESIGN] D54", () => {
+    const [node] = parsePlan(["-- physical:", "Distinct streamed", ""]).stages[0]?.roots ?? [];
+    expect(node === undefined ? null : groupingOf(node)).toEqual({ streamed: true, keys: [], computing: [] });
   });
 });

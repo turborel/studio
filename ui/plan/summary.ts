@@ -5,10 +5,13 @@
  * each of a rule of the analyzer's (D50), with its fix as SQL where one
  * would mend it: a large table read whole, an estimate off by ten times or
  * more, a nested loop of many probes, a large table read on one thread,
- * and a column compared with a constant that no index leads (SCAN-NO-INDEX).
- * EXPLAIN tells no spill, so none is warned of.
+ * and a column compared with a constant that no index leads (SCAN-NO-INDEX);
+ * and its notes of what is well: a subquery made a semi join, and an
+ * antijoin, NOT IN's meaning with nulls kept. EXPLAIN tells no spill, so
+ * none is warned of.
  */
 import type { ScanFinding } from "../analyzer/planRules";
+import { kindOf } from "./kinds";
 import { misestimated, operators, type Plan, type PlanNode } from "./plan";
 
 /** The rows past which a table read whole is large. */
@@ -31,6 +34,16 @@ export interface PlanWarning {
   readonly finding: ScanFinding | null;
 }
 
+/** A rule of a plan's notes, of what is well. */
+export type NoteRule = "PLAN-SEMI-JOIN" | "PLAN-ANTIJOIN";
+
+/** A note: its rule, what it says, and the operator it is of. */
+export interface PlanNote {
+  readonly rule: NoteRule;
+  readonly says: string;
+  readonly node: PlanNode;
+}
+
 /** An operator that costs much: by its own time, else its cost; and its share of the whole. */
 export interface Costly {
   readonly node: PlanNode;
@@ -46,6 +59,33 @@ export interface PlanSummary {
   readonly millis: number | null;
   readonly costliest: readonly Costly[];
   readonly warnings: readonly PlanWarning[];
+  readonly notes: readonly PlanNote[];
+}
+
+/** The notes of `nodes`: each semi join and antijoin, what it is good for. */
+function notesOf(nodes: readonly PlanNode[]): PlanNote[] {
+  return nodes.flatMap((node): PlanNote[] => {
+    switch (kindOf(node)) {
+      case "semiJoin":
+        return [
+          {
+            rule: "PLAN-SEMI-JOIN",
+            says: `${node.operator} keeps each row of its left at its first match, its right read no more for it: an EXISTS or IN subquery, or a join that only MIN and MAX read, made a semi join. Nothing to change.`,
+            node,
+          },
+        ];
+      case "antiJoin":
+        return [
+          {
+            rule: "PLAN-ANTIJOIN",
+            says: `${node.operator} keeps each row of its left that its right does not match: a NOT EXISTS or NOT IN subquery made an antijoin. NOT IN keeps its meaning with nulls: a row is kept only if no value of the subquery equals it or may equal it.`,
+            node,
+          },
+        ];
+      default:
+        return [];
+    }
+  });
 }
 
 /** Whether `node` reads its table whole: a scan, not by an index. */
@@ -154,5 +194,6 @@ export function summarize(plan: Plan, findings: readonly ScanFinding[]): PlanSum
       ),
       ...scans,
     ],
+    notes: notesOf(nodes),
   };
 }

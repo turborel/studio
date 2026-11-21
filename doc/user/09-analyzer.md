@@ -73,7 +73,10 @@ gathered, which reading the view asks for.
 
 The plan's own warnings, `PLAN-FULL-SCAN`, `PLAN-SERIAL`,
 `PLAN-MISESTIMATE` and `PLAN-MANY-PROBES`, are told by the plan viewer
-([Worksheets](05-worksheets.md#the-plan)); none has a fix of SQL.
+([Worksheets](05-worksheets.md#the-plan)); none has a fix of SQL. So are
+its notes of what is well: `PLAN-SEMI-JOIN`, a subquery made a semi
+join, and `PLAN-ANTIJOIN`, NOT EXISTS or NOT IN made an antijoin, NOT
+IN keeping its meaning with nulls.
 
 A constraint's index is never dropped by a fix. A partition is judged
 with its partitioned table, not apart. `SETTING-ADVISED` finds:

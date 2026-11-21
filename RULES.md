@@ -1246,11 +1246,19 @@ The review checklist:
   the logarithm of their rows, heat as a share of the time in the
   second series colour (D52); collapse, search, zoom and fit.
 - **Kinds:** each operator's kind of its name, with an icon of its own: a
-  scan, an index scan, a join, a range join (`RangeJoin`, `LeftRangeJoin`,
+  scan, an index scan, a join, a semi join and an antijoin (each of the
+  names main's physical plan gives, `HashSemiJoin`, `HashRightAntiJoin`,
+  `NestedLoopSemiJoin`, `SemiIndexNestedLoop` and their kin, and the
+  logical `Semi join` and `Anti join`, read for how they search their
+  right), a range join (`RangeJoin`, `LeftRangeJoin`,
   its note `sorted on … within … , pruned by …` read for the details), a
-  sort, an aggregate (its `[streamed] group by […] computing […]` read
-  for the details: streamed or not, its keys and what it computes), a
-  limit, a part in parallel, a filter, a projection.
+  sort, an aggregate (its `[streamed] group by […] computing […]`, or a
+  `Distinct streamed`, read for the details: streamed or not, its keys
+  and what it computes), a limit, a part in parallel, a filter, a
+  projection.
+- **Notes:** beside the warnings, what is well: PLAN-SEMI-JOIN of a semi
+  join, and PLAN-ANTIJOIN of an antijoin, NOT IN's meaning with nulls
+  kept.
 - **Tree-table:** sortable by estimate, actual, loops, probes and time.
 - **Compare:** two tree-tables side by side, operators matched by name
   and detail, their figures aside.
