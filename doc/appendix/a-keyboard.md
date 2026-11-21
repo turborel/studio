@@ -16,9 +16,10 @@ are bound.
 | New In-Memory Database | File | | |
 | New Worksheet | File | Cmd+N | Ctrl+N |
 | Open File… | File | Cmd+O | Ctrl+O |
-| Run SQL File… | File |  |  |
+| Run SQL File… | File | | |
 | New Model | File | | |
 | Open Model… | File | | |
+| Import DDL into Model… | File | | |
 | Reopen Closed Worksheet | File | Cmd+Shift+T | Ctrl+Shift+T |
 | History… | File | Cmd+Shift+H | Ctrl+Shift+H |
 | Disconnect | Connection | | |

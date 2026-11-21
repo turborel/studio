@@ -275,7 +275,7 @@ impl<R: Read> Statements<R> {
 
 /// Where the code of `text`, a statement, begins: after the separators and
 /// comments before it.
-fn code_start(text: &str) -> usize {
+pub(crate) fn code_start(text: &str) -> usize {
     let mut rest = text;
     loop {
         let trimmed = rest.trim_start();

@@ -153,6 +153,7 @@ function modelDocOf(id: string, document: unknown): ModelDoc | null {
     selected: null,
     hidden: Array.isArray(d?.hidden) ? d.hidden : [],
     told: "",
+    leftOut: [],
   };
 }
 

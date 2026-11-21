@@ -396,8 +396,9 @@ fn files_not_chosen_are_refused() {
     assert_eq!(refusal(&window, "export_query", serde_json::json!({"request": request}))["sqlstate"], "TB910");
 }
 
-/// [DESIGN] D62 [RULE] R-SEC-5: Run SQL File reads only a file the
-/// platform's dialog chose, and cancels only a file that runs.
+/// [DESIGN] D62 D64 [RULE] R-SEC-5: Run SQL File and the DDL import read
+/// only a file the platform's dialog chose; a cancel needs a file or an
+/// import that runs.
 #[test]
 fn sql_files_not_chosen_are_refused() {
     let (_app, window) = window();
@@ -407,4 +408,6 @@ fn sql_files_not_chosen_are_refused() {
     let run = serde_json::json!({"connection": 7, "path": elsewhere, "options": options, "confirmed": true});
     assert_eq!(refusal(&window, "run_sql_file", run)["sqlstate"], "TB910");
     assert_eq!(refusal(&window, "cancel_sql_file", serde_json::json!({"connection": 7}))["sqlstate"], "TB910");
+    assert_eq!(refusal(&window, "ddl_model", serde_json::json!({"path": elsewhere, "schema": "S"}))["sqlstate"], "TB910");
+    assert_eq!(refusal(&window, "cancel_import", serde_json::json!({"connection": 7}))["sqlstate"], "TB910");
 }

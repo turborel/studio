@@ -29,6 +29,7 @@
 mod child;
 mod files;
 mod imports;
+mod models;
 mod opening;
 mod requests;
 
@@ -129,6 +130,7 @@ const TESTS: &[(&str, Test)] = &[
     ("an_analyzed_change_is_rolled_back", requests::an_analyzed_change_is_rolled_back),
     ("a_38_digit_number_round_trips", requests::a_38_digit_number_round_trips),
     ("a_sheet_is_read_by_rows", imports::a_sheet_is_read_by_rows),
+    ("a_ddl_script_becomes_a_model", models::a_ddl_script_becomes_a_model),
     ("each_format_is_imported", imports::each_format_is_imported),
     ("an_import_is_limited_and_cancelled", imports::an_import_is_limited_and_cancelled),
     ("a_file_runs_by_its_transactions_and_error_policy", files::a_file_runs_by_its_transactions_and_error_policy),

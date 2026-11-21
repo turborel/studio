@@ -4,8 +4,8 @@
 
 A model is a schema's tables drawn as a diagram: each table a box of its
 columns, each foreign key a line from its table to the one it
-references. A model is read from a live schema, or designed table by
-table, and kept as a file of its own. It is compared with a live schema,
+references. A model is read from a live schema, imported of a DDL
+script, or designed table by table, and kept as a file of its own. It is compared with a live schema,
 and the script that takes the schema to the model is written, to be read
 and run in a worksheet; two live schemas are compared the same way. The
 query builder writes a query of a schema's tables, their joins following
@@ -39,6 +39,39 @@ The tab's toolbar:
 A model's tab is marked `•` while it has changed since it was saved.
 Closing it lets its changes go. A model is not kept between sessions but
 in its file ([Appendix D](../appendix/d-files.md#a-models-file)).
+
+## Importing a DDL script
+
+**File > Import DDL into Model…** makes a model of a `.sql` file of
+CREATE statements the platform's dialog chooses, so a schema kept as a
+script is diagrammed, compared with a live schema, and its migration
+script written as any model's is. Studio asks the schema of the names
+the script does not qualify, the active connection's at first, and runs
+the script's definitions in an in-memory database of its own, which
+nothing else sees and which is gone once the model is read: Turborel
+reads each statement as a server would, so each table, column type,
+default, key, foreign key and index is the one Turborel defines. The
+model holds the tables of each schema the script made, read as **Read
+Tables of a Schema…** reads them.
+
+What a model does not hold is left out of it, and listed under the
+diagram by its line, with why, until **Dismiss**:
+
+- a definition of another kind, as a view, a routine or a sequence: run,
+  as a table may need it, but not modeled;
+- a statement of data, as an INSERT, or of privileges or users, as a
+  GRANT, or of the server: not run;
+- a definition the database refuses: with its SQLSTATE and why.
+
+```
+Left out of the model:
+Line 6: a definition of a view, which a model does not hold
+Line 7: a statement of data, not a definition: not run
+```
+
+The note under the diagram tells how many statements the script held,
+and how many were left out. Nothing is guessed of a statement that is
+not run, and no statement of the script reaches a database of yours.
 
 ## The diagram
 

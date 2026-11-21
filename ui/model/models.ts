@@ -2,10 +2,10 @@
  * The models open in the window (RULES.md D46): each a tab of the dock,
  * its model, its file if it has one, whether it changed since saved, and
  * how its diagram is shown; made new, opened from a file, read from a
- * live schema, saved, and closed.
+ * live schema or imported of a DDL script (D64), saved, and closed.
  */
 import { saveTextFile } from "../ipc/catalog";
-import { openModelFile } from "../ipc/model";
+import { type LeftOut, openModelFile } from "../ipc/model";
 import { writeSqlFile } from "../ipc/worksheet";
 import type { Store, StudioState } from "../state/store";
 import { laidOut } from "./layout";
@@ -29,6 +29,8 @@ export interface ModelDoc {
   readonly hidden: readonly string[];
   /** What was last told of the model, as a save. */
   readonly told: string;
+  /** The statements of the DDL script it was imported of that it does not hold, until dismissed. */
+  readonly leftOut: readonly LeftOut[];
 }
 
 /** A new identifier. */
@@ -55,7 +57,12 @@ export function editModel(store: Store, id: string, change: (m: Model) => Model)
 export function openModel(
   store: Store,
   model: Model,
-  { path = null, connection = null }: { path?: string | null; connection?: number | null } = {},
+  {
+    path = null,
+    connection = null,
+    leftOut = [],
+    told = "",
+  }: { path?: string | null; connection?: number | null; leftOut?: readonly LeftOut[]; told?: string } = {},
 ): string {
   const id = newId();
   const doc: ModelDoc = {
@@ -68,7 +75,8 @@ export function openModel(
     grouped: false,
     selected: null,
     hidden: [],
-    told: "",
+    told,
+    leftOut,
   };
   store.update((now) => ({ ...now, models: [...now.models, doc], activeModel: id }));
   return id;

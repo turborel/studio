@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-ddl-model"
+description = "Enables the ddl_model command without any pre-configured scope."
+commands.allow = ["ddl_model"]
+
+[[permission]]
+identifier = "deny-ddl-model"
+description = "Denies the ddl_model command without any pre-configured scope."
+commands.deny = ["ddl_model"]

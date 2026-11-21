@@ -103,6 +103,7 @@ Each is told in full in [§7](#7-the-decisions).
 | D61 | Explain Analyze of a data change: said to change data, rolled back to a savepoint unless kept |
 | D62 | Run SQL File: a file streamed, scanned and judged whole, run by its options, never by the assistant |
 | D63 | The import wizard: CSV, JSON and Excel, into a table or a new one typed from a sample, watched and cancelled |
+| D64 | A DDL script imported into a model: run in an in-memory database of its own, read back, what is not a table's listed |
 
 ---
 
@@ -1641,6 +1642,33 @@ The review checklist:
 - *Why:* data comes as spreadsheets and JSON as often as CSV, and a new
   table should take its types from what is in the file, shown before
   anything is made.
+
+#### D64. A DDL script imported into a model: run in an in-memory database of its own, read back, what is not a table's listed
+
+- **What:** **File > Import DDL into Model…** makes a model (D46) of a
+  `.sql` file of definitions, for the diagram, comparison and the
+  migration script.
+- **How** (`core/src/connections/manager/ddlmodel.rs`): the file read and
+  split as Run SQL File reads one (D62); its definitions run, a statement
+  at a time and each its own transaction, in an in-memory database the
+  manager opens for it alone, its unqualified names of the schema the
+  user names, made if it is not; the model read back of that
+  database's Information Schema, schema by schema, as a live schema's is
+  (D33, D46), of the schemas of base tables it has after and not before;
+  the database closed. Turborel's own parser and binder read each
+  statement, so a type, a default or a key is the one Turborel defines;
+  Studio writes no SQL of its own reading.
+- **Left out, never guessed:** each statement not a table's listed by
+  its line, with why: a definition of another kind (a view, a routine, a
+  sequence, a domain), run, as a table may need it, not modeled; a
+  statement of data, privileges, users or the server, never run; a
+  definition the database refuses, with its SQLSTATE and message. A
+  definition Studio cannot classify is run, the database deciding. The
+  first 200 listed, the rest counted; at most 100,000 statements.
+- **Nothing reaches a database of the user's:** the in-memory database
+  is Studio's, closed as the model is read, or as the import fails.
+- *Why:* a schema kept as a script should be drawn and compared as a
+  live one is, and a reading of its own would drift from Turborel's.
 ---
 
 ## 8. References

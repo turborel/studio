@@ -39,7 +39,8 @@ person who works with the database one window for it:
   them from CSV, JSON or Excel into a table or a new one typed from the
   file, exporting them, and dialogs that write DDL;
 - [schema diagrams and models](doc/user/08-modeling.md), designed
-  offline and compared with a live schema, and schema compare;
+  offline or imported of a DDL script, and compared with a live schema,
+  and schema compare;
 - an [analyzer](doc/user/09-analyzer.md) of indexes, plans and
   statements, and reports;
 - an [assistant](doc/user/10-assistant.md), off until the user turns it

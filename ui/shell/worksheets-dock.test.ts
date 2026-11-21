@@ -141,6 +141,7 @@ describe("the dock's models", () => {
       grouped: false,
       selected: null,
       told: "",
+      leftOut: [],
     };
     expect(modelTitle(closed)).toBe("X");
     expect(modelOf(store.current(), a)).toBeUndefined();

@@ -47,6 +47,36 @@ function Tool(props: {
   );
 }
 
+/** The statements of the DDL script the model was imported of that it does not hold, each by its line and why, until dismissed. */
+function LeftOutList({ doc }: { readonly doc: ModelDoc }) {
+  const store = useStore();
+  if (doc.leftOut.length === 0) {
+    return null;
+  }
+  return (
+    <section className="left-out" aria-label="Left out of the model">
+      <p>Left out of the model:</p>
+      <ul>
+        {doc.leftOut.map((l) => (
+          <li key={`${String(l.line)}.${l.statement}`}>
+            Line {String(l.line)}: {l.why}
+            <br />
+            <code>{l.statement}</code>
+          </li>
+        ))}
+      </ul>
+      <button
+        type="button"
+        onClick={() => {
+          changeModel(store, doc.id, (d) => ({ ...d, leftOut: [] }));
+        }}
+      >
+        Dismiss
+      </button>
+    </section>
+  );
+}
+
 /** Exports `doc`'s diagram as SVG or PNG, told in the model's note. */
 async function exportDiagram(store: ReturnType<typeof useStore>, doc: ModelDoc, as: "svg" | "png"): Promise<void> {
   const svg = modelSvg(doc.model);
@@ -253,6 +283,7 @@ export function ModelView({ id }: { readonly id: string }) {
       <p className="hint" role="status">
         {String(doc.model.tables.length)} tables{doc.modified ? ", changed since saved" : ""}. {doc.told}
       </p>
+      <LeftOutList doc={doc} />
       {open === "read" && <ReadSchemaDialog doc={doc} onClose={close} />}
       {open === "compare" && <CompareWithSchemaDialog doc={doc} onClose={close} />}
       {open === "add" && <TableEditor doc={doc} old={null} onClose={close} />}

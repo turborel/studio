@@ -26,6 +26,7 @@ pub const MENUS: [(&str, &[Item]); 7] = [
             Some(("file.runSql", "Run SQL File…")),
             Some(("model.new", "New Model")),
             Some(("model.open", "Open Model…")),
+            Some(("model.importDdl", "Import DDL into Model…")),
             Some(("worksheet.save", "Save")),
             Some(("worksheet.saveAs", "Save As…")),
             Some(("worksheet.reopen", "Reopen Closed Worksheet")),

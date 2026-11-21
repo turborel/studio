@@ -15,6 +15,7 @@ use tauri::{AppHandle, Runtime, State};
 use tauri_plugin_dialog::DialogExt;
 use turborel_studio_core::connections::imports::{ImportSpec, Preview, Reading, preview};
 use turborel_studio_core::connections::manager::ImportAnswer;
+use turborel_studio_core::connections::manager::ddlmodel::DdlModel;
 use turborel_studio_core::connections::manager::sqlfile::{FileAnswer, FileOptions, FileReport, log_text};
 use turborel_studio_core::error::{Result, StudioError};
 use turborel_studio_core::events::ConnectionId;
@@ -148,4 +149,14 @@ pub(crate) async fn save_sql_file_log<R: Runtime>(
         Ok(Some(path.display().to_string()))
     })
     .await
+}
+
+/// Imports the DDL script `path`, one chosen, into a model: its
+/// definitions run in an in-memory database, its unqualified names of
+/// `schema`; the database to read the model of, then close, and what was
+/// left out (RULES.md D64).
+#[tauri::command]
+pub(crate) async fn ddl_model(studio: State<'_, Studio>, path: String, schema: String) -> Result<DdlModel> {
+    let path = studio.files.chosen(&PathBuf::from(path))?;
+    blocking(&studio, move |m| m.ddl_model(&path, &schema)).await
 }

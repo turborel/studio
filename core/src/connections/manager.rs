@@ -566,6 +566,7 @@ fn unexpected() -> StudioError {
     StudioError::misuse("[DESIGN] the connection's worker answered out of turn")
 }
 
+pub mod ddlmodel;
 mod embedded;
 mod ending;
 pub mod sqlfile;

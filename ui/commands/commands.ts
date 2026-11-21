@@ -17,6 +17,7 @@ import {
 import type { IconName } from "../icons/Icon";
 import type { Store } from "../state/store";
 import { loadSchemas } from "../state/catalog";
+import { importDdl } from "../model/ddl";
 import { newModel, openModelFrom } from "../model/models";
 import { openWorksheet } from "../state/worksheets";
 import {
@@ -236,6 +237,17 @@ const WORKSHEET_COMMANDS: readonly Command[] = [
   onWorksheet("worksheet.closeOthers", "Close Other Worksheets", undefined, TAB_ACTS.closeOthers),
 ];
 
+/** A command of the File menu, of no key: enabled always, unless `enabled` says. */
+function fileCommand(
+  id: string,
+  icon: IconName,
+  title: string,
+  run: Command["run"],
+  enabled: Command["enabled"] = always,
+): Command {
+  return { id, icon, title, category: "File", enabled, run };
+}
+
 /** Every command, in the order the palette lists them. */
 export const COMMANDS: readonly Command[] = [
   {
@@ -249,34 +261,13 @@ export const COMMANDS: readonly Command[] = [
       show(store, { kind: "connection", editing: null });
     },
   },
-  {
-    id: "database.open",
-    icon: "openDatabase",
-    title: "Open Database…",
-    category: "File",
-    enabled: always,
-    run: ({ store }) => {
-      show(store, { kind: "embedded", mode: "open", editing: null });
-    },
-  },
-  {
-    id: "database.new",
-    icon: "newDatabase",
-    title: "New Database…",
-    category: "File",
-    enabled: always,
-    run: ({ store }) => {
-      show(store, { kind: "embedded", mode: "new", editing: null });
-    },
-  },
-  {
-    id: "database.newInMemory",
-    icon: "inMemory",
-    title: "New In-Memory Database",
-    category: "File",
-    enabled: always,
-    run: ({ store }) => newInMemory(store),
-  },
+  fileCommand("database.open", "openDatabase", "Open Database…", ({ store }) => {
+    show(store, { kind: "embedded", mode: "open", editing: null });
+  }),
+  fileCommand("database.new", "newDatabase", "New Database…", ({ store }) => {
+    show(store, { kind: "embedded", mode: "new", editing: null });
+  }),
+  fileCommand("database.newInMemory", "inMemory", "New In-Memory Database", ({ store }) => newInMemory(store)),
   {
     id: "worksheet.new",
     icon: "newWorksheet",
@@ -297,35 +288,25 @@ export const COMMANDS: readonly Command[] = [
     enabled: always,
     run: ({ store }) => openFile(store),
   },
-  {
-    id: "file.runSql",
-    icon: "runScript",
-    title: "Run SQL File…",
-    category: "File",
-    enabled: connected,
-    // Enabled only while a connection is active.
-    run: ({ store }) => {
+  // Enabled only while a connection is active.
+  fileCommand(
+    "file.runSql",
+    "runScript",
+    "Run SQL File…",
+    ({ store }) => {
       show(store, { kind: "data", task: { kind: "runSqlFile", connection: store.current().active ?? 0 } });
     },
-  },
-  {
-    id: "model.new",
-    icon: "graph",
-    title: "New Model",
-    category: "File",
-    enabled: always,
-    run: ({ store }) => {
-      newModel(store);
-    },
-  },
-  {
-    id: "model.open",
-    icon: "open",
-    title: "Open Model…",
-    category: "File",
-    enabled: always,
-    run: ({ store }) => attempt(store, () => openModelFrom(store)).then(() => undefined),
-  },
+    connected,
+  ),
+  fileCommand("model.new", "graph", "New Model", ({ store }) => {
+    newModel(store);
+  }),
+  fileCommand("model.open", "open", "Open Model…", ({ store }) =>
+    attempt(store, () => openModelFrom(store)).then(() => undefined),
+  ),
+  fileCommand("model.importDdl", "open", "Import DDL into Model…", ({ store }) =>
+    attempt(store, () => importDdl(store)).then(() => undefined),
+  ),
   {
     id: "worksheet.reopen",
     icon: "reopen",
