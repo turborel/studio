@@ -2,9 +2,9 @@
 //! manager holds (RULES.md D24, D59, R-SAFE-5): a server's statement
 //! cancelled through turborel-client's canceller, an embedded session's
 //! through its own; an embedded database closed, with a checkpoint, as
-//! its connection ends.
+//! the last connection of it ends.
 
-use std::sync::mpsc;
+use std::sync::{Arc, mpsc};
 
 use super::{ConnectionManager, Origin, Stopper, ThreadInfo, unknown, worker_name};
 use crate::connections::session::SessionState;
@@ -47,7 +47,10 @@ impl ConnectionManager {
         let mut closed = Ok(());
         if let Some(handle) = handle {
             let _ = handle.thread.join(); // It has answered Terminate, and ends.
-            if let Origin::Embedded(embedded) = handle.origin {
+            // The database closes with the last of its sessions.
+            if let Origin::Embedded(embedded) = handle.origin
+                && !self.handles().values().any(|h| matches!(&h.origin, Origin::Embedded(e) if Arc::ptr_eq(e, &embedded)))
+            {
                 closed = embedded.close();
             }
         }

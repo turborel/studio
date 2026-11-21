@@ -30,8 +30,9 @@ const ANALYZE: &str = "ANALYZE";
 
 /// Opens the assistant's own connection of saved connection `saved`: as
 /// its user, proving `password`, or as `login`, proving its password,
-/// where the policy names one; each transaction begun READ ONLY, each
-/// statement cancelled past `policy`'s seconds.
+/// where the policy names one; of an embedded database, a session more of
+/// it, as its own user; each transaction begun READ ONLY, each statement
+/// cancelled past `policy`'s seconds.
 ///
 /// # Errors
 ///
@@ -51,7 +52,11 @@ pub fn open_session(
         None => password,
     };
     let guards = Guards { environment: saved.environment, read_only: true };
-    let opened = manager.open((&spec, guards), password, |name| std::env::var(name).ok())?;
+    let opened = match &saved.embedded {
+        // An embedded database's session more, beside the user's own.
+        Some(embedded) => manager.open_embedded_beside(&embedded.spec(), guards)?,
+        None => manager.open((&spec, guards), password, |name| std::env::var(name).ok())?,
+    };
     let timeout = format!("SET STATEMENT.TIMEOUT_MS = {}", u64::from(policy.limits.statement_seconds) * 1000);
     if let Err(e) = manager.run(opened.connection, &timeout, true) {
         let _ = manager.close(opened.connection); // Its failure is the one told.

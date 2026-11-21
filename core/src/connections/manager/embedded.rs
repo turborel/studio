@@ -1,6 +1,6 @@
 //! The connection manager's embedded databases (RULES.md D59): one opened
-//! or made, a session of it started on a worker of its own, and what a
-//! connection of one was given.
+//! or made, a session of it started on a worker of its own, a session more
+//! of one Studio holds, and what a connection of one was given.
 
 use std::sync::Arc;
 use std::sync::mpsc;
@@ -61,6 +61,27 @@ impl ConnectionManager {
                 Err(e)
             }
         }
+    }
+
+    /// A session of its own of the embedded database `spec` names, as the
+    /// assistant's connection is (RULES.md D55, D59): beside the connection
+    /// that holds it open in Studio, a session more of the same database;
+    /// else the database opened, never made.
+    ///
+    /// # Errors
+    ///
+    /// The database's, as `open_embedded` gives them.
+    pub fn open_embedded_beside(&self, spec: &EmbeddedSpec, guards: Guards) -> Result<Opened> {
+        let held = self.handles().values().find_map(|h| match &h.origin {
+            Origin::Embedded(e) if matches!(spec.place, Place::Directory { .. }) && e.place == spec.place => Some(Arc::clone(e)),
+            Origin::Embedded(_) | Origin::Server(_) => None,
+        });
+        let Some(embedded) = held else { return self.open_embedded(&EmbeddedSpec { create: false, ..spec.clone() }, guards) };
+        let told = embedded.told.clone();
+        let id = self.next_id();
+        let (handle, session) = self.start_embedded(id, embedded, guards)?;
+        self.handles().insert(id, handle);
+        Ok(Opened { connection: id, session, told })
     }
 
     /// Starts connection `id`'s worker, a session of `embedded`, and waits for it.

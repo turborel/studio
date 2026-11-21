@@ -71,7 +71,9 @@ the old forgotten; asking of another saved connection begins one too.
 
 The conversation runs on a connection of the assistant's own, opened as
 it is first asked, on which each transaction begins READ ONLY and each
-statement is cancelled past the policy's time.
+statement is cancelled past the policy's time. Of an embedded database,
+it is a session more of the database, beside the user's own, as the
+database's user; the database closes as the last of them ends.
 
 ### What will be sent
 

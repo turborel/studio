@@ -175,3 +175,41 @@ pub fn plug_ins_are_listed(scratch: &Scratch) {
     assert!(explained.iter().all(|n| n.starts_with("not ")), "{explained:?}");
     manager.close(opened.connection).unwrap();
 }
+
+/// [DESIGN] D55 D59: the assistant's connection of a saved embedded
+/// database is a session more of it, beside the user's own, READ ONLY;
+/// the database stays open while either session does, and closes with
+/// the last, so it opens again after.
+pub fn the_assistant_opens_a_session_beside_the_users(scratch: &Scratch) {
+    use turborel_studio_core::assistant::policy::ConnectionPolicy;
+    use turborel_studio_core::assistant::toolbox::open_session;
+    use turborel_studio_core::saved::{Environment, SavedConnection, SavedEmbedded};
+    let dir = scratch.path("beside");
+    let (manager, _) = scratch.manager();
+    let users = open(&manager, &spec(&dir, true)).unwrap();
+    run(&manager, users.connection, "CREATE TABLE NOTES (ID INTEGER PRIMARY KEY)").unwrap();
+    run(&manager, users.connection, "INSERT INTO NOTES VALUES (1), (2)").unwrap();
+    run(&manager, users.connection, "COMMIT").unwrap();
+    let embedded = SavedEmbedded { directory: dir.clone(), keys: None, checksum_key: None, plugin_directories: None, user: None };
+    let saved = SavedConnection {
+        id: "beside".into(),
+        name: "beside".into(),
+        folder: Vec::new(),
+        spec: turborel_studio_core::connections::spec::ConnectionSpec::default(),
+        environment: Environment::Development,
+        colour: None,
+        read_only: false,
+        pinned: false,
+        favourites: Vec::new(),
+        embedded: Some(embedded),
+    };
+    let assistants = open_session(&manager, &saved, (None, None), &ConnectionPolicy::default()).unwrap();
+    assert_ne!(assistants.connection, users.connection);
+    assert_eq!(column(&manager, assistants.connection, "SELECT COUNT(*) FROM NOTES"), [Some("2".to_owned())]);
+    assert!(run(&manager, assistants.connection, "INSERT INTO NOTES VALUES (3)").is_err(), "the assistant's session wrote");
+    manager.close(users.connection).unwrap();
+    assert_eq!(column(&manager, assistants.connection, "SELECT COUNT(*) FROM NOTES"), [Some("2".to_owned())]);
+    manager.close(assistants.connection).unwrap();
+    let again = open(&manager, &spec(&dir, false)).unwrap();
+    manager.close(again.connection).unwrap();
+}

@@ -119,6 +119,7 @@ const TESTS: &[(&str, Test)] = &[
     ("a_killed_process_is_recovered", opening::a_killed_process_is_recovered),
     ("an_in_memory_database_is_not_saved", opening::an_in_memory_database_is_not_saved),
     ("plug_ins_are_listed", opening::plug_ins_are_listed),
+    ("the_assistant_opens_a_session_beside_the_users", opening::the_assistant_opens_a_session_beside_the_users),
     ("a_query_is_paged_through_its_cursor", requests::a_query_is_paged_through_its_cursor),
     ("parameters_and_large_objects", requests::parameters_and_large_objects),
     ("the_transaction_is_followed", requests::the_transaction_is_followed),
