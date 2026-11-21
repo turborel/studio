@@ -1,6 +1,6 @@
 /**
  * An operator's kind (RULES.md D54), of its name as EXPLAIN writes it:
- * a data change, a scan, a scan by an index, a join, a semi join, an antijoin, a range
+ * a data change, a scan, a scan by an index, a join, a semi join, an antijoin, a mark join, a range
  * join, a sort, an aggregate,
  * a limit, a part run in parallel, a filter, a projection or another; and
  * its icon. A range join's search is read of its note: the value its right
@@ -21,6 +21,7 @@ export type OperatorKind =
   | "join"
   | "semiJoin"
   | "antiJoin"
+  | "markJoin"
   | "rangeJoin"
   | "sort"
   | "aggregate"
@@ -38,6 +39,7 @@ export const KIND_ICONS: Readonly<Record<OperatorKind, IconName>> = {
   join: "join",
   semiJoin: "semiJoin",
   antiJoin: "antiJoin",
+  markJoin: "markJoin",
   rangeJoin: "rangeJoin",
   sort: "sort",
   aggregate: "aggregate",
@@ -55,6 +57,7 @@ const KNOWN: readonly (readonly [OperatorKind, RegExp])[] = [
   ["rangeJoin", /^(Left)?RangeJoin$/u],
   ["semiJoin", /SemiJoin$|^Semi(?=[A-Z]|$)/u],
   ["antiJoin", /AntiJoin$|^Anti(?=[A-Z]|$)/u],
+  ["markJoin", /MarkJoin$|^Mark$/u],
   ["join", /(Join|NestedLoop|Product|join)$|^(Left|Right|Full|Inner|Semi|Anti)\b/u],
   ["scan", /Scan$/u],
   ["sort", /^(Sort|TopN|Order)/u],
@@ -104,6 +107,27 @@ export function semiOf(node: PlanNode): SemiSearch | null {
     return null;
   }
   return { anti: kind === "antiJoin", method: SEMI_METHODS.find(([test]) => test.test(node.operator))?.[1] ?? null };
+}
+
+/** How a mark join marks each row of its left: the comparison its mark ORs, if any, and how its right is searched. */
+export interface MarkSearch {
+  readonly marking: string | null;
+  readonly method: string | null;
+}
+
+/** How mark join `node` marks, of `HashMarkJoin` or `NestedLoopMarkJoin`'s note `(marking …)`, or the logical `Mark join on … marking …`; none of another operator. */
+export function markOf(node: PlanNode): MarkSearch | null {
+  if (kindOf(node) !== "markJoin") {
+    return null;
+  }
+  const note = node.notes.find((n) => n.startsWith("marking "))?.slice("marking ".length);
+  const logical = node.detail.split(" marking ").slice(1).join(" marking ");
+  const method = node.operator.startsWith("Hash")
+    ? "its right hashed by the values its rows are matched on"
+    : node.operator.startsWith("NestedLoop")
+      ? "a nested loop"
+      : null;
+  return { marking: note ?? (logical === "" ? null : logical), method };
 }
 
 /** How an aggregate groups: whether streamed, its keys, and what it computes. */

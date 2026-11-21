@@ -283,7 +283,13 @@ that group those rows, and the comparison it is pruned by. A semi join,
 as `HashSemiJoin`, `HashRightSemiJoin`, `NestedLoopSemiJoin` or
 `SemiIndexNestedLoop`, and an antijoin, as `HashAntiJoin` and its kin,
 each have an icon of their own, and their details say which it is and
-how it searches its right: hashed, a nested loop, or an index probed. An
+how it searches its right: hashed, a nested loop, or an index probed. A
+mark join, `HashMarkJoin` or `NestedLoopMarkJoin`, made of a correlated
+EXISTS, IN, NOT IN or SOME, ANY or ALL subquery under OR or NOT, in a
+CASE or in the select list, has an icon of its own too: its details say
+that each row of its left is given once, marked true, false or unknown
+by whether its right has a matching row, the comparison it marks by, and
+how it searches its right. An
 aggregate's details say how it groups: **Streamed**, a group made at a
 time over its input in the order of its keys, as `Aggregate streamed
 group by [...]` is, or of its input in any order; and the keys it groups

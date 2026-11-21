@@ -1263,7 +1263,8 @@ The review checklist:
   names main's physical plan gives, `HashSemiJoin`, `HashRightAntiJoin`,
   `NestedLoopSemiJoin`, `SemiIndexNestedLoop` and their kin, and the
   logical `Semi join` and `Anti join`, read for how they search their
-  right), a range join (`RangeJoin`, `LeftRangeJoin`,
+  right), a mark join (`HashMarkJoin`, `NestedLoopMarkJoin`, the logical
+  `Mark join`, read for what it marks by and how), a range join (`RangeJoin`, `LeftRangeJoin`,
   its note `sorted on … within … , pruned by …` read for the details), a
   sort, an aggregate (its `[streamed] group by […] computing […]`, or a
   `Distinct streamed`, read for the details: streamed or not, its keys

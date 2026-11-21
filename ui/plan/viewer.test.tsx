@@ -363,6 +363,26 @@ describe("the plan viewer", () => {
     expect(screen.getByRole("complementary", { name: "Operator" }).textContent).toContain("JoinSemi join");
   });
 
+  it("tells a mark join, what it marks and how [DOC sql/06-queries.md Correlated subqueries]", async () => {
+    catalogBackend({ catalog_table: () => refused() });
+    const store = await opened();
+    const id = openWorksheet(store, "SELECT 1");
+    const plan = parsePlan([
+      "-- physical:",
+      "HashMarkJoin S.DEPT = D.DEPT  (marking S.PAY > D.FLOOR)  (hashed on S.DEPT = D.DEPT)",
+      "  SeqScan ANN.STAFF  (rows=10)",
+      "  SeqScan ANN.DEPT  (rows=3)",
+    ]);
+    within(store, <PlanViewer id={id} plans={[plan]} />);
+    await settle();
+    fireEvent.click(screen.getByRole("radio", { name: "Tree-Table" }));
+    fireEvent.click(screen.getAllByRole("row")[1] ?? document.body);
+    const mark = screen.getByRole("complementary", { name: "Operator" }).textContent;
+    expect(mark).toContain("JoinMark join: each row of its left once, marked true, false or unknown");
+    expect(mark).toContain("MarkingS.PAY > D.FLOOR");
+    expect(mark).toContain("Byits right hashed by the values its rows are matched on");
+  });
+
   it("tells a streamed grouping, its keys and what it computes, in an aggregate's details [DOC sql/statements/explain.md EXAMPLES]", async () => {
     catalogBackend({ catalog_table: () => refused() });
     const store = await opened();

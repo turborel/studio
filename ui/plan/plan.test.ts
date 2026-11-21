@@ -1,5 +1,5 @@
 import { misestimated, operators, parsePlan } from "./plan";
-import { groupingOf, kindOf, rangeOf, semiOf } from "./kinds";
+import { groupingOf, kindOf, markOf, rangeOf, semiOf } from "./kinds";
 import { ownTime } from "./summary";
 
 /** The lines of a plan as EXPLAIN gives them, one row each, the result's left margin taken off. */
@@ -336,5 +336,26 @@ describe("what EXPLAIN ANALYZE tells an operator did", () => {
     expect([plan.ran, plan.ranChanged]).toEqual([50, true]);
     expect(nodes.at(-1)?.reads?.leafPages).toBe(8);
     expect(physical("join").plan.ranChanged).toBe(false);
+  });
+});
+
+describe("mark joins", () => {
+  it("are known by each name EXPLAIN gives them, with what they mark and how [DOC sql/06-queries.md Correlated subqueries]", () => {
+    const hashed = "HashMarkJoin S.DEPT = D.DEPT  (marking S.PAY > D.FLOOR)  (hashed on S.DEPT = D.DEPT)";
+    const [hash] = parsePlan(["-- physical:", hashed, ""]).stages[0]?.roots ?? [];
+    expect(hash === undefined ? null : [kindOf(hash), markOf(hash)]).toEqual([
+      "markJoin",
+      { marking: "S.PAY > D.FLOOR", method: "its right hashed by the values its rows are matched on" },
+    ]);
+    const [nested] = parsePlan(["-- physical:", "NestedLoopMarkJoin S.N < T.N", ""]).stages[0]?.roots ?? [];
+    expect(nested === undefined ? null : markOf(nested)).toEqual({ marking: null, method: "a nested loop" });
+    const [logical] =
+      parsePlan(["-- bound:", "Mark join on S.DEPT = D.DEPT marking S.PAY > D.FLOOR", ""]).stages[0]?.roots ?? [];
+    expect(logical === undefined ? null : [kindOf(logical), markOf(logical)]).toEqual([
+      "markJoin",
+      { marking: "S.PAY > D.FLOOR", method: null },
+    ]);
+    const [semi] = parsePlan(["-- physical:", "HashSemiJoin A.K = B.K", ""]).stages[0]?.roots ?? [];
+    expect(semi === undefined ? null : markOf(semi)).toBeNull();
   });
 });

@@ -104,6 +104,7 @@ import { CodeIcon } from "@phosphor-icons/react/dist/csr/Code";
 import { BinaryIcon } from "@phosphor-icons/react/dist/csr/Binary";
 import { VectorThreeIcon } from "@phosphor-icons/react/dist/csr/VectorThree";
 import { PushPinSlashIcon } from "@phosphor-icons/react/dist/csr/PushPinSlash";
+import { TagIcon } from "@phosphor-icons/react/dist/csr/Tag";
 import { IntersectIcon } from "@phosphor-icons/react/dist/csr/Intersect";
 import { SubtractIcon } from "@phosphor-icons/react/dist/csr/Subtract";
 import { FolderPlusIcon } from "@phosphor-icons/react/dist/csr/FolderPlus";
@@ -218,6 +219,7 @@ const ICONS = {
   rangeJoin: [ArrowsInLineHorizontalIcon, "plain"],
   semiJoin: [IntersectIcon, "plain"],
   antiJoin: [SubtractIcon, "plain"],
+  markJoin: [TagIcon, "plain"],
   tree: [TreeViewIcon, "plain"],
   assistant: [ChatsCircleIcon, "plain"],
   tool: [WrenchIcon, "plain"],

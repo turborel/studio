@@ -8,7 +8,8 @@
  * copied. A node chosen shows every detail in a side panel. Two plans are
  * compared side by side, the operators changed marked.
  */
-import { Fragment, useContext, useMemo, useState } from "react";
+import { KindDetails } from "./OperatorDetails";
+import { useContext, useMemo, useState } from "react";
 import { openDdl } from "../data/ddlActions";
 import { show } from "../state/actions";
 import { useStore, useStudio } from "../state/store";
@@ -21,7 +22,6 @@ import { placed } from "./flow";
 import type { Plan, PlanNode, Stage } from "./plan";
 import { PlanGraph, nodeFigures } from "./PlanGraph";
 import { PlanTable } from "./PlanTable";
-import { groupingOf, rangeOf, semiOf } from "./kinds";
 import { type PlanSummary, type PlanWarning, summarize } from "./summary";
 
 /** How a stage is drawn. */
@@ -111,124 +111,6 @@ function Warning({ warning, id }: { readonly warning: PlanWarning; readonly id: 
   );
 }
 
-/** What a range join searches by, of `node` if it is one. */
-function RangeDetails({ node }: { readonly node: PlanNode }) {
-  const range = rangeOf(node);
-  if (range === null) {
-    return null;
-  }
-  return (
-    <>
-      <dt>Sorted on</dt>
-      <dd>{range.sorted}</dd>
-      {range.within.length > 0 && (
-        <>
-          <dt>Grouped by</dt>
-          <dd>{range.within.join(", ")}</dd>
-        </>
-      )}
-      {range.pruned !== null && (
-        <>
-          <dt>Pruned by</dt>
-          <dd>{range.pruned}</dd>
-        </>
-      )}
-    </>
-  );
-}
-
-/** What `node` did beyond its rows: the rows it changed, its batches, its spill and its reads of an index. */
-function DoneDetails({ node }: { readonly node: PlanNode }) {
-  const told: (readonly [string, string])[] = [];
-  if (node.changed !== null) {
-    told.push(["Rows changed", String(node.changed)]);
-  }
-  if (node.batches !== null) {
-    told.push(["Batches", `${String(node.batches.count)}, of ${String(node.batches.meanRows)} rows on average`]);
-  }
-  if (node.spilled !== null) {
-    const { bytes, partitions, passes } = node.spilled;
-    told.push([
-      "Spilled",
-      `${String(bytes)} bytes, to ${String(partitions)} partitions, read back in ${String(passes)} passes`,
-    ]);
-  }
-  const reads = node.reads;
-  if (reads !== null) {
-    const parts: (readonly [string, number | null])[] = [
-      ["entries", reads.entries],
-      ["fetched", reads.fetched],
-      ["rechecked", reads.rechecked],
-      ["leaf pages", reads.leafPages],
-    ];
-    told.push(["Read", parts.flatMap(([name, n]) => (n === null ? [] : [`${name} ${String(n)}`])).join(", ")]);
-  }
-  return (
-    <>
-      {told.map(([name, value]) => (
-        <Fragment key={name}>
-          <dt>{name}</dt>
-          <dd>{value}</dd>
-        </Fragment>
-      ))}
-    </>
-  );
-}
-
-/** How semi join or antijoin `node` joins: what of its left it keeps, and how it searches its right. */
-function SemiDetails({ node }: { readonly node: PlanNode }) {
-  const semi = semiOf(node);
-  if (semi === null) {
-    return null;
-  }
-  return (
-    <>
-      <dt>Join</dt>
-      <dd>
-        {semi.anti
-          ? "Antijoin: each row of its left that no row of its right matches"
-          : "Semi join: each row of its left at its first match on its right, once"}
-      </dd>
-      {semi.method !== null && (
-        <>
-          <dt>By</dt>
-          <dd>{semi.method}</dd>
-        </>
-      )}
-    </>
-  );
-}
-
-/** How aggregate `node` groups: streamed or not, by which keys, computing what. */
-function GroupingDetails({ node }: { readonly node: PlanNode }) {
-  const grouping = groupingOf(node);
-  if (grouping === null) {
-    return null;
-  }
-  return (
-    <>
-      <dt>Grouping</dt>
-      <dd>
-        {grouping.streamed
-          ? "Streamed: a group made at a time, over its input in the order of its keys"
-          : "Of its input in any order"}
-      </dd>
-      {grouping.keys.length > 0 && (
-        <>
-          <dt>Grouped by</dt>
-          <dd>{grouping.keys.join(", ")}</dd>
-        </>
-      )}
-      {grouping.computing.length > 0 && (
-        <>
-          <dt>Computing</dt>
-          <dd>{grouping.computing.join(", ")}</dd>
-        </>
-      )}
-    </>
-  );
-}
-
 /** Every detail of operator `node`: its name, what it reads and is of, its notes and figures, and its line. */
 function Details({ node, onClose }: { readonly node: PlanNode; readonly onClose: () => void }) {
   return (
@@ -251,10 +133,7 @@ function Details({ node, onClose }: { readonly node: PlanNode; readonly onClose:
             <dd>{String(node.degree)}</dd>
           </>
         )}
-        <RangeDetails node={node} />
-        <GroupingDetails node={node} />
-        <SemiDetails node={node} />
-        <DoneDetails node={node} />
+        <KindDetails node={node} />
         <dt>Notes</dt>
         <dd>{node.notes.length === 0 ? "none" : node.notes.join("; ")}</dd>
         <dt>Line</dt>
