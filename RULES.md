@@ -1553,7 +1553,7 @@ The review checklist:
   autocommit as it was. By statements a server and an embedded database
   both run, so the same on each.
 - **The setting:** `analyzeKeepsChanges`, off at first, makes Analyze
-  and Keep Changes the first choice.
+  and Keep Changes the first choice; settled as it is.
 - *Why:* EXPLAIN ANALYZE of a change is the change; a person asking for
   its plan seldom means to keep it, and must not be surprised by it.
 

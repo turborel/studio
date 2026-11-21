@@ -66,7 +66,5 @@ Code never cites this file (R-DOC-5).
 - The nightly's trigger after verify on main, written and left off,
   turned on once its installers are seen to build on each platform; and
   macOS on Intel, once a runner of its own is there.
-- The documentation site copying `doc/images/`, and rewriting an image's
-  link to where it copies it, which is the site's to do.
 - The full manual, every feature checked again against turborel-client
   and Turborel's manual at the pinned commit.
