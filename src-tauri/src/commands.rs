@@ -8,6 +8,7 @@ mod catalog;
 pub(crate) mod connections;
 pub(crate) mod data;
 mod files;
+mod live;
 mod preferences;
 mod saved;
 mod worksheet;
@@ -28,6 +29,24 @@ fn app_info() -> AppInfo {
 pub(crate) fn handler<R: Runtime>() -> impl Fn(Invoke<R>) -> bool + Send + Sync + 'static {
     tauri::generate_handler![
         app_info,
+        live::live_settings,
+        live::save_live_settings,
+        live::live_status,
+        live::live_present,
+        live::live_invite,
+        live::live_answer,
+        live::live_remove,
+        live::live_grant,
+        live::live_hand_over,
+        live::live_choose,
+        live::live_publish,
+        live::live_end,
+        live::live_join,
+        live::live_hand,
+        live::live_suggest,
+        live::live_leave,
+        live::live_audit,
+        live::clear_live_audit,
         assistant::assistant_settings,
         assistant::save_assistant_settings,
         assistant::set_assistant_key,

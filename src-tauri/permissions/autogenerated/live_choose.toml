@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-live-choose"
+description = "Enables the live_choose command without any pre-configured scope."
+commands.allow = ["live_choose"]
+
+[[permission]]
+identifier = "deny-live-choose"
+description = "Denies the live_choose command without any pre-configured scope."
+commands.deny = ["live_choose"]

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-live-end"
+description = "Enables the live_end command without any pre-configured scope."
+commands.allow = ["live_end"]
+
+[[permission]]
+identifier = "deny-live-end"
+description = "Denies the live_end command without any pre-configured scope."
+commands.deny = ["live_end"]

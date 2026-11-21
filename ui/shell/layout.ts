@@ -13,6 +13,7 @@ export const PANELS = {
   worksheet: { id: "worksheet", title: "Worksheet" },
   model: { id: "model", title: "Model" },
   assistant: { id: "assistant", title: "Assistant" },
+  live: { id: "live", title: "Live Session" },
 } as const;
 
 /** The width of the side panels as the layout first opens, in pixels. */
@@ -45,7 +46,10 @@ export function defaultLayout(api: DockviewApi): void {
 }
 
 /** Shows panel `id`, added where its kind goes if the layout has it not. */
-export function showPanel(api: DockviewApi, id: typeof PANELS.assistant.id | typeof PANELS.details.id): void {
+export function showPanel(
+  api: DockviewApi,
+  id: typeof PANELS.assistant.id | typeof PANELS.details.id | typeof PANELS.live.id,
+): void {
   const panel = api.getPanel(id);
   if (panel !== undefined) {
     panel.api.setActive();

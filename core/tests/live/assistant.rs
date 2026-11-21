@@ -5,7 +5,6 @@
 use std::cell::RefCell;
 
 use serde_json::{Map, Value, json};
-use turborel_studio_core::assistant::audit::Audit;
 use turborel_studio_core::assistant::http::Endpoint;
 use turborel_studio_core::assistant::mock::{Answer, MockModel, anthropic_stream};
 use turborel_studio_core::assistant::policy::{ConnectionPolicy, Level};
@@ -150,7 +149,7 @@ pub fn a_turn_of_the_mock_model_calls_the_server(live: &Live) {
     ]);
     let dir = std::env::temp_dir().join(format!("studio-live-audit-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
-    let audit = Audit::new(&dir);
+    let audit = turborel_studio_core::assistant::audit::audit(&dir);
     let endpoint = Endpoint { base: mock.url.clone(), wire: Wire::Anthropic, claude: true, key: Some(Secret::new("sk-test")) };
     let settings = AssistantSettings { enabled: true, ..AssistantSettings::default() };
     let parts = Parts { endpoint: &endpoint, settings: &settings, policy: &policy, connection: "live", audit: &audit };

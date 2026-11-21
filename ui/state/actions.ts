@@ -5,6 +5,7 @@
  */
 import { listReports, type ReportList } from "../ipc/analyzer";
 import { assistantAsked, assistantTold } from "../assistant/chat";
+import { guestTold, hostTold } from "../live/live";
 import {
   cancelStatement,
   closeConnection,
@@ -284,6 +285,10 @@ export function told(store: Store, event: StudioEvent): void {
         position: null,
       });
     }
+  } else if (event.kind === "liveHost") {
+    hostTold(store, event.event);
+  } else if (event.kind === "liveGuest") {
+    guestTold(store, event.event);
   } else if (event.kind === "assistant") {
     assistantTold(store, event.conversation, event.event);
   } else if (event.kind === "assistantAsks") {

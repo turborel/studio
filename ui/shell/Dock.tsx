@@ -31,6 +31,7 @@ import { DetailsPanel, ExplorerPanel, WelcomePanel } from "./panels";
 import { activateModel, closeModel, type ModelDoc } from "../model/models";
 import { ModelView } from "../model/ModelView";
 import { AssistantPanel } from "../assistant/AssistantPanel";
+import { LivePanel } from "../live/LivePanel";
 import { useMenu } from "./ContextMenu";
 import { tabMenu } from "../worksheet/menus";
 
@@ -57,6 +58,7 @@ const COMPONENTS = {
   [PANELS.worksheet.id]: WorksheetPanel,
   [PANELS.model.id]: ModelPanel,
   [PANELS.assistant.id]: AssistantPanel,
+  [PANELS.live.id]: LivePanel,
 };
 
 /** The icon of each panel's tab, by its component. */
@@ -67,6 +69,7 @@ export const TAB_ICONS: Readonly<Record<string, IconName>> = {
   [PANELS.worksheet.id]: "worksheet",
   [PANELS.model.id]: "graph",
   [PANELS.assistant.id]: "assistant",
+  [PANELS.live.id]: "present",
 };
 
 /** A panel's tab: its icon, then dockview's own tab of its title. */
@@ -80,6 +83,9 @@ export function Tab(props: IDockviewPanelHeaderProps) {
   });
   const store = useStore();
   const worksheet = typeof params.id === "string" && props.api.component === PANELS.worksheet.id ? params.id : null;
+  const shared = useStudio(
+    (s) => typeof params.id === "string" && s.live.status.hosted !== null && s.live.shared.includes(params.id),
+  );
   const menu = useMenu(() =>
     worksheet === null
       ? []
@@ -99,6 +105,11 @@ export function Tab(props: IDockviewPanelHeaderProps) {
     >
       {icon !== undefined && <Icon name={icon} />}
       <DockviewDefaultTab {...props} />
+      {shared && (
+        <span className="dock-shared" title="Shared in the Live Session" aria-label="shared">
+          <Icon name="shared" />
+        </span>
+      )}
     </div>
   );
 }

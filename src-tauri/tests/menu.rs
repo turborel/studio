@@ -13,7 +13,7 @@ fn the_menu_bar_holds_every_menu() {
     let app = mock_builder().build(turborel_studio::context()).unwrap();
     let bar = menu::build(app.handle()).unwrap();
     let titles: Vec<String> = bar.items().unwrap().iter().filter_map(|item| item.as_submenu().map(|s| s.text().unwrap())).collect();
-    let expected: Vec<String> = ["File", "Edit", "Worksheet", "Connection", "View", "Window", "Help"].map(str::to_owned).to_vec();
+    let expected: Vec<String> = ["File", "Edit", "Worksheet", "Connection", "View", "Live", "Window", "Help"].map(str::to_owned).to_vec();
     assert!(titles.ends_with(&expected), "{titles:?}");
     for (_, items) in MENUS {
         for (id, _) in items.iter().flatten() {

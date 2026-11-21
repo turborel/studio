@@ -24,6 +24,8 @@ so a crash leaves the old file or the new. None holds a password.
 | `assistant.json` | the configuration | the assistant's settings, of no key |
 | `assistant-policy.json` | the configuration | the assistant's policy of each saved connection |
 | `assistant-audit.jsonl` | the configuration | the assistant's log, an entry a line |
+| `live-sessions.json` | the configuration | Live Sessions' settings |
+| `live-sessions-audit.jsonl` | the configuration | Live Sessions' log, an entry a line |
 | `failures.log` | the configuration | the failures the window did not handle, a line each |
 | `turborel-studio-*` | the cache, `results` | a result's pages, sealed, while it is open |
 
@@ -293,6 +295,60 @@ nor a row's value.
 
 ```json
 {"format":1,"time":1795046400,"provider":"claude","model":"claude-opus-5-5","connection":"Orders","sent":["schema","sql"],"tools":[{"name":"run_query","outcome":"approved"}],"stop":"toolUse","usage":{"input":5120,"output":240,"cacheRead":4800,"cacheWritten":0}}
+```
+
+## live-sessions.json
+
+Live Sessions' settings ([Live Sessions](../user/11-live-sessions.md#the-settings)):
+whether sessions are on, `enabled`; the name others see, `name`; what
+each environment shares, `share`, and whether its values too,
+`values`; the rows of a result shared, `rowLimit`, from 1 to 10,000;
+the columns whose values are masked, `maskedColumns`, at most 500;
+whether viewers may copy, `allowCopy`; whether a viewer may be granted
+Suggest, `allowSuggest`; the most viewers, `maxViewers`, from 1 to 64;
+an invitation's minutes, `inviteMinutes`, from 1 to 60; how a presenter
+is reached, `connectivity`; and whether a session may widen these,
+`locked` false, or not.
+
+```json
+{
+  "format": 1,
+  "enabled": true,
+  "name": "Ann",
+  "environments": {
+    "development": { "share": true, "values": true },
+    "test": { "share": true, "values": true },
+    "production": { "share": true, "values": false }
+  },
+  "rowLimit": 100,
+  "maskedColumns": ["SALARY"],
+  "allowCopy": false,
+  "allowSuggest": true,
+  "maxViewers": 10,
+  "inviteMinutes": 10,
+  "connectivity": {
+    "direct": true,
+    "port": 0,
+    "advertise": [],
+    "relay": false,
+    "relayAddress": "",
+    "relayFingerprint": ""
+  },
+  "locked": false
+}
+```
+
+## live-sessions-audit.jsonl
+
+Live Sessions' log ([Live Sessions](../user/11-live-sessions.md#the-log)):
+a line of JSON each event, of format 1, its time in seconds since 1970,
+what happened, `what`, of whom, `who`, a participant's name, and more
+of it, `detail`, as a suggestion's SQL, at most 4096 characters. It is
+begun again past 1 MiB, the old let go. It holds no workspace, nor a
+secret.
+
+```json
+{"format":1,"time":1795046400,"what":"admitted","who":"Bob","detail":null}
 ```
 
 ## A model's file

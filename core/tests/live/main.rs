@@ -32,6 +32,7 @@ mod data;
 mod guards;
 mod server;
 mod session;
+mod sessions;
 mod statements;
 
 use std::panic::{AssertUnwindSafe, catch_unwind};
@@ -155,6 +156,7 @@ const TESTS: &[(&str, Test)] = &[
     ("the_assistants_tools_run_read_only", assistant::the_assistants_tools_run_read_only),
     ("a_turn_of_the_mock_model_calls_the_server", assistant::a_turn_of_the_mock_model_calls_the_server),
     ("a_conversation_runs_on_its_own_thread", assistant::a_conversation_runs_on_its_own_thread),
+    ("no_setting_nor_secret_is_shared", sessions::no_setting_nor_secret_is_shared),
     ("a_running_statement_is_cancelled", session::a_running_statement_is_cancelled),
     ("the_transaction_is_followed", session::the_transaction_is_followed),
     ("a_lost_connection_is_told_and_reconnected", session::a_lost_connection_is_told_and_reconnected),

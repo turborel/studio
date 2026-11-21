@@ -14,6 +14,9 @@ import { ArrowsSplitIcon } from "@phosphor-icons/react/dist/csr/ArrowsSplit";
 import { ScissorsIcon } from "@phosphor-icons/react/dist/csr/Scissors";
 import { ArrowsMergeIcon } from "@phosphor-icons/react/dist/csr/ArrowsMerge";
 import { TreeViewIcon } from "@phosphor-icons/react/dist/csr/TreeView";
+import { BroadcastIcon } from "@phosphor-icons/react/dist/csr/Broadcast";
+import { SignInIcon } from "@phosphor-icons/react/dist/csr/SignIn";
+import { ShareNetworkIcon } from "@phosphor-icons/react/dist/csr/ShareNetwork";
 import { ArrowsInLineHorizontalIcon } from "@phosphor-icons/react/dist/csr/ArrowsInLineHorizontal";
 import { ChatsCircleIcon } from "@phosphor-icons/react/dist/csr/ChatsCircle";
 import { WrenchIcon } from "@phosphor-icons/react/dist/csr/Wrench";
@@ -204,6 +207,9 @@ const ICONS = {
   tree: [TreeViewIcon, "plain"],
   assistant: [ChatsCircleIcon, "plain"],
   tool: [WrenchIcon, "plain"],
+  present: [BroadcastIcon, "plain"],
+  joinSession: [SignInIcon, "plain"],
+  shared: [ShareNetworkIcon, "plain"],
 } as const satisfies Record<string, readonly [PhosphorIcon, Tone]>;
 
 /** An icon's name. */

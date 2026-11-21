@@ -449,6 +449,15 @@ impl ConnectionManager {
         }
     }
 
+    /// The environment of connection `id`, as its guards were given it.
+    ///
+    /// # Errors
+    ///
+    /// SQLCODE -910 of a connection not open.
+    pub fn environment(&self, id: ConnectionId) -> Result<crate::saved::Environment> {
+        Ok(self.handles().get(&id).ok_or_else(|| unknown(id))?.guards.environment)
+    }
+
     /// What connection `id`'s guards would ask of `script` before it runs,
     /// if anything (RULES.md D29).
     ///

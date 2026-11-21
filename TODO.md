@@ -46,11 +46,11 @@ Code never cites this file (R-DOC-5).
 
 ## M10 Live Sessions
 
-- Present and Join: a presenter shares the workspace's state live with
-  viewers, never a secret, the connection or its settings; invites,
-  approval by a safety code, QUIC on TLS 1.3 with the certificate pinned,
-  end to end through a relay, revoked at any time; the policy file; the
-  `studio-relay` program; their tests.
+- A check across machines, for the owner: two computers on one network,
+  one presenting and one joining directly; then both through a
+  `studio-relay` on a third, reached by its address and fingerprint.
+- Whether Turborel runs a public relay, and its address, is the owner's
+  decision; until then no relay is set.
 
 ## M11 Administration
 

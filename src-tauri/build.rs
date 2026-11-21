@@ -10,8 +10,26 @@
 /// Every command the application defines, as `src/commands.rs` registers
 /// them and `capabilities/main.json` grants them; the checks tool holds the
 /// three lists equal.
-const COMMANDS: [&str; 81] = [
+const COMMANDS: [&str; 99] = [
     "app_info",
+    "live_settings",
+    "save_live_settings",
+    "live_status",
+    "live_present",
+    "live_invite",
+    "live_answer",
+    "live_remove",
+    "live_grant",
+    "live_hand_over",
+    "live_choose",
+    "live_publish",
+    "live_end",
+    "live_join",
+    "live_hand",
+    "live_suggest",
+    "live_leave",
+    "live_audit",
+    "clear_live_audit",
     "assistant_settings",
     "save_assistant_settings",
     "set_assistant_key",

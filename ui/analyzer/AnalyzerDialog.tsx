@@ -6,6 +6,7 @@
  * why it cannot be shown yet.
  */
 import { useEffect, useState } from "react";
+import { changeLive } from "../live/live";
 import { type Analysis, catalogAnalysis, type Finding } from "../ipc/analyzer";
 import { openDdl } from "../data/ddlActions";
 import { show } from "../state/actions";
@@ -238,6 +239,33 @@ function AnalyzerBody(props: {
   }
 }
 
+/** Shares the findings of `found`, titled `title`, of `connection`, in the Live Session hosted. */
+function ShareFindings(props: {
+  readonly connection: number;
+  readonly title: string;
+  readonly found: Analysis | string | null;
+}) {
+  const store = useStore();
+  const hosting = useStudio((s) => s.live.status.hosted !== null);
+  const found = props.found;
+  if (!hosting || typeof found !== "object" || found === null) {
+    return null;
+  }
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        changeLive(store, (l) => ({
+          ...l,
+          findings: { title: props.title, connection: props.connection, findings: found.findings },
+        }));
+      }}
+    >
+      Share in Live Session
+    </button>
+  );
+}
+
 /** The analyzer of `schema` on `connection`, or of its table `table`, its tab `tab` shown first. */
 export function AnalyzerDialog(props: {
   readonly connection: number;
@@ -255,12 +283,9 @@ export function AnalyzerDialog(props: {
     show(store, null);
   };
   const open = (sql: string) => void openDdl(store, connection, { sql, title: `Fixes of ${schema}` }, false);
+  const of = table === undefined ? schema : `${schema}.${table}`;
   return (
-    <Modal
-      title={table === undefined ? `Analyze Schema ${schema}` : `Analyze Table ${schema}.${table}`}
-      onClose={close}
-      wide
-    >
+    <Modal title={`Analyze ${table === undefined ? "Schema" : "Table"} ${of}`} onClose={close} wide>
       <div role="tablist" className="tabs">
         {TABS.map(([t, name]) => (
           <button
@@ -278,6 +303,7 @@ export function AnalyzerDialog(props: {
       </div>
       <AnalyzerBody found={found} tab={tab} onOpen={open} />
       <div className="dialog-buttons">
+        <ShareFindings connection={connection} title={`Findings of ${of}`} found={found} />
         <button type="button" onClick={close}>
           Close
         </button>

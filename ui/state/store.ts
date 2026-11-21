@@ -18,6 +18,7 @@ import type { Chart, ReportList } from "../ipc/analyzer";
 import type { WhatIf } from "../analyzer/whatIf";
 import type { OpenMenu } from "../shell/ContextMenu";
 import { type Chat, newChat } from "../assistant/chat";
+import { type LiveState, NO_LIVE } from "../live/live";
 import type { WorksheetState } from "./worksheets";
 
 /** A connection open in this window. */
@@ -63,6 +64,8 @@ export type Dialog =
   | { readonly kind: "whatIf"; readonly whatIf: WhatIf }
   | { readonly kind: "report"; readonly sql: string; readonly chart: Chart | null }
   | { readonly kind: "assistantSettings" }
+  | { readonly kind: "liveSettings" }
+  | { readonly kind: "liveJoin" }
   | {
       readonly kind: "prompt";
       readonly title: string;
@@ -108,6 +111,8 @@ export interface StudioState {
   readonly activeModel: string | null;
   /** The assistant's conversation. */
   readonly chat: Chat;
+  /** Live Sessions. */
+  readonly live: LiveState;
 }
 
 /** The state before anything is loaded. */
@@ -134,6 +139,7 @@ export const INITIAL: StudioState = {
   models: [],
   activeModel: null,
   chat: newChat(),
+  live: NO_LIVE,
 };
 
 /** The store of a window: its state, and who reads it. */

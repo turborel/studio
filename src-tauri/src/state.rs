@@ -49,6 +49,8 @@ pub struct Studio {
     pub failures: Arc<turborel_studio_core::failures::Failures>,
     /// The assistant's conversations, settings, policies and log.
     pub assistant: Arc<turborel_studio_core::assistant::service::Service>,
+    /// Live Sessions.
+    pub live: Arc<turborel_studio_core::live::service::LiveService>,
 }
 
 /// Tells the backend's events to the webview.

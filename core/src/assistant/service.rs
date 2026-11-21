@@ -110,7 +110,7 @@ impl Service {
         Service {
             assistant: Assistant::new(dir, Arc::clone(&secrets)),
             policies: Policies::new(dir),
-            audit: Audit::new(dir),
+            audit: crate::assistant::audit::audit(dir),
             saved,
             secrets,
             manager,

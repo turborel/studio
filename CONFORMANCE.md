@@ -184,6 +184,8 @@ the manual.
 | S-FILE-7 | The history of what ran, with no statement of security | done |
 | S-FILE-8 | The favourite queries | done |
 | S-FILE-9 | The project folders | done |
+| S-FILE-10 | The assistant's settings and policies | done |
+| S-FILE-11 | Live Sessions' settings, and their log | done |
 
 ## Security
 
@@ -197,6 +199,7 @@ the manual.
 | S-SEC-6 | A statement that destroys asks first (R-SEC-8) | done |
 | S-SEC-7 | The webview's policy and capability (R-SEC-4, R-SEC-5) | done |
 | S-SEC-8 | The assistant sends only what the user chose, shown first, and its tools never act alone (R-SEC-12) | done |
+| S-SEC-9 | A Live Session shares no connection, setting nor secret; is encrypted end to end, its certificate pinned; admits each viewer by name and safety code | done |
 
 ## Implementation-defined
 
@@ -222,3 +225,4 @@ makes them.
 | S-LIMIT-3 | A large object's viewer reads at most | its first 16 MiB, a chunk of 256 KiB at a time | done |
 | S-LIMIT-4 | A worksheet's history | 1000 statements, each at most 64 KiB | done |
 | S-LIMIT-5 | The rows the assistant's `run_query` returns | the policy's, 100 at first, 1 to 10,000 | done |
+| S-LIMIT-6 | The rows of a result a Live Session shares | the settings', 100 at first, 1 to 10,000; the whole shared at most 8 MiB | done |

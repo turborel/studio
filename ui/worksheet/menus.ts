@@ -3,6 +3,7 @@
  * worksheet's commands of the registry; of its tab, close it, the others
  * or those to its right, pin, rename, duplicate, and show its connection.
  */
+import { toggleShared } from "../live/live";
 import type { MenuEntry, MenuItem } from "../shell/ContextMenu";
 import { prompted } from "../shell/PromptDialog";
 import { activate } from "../state/actions";
@@ -54,6 +55,18 @@ function copyItems(store: Store, w: WorksheetState): MenuItem[] {
 }
 
 /** The menu of worksheet `id`'s tab, of the worksheets of its group, `group`, in order. */
+/** The item that shares worksheet `id` in a Live Session, or stops. */
+function shareItem(store: Store, id: string): MenuItem {
+  const shared = store.current().live.shared.includes(id);
+  return {
+    label: shared ? "Stop Sharing in Live Session" : "Share in Live Session",
+    icon: "shared",
+    run: () => {
+      toggleShared(store, id);
+    },
+  };
+}
+
 export function tabMenu(store: Store, id: string, group: readonly string[]): MenuItem[] {
   const w = worksheetOf(store.current(), id);
   if (w === undefined) {
@@ -86,6 +99,7 @@ export function tabMenu(store: Store, id: string, group: readonly string[]): Men
       },
     },
     ...copyItems(store, w),
+    shareItem(store, id),
     {
       label: "Reveal Connection",
       icon: "connection",

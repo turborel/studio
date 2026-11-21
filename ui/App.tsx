@@ -30,6 +30,8 @@ import { WhatIfDialog } from "./analyzer/PlanFindings";
 import { SaveReportDialog } from "./analyzer/Reports";
 import { PromptDialog } from "./shell/PromptDialog";
 import { AssistantSettingsDialog } from "./assistant/AssistantSettings";
+import { JoinDialog, LiveSettingsDialog } from "./live/LiveDialogs";
+import { useLiveSync } from "./live/sync";
 import { showPanel } from "./shell/layout";
 import { CommandContextOf, ContextMenu } from "./shell/ContextMenu";
 import { applyTheme, DARK_QUERY, resolveTheme } from "./theme/theme";
@@ -153,6 +155,10 @@ function TaskDialogs({ dialog }: { readonly dialog: Dialog | null }) {
       return <PromptDialog {...dialog} />;
     case "assistantSettings":
       return <AssistantSettingsDialog />;
+    case "liveSettings":
+      return <LiveSettingsDialog />;
+    case "liveJoin":
+      return <JoinDialog />;
     default:
       return null;
   }
@@ -169,6 +175,7 @@ function nativeMenuOnlyInText(event: React.MouseEvent): void {
 /** The window's parts, within its store. */
 function Window({ store }: { readonly store: Store }) {
   const dock = useRef<DockviewApi | null>(null);
+  useLiveSync(store);
   const context = useMemo<CommandContext>(
     () => ({
       store,

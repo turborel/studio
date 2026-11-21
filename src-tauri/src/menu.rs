@@ -13,7 +13,7 @@ pub const MENU_EVENT: &str = "studio:menu";
 pub type Item = Option<(&'static str, &'static str)>;
 
 /// The menus, each its title and its items.
-pub const MENUS: [(&str, &[Item]); 6] = [
+pub const MENUS: [(&str, &[Item]); 7] = [
     (
         "File",
         &[
@@ -94,6 +94,20 @@ pub const MENUS: [(&str, &[Item]); 6] = [
             Some(("assistant.open", "Assistant")),
             Some(("assistant.settings", "Assistant Settings…")),
             Some(("layout.reset", "Reset Layout")),
+        ],
+    ),
+    (
+        "Live",
+        &[
+            Some(("live.present", "Present")),
+            Some(("live.join", "Join…")),
+            Some(("live.share", "Share Worksheet in Live Session")),
+            None,
+            Some(("live.end", "End Session")),
+            Some(("live.leave", "Leave Session")),
+            None,
+            Some(("live.open", "Live Session")),
+            Some(("live.settings", "Live Sessions Settings…")),
         ],
     ),
     ("Window", &[]),

@@ -12,6 +12,8 @@ pub mod events;
 pub mod failures;
 pub mod files;
 pub mod guard;
+pub mod jsonl;
+pub mod live;
 pub mod preferences;
 pub mod reports;
 pub mod saved;

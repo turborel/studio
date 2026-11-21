@@ -15,6 +15,7 @@ export const TOOLBAR: readonly (readonly string[])[] = [
   ["connection.new", "worksheet.new", "connection.disconnect", "connection.reconnect"],
   ["statement.cancel"],
   ["transaction.commit", "transaction.rollback"],
+  ["live.present", "live.join"],
   ["palette.open"],
 ];
 

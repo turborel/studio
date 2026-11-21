@@ -16,6 +16,7 @@ use turborel_studio_core::connections::manager::ConnectionManager;
 use turborel_studio_core::connections::spool;
 use turborel_studio_core::events::Hub;
 use turborel_studio_core::files::private_dir;
+use turborel_studio_core::live::service::LiveService;
 use turborel_studio_core::saved::{FILE as SAVED_FILE, SavedConnections};
 use turborel_studio_core::secrets::{Keychain, MemorySecrets, SecretStore};
 use turborel_studio_core::worksheet::files::Kept;
@@ -62,11 +63,13 @@ pub(crate) fn manage<R: Runtime>(
     hub.listen(Arc::new(WebviewEvents(app.handle().clone())));
     let connections = Arc::new(ConnectionManager::new(folders.results.clone(), hub.clone()));
     let saved = Arc::new(SavedConnections::new(folders.config.join(SAVED_FILE), Arc::clone(&secrets)));
-    let assistant = Arc::new(Service::new(&folders.config, (Arc::clone(&saved), secrets), Arc::clone(&connections), hub));
+    let assistant = Arc::new(Service::new(&folders.config, (Arc::clone(&saved), secrets), Arc::clone(&connections), hub.clone()));
+    let live = Arc::new(LiveService::new(&folders.config, Arc::clone(&connections), hub)?);
     app.manage(Studio {
         connections,
         saved,
         assistant,
+        live,
         config: folders.config.clone(),
         keychain,
         history: Arc::new(History::new(&folders.config)),

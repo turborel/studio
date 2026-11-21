@@ -6,7 +6,6 @@ use std::cell::RefCell;
 use serde_json::{Map, Value};
 
 use super::{Conversation, Host, Parts, Prompt, Question, ToolOutcome, Toolbox, TurnEvent, message_of, run_turn};
-use crate::assistant::audit::Audit;
 use crate::assistant::http::Endpoint;
 use crate::assistant::mock::{Answer, MockModel, anthropic_stream, chat_stream};
 use crate::assistant::policy::{ConnectionPolicy, Limits};
@@ -66,7 +65,7 @@ fn a_turn_runs_a_tool_and_answers() {
         Answer::Stream(anthropic_stream("STAFF has two columns.", &[], "end_turn")),
     ]);
     let dir = crate::testing::scratch("assistant/turn");
-    let audit = Audit::new(&dir);
+    let audit = crate::assistant::audit::audit(&dir);
     let settings = AssistantSettings { enabled: true, ..AssistantSettings::default() };
     let policy = ConnectionPolicy::default();
     let parts = Parts { endpoint: &claude(&mock), settings: &settings, policy: &policy, connection: "local", audit: &audit };
@@ -100,7 +99,7 @@ event: message_delta\ndata: {\"type\":\"message_delta\",\"delta\":{\"stop_reason
             .to_owned(),
     )]);
     let dir = crate::testing::scratch("assistant/refused");
-    let audit = Audit::new(&dir);
+    let audit = crate::assistant::audit::audit(&dir);
     let settings = AssistantSettings::default();
     let policy = ConnectionPolicy::default();
     let parts = Parts { endpoint: &claude(&mock), settings: &settings, policy: &policy, connection: "local", audit: &audit };
@@ -141,7 +140,7 @@ fn inputs_are_checked_calls_limited_and_tools_left_out() {
         Answer::Stream(chat_stream("Plain.", &[], "stop")),
     ]);
     let dir = crate::testing::scratch("assistant/limits");
-    let audit = Audit::new(&dir);
+    let audit = crate::assistant::audit::audit(&dir);
     let own = AssistantSettings {
         provider: Provider::Own,
         own: OwnModel { model: "local".into(), ..OwnModel::default() },

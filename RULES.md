@@ -95,6 +95,7 @@ Each is told in full in [§7](#7-the-decisions).
 | D53 | Context menus everywhere, of the registry, and a new worksheet a click away |
 | D54 | The plan viewer: a summary, a flow, a tree-table, the stages, the raw text last |
 | D55 | The assistant: off until turned on, called by the backend, its guard rails in code and the database |
+| D56 | Live Sessions: a workspace's state shared, filtered, end to end over QUIC, each viewer admitted |
 
 ---
 
@@ -111,6 +112,10 @@ Each is told in full in [§7](#7-the-decisions).
 | `core/src/saved.rs`, `secrets.rs` | saved connections, and the keychain (D16, D28) |
 | `core/src/preferences.rs`, `store.rs` | settings and the layout, and Studio's files of format 1 (R-FMT-1) |
 | `core/src/failures.rs` | the window's failures' log (D49) |
+| `core/src/jsonl.rs` | the logs of JSON lines: the assistant's and Live Sessions' (D55, D56) |
+| `core/src/assistant/` | the assistant: its settings, policies and guard rails, wire formats, tools, turns and conversations (D55) |
+| `core/src/live/` | Live Sessions in the backend: their settings, the workspace filtered, the log and the sessions (D56) |
+| `live/` | `turborel-studio-live`: invitations, the transport over QUIC, the host, the guest, and the relay, `studio-relay` (D56) |
 | `xtask/smoke/earlier/` | an earlier build's app data, for the smoke test of the real window (D49) |
 | `core/tests/live/` | the live tests, their harness and server (D27) |
 | `src-tauri/` | `turborel-studio`, the application: the window, its capability and the commands, each a thin layer over `core` (D1, D9) |
@@ -131,6 +136,8 @@ Each is told in full in [§7](#7-the-decisions).
 | `ui/results/` | a result's grid, its views and viewers, its copies, exports and comparisons, the timings (D39), and its rows edited (D42) |
 | `ui/model/` | models: their diagram, file, tables designed, and comparisons with schemas (D46, D47) |
 | `ui/builder/` | the query builder (D48) |
+| `ui/assistant/` | the assistant's panel and settings (D55) |
+| `ui/live/` | Live Sessions' panel, dialogs, the workspace shown and the workspace kept shared (D56) |
 | `core/src/analyzer.rs` | the analyzer's rules of the catalog and the settings (D50) |
 | `core/src/reports.rs` | the built-in reports, and the user's kept (D52) |
 | `ui/plan/` | the plan's parser, summary, flow, tree-table and viewer (D54) |
@@ -660,7 +667,7 @@ The review checklist:
   takes no more until it is reconnected by the settings it was made by.
 - **Events:** notices and losses go to one hub, the backend's one stream
   of events, which tells the webview, as the event `studio:event`, and
-  any other sink that listens, as a live session will.
+  any other sink that listens, as the tests' do.
 - *Why:* turborel-client is blocking, and a connection is one session
   answering one request at a time; a thread of its own keeps each
   session's order, and a named, held thread is one that ends (R-SAFE-5).
@@ -1291,6 +1298,66 @@ The review checklist:
   that can never, for example, drop a database. What it may do is
   decided by Studio and the database, never by what a model is told,
   so no answer, nor text it reads, talks its way past it.
+
+#### D56. Live Sessions: a workspace's state shared, filtered, end to end over QUIC, each viewer admitted
+
+- **What:** a presenter's workspace's state, of the tabs picked: a
+  worksheet's title, SQL, selection, the result shown, its latest 50
+  messages and plan; a model's diagram; the analyzer's findings; the tab
+  shown and the pointer. The window reads it four times a second and
+  sends what changed; the backend filters it (`core/src/live/share.rs`)
+  before it leaves: a tab's connection is never sent, its environment
+  read of the manager, a closed one judged production's; an environment
+  of no sharing left out, one of no values sent of no row nor message;
+  rows cut to the session's limit; masked columns of no value; 8 MiB at
+  most. A viewer reads what it is shown back into its shape, or drops it,
+  and holds it in memory alone.
+- **Crate:** `turborel-studio-live` (`live/`) knows nothing of a
+  workspace: invitations, the transport, the host, the guest, the relay.
+- **Transport:** QUIC by `quinn` 0.11.12, MIT and Apache-2.0, without its
+  default features (no ring), of `runtime-tokio` and `rustls-aws-lc-rs`;
+  TLS 1.3 alone by `rustls` 0.23.46 on aws-lc-rs; through a relay, a TLS
+  1.3 session of the guest and host inside the relay's stream, by
+  `tokio-rustls` 0.26.6; `tokio` 1.54.1, the runtime quinn and Tauri
+  share. quinn claims no 1.0: its makers' README tells of 30 releases
+  since 2018, tested on Linux, macOS and Windows on stable Rust; it is
+  the QUIC the owner named. Frames are JSON, each its length first, at
+  most 16 MiB.
+- **Identity:** a certificate made by `rcgen` for each session as it
+  starts, its key in memory alone; a guest accepts the certificate of
+  the invitation's fingerprint alone, its handshake's signature checked.
+- **Invitations:** `turborel-live:` and base64 of their JSON: the
+  session, the fingerprint, a 32-byte secret, the expiry, the direct
+  addresses and the relay; one use, 1 to 60 minutes.
+- **Admission:** a guest says hello with the secret and its name; the
+  host's user admits it by name beside the safety code, six digits of
+  the TLS session's exported keys (RFC 8446 §7.5), shown on both sides;
+  10 minutes, then refused. A refusal and the end are told before the
+  connection closes.
+- **Roles:** one presenter, the host or a guest it hands the role to,
+  whose state the host passes on; Suggest granted per guest, where the
+  settings allow, its SQL opened in a worksheet, never run by itself;
+  hands; remove; end.
+- **Relay:** `studio-relay`, no accounts, sessions in memory, the first
+  host of an identifier holding it while its connection lasts; limits
+  of sessions and guests; its certificate made at start or kept by
+  `--identity`, pinned by the fingerprint the settings name. No public
+  relay is set: whether one is run is the owner's decision.
+- **Settings and log:** `live-sessions.json`, format 1, every choice of a
+  safe default (production shares SQL and schema alone; no copying;
+  direct only), and a lock so a session never widens them;
+  `live-sessions-audit.jsonl`, D55's log of JSON lines.
+- **Threads:** the backend's runtime's, named `studio-live`; the relay's
+  `studio-relay`.
+- **Tests:** a host, guests and a relay in one process
+  (`live/tests/sessions.rs`): pinning, expired and used invitations, a
+  refused joiner, removal, the end, and a relay that reads nothing; two
+  Studios' services, directly and through a relay; and, live, a shared
+  worksheet of a connection to the server in which no setting nor
+  secret of the connection appears, nor in the bytes the relay passed.
+- *Why:* the owner asked that a presenter show their Studio to others,
+  securely, with nothing copied and pasted; what leaves is decided by
+  the backend, and no relay, nor anyone who is not admitted, reads it.
 
 ---
 

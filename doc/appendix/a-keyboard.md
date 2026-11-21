@@ -63,6 +63,13 @@ are bound.
 | Actual Size | View | Cmd+0 | Ctrl+0 |
 | Assistant | View | | |
 | Assistant Settings… | View | | |
+| Live Session | Live | | |
+| Present | Live | | |
+| Join… | Live | | |
+| Share Worksheet in Live Session | Live | | |
+| End Session | Live | | |
+| Leave Session | Live | | |
+| Live Sessions Settings… | Live | | |
 | Reset Layout | View | | |
 | About Turborel Studio | Help | | |
 | Keyboard Shortcuts | Help | F1 | F1 |

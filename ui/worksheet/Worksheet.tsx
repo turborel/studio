@@ -3,7 +3,8 @@
  * on, its editor with the outline of its statements, the values of its
  * script variables, and the panes below.
  */
-import { useState } from "react";
+import { pointerOf } from "../live/sync";
+import { useMemo, useState } from "react";
 import type { Piece } from "../ipc/worksheet";
 import { useStore, useStudio } from "../state/store";
 import type { CommandContext } from "../commands/commands";
@@ -227,6 +228,7 @@ export function Worksheet({ id }: { readonly id: string }) {
   const [share, setShare] = useState(EDITOR_SHARE);
   const store = useStore();
   const entry = useCommandEntry();
+  const pointer = useMemo(() => pointerOf(store, id), [store, id]);
   const menu = useMenu(() => {
     activateWorksheet(store, id);
     return editorMenu(entry);
@@ -235,7 +237,7 @@ export function Worksheet({ id }: { readonly id: string }) {
     return <div className="panel-empty">This worksheet is closed.</div>;
   }
   return (
-    <div className="worksheet" role="region" aria-label="Worksheet">
+    <div className="worksheet" role="region" aria-label="Worksheet" {...pointer}>
       <Bar id={id} />
       <Variables id={id} />
       <div className="worksheet-body" style={{ flexBasis: `${String(share)}%` }} {...menu}>

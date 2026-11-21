@@ -18,6 +18,7 @@ and at the top of the window on Linux and Windows. Its menus are:
 | **Worksheet** | Run Statement, Run Script, Run Script on a Folder's Connections…, Explain, Explain Analyze, Run to CSV File…, Run to Native Rows File…, Query Builder…, Format, Toggle Comment, Upper Case, Lower Case, Find and Replace…, Toggle Bookmark, Next Bookmark, Previous Bookmark, Go to Definition, Describe, Split Editor, Outline, Add to Favourite Queries…, Autocommit, Pin Tab, Close Worksheet, Close Other Worksheets |
 | **Connection** | Disconnect, Reconnect, Cancel Statement, Refresh Catalog, Analyze Schema…, Commit, Rollback |
 | **View** | Command Palette…, Theme: System, Theme: Light, Theme: Dark, Zoom In, Zoom Out, Actual Size, Assistant, Assistant Settings…, Reset Layout |
+| **Live** | Present, Join…, Share Worksheet in Live Session, End Session, Leave Session, Live Session, Live Sessions Settings… |
 | **Window** | Minimize, Full Screen |
 | **Help** | About Turborel Studio, Keyboard Shortcuts |
 
@@ -34,7 +35,8 @@ by **Help > Keyboard Shortcuts**.
 
 The toolbar holds the commands used most, each a button of its icon, in
 groups apart by a line: New Connection, New Worksheet, Disconnect and
-Reconnect; Cancel Statement; Commit and Rollback; and Command Palette. A button's tooltip
+Reconnect; Cancel Statement; Commit and Rollback; Present and Join
+([Live Sessions](11-live-sessions.md)); and Command Palette. A button's tooltip
 names it and its key, where it has one. A button that cannot act now, as
 Disconnect with no connection open, is disabled. The setting **Show the
 toolbar's labels beside its icons** adds each button's name.

@@ -62,6 +62,18 @@ pub enum Event {
         /// The question.
         question: crate::assistant::turn::Question,
     },
+    /// What happens at the session this Studio hosts (RULES.md D56).
+    #[serde(rename_all = "camelCase")]
+    LiveHost {
+        /// What happened.
+        event: turborel_studio_live::host::HostEvent,
+    },
+    /// What happens to this Studio as a guest of a session.
+    #[serde(rename_all = "camelCase")]
+    LiveGuest {
+        /// What happened.
+        event: turborel_studio_live::guest::GuestEvent,
+    },
 }
 
 /// What the backend tells its events to.
@@ -71,8 +83,7 @@ pub trait EventSink: Send + Sync {
 }
 
 /// The one stream of the backend's events, told to every sink that
-/// listens: the webview, and a live session's viewers once one is shared
-/// (RULES.md D24), so what is shared is what the window is told.
+/// listens: the webview, and the tests' sinks (RULES.md D24).
 #[derive(Default)]
 pub struct Hub(std::sync::RwLock<Vec<std::sync::Arc<dyn EventSink>>>);
 

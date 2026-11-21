@@ -27,13 +27,14 @@ import {
   toggleAutocommit,
 } from "../worksheet/commands";
 import type { ThemeChoice } from "../theme/theme";
+import { endSession, leave, present, toggleShared } from "../live/live";
 
 /** What a command is run with: the window's store, and its dock's layout reset. */
 export interface CommandContext {
   readonly store: Store;
   readonly resetLayout: () => void;
   /** Shows a panel of the dock, added if the layout has it not. */
-  readonly showPanel?: (id: "assistant" | "details") => void;
+  readonly showPanel?: (id: "assistant" | "details" | "live") => void;
 }
 
 /** A command. */
@@ -417,6 +418,75 @@ export const COMMANDS: readonly Command[] = [
     enabled: always,
     run: ({ store }) => {
       show(store, { kind: "assistantSettings" });
+    },
+  },
+  {
+    id: "live.open",
+    icon: "present",
+    title: "Live Session",
+    category: "Live",
+    enabled: always,
+    run: ({ showPanel }) => {
+      showPanel?.("live");
+    },
+  },
+  {
+    id: "live.present",
+    icon: "present",
+    title: "Present",
+    category: "Live",
+    enabled: ({ store }) => store.current().live.status.hosted === null && store.current().live.status.joined === null,
+    run: async ({ store, showPanel }) => {
+      showPanel?.("live");
+      await present(store);
+    },
+  },
+  {
+    id: "live.join",
+    icon: "joinSession",
+    title: "Join…",
+    category: "Live",
+    enabled: ({ store }) => store.current().live.status.hosted === null && store.current().live.status.joined === null,
+    run: ({ store, showPanel }) => {
+      showPanel?.("live");
+      show(store, { kind: "liveJoin" });
+    },
+  },
+  {
+    id: "live.share",
+    icon: "shared",
+    title: "Share Worksheet in Live Session",
+    category: "Live",
+    enabled: ({ store }) => store.current().activeWorksheet !== null,
+    run: ({ store }) => {
+      const id = store.current().activeWorksheet;
+      if (id !== null) {
+        toggleShared(store, id);
+      }
+    },
+  },
+  {
+    id: "live.end",
+    title: "End Session",
+    category: "Live",
+    enabled: ({ store }) => store.current().live.status.hosted !== null,
+    run: ({ store }) => endSession(store),
+  },
+  {
+    id: "live.leave",
+    title: "Leave Session",
+    category: "Live",
+    enabled: ({ store }) => store.current().live.status.joined !== null,
+    run: ({ store }) => leave(store),
+  },
+  {
+    id: "live.settings",
+    icon: "settings",
+    title: "Live Sessions Settings…",
+    category: "Live",
+    enabled: always,
+    run: ({ store }) => {
+      show(store, { kind: "liveSettings" });
     },
   },
   {
