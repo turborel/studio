@@ -33,8 +33,8 @@ by **Help > Keyboard Shortcuts**.
 ## The toolbar
 
 The toolbar holds the commands used most, each a button of its icon, in
-groups apart by a line: New Connection, Disconnect and Reconnect; Cancel
-Statement; Commit and Rollback; and Command Palette. A button's tooltip
+groups apart by a line: New Connection, New Worksheet, Disconnect and
+Reconnect; Cancel Statement; Commit and Rollback; and Command Palette. A button's tooltip
 names it and its key, where it has one. A button that cannot act now, as
 Disconnect with no connection open, is disabled. The setting **Show the
 toolbar's labels beside its icons** adds each button's name.
@@ -54,8 +54,10 @@ The dock holds the panels. When Studio is first opened:
 - the **Explorer** is on the left, with the connections, open and saved
   ([Connections](03-connections.md)), and the catalog of the active
   connection ([The Object Explorer](04-explorer.md));
-- the centre is the **Start** panel, and each worksheet opens there as a
-  tab of its own, marked by the colour of the connection it runs on;
+- the centre is the **Start** panel, whose **New Connection…** and
+  **New Worksheet** begin, and each worksheet opens there as a tab of
+  its own, marked by the colour of the connection it runs on; the **+**
+  after a group's tabs opens a new worksheet there;
 - **Details** is on the right, showing what is selected in the explorer.
 
 A panel is moved by dragging its tab: onto another group to join it, or
@@ -63,6 +65,43 @@ to a group's edge to split it. A group is resized by dragging the line
 between it and the next. Studio keeps the layout as it is left, and lays
 the window out so when it opens again. **View > Reset Layout** lays it
 out as it was first.
+
+## Context menus
+
+The secondary button, or Shift+F10 or the context menu key, opens the
+menu of what is under the pointer, or has the focus: its items, each
+with its icon and its key, are those its menus, buttons and the command
+palette offer of it. The arrow keys move through a menu, Right opens a
+submenu and Left closes it, Enter or Space chooses an item, and Escape
+closes the menu, the focus given back. An item that destroys is drawn in
+the colour of danger, and its statement runs in a worksheet of its own,
+through the connection's guards, as one typed would
+([Connections](03-connections.md#environments-and-guards)).
+
+| Of | Its menu |
+|---|---|
+| an open connection in the explorer | New Worksheet, on it; Refresh Catalog; Analyze Schema…; Edit Connection…; Copy URI, with no password; Reconnect; Disconnect |
+| a saved connection | Connect; Edit Connection…; Copy URI; Pin or Unpin; Delete…, which asks for its name typed |
+| a schema | New Worksheet, its schema set; Create Table…; Generate Script…; Open Model; Compare Schema…; Analyze Schema…; Copy Name; Properties; Refresh |
+| a table | New Worksheet; Open Data, its first 200 rows; Open Data Filtered…; Alter Table…; Indexes…; Analyze Table…; Import…; Export…; Compare Rows…; Script As CREATE, ALTER, DROP, SELECT, INSERT, UPDATE or DELETE, to a worksheet or the clipboard; Copy Name; Copy Qualified Name; Rename…; Drop Table; Dependencies; Properties; Refresh |
+| a view | New Worksheet; Open Data; Script As CREATE, SELECT or DROP; Copy Name; Copy Qualified Name; Drop View; Dependencies; Properties; Refresh |
+| a column, a constraint, an index or a trigger | Copy Name; Rename Column… and Drop Column, of a column; Drop Constraint, Drop Index or Drop Trigger; Properties |
+| a routine, a sequence, a domain or a type | Execute…, of a routine; Script As CREATE; Copy Name; Copy Qualified Name; its Drop; Properties |
+| a result's cell | Copy; Copy with Headers; Copy As each format; Filter to This Value; Filter Out This Value; Sort Ascending; Sort Descending; Hide Column; Show Hidden Columns; Freeze Up to This Column; Unfreeze Columns; View Value; Show in Record View; Edit Rows; Set to NULL; Export Selection… |
+| a result's header | Sort Ascending; Sort Descending; the column hidden, shown or frozen; Copy, of the column |
+| the editor | Run Statement; Run Script; Explain; Explain Analyze; Format; Toggle Comment; Upper Case; Lower Case; Go to Definition; Describe; Find and Replace…; Add to Favourite Queries… |
+| a worksheet's tab | Close; Close Others; Close to the Right; Pin Tab or Unpin Tab; Rename…; Duplicate; Reveal Connection |
+| a model's table | Edit Table…; Add Referenced Tables; Hide from Diagram; Script As CREATE, to a worksheet or the clipboard; Remove from Model |
+| a model's diagram | Add Table…; Lay Out Again; Show Hidden Tables |
+
+New Worksheet of a schema, or of a table, runs `SET SCHEMA` of its
+schema first in the new worksheet, where the session's is another; the
+session is the connection's, so every worksheet on it then runs in that
+schema. A routine's Execute… opens a worksheet that calls it, `CALL` of
+a procedure and `VALUES` of a function, each argument a `?` whose value
+the worksheet asks for as it runs. Close Others and Close to the Right
+leave pinned tabs open. Elsewhere the webview's own menu is offered in a
+field of text alone, where it cuts and pastes.
 
 ## The status bar
 

@@ -2,7 +2,10 @@
 import { CatalogTree } from "../explorer/CatalogTree";
 import { Details } from "../explorer/Details";
 import { Library } from "../explorer/Library";
-import { useStudio } from "../state/store";
+import { useStore, useStudio } from "../state/store";
+import { show } from "../state/actions";
+import { openWorksheet } from "../state/worksheets";
+import { Icon } from "../icons/Icon";
 import { ConnectionsPanel } from "./ConnectionsPanel";
 
 /** The Object Explorer: the connections, open and saved, the favourite queries and projects, then the active connection's catalog. */
@@ -20,13 +23,33 @@ export function ExplorerPanel() {
   );
 }
 
-/** The centre, before any worksheet. */
+/** The centre, before any worksheet: a new connection or worksheet a click away. */
 export function WelcomePanel() {
+  const store = useStore();
   return (
     <div className="panel-empty">
       <h1>Turborel Studio</h1>
-      <p>Open a connection to begin: New Connection, in the explorer or the File menu.</p>
-      <p>Then New Worksheet, in the File menu, opens a worksheet to write SQL in and run it.</p>
+      <div className="welcome-actions">
+        <button
+          type="button"
+          onClick={() => {
+            show(store, { kind: "connection", editing: null });
+          }}
+        >
+          <Icon name="newConnection" />
+          New Connection…
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            openWorksheet(store);
+          }}
+        >
+          <Icon name="newWorksheet" />
+          New Worksheet
+        </button>
+      </div>
+      <p>Open a connection, then a worksheet to write SQL in and run it on the connection.</p>
     </div>
   );
 }

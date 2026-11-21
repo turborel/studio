@@ -191,38 +191,6 @@ path.plane-selected.plane-area {
   max-width: 180px;
 }
 
-.menu-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-}
-
-.cell-menu {
-  position: fixed;
-  margin: 0;
-  padding: 4px 0;
-  list-style: none;
-  background: var(--surface-raised);
-  border: 1px solid var(--border);
-  box-shadow: 0 2px 8px rgb(0 0 0 / 25%);
-}
-
-.cell-menu button {
-  display: block;
-  width: 100%;
-  padding: 4px 12px;
-  text-align: left;
-  background: none;
-  border: none;
-  color: var(--text);
-}
-
-.cell-menu button:hover,
-.cell-menu button:focus-visible {
-  background: var(--selection);
-  color: var(--on-selection);
-}
-
 .result-tab {
   display: inline-flex;
   align-items: center;

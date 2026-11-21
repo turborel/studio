@@ -11,11 +11,14 @@ import { filterTree, loadSchemas, scriptChosen, searchCatalog, select, toggle, t
 import { openWorksheet } from "../state/worksheets";
 import { TABLE_DRAG } from "../worksheet/editor/extensions";
 import type { ObjectRef } from "../ipc/catalog";
-import { useStore, useStudio } from "../state/store";
+import { type Store, useStore, useStudio } from "../state/store";
 import { EMPTY_CATALOG, type Selected } from "./catalogState";
 import { Favourites } from "./Favourites";
 import { iconOf, type TreeRow, treeRows } from "./tree";
 import { Icon } from "../icons/Icon";
+import { type MenuItem, useMenu } from "../shell/ContextMenu";
+import { objectMenu, type PartOf, partMenu, schemaMenu, tableMenu } from "./menus";
+import { SEP } from "./tree";
 
 /** The rows of the tree, each focused in turn by the arrow keys. */
 function moveFocus(event: KeyboardEvent<HTMLElement>, step: number): void {
@@ -88,6 +91,45 @@ function Twisty({ row, open }: { row: TreeRow; open: () => void }) {
   );
 }
 
+/** The kinds of a table's parts, which have menus of their own. */
+const PARTS: readonly string[] = ["column", "constraint", "index", "trigger"];
+
+/** The menu of `row`, by its kind: none of a folder or a note. */
+export function rowMenu(store: Store, connection: number, row: TreeRow): MenuItem[] {
+  const [kind = "", schema = "", table = "", name = ""] = row.id.split(SEP);
+  const select = row.select;
+  switch (select?.kind) {
+    case "schema":
+      return schemaMenu(store, connection, select.schema);
+    case "table":
+      return tableMenu(store, connection, select.schema, select.name, row.icon === "view");
+    case "routine":
+    case "sequence":
+    case "domain":
+    case "type":
+      return objectMenu(store, connection, select);
+    default:
+      return PARTS.includes(kind)
+        ? partMenu(store, connection, { kind: kind as PartOf["kind"], schema, table, name })
+        : [];
+  }
+}
+
+/** The handlers of a row's keys: its menu's first, then the tree's. */
+function useRowHandlers(store: Store, connection: number, row: TreeRow, open: () => void, choose: () => void) {
+  const menu = useMenu(() => rowMenu(store, connection, row));
+  const keys = rowKeys(row, open, choose);
+  return {
+    onContextMenu: menu.onContextMenu,
+    onKeyDown: (e: KeyboardEvent<HTMLDivElement>) => {
+      menu.onKeyDown(e);
+      if (!e.defaultPrevented) {
+        keys(e);
+      }
+    },
+  };
+}
+
 /** A row of the tree. */
 function Row({ row, connection, selected }: { row: TreeRow; connection: number; selected: boolean }) {
   const store = useStore();
@@ -105,6 +147,9 @@ function Row({ row, connection, selected }: { row: TreeRow; connection: number; 
   const chosen = useStudio(
     (s) => s.catalogs[connection]?.chosen.some((c) => JSON.stringify(c) === JSON.stringify(row.select)) === true,
   );
+  const handlers = useRowHandlers(store, connection, row, open, () => {
+    choose();
+  });
   const className = ["tree-row", selected ? "tree-active" : "", chosen ? "tree-chosen" : ""]
     .filter((c) => c !== "")
     .join(" ");
@@ -121,7 +166,7 @@ function Row({ row, connection, selected }: { row: TreeRow; connection: number; 
       aria-selected={selected}
       className={className}
       style={{ paddingLeft: `${String(row.depth * 14 + 4)}px` }}
-      onKeyDown={rowKeys(row, open, choose)}
+      {...handlers}
       onClick={(e) => {
         choose(e);
       }}

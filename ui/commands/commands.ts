@@ -184,6 +184,25 @@ const WORKSHEET_COMMANDS: readonly Command[] = [
       }
     },
   },
+  {
+    id: "worksheet.complete",
+    icon: "format",
+    title: "Complete or Indent",
+    category: "Worksheet",
+    key: "Tab",
+    // The editor's own key: it runs there alone, and never from the window, the menus or the palette.
+    enabled: () => false,
+    run: () => undefined,
+  },
+  {
+    id: "worksheet.completeBack",
+    icon: "format",
+    title: "Previous Placeholder or Outdent",
+    category: "Worksheet",
+    key: "Shift+Tab",
+    enabled: () => false,
+    run: () => undefined,
+  },
   onWorksheet("worksheet.format", "Format", "Mod+Shift+F", formatCurrent),
   onWorksheet("worksheet.comment", "Toggle Comment", "Mod+/", EDITOR_ACTS.comment),
   onWorksheet("worksheet.upperCase", "Upper Case", "Mod+Shift+U", EDITOR_ACTS.upper),
@@ -223,7 +242,7 @@ export const COMMANDS: readonly Command[] = [
     icon: "newWorksheet",
     title: "New Worksheet",
     category: "File",
-    key: "Mod+T",
+    key: "Mod+N",
     enabled: always,
     run: ({ store }) => {
       openWorksheet(store);

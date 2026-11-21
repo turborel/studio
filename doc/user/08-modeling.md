@@ -54,7 +54,13 @@ element tables.
 
 Tables are laid out from left to right along their foreign keys; a table
 already placed keeps its place, and a table dragged keeps the place it is
-dropped at. A click on a table selects it; a click on the diagram's
+dropped at. A table's menu, by the secondary button, or Shift+F10 on the
+diagram with the table selected, edits it, adds the tables its foreign
+keys reference, read of the connection the model was read from, hides it
+from the diagram, scripts its CREATE TABLE, or removes it from the model;
+the diagram's menu adds a table, lays the diagram out again, and shows
+the tables hidden. A table hidden is still the model's, saved and
+compared with it; the hiding is not saved. A click on a table selects it; a click on the diagram's
 background selects none. The diagram zooms and pans by the pointer and
 by its controls.
 

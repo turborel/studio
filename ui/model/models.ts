@@ -25,6 +25,8 @@ export interface ModelDoc {
   readonly grouped: boolean;
   /** The table selected, by its schema and name. */
   readonly selected: string | null;
+  /** The tables hidden from the diagram, by their schema and name: still the model's, saved and compared with it; the hiding is not saved. */
+  readonly hidden: readonly string[];
   /** What was last told of the model, as a save. */
   readonly told: string;
 }
@@ -65,6 +67,7 @@ export function openModel(
     filter: "",
     grouped: false,
     selected: null,
+    hidden: [],
     told: "",
   };
   store.update((now) => ({ ...now, models: [...now.models, doc], activeModel: id }));

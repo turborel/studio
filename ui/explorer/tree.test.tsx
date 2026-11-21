@@ -2,9 +2,10 @@ import { fireEvent, screen, within as inside } from "@testing-library/react";
 import type { Found } from "../ipc/catalog";
 import { disconnect } from "../state/actions";
 import { filterTree, loadSchemas, loadTable, searchCatalog, select } from "../state/catalog";
-import { OBJECTS, SECURITY, STAFF, catalogBackend, opened, settle, within } from "../test/catalog";
+import { OBJECTS, SECURITY, STAFF, catalogBackend, must, opened, settle, within } from "../test/catalog";
 import { EMPTY_CATALOG, tableKey } from "./catalogState";
 import { CatalogTree, selectable } from "./CatalogTree";
+import { ConnectionsPanel } from "../shell/ConnectionsPanel";
 import { nodeId, TRUNCATED, treeRows } from "./tree";
 
 describe("the catalog's tree", () => {
@@ -35,6 +36,38 @@ describe("the catalog's tree", () => {
     fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
     await settle();
     expect(asked.filter((a) => a.command === "catalog_schemas")).toHaveLength(2);
+  });
+
+  it("opens a row's menu by the secondary button or Shift+F10, and the connections' too [DESIGN] D53", async () => {
+    catalogBackend();
+    const store = await opened();
+    within(
+      store,
+      <>
+        <ConnectionsPanel />
+        <CatalogTree connection={1} />
+      </>,
+    );
+    await settle();
+    const tree = screen.getByRole("tree", { name: "Catalog" });
+    const schema = must(inside(tree).getByText("ANN").closest<HTMLElement>("[role='treeitem']"));
+    fireEvent.keyDown(schema, { key: "F10", shiftKey: true });
+    expect(screen.getByRole("menuitem", { name: "Analyze Schema…" })).toBeTruthy();
+    fireEvent.keyDown(screen.getByRole("menu"), { key: "Escape" });
+    fireEvent.contextMenu(schema);
+    expect(screen.getByRole("menuitem", { name: "Generate Script…" })).toBeTruthy();
+    fireEvent.click(must(document.querySelector(".menu-backdrop")));
+    const open = must(
+      screen.getByRole("tree", { name: "Open connections" }).querySelector<HTMLElement>("[role='treeitem']"),
+    );
+    fireEvent.contextMenu(open);
+    expect(screen.getByRole("menuitem", { name: "Copy URI" })).toBeTruthy();
+    fireEvent.click(must(document.querySelector(".menu-backdrop")));
+    const saved = must(
+      screen.getByRole("tree", { name: "Saved connections" }).querySelector<HTMLElement>("[role='treeitem']"),
+    );
+    fireEvent.contextMenu(saved);
+    expect(screen.getByRole("menuitem", { name: "Delete…" })).toBeTruthy();
   });
 
   it("moves by the arrow keys, opens by Right, closes by Left and selects by Enter [RULE] R-UI-1", async () => {

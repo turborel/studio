@@ -21,6 +21,7 @@ import "@glideapps/glide-data-grid/dist/index.css";
 import { useCallback, useMemo, useState } from "react";
 import type { Cell, ColumnInfo } from "../ipc/connections";
 import { useStudio } from "../state/store";
+import { menuKey } from "../shell/ContextMenu";
 import { PALETTES, type ThemeName } from "../theme/tokens";
 import type { Editing } from "../state/worksheets";
 import { type Edits, writable } from "./edits";
@@ -55,6 +56,10 @@ export interface GridProps {
   readonly onHeader: (column: number, adding: boolean) => void;
   /** The context menu of a cell, at a place in the window. */
   readonly onCellMenu: (cell: Item, at: { x: number; y: number }) => void;
+  /** The context menu of a column's header, at a place in the window. */
+  readonly onHeaderMenu?: (column: number, at: { x: number; y: number }) => void;
+  /** The columns hidden, drawn of no width. */
+  readonly hidden?: readonly number[];
   /** The rows' edits, while they are edited; and the cells of large objects not sent whole, which are not. */
   readonly editing: Editing | null;
   readonly lobs: readonly string[];
@@ -197,18 +202,22 @@ export function headerDrawer(columns: readonly ColumnInfo[]): DrawHeaderCallback
   };
 }
 
-/** The grid's columns, each as wide as it was made or its values need. */
+/** No column hidden. */
+const NONE_HIDDEN: readonly number[] = [];
+
+/** The grid's columns, each as wide as it was made or its values need, those hidden of none. */
 function useGridColumns(props: GridProps): { columns: GridColumn[]; resize: (col: number, width: number) => void } {
   const { columns, rows, sort } = props;
+  const hidden = props.hidden ?? NONE_HIDDEN;
   const [widths, setWidths] = useState<Readonly<Record<number, number>>>({});
   const gridColumns = useMemo<GridColumn[]>(
     () =>
       columns.map((c, i) => ({
         id: String(i),
         title: `${c.name ?? `(${String(i + 1)})`}${sortMark(sort, i)}`,
-        width: widths[i] ?? columnWidth(c, i, rows),
+        width: hidden.includes(i) ? 0 : (widths[i] ?? columnWidth(c, i, rows)),
       })),
-    [columns, rows, sort, widths],
+    [columns, rows, sort, widths, hidden],
   );
   const resize = useCallback((col: number, width: number) => {
     setWidths((w) => ({ ...w, [col]: width }));
@@ -245,6 +254,38 @@ function edited(props: GridProps): (cell: Item, value: EditableGridCell) => void
   };
 }
 
+/** Where a grid's event was, in the window. */
+function pointed(event: { bounds: Rectangle; localEventX: number; localEventY: number }): { x: number; y: number } {
+  return { x: event.bounds.x + event.localEventX, y: event.bounds.y + event.localEventY };
+}
+
+/** Opens the menu of the current cell by Shift+F10 or the context menu key. */
+function menuOfCurrent(props: GridProps): (e: React.KeyboardEvent<HTMLDivElement>) => void {
+  return (e) => {
+    const cell = props.selection.current?.cell;
+    if (menuKey(e) && cell !== undefined) {
+      e.preventDefault();
+      const box = e.currentTarget.getBoundingClientRect();
+      props.onCellMenu(cell, { x: box.left + KEYED_MENU_INSET, y: box.top + KEYED_MENU_INSET });
+    }
+  };
+}
+
+/** How far into the grid a menu opened by the keys is placed, in pixels. */
+const KEYED_MENU_INSET = 40;
+
+/** Asks for more rows as the grid scrolls within `READ_AHEAD` of the last read. */
+function useVisible(complete: boolean, rows: number, onMore: () => void): (range: Rectangle) => void {
+  return useCallback(
+    (range: Rectangle) => {
+      if (!complete && range.y + range.height >= rows - READ_AHEAD) {
+        onMore();
+      }
+    },
+    [complete, rows, onMore],
+  );
+}
+
 /** A result's grid. */
 export function Grid(props: GridProps) {
   const { columns, rows, complete, onMore, onHeader, onCellMenu } = props;
@@ -252,16 +293,9 @@ export function Grid(props: GridProps) {
   const name = shownTheme();
   const grid = useGridColumns(props);
   const content = useContent(props, name);
-  const visible = useCallback(
-    (range: Rectangle) => {
-      if (!complete && range.y + range.height >= rows.length - READ_AHEAD) {
-        onMore();
-      }
-    },
-    [complete, rows.length, onMore],
-  );
+  const visible = useVisible(complete, rows.length, onMore);
   return (
-    <div className="result-grid" data-theme-choice={choice}>
+    <div className="result-grid" data-theme-choice={choice} onKeyDown={menuOfCurrent(props)}>
       <DataEditor
         columns={grid.columns}
         rows={rows.length + (props.editing?.edits.added.length ?? 0)}
@@ -288,9 +322,14 @@ export function Grid(props: GridProps) {
           grid.resize(col, width);
         }}
         onCellEdited={edited(props)}
+        minColumnWidth={0}
         onCellContextMenu={(cell, event) => {
           event.preventDefault();
-          onCellMenu(cell, { x: event.bounds.x + event.localEventX, y: event.bounds.y + event.localEventY });
+          onCellMenu(cell, pointed(event));
+        }}
+        onHeaderContextMenu={(column, event) => {
+          event.preventDefault();
+          props.onHeaderMenu?.(column, pointed(event));
         }}
       />
     </div>

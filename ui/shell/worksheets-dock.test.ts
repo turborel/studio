@@ -119,6 +119,7 @@ describe("the dock's models", () => {
       modified: false,
       connection: null,
       filter: "",
+      hidden: [],
       grouped: false,
       selected: null,
       told: "",

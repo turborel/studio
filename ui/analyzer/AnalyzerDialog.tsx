@@ -9,7 +9,8 @@ import { useEffect, useState } from "react";
 import { type Analysis, catalogAnalysis, type Finding } from "../ipc/analyzer";
 import { openDdl } from "../data/ddlActions";
 import { show } from "../state/actions";
-import { useStore } from "../state/store";
+import { useStore, useStudio } from "../state/store";
+import { namer } from "../data/ddl";
 import { Modal } from "../shell/Modal";
 import { thrownText } from "../model/ModelDialogs";
 
@@ -25,7 +26,7 @@ export const WAITING: readonly (readonly [string, string])[] = [
 ];
 
 /** The tabs of the analyzer. */
-type Tab = "findings" | "indexes" | "settings" | "waiting";
+export type Tab = "findings" | "indexes" | "settings" | "waiting";
 
 /** The tabs, each with its name. */
 const TABS: readonly (readonly [Tab, string])[] = [
@@ -198,17 +199,68 @@ function Waiting() {
   );
 }
 
-/** The analyzer of `schema` on `connection`. */
-export function AnalyzerDialog({ connection, schema }: { readonly connection: number; readonly schema: string }) {
+/** `analysis` of table `table` alone, where one is given: its findings, those of its indexes, and its indexes. */
+export function ofTable(analysis: Analysis, table: string | undefined, name: (n: string) => string): Analysis {
+  if (table === undefined) {
+    return analysis;
+  }
+  const indexes = analysis.indexes.filter((r) => r.table === table);
+  const names = new Set(indexes.map((r) => name(r.index.name)));
+  const findings = analysis.findings.filter(
+    (f) => f.object.split(" ")[0]?.endsWith(`.${name(table)}`) === true || names.has(f.object),
+  );
+  return { ...analysis, indexes, findings };
+}
+
+/** The tab `tab` of the analysis `found`: read, or why not, or reading. */
+function AnalyzerBody(props: {
+  readonly found: Analysis | string | null;
+  readonly tab: Tab;
+  readonly onOpen: (sql: string) => void;
+}) {
+  const { found, tab } = props;
+  if (tab === "waiting") {
+    return <Waiting />;
+  }
+  if (found === null) {
+    return <p className="hint">Reading the schema…</p>;
+  }
+  if (typeof found === "string") {
+    return <p className="error">{found}</p>;
+  }
+  switch (tab) {
+    case "findings":
+      return <Findings findings={found.findings} onOpen={props.onOpen} />;
+    case "indexes":
+      return <Indexes analysis={found} />;
+    case "settings":
+      return <Settings analysis={found} />;
+  }
+}
+
+/** The analyzer of `schema` on `connection`, or of its table `table`, its tab `tab` shown first. */
+export function AnalyzerDialog(props: {
+  readonly connection: number;
+  readonly schema: string;
+  readonly table?: string;
+  readonly tab?: Tab;
+}) {
+  const { connection, schema, table } = props;
   const store = useStore();
-  const found = useAnalysis(connection, schema);
-  const [tab, setTab] = useState<Tab>("findings");
+  const read = useAnalysis(connection, schema);
+  const reserved = useStudio((s) => s.reservedWords);
+  const found = typeof read === "object" && read !== null ? ofTable(read, table, namer(reserved)) : read;
+  const [tab, setTab] = useState<Tab>(props.tab ?? "findings");
   const close = () => {
     show(store, null);
   };
   const open = (sql: string) => void openDdl(store, connection, { sql, title: `Fixes of ${schema}` }, false);
   return (
-    <Modal title={`Analyze Schema ${schema}`} onClose={close} wide>
+    <Modal
+      title={table === undefined ? `Analyze Schema ${schema}` : `Analyze Table ${schema}.${table}`}
+      onClose={close}
+      wide
+    >
       <div role="tablist" className="tabs">
         {TABS.map(([t, name]) => (
           <button
@@ -224,14 +276,7 @@ export function AnalyzerDialog({ connection, schema }: { readonly connection: nu
           </button>
         ))}
       </div>
-      {found === null && tab !== "waiting" && <p className="hint">Reading the schema…</p>}
-      {typeof found === "string" && tab !== "waiting" && <p className="error">{found}</p>}
-      {typeof found === "object" && found !== null && tab === "findings" && (
-        <Findings findings={found.findings} onOpen={open} />
-      )}
-      {typeof found === "object" && found !== null && tab === "indexes" && <Indexes analysis={found} />}
-      {typeof found === "object" && found !== null && tab === "settings" && <Settings analysis={found} />}
-      {tab === "waiting" && <Waiting />}
+      <AnalyzerBody found={found} tab={tab} onOpen={open} />
       <div className="dialog-buttons">
         <button type="button" onClick={close}>
           Close

@@ -6,8 +6,12 @@
  */
 import { useState } from "react";
 import type { SavedConnection, SavedView } from "../ipc/saved";
-import { activate, connectSaved, disconnect, forget, save, show } from "../state/actions";
-import { type OpenConnection, useStore, useStudio } from "../state/store";
+import { activate, connectSaved, disconnect, forget, reconnectOpen, save, show } from "../state/actions";
+import { loadSchemas } from "../state/catalog";
+import { type OpenConnection, type Store, useStore, useStudio } from "../state/store";
+import { copyText, newWorksheetOn, uriOf } from "../explorer/menus";
+import { type MenuItem, useMenu } from "./ContextMenu";
+import { prompted } from "./PromptDialog";
 import { type Folder, tree } from "./connectionsTree";
 import { tint } from "./environment";
 import { Icon } from "../icons/Icon";
@@ -40,13 +44,81 @@ function DeleteButton({ connection: c }: { readonly connection: SavedConnection 
   );
 }
 
+/** The items of saved connection `c`'s menu that edit it, copy its URI, and delete it. */
+function savedItems(store: Store, c: SavedConnection): MenuItem[] {
+  return [
+    {
+      label: "Edit Connection…",
+      icon: "edit",
+      run: () => {
+        show(store, { kind: "connection", editing: c });
+      },
+    },
+    { label: "Copy URI", icon: "copy", run: () => copyText(store, uriOf(c.spec)) },
+  ];
+}
+
+/** The menu of saved connection `c`. */
+export function savedMenu(store: Store, c: SavedConnection): MenuItem[] {
+  return [
+    { label: "Connect", icon: "connect", run: () => connectSaved(store, c, null) },
+    ...savedItems(store, c),
+    {
+      label: c.pinned ? "Unpin" : "Pin",
+      icon: "pin",
+      run: () => save(store, { ...c, pinned: !c.pinned }, { kind: "keep" }),
+    },
+    "separator",
+    {
+      label: "Delete…",
+      icon: "remove",
+      destructive: true,
+      run: async () => {
+        const typed = await prompted(store, `Delete ${c.name}`, `Type ${c.name} to delete the saved connection`);
+        if (typed === c.name) {
+          await forget(store, c.id);
+        }
+      },
+    },
+  ];
+}
+
+/** The menu of open connection `connection`. */
+export function openMenuOf(store: Store, connection: OpenConnection): MenuItem[] {
+  const saved = store.current().saved.connections.find((v) => v.connection.id === connection.savedId)?.connection;
+  return [
+    {
+      label: "New Worksheet",
+      icon: "newWorksheet",
+      run: () => newWorksheetOn(store, connection.id, null).then(() => undefined),
+    },
+    { label: "Refresh Catalog", icon: "reconnect", run: () => loadSchemas(store, connection.id) },
+    {
+      label: "Analyze Schema…",
+      icon: "analyze",
+      run: () => {
+        show(store, {
+          kind: "analyzer",
+          connection: connection.id,
+          schema: connection.session.schema ?? connection.session.authorization,
+        });
+      },
+    },
+    "separator",
+    ...(saved === undefined ? [] : savedItems(store, saved)),
+    { label: "Reconnect", icon: "reconnect", run: () => reconnectOpen(store, connection.id) },
+    { label: "Disconnect", icon: "disconnect", run: () => disconnect(store, connection.id) },
+  ];
+}
+
 /** A saved connection's item, with its actions. */
 function SavedItem({ view }: { readonly view: SavedView }) {
   const store = useStore();
   const c: SavedConnection = view.connection;
   const connect = () => void connectSaved(store, c, null);
+  const menu = useMenu(() => savedMenu(store, c));
   return (
-    <li role="treeitem" aria-selected="false" className="tree-item">
+    <li role="treeitem" aria-selected="false" className="tree-item" tabIndex={0} {...menu}>
       <Swatch colour={tint(c.environment, c.colour)} />
       <Icon name="connection" />
       <span className="tree-name" onDoubleClick={connect}>
@@ -106,8 +178,15 @@ function FolderItems({ folder }: { readonly folder: Folder }) {
 /** An open connection's item. */
 function OpenItem({ connection, active }: { readonly connection: OpenConnection; readonly active: boolean }) {
   const store = useStore();
+  const menu = useMenu(() => openMenuOf(store, connection));
   return (
-    <li role="treeitem" aria-selected={active} className={active ? "tree-item tree-active" : "tree-item"}>
+    <li
+      role="treeitem"
+      aria-selected={active}
+      className={active ? "tree-item tree-active" : "tree-item"}
+      tabIndex={0}
+      {...menu}
+    >
       <Swatch colour={tint(connection.guards.environment, connection.colour)} />
       <Icon name="connection" />
       <button

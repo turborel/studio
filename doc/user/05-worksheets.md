@@ -9,8 +9,12 @@ the arrow keys when it has the focus, to share the tab between them.
 
 ## Opening a worksheet
 
-**File > New Worksheet** opens an empty worksheet on the active
-connection. **File > Open File…** opens a `.sql` file in a worksheet of
+**File > New Worksheet**, Cmd+N or Ctrl+N, the toolbar's **New
+Worksheet**, the **+** after the worksheets' tabs, or the Start panel's
+button opens an empty worksheet on the active connection; **New
+Worksheet** in the menu of a connection, schema or table in the explorer
+opens one on that connection, its schema set
+([The Window](02-window.md#context-menus)). **File > Open File…** opens a `.sql` file in a worksheet of
 its own; **Favourite Queries**, **Projects** and **File > History…** open
 what they hold the same way, and **Open in Worksheet** opens an object's
 definition from the details panel ([The Object Explorer](04-explorer.md)).
@@ -52,7 +56,17 @@ delimited identifiers and comments, each in a colour of its own.
 ## Completion
 
 Completion offers, as a word is typed, after a period, and by
-Ctrl+Space, what may be written where the cursor is. The statement is
+Ctrl+Space or Tab, what may be written where the cursor is. While its
+list is open, Up and Down move through it, Page Up, Page Down, Home and
+End jump, typing narrows it, and the item highlighted shows its detail;
+Tab or Enter takes it, and Escape closes the list. With no list open,
+the arrow keys move the cursor, and Tab completes the word before the
+cursor in place where one candidate alone begins with it, opens the
+list where several do, and otherwise moves to a snippet's next field or
+indents; Shift+Tab goes back a field, or outdents. Both are commands,
+**Complete or Indent** and **Previous Placeholder or Outdent**, whose
+keys may be changed ([The Window](02-window.md#keys)). Escape, then Tab,
+leaves the editor. The statement is
 read by Turborel's own parser, with a name put where one is being typed
 so that a statement being written parses; one that does not parse even
 so is read by its words.

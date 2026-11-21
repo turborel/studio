@@ -12,6 +12,8 @@ import { activateWorksheet, changeWorksheet, setConnection, worksheetOf } from "
 import { toggleAutocommit } from "./commands";
 import { selectStatement } from "./editor/actions";
 import { Editor } from "./editor/Editor";
+import { useCommandEntry, useMenu } from "../shell/ContextMenu";
+import { editorMenu } from "./menus";
 import { viewOf } from "./editor/views";
 import { Panes } from "./Panes";
 import { variableNames } from "./variables";
@@ -223,6 +225,12 @@ export function Worksheet({ id }: { readonly id: string }) {
   const exists = useStudio((s) => worksheetOf(s, id) !== undefined);
   const outline = useStudio((s) => worksheetOf(s, id)?.outline === true);
   const [share, setShare] = useState(EDITOR_SHARE);
+  const store = useStore();
+  const entry = useCommandEntry();
+  const menu = useMenu(() => {
+    activateWorksheet(store, id);
+    return editorMenu(entry);
+  });
   if (!exists) {
     return <div className="panel-empty">This worksheet is closed.</div>;
   }
@@ -230,7 +238,7 @@ export function Worksheet({ id }: { readonly id: string }) {
     <div className="worksheet" role="region" aria-label="Worksheet">
       <Bar id={id} />
       <Variables id={id} />
-      <div className="worksheet-body" style={{ flexBasis: `${String(share)}%` }}>
+      <div className="worksheet-body" style={{ flexBasis: `${String(share)}%` }} {...menu}>
         {outline && <Outline id={id} />}
         <Editor id={id} />
       </div>

@@ -5,7 +5,7 @@ import { catalogBackend, opened, refused, settle, STAFF, within } from "../test/
 import type { Store } from "../state/store";
 import { SchemaNode, TableNode } from "./Diagram";
 import { modelTable, modelText } from "./model";
-import { closeModel, modelOf, newModel, openModel, openModelFrom, saveModel } from "./models";
+import { changeModel, closeModel, editModel, modelOf, newModel, openModel, openModelFrom, saveModel } from "./models";
 import { ModelView } from "./ModelView";
 import { pngOf } from "./image";
 
@@ -92,6 +92,23 @@ async function click(name: string): Promise<void> {
 }
 
 describe("a model's tab", () => {
+  it("opens the diagram's menu by Shift+F10, and a table's when one is selected [DESIGN] D53", async () => {
+    const { store, id } = await shown();
+    const figure = screen.getByRole("figure");
+    fireEvent.keyDown(figure, { key: "F10", shiftKey: true });
+    expect(screen.getByRole("menuitem", { name: "Lay Out Again" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("menuitem", { name: "Add Table…" }));
+    await settle();
+    expect(screen.getByRole("dialog")).toBeTruthy();
+    editModel(store, id, (m) => ({ ...m, tables: [modelTable(STAFF)] }));
+    changeModel(store, id, (d) => ({ ...d, selected: "ANN.STAFF" }));
+    await settle();
+    fireEvent.keyDown(screen.getByRole("figure"), { key: "F10", shiftKey: true });
+    fireEvent.click(screen.getByRole("menuitem", { name: "Edit Table…" }));
+    await settle();
+    expect(screen.getAllByRole("dialog").length).toBeGreaterThan(0);
+  });
+
   it("reads tables of a live schema into the model, and its property graphs [DESIGN] D46", async () => {
     const { store, id } = await shown();
     expect(screen.getByText(/^0 tables\./u)).toBeTruthy();

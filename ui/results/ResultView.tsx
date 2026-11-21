@@ -18,14 +18,16 @@ import { COPY_FORMATS, type CopyFormat } from "./copy";
 import { editCell } from "./edits";
 import { stage } from "./editing";
 import { EditTools } from "./EditTools";
-import { editable, Grid } from "./Grid";
-import { narrowed, nextSort, valueCondition } from "./requery";
+import { Grid } from "./Grid";
+import { nextSort } from "./requery";
 import { CompareView, GraphOfResult, PlaneOfResult, RecordView, spatialColumns, TextView } from "./ResultParts";
 import { defaultChart } from "./chart";
 import { ChartView } from "./ChartView";
 import type { Chart } from "../ipc/analyzer";
 import { show } from "../state/actions";
 import { allOf, chosenOf } from "./selection";
+import { cellMenu, headerMenu } from "./menus";
+import { openMenu } from "../shell/ContextMenu";
 import { ValueViewer, type Viewed } from "./viewers/ValueViewer";
 
 /** How a result is shown. */
@@ -64,35 +66,6 @@ function Tool(props: {
     >
       <Icon name={props.icon} size={LARGE} />
     </button>
-  );
-}
-
-/** The menu of a cell: filter by its value, view it, freeze up to its column. */
-function CellMenu(props: {
-  readonly at: { x: number; y: number };
-  readonly items: readonly (readonly [string, (() => void) | null])[];
-  readonly onClose: () => void;
-}) {
-  return (
-    <div className="menu-backdrop" role="presentation" onClick={props.onClose}>
-      <ul role="menu" className="cell-menu" style={{ left: props.at.x, top: props.at.y }} aria-label="Cell">
-        {props.items.map(([name, act]) => (
-          <li key={name} role="none">
-            <button
-              type="button"
-              role="menuitem"
-              disabled={act === null}
-              onClick={() => {
-                act?.();
-                props.onClose();
-              }}
-            >
-              {name}
-            </button>
-          </li>
-        ))}
-      </ul>
-    </div>
   );
 }
 
@@ -194,7 +167,8 @@ interface ViewState {
   readonly freeze: number;
   readonly record: number;
   readonly viewing: boolean;
-  readonly menu: { readonly cell: Item; readonly at: { x: number; y: number } } | null;
+  /** The columns hidden, by their places. */
+  readonly hidden: readonly number[];
   readonly comparing: number | null;
   /** The chart of the chart view, as last chosen; null for the one first shown. */
   readonly chart: Chart | null;
@@ -207,7 +181,7 @@ const FIRST: ViewState = {
   freeze: 0,
   record: 0,
   viewing: false,
-  menu: null,
+  hidden: [],
   comparing: null,
   chart: null,
 };
@@ -367,8 +341,12 @@ function ResultGrid({ id, run, view, change }: Parts) {
           void requery(store, id, run.id, (q) => ({ ...q, sort: nextSort(q.sort, column, adding) }));
         }
       }}
+      hidden={view.hidden}
       onCellMenu={(cell, at) => {
-        change({ menu: { cell, at } });
+        openMenu(store, at, cellMenu(store, { id, run, view, change }, cell));
+      }}
+      onHeaderMenu={(column, at) => {
+        openMenu(store, at, headerMenu(store, { id, run, view, change }, column));
       }}
       editing={run.editing}
       lobs={run.lobs}
@@ -419,63 +397,6 @@ function ResultMain(parts: Parts) {
   }
 }
 
-/** The filters of a cell's menu: to its value, or out of it; none of a value no comparison takes, or of no query. */
-function filterBy({ id, run }: Parts, store: ReturnType<typeof useStore>, cell: Item, excluding: boolean) {
-  const condition = valueCondition(run.columns, cell[0], run.rows[cell[1]]?.[cell[0]] ?? null, excluding);
-  return condition === null || !requeryable(run)
-    ? null
-    : () => void requery(store, id, run.id, (q) => ({ ...q, filter: narrowed(q.filter, condition) }));
-}
-
-/** The menu of the cell `cell`: its items. */
-function menuItems(parts: Parts, store: ReturnType<typeof useStore>, cell: Item) {
-  const { id, run, view, change } = parts;
-  const nullable = editable({ columns: run.columns, rows: run.rows, editing: run.editing, lobs: run.lobs }, cell);
-  const one: GridSelection = {
-    ...NOTHING,
-    current: { cell, range: { x: cell[0], y: cell[1], width: 1, height: 1 }, rangeStack: [] },
-  };
-  const act = (f: () => void) => f;
-  return [
-    ["Filter to This Value", filterBy(parts, store, cell, false)],
-    ["Filter Out This Value", filterBy(parts, store, cell, true)],
-    [
-      "View Value",
-      act(() => {
-        change({ selection: one, viewing: true });
-      }),
-    ],
-    [
-      "Show in Record View",
-      act(() => {
-        change({ record: cell[1], mode: "record" });
-      }),
-    ],
-    [
-      "Freeze Up to This Column",
-      act(() => {
-        change({ freeze: cell[0] + 1 });
-      }),
-    ],
-    [
-      "Unfreeze Columns",
-      view.freeze === 0
-        ? null
-        : act(() => {
-            change({ freeze: 0 });
-          }),
-    ],
-    [
-      "Set to NULL",
-      nullable
-        ? act(() => {
-            stage(store, id, run.id, (e) => editCell(e, cell, null, run.rows.length));
-          })
-        : null,
-    ],
-  ] as const;
-}
-
 /** The bar below a result: the rows read, its time, and whether more may be read. */
 function ResultBar({ id, run, view }: Parts) {
   const store = useStore();
@@ -524,7 +445,6 @@ export function ResultView({
   readonly run: RunResult;
   readonly names: ReadonlyMap<number, string>;
 }) {
-  const store = useStore();
   const reported = useStudio((s) => worksheetOf(s, id)?.chart ?? null);
   const [view, setView] = useState<ViewState>(() =>
     reported === null ? FIRST : { ...FIRST, mode: "chart", chart: reported },
@@ -546,15 +466,6 @@ export function ResultView({
         {view.viewing && <ValuePanel run={run} current={current} />}
       </div>
       <ResultBar {...parts} />
-      {view.menu !== null && (
-        <CellMenu
-          at={view.menu.at}
-          onClose={() => {
-            change({ menu: null });
-          }}
-          items={menuItems(parts, store, view.menu.cell)}
-        />
-      )}
     </div>
   );
 }

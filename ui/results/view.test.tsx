@@ -163,8 +163,45 @@ describe("a result's grid", () => {
     expect(sent(asked).at(-1)).toContain('"DOC" IS NOT NULL');
     fireEvent.contextMenu(cell(3, 0));
     expect(screen.getByRole("menuitem", { name: "Filter to This Value" })).toHaveProperty("disabled", true);
-    fireEvent.click(screen.getByRole("presentation"));
+    fireEvent.click(must(document.querySelector(".menu-backdrop")));
     expect(screen.queryByRole("menu")).toBeNull();
+  });
+
+  it("has a header's menu and a cell's of the keys: sort, hide and show, copy as each format, and export the selection [DESIGN] D53", async () => {
+    const copied: string[] = [];
+    Object.defineProperty(navigator, "clipboard", {
+      value: { writeText: (t: string) => Promise.resolve(copied.push(t)) },
+      configurable: true,
+    });
+    const { asked } = await ranResult("SELECT * FROM ANN.ITEMS", { save_text_file: () => "/tmp/selection.csv" });
+    fireEvent.contextMenu(screen.getByRole("button", { name: "NAME" }));
+    await choose("Sort Descending");
+    expect(sent(asked).at(-1)).toContain('ORDER BY "NAME" DESC');
+    fireEvent.contextMenu(screen.getByRole("button", { name: "ID" }));
+    await choose("Hide Column");
+    expect(document.querySelector("th")?.getAttribute("data-width")).toBe("0");
+    fireEvent.contextMenu(screen.getByRole("button", { name: "ID" }));
+    await choose("Show Hidden Columns");
+    expect(document.querySelector("th")?.getAttribute("data-width")).not.toBe("0");
+    fireEvent.contextMenu(screen.getByRole("button", { name: "ID" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Copy As" }));
+    await choose("JSON");
+    expect(copied.at(-1)).toContain('"ID"');
+    fireEvent.click(cell(1, 0));
+    fireEvent.keyDown(must(document.querySelector(".result-grid")), { key: "F10", shiftKey: true });
+    await choose("Copy with Headers");
+    expect(copied.at(-1)).toBe("NAME\r\nAda\r\n");
+    fireEvent.contextMenu(cell(1, 0));
+    await choose("Sort Ascending");
+    fireEvent.contextMenu(cell(1, 0));
+    await choose("Export Selection…");
+    expect(asked.find((a) => a.command === "save_text_file")?.args["text"]).toBe("NAME\r\nAda\r\n");
+    fireEvent.contextMenu(cell(2, 0));
+    fireEvent.click(screen.getByRole("menuitem", { name: /^Copy(?! with| As)/u }));
+    await settle();
+    expect(copied.at(-1)).toContain("{");
+    fireEvent.contextMenu(cell(1, 0));
+    await choose("Edit Rows");
   });
 
   it("keeps the rows it has when a sort fails, and tells why; runs again once the guards are answered [DESIGN] D39", async () => {

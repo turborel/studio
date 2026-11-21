@@ -86,10 +86,16 @@ The toolbar's first group chooses how a result is shown:
 | **Graph View** | the rows as nodes and edges ([Graphs](#graphs)) |
 | **Plane View** | a spatial column's values on a plane, offered where the result has one ([Spatial values](#spatial-values)) |
 
-A cell's menu also opens its row in the record view (**Show in Record
-View**), and keeps columns in view as the grid scrolls across: **Freeze
-Up to This Column** freezes each column from the first to the cell's,
-and **Unfreeze Columns** lets them go.
+A cell's menu, or a header's, by the secondary button, or Shift+F10 on
+the cell selected ([The Window](02-window.md#context-menus)), also opens
+its row in the record view (**Show in Record View**), and keeps columns
+in view as the grid scrolls across: **Freeze Up to This Column** freezes
+each column from the first to the cell's, and **Unfreeze Columns** lets
+them go. **Hide Column** draws a column of no width, and **Show Hidden
+Columns** draws them again; a column hidden is still the result's, and
+is copied and exported with it. **Export Selection…** saves the cells
+selected, or the cell, as CSV with headers, where the platform's dialog
+says.
 
 ## The status bar
 

@@ -8,7 +8,7 @@ import { changeWorksheet, openWorksheet, worksheetOf } from "../state/worksheets
 import { SESSION } from "../test/backend";
 import { catalogBackend, must, opened, refused, settle, STAFF, within } from "../test/catalog";
 import { parsePlan } from "../worksheet/plan";
-import { AnalyzerDialog, WAITING } from "./AnalyzerDialog";
+import { AnalyzerDialog, ofTable, WAITING } from "./AnalyzerDialog";
 import { PlanPane, WhatIfDialog } from "./PlanFindings";
 import { comparedColumn, conjuncts, scanFindings, scannedTables } from "./planRules";
 import { openReport, Reports, SaveReportDialog } from "./Reports";
@@ -248,6 +248,24 @@ const ANALYSIS: Analysis = {
 };
 
 describe("the analyzer of a schema", () => {
+  it("of a table alone keeps its findings and those of its indexes, and its indexes [DESIGN] D50", () => {
+    const of = ofTable(
+      {
+        ...ANALYSIS,
+        findings: [
+          ...ANALYSIS.findings,
+          { rule: "INDEX-DUPLICATE", object: '"ANN.PARTS.UNIQUE1"', says: "", fix: "" },
+          { rule: "TABLE-NO-KEY", object: "ANN.OTHER", says: "", fix: "" },
+        ],
+      },
+      "STAFF",
+      (n) => (n.includes(".") ? `"${n}"` : n),
+    );
+    expect(of.findings.map((f) => f.object)).toEqual(["ANN.STAFF STAFF_DEPT", '"ANN.PARTS.UNIQUE1"']);
+    expect(of.indexes).toHaveLength(1);
+    expect(ofTable(ANALYSIS, undefined, (n) => n)).toBe(ANALYSIS);
+  });
+
   it("shows its findings, indexes, settings and what waits on the server, and opens the fixes chosen [DESIGN] D50", async () => {
     catalogBackend({ catalog_analysis: () => ANALYSIS });
     const store = await opened();

@@ -28,6 +28,8 @@ import { type Dialog, openConnection, type Store, StoreContext, useStudio } from
 import { AnalyzerDialog } from "./analyzer/AnalyzerDialog";
 import { WhatIfDialog } from "./analyzer/PlanFindings";
 import { SaveReportDialog } from "./analyzer/Reports";
+import { PromptDialog } from "./shell/PromptDialog";
+import { CommandContextOf, ContextMenu } from "./shell/ContextMenu";
 import { applyTheme, DARK_QUERY, resolveTheme } from "./theme/theme";
 import type { ThemeName } from "./theme/tokens";
 
@@ -140,13 +142,23 @@ function TaskDialogs({ dialog }: { readonly dialog: Dialog | null }) {
     case "builder":
       return <BuilderDialog worksheet={dialog.worksheet} connection={dialog.connection} schema={dialog.schema} />;
     case "analyzer":
-      return <AnalyzerDialog connection={dialog.connection} schema={dialog.schema} />;
+      return <AnalyzerDialog {...dialog} />;
     case "whatIf":
       return <WhatIfDialog whatIf={dialog.whatIf} />;
     case "report":
       return <SaveReportDialog sql={dialog.sql} chart={dialog.chart} />;
+    case "prompt":
+      return <PromptDialog {...dialog} />;
     default:
       return null;
+  }
+}
+
+/** The webview's own menu, of reloading and inspecting, left out but in a field of text, where it cuts and pastes. */
+function nativeMenuOnlyInText(event: React.MouseEvent): void {
+  const target = event.target as HTMLElement;
+  if (!target.closest("input, textarea")) {
+    event.preventDefault();
   }
 }
 
@@ -179,16 +191,19 @@ function Window({ store }: { readonly store: Store }) {
     ...(colour === null ? {} : { "--env-colour": colour }),
   };
   return (
-    <div className={colour === null ? "app" : "app app-tinted"} style={style}>
-      <Toolbar context={context} />
-      <ErrorBanner />
-      <NoticeBanner />
-      <main className="dock">
-        <Dock theme={theme} onApi={(api) => (dock.current = api)} />
-      </main>
-      <StatusBar />
-      <Dialogs context={context} />
-    </div>
+    <CommandContextOf.Provider value={context}>
+      <div className={colour === null ? "app" : "app app-tinted"} style={style} onContextMenu={nativeMenuOnlyInText}>
+        <Toolbar context={context} />
+        <ErrorBanner />
+        <NoticeBanner />
+        <main className="dock">
+          <Dock theme={theme} onApi={(api) => (dock.current = api)} />
+        </main>
+        <StatusBar />
+        <Dialogs context={context} />
+        <ContextMenu />
+      </div>
+    </CommandContextOf.Provider>
   );
 }
 

@@ -91,8 +91,12 @@ export function TableGrid(props: DataEditorProps) {
       <thead>
         <tr>
           {columns.map((c, i) => (
-            <th key={c.id ?? c.title} scope="col">
-              <button type="button" onClick={(e) => props.onHeaderClicked?.(i, headerClick(e.shiftKey))}>
+            <th key={c.id ?? c.title} scope="col" data-width={"width" in c ? c.width : ""}>
+              <button
+                type="button"
+                onClick={(e) => props.onHeaderClicked?.(i, headerClick(e.shiftKey))}
+                onContextMenu={() => props.onHeaderContextMenu?.(i, menuEvent() as unknown as HeaderClickedEventArgs)}
+              >
                 {c.title}
               </button>
               <button

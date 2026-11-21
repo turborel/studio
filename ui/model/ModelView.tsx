@@ -18,6 +18,8 @@ import { CompareWithSchemaDialog, thrownText, ReadSchemaDialog } from "./ModelDi
 import { changeModel, editModel, type ModelDoc, modelOf, saveModel } from "./models";
 import { modelSvg } from "./svg";
 import { TableEditor } from "./TableEditor";
+import { diagramMenu, tableNodeMenu } from "./menus";
+import { openMenu } from "../shell/ContextMenu";
 
 /** A dialog of a model open: which. */
 type Open = "read" | "compare" | "add" | "edit" | null;
@@ -195,6 +197,20 @@ function Graphs({ doc }: { readonly doc: ModelDoc }) {
   );
 }
 
+/** The menu of table `key` of `doc`, or of its diagram where `key` is null, its dialogs opened by `setOpen`. */
+function modelMenu(store: ReturnType<typeof useStore>, doc: ModelDoc, key: string | null, setOpen: (o: Open) => void) {
+  const opens = {
+    add: () => {
+      setOpen("add");
+    },
+    edit: (k: string) => {
+      changeModel(store, doc.id, (d) => ({ ...d, selected: k }));
+      setOpen("edit");
+    },
+  };
+  return key === null ? diagramMenu(store, doc, opens) : tableNodeMenu(store, doc, key, opens);
+}
+
 /** Model `id`'s tab. */
 export function ModelView({ id }: { readonly id: string }) {
   const store = useStore();
@@ -227,6 +243,9 @@ export function ModelView({ id }: { readonly id: string }) {
           }}
           onSelect={(key) => {
             changeModel(store, id, (d) => ({ ...d, selected: key }));
+          }}
+          onMenu={(key, at) => {
+            openMenu(store, at, modelMenu(store, doc, key, setOpen));
           }}
         />
         <Graphs doc={doc} />

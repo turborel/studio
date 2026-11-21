@@ -11,7 +11,9 @@ import { splitScript } from "../../ipc/worksheet";
 import { type Store, useStore, useStudio } from "../../state/store";
 import { changeWorksheet, setText, worksheetOf } from "../../state/worksheets";
 import type { Bridge } from "./catalog";
-import { editorExtensions, language, languageCompartment } from "./extensions";
+import { editorExtensions, language, languageCompartment, tabKeysOf } from "./extensions";
+import { tabCompartment, tabKeys } from "./tab";
+import { completionSource } from "../complete/source";
 import { setPieces } from "./fields";
 import { register } from "./views";
 
@@ -83,6 +85,20 @@ function relanguage(store: Store, bridge: Bridge, views: readonly EditorView[]):
   });
 }
 
+/** Binds the Tab keys of `views` again whenever the settings bind them anew: what stops it. */
+function rebindTab(store: Store, bridge: Bridge, views: readonly EditorView[]): () => void {
+  let last = store.current().settings.keyBindings;
+  return store.subscribe(() => {
+    const now = store.current().settings.keyBindings;
+    if (now !== last) {
+      last = now;
+      for (const view of views) {
+        view.dispatch({ effects: tabCompartment.reconfigure(tabKeys(completionSource(bridge), tabKeysOf(store))) });
+      }
+    }
+  });
+}
+
 /** Makes the views of worksheet `id` in `host`, the second in `second` if split: what ends them. */
 function mount(store: Store, id: string, [host, second]: readonly [HTMLDivElement, HTMLDivElement | null]): () => void {
   const bridge: Bridge = { store, worksheet: id };
@@ -109,9 +125,11 @@ function mount(store: Store, id: string, [host, second]: readonly [HTMLDivElemen
   const [first] = views;
   const unregister = first === undefined ? () => undefined : register(id, first);
   const unsubscribe = relanguage(store, bridge, views);
+  const unbind = rebindTab(store, bridge, views);
   return () => {
     stop();
     unsubscribe();
+    unbind();
     unregister();
     for (const view of views) {
       view.destroy();

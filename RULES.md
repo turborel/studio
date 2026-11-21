@@ -92,6 +92,7 @@ Each is told in full in [§7](#7-the-decisions).
 | D50 | The analyzer: rules of the catalog and the plan, each finding's fix as SQL |
 | D51 | What-if indexes: made, explained and dropped, only when asked |
 | D52 | Reports and charts: queries shown as tables or charts, the user's kept |
+| D53 | Context menus everywhere, of the registry, and a new worksheet a click away |
 
 ---
 
@@ -130,6 +131,7 @@ Each is told in full in [§7](#7-the-decisions).
 | `ui/builder/` | the query builder (D48) |
 | `core/src/analyzer.rs` | the analyzer's rules of the catalog and the settings (D50) |
 | `core/src/reports.rs` | the built-in reports, and the user's kept (D52) |
+| `ui/shell/ContextMenu.tsx` | the context menus, their items of the command registry (D53) |
 | `ui/analyzer/` | the analyzer's dialog, the plan's rule and findings, what-if indexes and reports (D50, D51, D52) |
 | `ui/data/` | the dialogs of a table's data and definitions: its rows edited, imported, exported and compared, and tables made and altered (D42 to D45) |
 | `ui/state/` | the window's store and its actions (D31) |
@@ -953,8 +955,18 @@ The review checklist:
   this session; matching CodeMirror's own, fuzzy.
 - **No comments:** Turborel keeps no comments of objects, so a popup has
   none.
+- **Tab:** with the list open, takes the item highlighted, as Enter
+  does; with none, completes the word in place where one candidate alone
+  begins with it, opens the list where several do, else moves to a
+  snippet's next field or indents; Shift+Tab goes back a field or
+  outdents; Home and End jump in the list. The keys are the commands
+  Complete or Indent and Previous Placeholder or Outdent, bound in the
+  editor alone, never by the window's handler of keys, so they may be
+  rebound; CodeMirror's tab-focus mode lets Escape, then Tab, leave the
+  editor.
 - *Why:* completion that knows the statement and the database, and is
-  never slower than the typing.
+  never slower than the typing; the arrows to choose and Tab to take, as
+  the owner asked, without trapping the keyboard.
 
 #### D41. Data: values written as the grid shows them
 
@@ -1099,8 +1111,10 @@ The review checklist:
 - **Smoke test:** `cargo xtask smoke` launches the built application under
   tauri-driver 2.1.0 and WebKit's WebDriver, on Linux under a virtual
   display, from no app data and from an earlier build's, and holds that
-  its toolbar and explorer are drawn, no failure panel shown and none
-  logged, and the file that does not fit told.
+  its toolbar and explorer are drawn, a new worksheet opens by the
+  toolbar's button and its editor's context menu opens (D53), no
+  failure panel shown and none logged, and the file that does not fit
+  told.
 - *Why:* a window blank and silent, as d3 under a prototype frozen before
   it ran made it (D22), tells its user nothing; this one tells them, and
   the tests see what they see.
@@ -1154,6 +1168,31 @@ The review checklist:
   more; values and labels in text's colours; the first 200 rows.
 - *Why:* a query worth keeping kept with how it is read; no chart
   library for two forms.
+
+#### D53. Context menus everywhere, of the registry, and a new worksheet a click away
+
+- **One menu:** one open at a time, in the window's store; opened by the
+  secondary button, Shift+F10 or the context menu key on what has the
+  focus; kept within the window; the arrows, Home, End, Right and Left
+  move and open submenus, Enter or Space chooses, Escape closes, the
+  focus given back.
+- **Items:** an item is a command of the registry where one does what
+  it does, with its title, icon and key, disabled where it cannot run;
+  else the action its button or dialog runs. Of the explorer's rows, a
+  result's cells and headers, the editor, a worksheet's tab, and a
+  model's tables and diagram.
+- **Destructive:** marked in the colour of danger; DROP, ALTER and the
+  like run in a worksheet of their own, through the guards, as typed;
+  deleting a saved connection asks its name typed.
+- **New worksheet:** File > New Worksheet, Mod+N, the toolbar, the plus
+  after the centre's tabs, the Start panel, and the explorer's menus,
+  the last on that connection, SET SCHEMA run first where the session's
+  is another.
+- **The webview's own menu:** left out but in fields of text.
+- **Hidden columns:** drawn of no width; still copied and exported.
+- *Why:* the owner asked for right-click everywhere and one-click
+  worksheets; one registry keeps the menus, the palette and the menu bar
+  the same.
 
 ---
 

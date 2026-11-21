@@ -11,7 +11,7 @@ are bound.
 | Command | Menu | macOS | Linux, Windows |
 |---|---|---|---|
 | New Connection… | File | Cmd+Shift+N | Ctrl+Shift+N |
-| New Worksheet | File | Cmd+T | Ctrl+T |
+| New Worksheet | File | Cmd+N | Ctrl+N |
 | Open File… | File | Cmd+O | Ctrl+O |
 | New Model | File | | |
 | Open Model… | File | | |
@@ -32,6 +32,8 @@ are bound.
 | Run to CSV File… | Worksheet | | |
 | Run to Native Rows File… | Worksheet | | |
 | Query Builder… | Worksheet | | |
+| Complete or Indent | Worksheet | Tab | Tab |
+| Previous Placeholder or Outdent | Worksheet | Shift+Tab | Shift+Tab |
 | Format | Worksheet | Cmd+Shift+F | Ctrl+Shift+F |
 | Toggle Comment | Worksheet | Cmd+/ | Ctrl+/ |
 | Upper Case | Worksheet | Cmd+Shift+U | Ctrl+Shift+U |
@@ -69,8 +71,20 @@ palette, the arrow keys choose a command and Enter runs it. The Edit
 menu's keys are the platform's own.
 
 In a worksheet's editor, Studio's keys come first: a key bound to one of
-Studio's commands runs it, wherever the cursor is. The editor's own keys
-are the rest: Tab, in a snippet, moves to its next field; Ctrl+Space
-asks for completion; Cmd+Z, or Ctrl+Z, undoes; Alt+Up and Alt+Down move
-a line; a click with Cmd, or Ctrl, adds a cursor; Cmd+Alt+[, or
-Ctrl+Shift+[, folds a statement, and the same with ] unfolds it.
+Studio's commands runs it, wherever the cursor is. **Complete or
+Indent** and **Previous Placeholder or Outdent**, Tab and Shift+Tab by
+default, are the editor's alone ([Worksheets](../user/05-worksheets.md#completion)):
+with the completion list open, Tab takes the item highlighted; with
+none, it completes the word in place where one candidate alone fits,
+opens the list where several do, moves to a snippet's next field, or
+indents. Escape, then Tab, leaves the editor, so the keyboard alone
+moves the focus on. The editor's own keys are the rest: Ctrl+Space asks
+for completion; while the list is open, Up and Down, Page Up and Page
+Down, Home and End move through it, Enter takes an item and Escape
+closes it; Cmd+Z, or Ctrl+Z, undoes; Alt+Up and Alt+Down move a line; a
+click with Cmd, or Ctrl, adds a cursor; Cmd+Alt+[, or Ctrl+Shift+[,
+folds a statement, and the same with ] unfolds it.
+
+Shift+F10, or the context menu key, opens the context menu of what has
+the focus: a row of the explorer, a cell of a result, the editor, or a
+model's diagram ([The Window](../user/02-window.md#context-menus)).

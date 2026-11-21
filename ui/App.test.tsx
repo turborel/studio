@@ -2,7 +2,7 @@ import { emit } from "@tauri-apps/api/event";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { App, MENU_EVENT } from "./App";
 import { connectSpec } from "./state/actions";
-import { Store } from "./state/store";
+import { type Dialog, Store } from "./state/store";
 import { mockBackend } from "./test/backend";
 
 /** Renders the window over a store of its own, and waits for it to load. */
@@ -92,6 +92,42 @@ describe("the window's parts", () => {
       });
       expect(screen.getByRole("dialog", { name })).toBeTruthy();
     }
+  });
+
+  it("shows the dialogs of the tasks, and keeps the webview's own menu to fields of text [DESIGN] D53", async () => {
+    mockBackend({ catalog_analysis: () => ({ indexes: [], findings: [], settings: [] }) });
+    const store = await renderWindow();
+    const statement = { sql: "SELECT 1", from: 0, to: 8 };
+    const dialogs: [Dialog, string][] = [
+      [{ kind: "analyzer", connection: 1, schema: "ANN" }, "Analyze Schema ANN"],
+      [{ kind: "analyzer", connection: 1, schema: "ANN", table: "T", tab: "settings" }, "Analyze Table ANN.T"],
+      [
+        {
+          kind: "whatIf",
+          whatIf: { worksheet: "w", statement, index: "I", create: "CREATE INDEX I ON T (A)", drop: "DROP INDEX I" },
+        },
+        "What If",
+      ],
+      [{ kind: "report", sql: "SELECT 1", chart: null }, "Save as Report"],
+      [{ kind: "prompt", title: "Rename T", label: "New name", initial: "T", answer: () => undefined }, "Rename T"],
+    ];
+    for (const [dialog, name] of dialogs) {
+      act(() => {
+        store.update((now) => ({ ...now, dialog }));
+      });
+      expect(screen.getByRole("dialog", { name })).toBeTruthy();
+    }
+    act(() => {
+      store.update((now) => ({ ...now, dialog: null }));
+    });
+    const menu = new MouseEvent("contextmenu", { bubbles: true, cancelable: true });
+    screen.getByRole("toolbar", { name: "Toolbar" }).dispatchEvent(menu);
+    expect(menu.defaultPrevented).toBe(true);
+    const field = document.createElement("input");
+    screen.getByRole("toolbar", { name: "Toolbar" }).append(field);
+    const inField = new MouseEvent("contextmenu", { bubbles: true, cancelable: true });
+    field.dispatchEvent(inField);
+    expect(inField.defaultPrevented).toBe(false);
   });
 
   it("runs a toolbar button's command, and ignores keys bound to nothing [DESIGN] D30", async () => {

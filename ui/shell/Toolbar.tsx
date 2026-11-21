@@ -12,7 +12,7 @@ import { useStudio } from "../state/store";
 
 /** The commands the toolbar holds, in their groups, in order. */
 export const TOOLBAR: readonly (readonly string[])[] = [
-  ["connection.new", "connection.disconnect", "connection.reconnect"],
+  ["connection.new", "worksheet.new", "connection.disconnect", "connection.reconnect"],
   ["statement.cancel"],
   ["transaction.commit", "transaction.rollback"],
   ["palette.open"],

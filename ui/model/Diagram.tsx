@@ -20,6 +20,7 @@ import { columnMarks } from "./svg";
 import { type ModelDoc } from "./models";
 import { tableKey } from "./model";
 import { edgesOf, nodesOf, type TableData } from "./flowParts";
+import { menuKey } from "../shell/ContextMenu";
 
 /** A table's node: its name, then each column, its type and marks. */
 export function TableNode({ data }: NodeProps) {
@@ -65,21 +66,64 @@ function SearchFocus({ doc, search }: { readonly doc: ModelDoc; readonly search:
   return null;
 }
 
+/** Opens the menu of the table selected, or of the diagram, by Shift+F10 or the context menu key. */
+function keyedMenu(
+  doc: ModelDoc,
+  onMenu: ((key: string | null, at: { x: number; y: number }) => void) | undefined,
+): (e: React.KeyboardEvent<HTMLDivElement>) => void {
+  return (e) => {
+    if (menuKey(e)) {
+      e.preventDefault();
+      const box = e.currentTarget.getBoundingClientRect();
+      onMenu?.(doc.selected, { x: box.left + KEYED_INSET, y: box.top + KEYED_INSET });
+    }
+  };
+}
+
+/** What a click on the diagram's background does: no table selected. */
+function selectsNone(onSelect: (key: string | null) => void): () => void {
+  return () => {
+    onSelect(null);
+  };
+}
+
+/** The nodes and edges of `doc`'s tables not hidden. */
+function drawn(doc: ModelDoc) {
+  const model = { ...doc.model, tables: doc.model.tables.filter((t) => !doc.hidden.includes(tableKey(t))) };
+  return { nodes: nodesOf(model, doc), edges: edgesOf(model, doc.filter) };
+}
+
+/** Opens the menu of `key`, or of the diagram, where the pointer is. */
+function pointedMenu(
+  event: { preventDefault: () => void; clientX: number; clientY: number },
+  key: string | null,
+  onMenu: ((key: string | null, at: { x: number; y: number }) => void) | undefined,
+): void {
+  event.preventDefault();
+  onMenu?.(key, { x: event.clientX, y: event.clientY });
+}
+
+/** How far into the diagram a menu opened by the keys is placed, in pixels. */
+const KEYED_INSET = 40;
+
 /** The diagram of `doc`, a table moved told by `onMove`, one clicked by `onSelect`. */
 export function Diagram(props: {
   readonly doc: ModelDoc;
   readonly search: string;
   readonly onMove: (key: string, at: { x: number; y: number }) => void;
   readonly onSelect: (key: string | null) => void;
+  /** The menu of a table, or of the diagram where `key` is null, at a place in the window. */
+  readonly onMenu?: (key: string | null, at: { x: number; y: number }) => void;
 }) {
   const { doc } = props;
-  const nodes = nodesOf(doc.model, doc);
-  const edges = edgesOf(doc.model, doc.filter);
+  const { nodes, edges } = drawn(doc);
   return (
     <div
       className="model-diagram"
       role="figure"
       aria-label={`Diagram of ${doc.model.name}: ${String(doc.model.tables.length)} tables`}
+      tabIndex={0}
+      onKeyDown={keyedMenu(doc, props.onMenu)}
     >
       <ReactFlowProvider>
         <ReactFlow
@@ -96,8 +140,12 @@ export function Diagram(props: {
           onNodeClick={(_event, node: Node) => {
             props.onSelect(node.type === "table" ? node.id : null);
           }}
-          onPaneClick={() => {
-            props.onSelect(null);
+          onPaneClick={selectsNone(props.onSelect)}
+          onNodeContextMenu={(event, node: Node) => {
+            pointedMenu(event, node.type === "table" ? node.id : null, props.onMenu);
+          }}
+          onPaneContextMenu={(event) => {
+            pointedMenu(event, null, props.onMenu);
           }}
         >
           <Background />

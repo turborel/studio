@@ -36,6 +36,9 @@ import {
   type ViewUpdate,
 } from "@codemirror/view";
 import type { TableDetail } from "../../ipc/catalog";
+import type { Store } from "../../state/store";
+import { defaultKeys } from "../../commands/commands";
+import { TAB_COMMANDS, tabCompartment, tabKeys } from "./tab";
 import { sqlName, turborelDialect } from "../dialect";
 import { markers } from "../variables";
 import { completionSource, iconElement } from "../complete/source";
@@ -175,6 +178,15 @@ export function language(bridge: Bridge): Extension {
   return sql({ dialect: turborelDialect(bridge.store.current().reservedWords) });
 }
 
+/** The keys of the Tab commands, as the settings bind them, else by default. */
+export function tabKeysOf(store: Store): { complete: string; back: string } {
+  const bound = store.current().settings.keyBindings;
+  return {
+    complete: bound[TAB_COMMANDS.complete] ?? defaultKeys()[TAB_COMMANDS.complete] ?? "",
+    back: bound[TAB_COMMANDS.back] ?? defaultKeys()[TAB_COMMANDS.back] ?? "",
+  };
+}
+
 /** Every extension of a worksheet's editor, `changed` told of each change of its text. */
 export function editorExtensions(bridge: Bridge, changed: (text: string) => void): Extension {
   return [
@@ -199,6 +211,7 @@ export function editorExtensions(bridge: Bridge, changed: (text: string) => void
     crosshairCursor(),
     highlightActiveLine(),
     highlightSelectionMatches(),
+    tabCompartment.of(tabKeys(completionSource(bridge), tabKeysOf(bridge.store))),
     keymap.of([
       ...closeBracketsKeymap,
       ...defaultKeymap,

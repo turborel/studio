@@ -10,6 +10,9 @@ itself by, a part at a time as the tree opens.
 
 ## The tree
 
+Each row of the tree, and each connection, has a context menu of what
+can be done with it ([The Window](02-window.md#context-menus)).
+
 The tree's first level holds the schemas, then **Users and Roles**. A
 schema opens on its folders:
 

@@ -16,6 +16,7 @@ import type { Confirm } from "../ipc/connections";
 import type { FavouriteQuery } from "../ipc/worksheet";
 import type { Chart, ReportList } from "../ipc/analyzer";
 import type { WhatIf } from "../analyzer/whatIf";
+import type { OpenMenu } from "../shell/ContextMenu";
 import type { WorksheetState } from "./worksheets";
 
 /** A connection open in this window. */
@@ -50,9 +51,23 @@ export type Dialog =
   | { readonly kind: "favourite"; readonly sql: string }
   | { readonly kind: "data"; readonly task: DataTask }
   | { readonly kind: "builder"; readonly worksheet: string; readonly connection: number; readonly schema: string }
-  | { readonly kind: "analyzer"; readonly connection: number; readonly schema: string }
+  | {
+      readonly kind: "analyzer";
+      readonly connection: number;
+      readonly schema: string;
+      /** The table it is of, if one: the findings and indexes of that table alone. */
+      readonly table?: string;
+      readonly tab?: "findings" | "indexes" | "settings" | "waiting";
+    }
   | { readonly kind: "whatIf"; readonly whatIf: WhatIf }
-  | { readonly kind: "report"; readonly sql: string; readonly chart: Chart | null };
+  | { readonly kind: "report"; readonly sql: string; readonly chart: Chart | null }
+  | {
+      readonly kind: "prompt";
+      readonly title: string;
+      readonly label: string;
+      readonly initial: string;
+      readonly answer: (value: string | null) => void;
+    };
 
 /** The values a statement's markers are given: its parameters' and its script variables'. */
 export interface Given {
@@ -68,6 +83,8 @@ export interface StudioState {
   readonly open: readonly OpenConnection[];
   readonly active: number | null;
   readonly dialog: Dialog | null;
+  /** The context menu open, if any. */
+  readonly menu: OpenMenu | null;
   readonly error: StudioError | null;
   readonly catalogs: Readonly<Record<number, CatalogState>>;
   readonly selected: { readonly connection: number; readonly object: Selected } | null;
@@ -97,6 +114,7 @@ export const INITIAL: StudioState = {
   open: [],
   active: null,
   dialog: null,
+  menu: null,
   error: null,
   catalogs: {},
   selected: null,

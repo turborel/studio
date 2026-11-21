@@ -10,10 +10,16 @@ import type { SavedConnection } from "../ipc/saved";
 import { connectSaved, refreshSaved } from "../state/actions";
 import { Store, StoreContext } from "../state/store";
 import { mockBackend } from "./backend";
+import { ContextMenu } from "../shell/ContextMenu";
 
-/** Renders `children` within `store`. */
+/** Renders `children` within `store`, and the context menu the window shows. */
 export function within(store: Store, children: ReactNode) {
-  return render(<StoreContext.Provider value={store}>{children}</StoreContext.Provider>);
+  return render(
+    <StoreContext.Provider value={store}>
+      {children}
+      <ContextMenu />
+    </StoreContext.Provider>,
+  );
 }
 
 /** Lets the backend's answers settle. */

@@ -9,12 +9,19 @@ import {
   type DockviewApi,
   type DockviewReadyEvent,
   type DockviewTheme,
+  type IDockviewHeaderActionsProps,
   type IDockviewPanelHeaderProps,
   type IDockviewPanelProps,
 } from "dockview-react";
 import { Icon, type IconName } from "../icons/Icon";
 import { type Store, useStore, useStudio } from "../state/store";
-import { activateWorksheet, closeWorksheet, type WorksheetState, worksheetOf } from "../state/worksheets";
+import {
+  activateWorksheet,
+  closeWorksheet,
+  openWorksheet,
+  type WorksheetState,
+  worksheetOf,
+} from "../state/worksheets";
 import { tint } from "./environment";
 import { Worksheet } from "../worksheet/Worksheet";
 import type { ThemeName } from "../theme/tokens";
@@ -23,6 +30,8 @@ import { defaultLayout, PANELS } from "./layout";
 import { DetailsPanel, ExplorerPanel, WelcomePanel } from "./panels";
 import { activateModel, closeModel, type ModelDoc } from "../model/models";
 import { ModelView } from "../model/ModelView";
+import { useMenu } from "./ContextMenu";
+import { tabMenu } from "../worksheet/menus";
 
 /** The dock's theme of each of Studio's, its colours from Studio's own. */
 const DOCK_THEMES: Readonly<Record<ThemeName, DockviewTheme>> = {
@@ -66,11 +75,52 @@ export function Tab(props: IDockviewPanelHeaderProps) {
     const open = s.open.find((c) => c.id === sheet?.connection);
     return open === undefined ? null : tint(open.guards.environment, open.colour);
   });
+  const store = useStore();
+  const worksheet = typeof params.id === "string" && props.api.component === PANELS.worksheet.id ? params.id : null;
+  const menu = useMenu(() =>
+    worksheet === null
+      ? []
+      : tabMenu(
+          store,
+          worksheet,
+          props.api.group.panels
+            .filter((p) => p.id.startsWith(WORKSHEET_PANEL))
+            .map((p) => p.id.slice(WORKSHEET_PANEL.length)),
+        ),
+  );
   return (
-    <div className="dock-tab" style={colour === null ? undefined : { boxShadow: `inset 0 -3px 0 ${colour}` }}>
+    <div
+      className="dock-tab"
+      style={colour === null ? undefined : { boxShadow: `inset 0 -3px 0 ${colour}` }}
+      {...(worksheet === null ? {} : menu)}
+    >
       {icon !== undefined && <Icon name={icon} />}
       <DockviewDefaultTab {...props} />
     </div>
+  );
+}
+
+/** The "+" at the end of a group's tabs of worksheets, models or the start, which opens a new worksheet there. */
+export function NewWorksheetAction({ panels }: IDockviewHeaderActionsProps) {
+  const store = useStore();
+  const centre = panels.some(
+    (p) => p.id.startsWith(WORKSHEET_PANEL) || p.id.startsWith(MODEL_PANEL) || p.id === PANELS.welcome.id,
+  );
+  if (!centre) {
+    return null;
+  }
+  return (
+    <button
+      type="button"
+      className="tool dock-new"
+      title="New Worksheet"
+      aria-label="New Worksheet"
+      onClick={() => {
+        openWorksheet(store);
+      }}
+    >
+      <Icon name="newWorksheet" />
+    </button>
   );
 }
 
@@ -244,5 +294,13 @@ export function Dock({ theme, onApi }: { readonly theme: ThemeName; readonly onA
       syncModels(event.api, store);
     });
   };
-  return <DockviewReact components={COMPONENTS} defaultTabComponent={Tab} onReady={ready} theme={DOCK_THEMES[theme]} />;
+  return (
+    <DockviewReact
+      components={COMPONENTS}
+      defaultTabComponent={Tab}
+      leftHeaderActionsComponent={NewWorksheetAction}
+      onReady={ready}
+      theme={DOCK_THEMES[theme]}
+    />
+  );
 }

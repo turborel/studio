@@ -1,8 +1,9 @@
 //! The real window's smoke test (RULES.md D49): the built application,
 //! launched by tauri-driver under WebDriver, its toolbar and explorer
-//! drawn, no failure panel shown and none logged; once from app data of
-//! none, and once from app data an earlier build left, of a file that no
-//! longer fits, which is set aside and told. It runs where tauri-driver
+//! drawn, a new worksheet opened by the toolbar's button and its editor's
+//! context menu opened (D53), no failure panel shown and none logged;
+//! once from app data of none, and once from app data an earlier build
+//! left, of a file that no longer fits, which is set aside and told. It runs where tauri-driver
 //! and the platform's WebDriver run: Linux, under a display server.
 
 use std::io::{BufRead, BufReader, Read, Write};
@@ -47,6 +48,39 @@ fn found(session: &str, selector: &str) -> Result<bool> {
     let (code, _) =
         request("POST", &format!("/session/{session}/element"), Some(&serde_json::json!({"using": "css selector", "value": selector})))?;
     Ok(code == 200)
+}
+
+/// Clicks the element `selector` finds.
+fn click(session: &str, selector: &str) -> Result<()> {
+    let (code, found) =
+        request("POST", &format!("/session/{session}/element"), Some(&serde_json::json!({"using": "css selector", "value": selector})))?;
+    let element = found.pointer("/value").and_then(|v| v.as_object()).and_then(|o| o.values().next()).and_then(serde_json::Value::as_str);
+    let Some(element) = element.filter(|_| code == 200) else { return fail(format!("no {selector} to click: {found}")) };
+    let (code, answer) = request("POST", &format!("/session/{session}/element/{element}/click"), Some(&serde_json::json!({})))?;
+    if code == 200 { Ok(()) } else { fail(format!("{selector} could not be clicked: {answer}")) }
+}
+
+/// Runs `script` in the page.
+fn script(session: &str, script: &str) -> Result<serde_json::Value> {
+    let (code, answer) =
+        request("POST", &format!("/session/{session}/execute/sync"), Some(&serde_json::json!({"script": script, "args": []})))?;
+    if code == 200 { Ok(answer) } else { fail(format!("the page's script failed: {answer}")) }
+}
+
+/// A new worksheet opened by the toolbar's button, and its editor's context menu opened.
+fn worksheet_and_menu(session: &str) -> Result<()> {
+    click(session, "[role=\"toolbar\"][aria-label=\"Toolbar\"] button[aria-label=\"New Worksheet\"]")?;
+    wait_for(session, "[role=\"region\"][aria-label=\"Worksheet\"] .worksheet-body")?;
+    script(
+        session,
+        "document.querySelector('.worksheet-body').dispatchEvent(new MouseEvent('contextmenu', {bubbles: true, cancelable: true, clientX: 120, clientY: 160}))",
+    )?;
+    wait_for(session, "[role=\"menu\"] [role=\"menuitem\"]")?;
+    let said = script(session, "return document.querySelector('[role=menu]').textContent")?;
+    if !said.pointer("/value").and_then(serde_json::Value::as_str).is_some_and(|s| s.contains("Run Statement")) {
+        return fail(format!("the editor's menu did not hold Run Statement: {said}"));
+    }
+    Ok(())
 }
 
 /// Waits until the page has an element `selector` finds.
@@ -114,13 +148,12 @@ fn scenario(application: &Path, home: &Path, told: Option<&str>) -> Result<()> {
         }
         if let Some(text) = told {
             wait_for(&session, ".notice-banner")?;
-            let script = serde_json::json!({"script": "return document.querySelector('.notice-banner').textContent", "args": []});
-            let (_, said) = request("POST", &format!("/session/{session}/execute/sync"), Some(&script))?;
+            let said = script(&session, "return document.querySelector('.notice-banner').textContent")?;
             if !said.pointer("/value").and_then(serde_json::Value::as_str).is_some_and(|s| s.contains(text)) {
                 return fail(format!("the notice did not tell {text}: {said}"));
             }
         }
-        Ok(())
+        worksheet_and_menu(&session)
     })();
     let _ = request("DELETE", &format!("/session/{session}"), None); // The driver ends with it.
     checked?;

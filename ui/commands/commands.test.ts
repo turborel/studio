@@ -37,6 +37,8 @@ describe("the commands", () => {
     await runCommand("transaction.commit", idle);
     expect(asked).toEqual([]);
     const store = await connected();
+    await runCommand("analyzer.open", context(store));
+    expect(store.current().dialog).toMatchObject({ kind: "analyzer", connection: 1, schema: "ANN" });
     for (const id of [
       "transaction.commit",
       "transaction.rollback",
