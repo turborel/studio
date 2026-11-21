@@ -178,9 +178,23 @@ impl Scene<'_> {
     /// to type into: of several worksheets, the one drawn.
     fn focus_editor(&self) -> Result<()> {
         self.session.script(
-            "document.getElementById('studio-editor')?.removeAttribute('id'); const e = [...document.querySelectorAll('.worksheet-body .cm-content')].find((e) => e.offsetParent !== null); if (!e) throw new Error('no worksheet is shown'); e.id = 'studio-editor';",
+            "document.getElementById('studio-editor')?.removeAttribute('id'); const e = [...document.querySelectorAll('.worksheet-body .cm-content')].find((e) => e.offsetParent !== null); if (!e) throw new Error('no worksheet is shown'); e.id = 'studio-editor'; e.focus();",
         )?;
-        self.session.click("#studio-editor")
+        // Focused by the page already; a click, where one lands, puts the cursor too.
+        let _ = self.session.click("#studio-editor");
+        Ok(())
+    }
+
+    /// Waits until the catalog draws a row of `label`.
+    fn wait_row(&self, label: &str) -> Result<()> {
+        let start = std::time::Instant::now();
+        while !self.session.script(&format!("return window.studioRow('{label}') !== undefined"))?.as_bool().unwrap_or(false) {
+            if start.elapsed() > crate::webdriver::DRAWN_WITHIN {
+                return fail(format!("the catalog drew no row {label}"));
+            }
+            std::thread::sleep(SETTLE);
+        }
+        Ok(())
     }
 
     /// Types `text` into the worksheet's editor.
@@ -236,11 +250,15 @@ fn plan_scene(scene: &Scene<'_>) -> Result<()> {
 /// A context menu: a table's, in the explorer.
 fn menu_scene(scene: &Scene<'_>) -> Result<()> {
     scene.session.script(HELPERS)?;
-    scene.session.script("window.studioRow('DEMO')?.dispatchEvent(new MouseEvent('dblclick', {bubbles: true}))")?;
-    std::thread::sleep(SETTLE);
-    scene.session.script("window.studioRow('Tables')?.dispatchEvent(new MouseEvent('dblclick', {bubbles: true}))")?;
-    std::thread::sleep(SETTLE);
-    scene.session.script("const r = window.studioRow('ORDERS'); if (!r) throw new Error('no ORDERS row'); window.studioMenu(r);")?;
+    if scene.session.script("return window.studioRow('Tables') === undefined")?.as_bool().unwrap_or(true) {
+        scene.session.script("window.studioRow('DEMO')?.dispatchEvent(new MouseEvent('dblclick', {bubbles: true}))")?;
+    }
+    scene.wait_row("Tables")?;
+    if scene.session.script("return window.studioRow('ORDERS') === undefined")?.as_bool().unwrap_or(true) {
+        scene.session.script("window.studioRow('Tables')?.dispatchEvent(new MouseEvent('dblclick', {bubbles: true}))")?;
+    }
+    scene.wait_row("ORDERS")?;
+    scene.session.script("window.studioMenu(window.studioRow('ORDERS'));")?;
     scene.session.wait_for("[role=\"menu\"] [role=\"menuitem\"]")?;
     scene.save("context-menu")?;
     scene.session.press(&[], &[ESCAPE])
@@ -298,7 +316,9 @@ fn name_in_save_dialog(file: &Path) -> Result<()> {
         if done.success() { Ok(()) } else { fail(format!("xdotool {} failed", args.join(" "))) }
     };
     let path = file.display().to_string();
-    typed(&["search", "--sync", "--onlyvisible", "--name", "Save", "windowactivate", "--sync"])?;
+    // A virtual display has no window manager to activate a window: the
+    // dialog is given the keyboard's focus instead.
+    typed(&["search", "--sync", "--onlyvisible", "--name", "Save", "windowfocus", "--sync"])?;
     std::thread::sleep(SETTLE);
     typed(&["key", "ctrl+a"])?;
     typed(&["type", "--delay", "20", &path])?;
