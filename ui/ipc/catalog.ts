@@ -140,6 +140,8 @@ export interface TableDetail {
     readonly partitions: readonly Partition[];
   } | null;
   readonly partitionOf: { readonly schema: string; readonly name: string; readonly bound: string } | null;
+  /** A base table's engine, and the options of it given a value of their own, each as SQL writes it. */
+  readonly storage: { readonly engine: string; readonly options: readonly (readonly [string, string])[] } | null;
 }
 
 /** A user-defined type. */

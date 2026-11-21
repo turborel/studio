@@ -10,7 +10,7 @@ import { savedOf, toggleFavourite } from "./Favourites";
 import { nodeId, treeRows } from "./tree";
 
 describe("the details panel", () => {
-  it("shows a table's columns, keys, indexes, triggers, privileges and dependencies [DESIGN] D33", async () => {
+  it("shows a table's columns, keys, indexes, storage, triggers, privileges and dependencies [DESIGN] D33", async () => {
     catalogBackend();
     const store = await opened();
     within(store, <Details />);
@@ -29,6 +29,9 @@ describe("the details panel", () => {
     expect(screen.getByText("its table's index")).toBeTruthy();
     expect(screen.getByText("FILL = 50")).toBeTruthy();
     expect(screen.queryByRole("tab", { name: "Partitions" })).toBeNull();
+    fireEvent.click(screen.getByRole("tab", { name: "Storage" }));
+    expect(screen.getByRole("table", { name: "Storage" }).textContent).toContain("rowstore");
+    expect(screen.getByText("STATISTICS.SAMPLE")).toBeTruthy();
     fireEvent.click(screen.getByRole("tab", { name: "Triggers" }));
     expect(screen.getByText("SET NEW.NAME = 'y'")).toBeTruthy();
     fireEvent.click(screen.getByRole("tab", { name: "Privileges" }));

@@ -1,4 +1,5 @@
 # The headings of Turborel's manual at ba8c845f27f24b736572e8aaf462b0adade9be29, copied by `cargo xtask headings` (RULES.md D6).
+appendix/g-table-options.md	Appendix G: Table Options *(extension)*
 client/02-library-connections.md	Connecting by settings
 client/02-library-connections.md	Where settings come from
 client/02-library-connections.md	The connection URI
@@ -54,6 +55,7 @@ sql/statements/create-function.md	SYNOPSIS
 sql/statements/create-index.md	SYNOPSIS
 sql/statements/create-index.md	DESCRIPTION
 sql/statements/create-table.md	SYNOPSIS
+sql/statements/create-table.md	DESCRIPTION
 sql/statements/create-type.md	SYNOPSIS
 sql/statements/create-view.md	SYNOPSIS
 sql/statements/declare-local-temporary-table.md	DESCRIPTION

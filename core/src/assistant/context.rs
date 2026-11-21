@@ -170,6 +170,7 @@ mod tests {
             view: None,
             partitioning: None,
             partition_of: None,
+            storage: None,
         }
     }
 

@@ -1,16 +1,20 @@
-//! A table's partitions and its indexes' options, read from the views
-//! of partitioned tables and of index options
+//! A table's partitions, its storage and its indexes' options, read from
+//! the views of partitioned tables, of table options and of index options
 //! (`[DOC sql/23-partitioning.md The Information Schema]`).
 
 use std::collections::BTreeMap;
 
-use crate::catalog::model::{Index, Partition, PartitionOf, Partitioning};
+use crate::catalog::model::{Index, Partition, PartitionOf, Partitioning, Storage};
 use crate::catalog::names::literal;
 use crate::catalog::{Catalog, need, queries, yes};
 use crate::error::Result;
 
 /// How INDEX_OPTIONS' VALUE_KIND begins for an option whose value is text.
 const TEXT_KIND: &str = "TEXT";
+/// How TABLE_OPTIONS' VALUE_KIND begins for an option whose value is a number, written unquoted.
+const NUMBER_KINDS: [&str; 2] = ["INTEGER", "NUMBER"];
+/// TABLE_OPTIONS' VALUE_SOURCE of an option of its default.
+const DEFAULT_SOURCE: &str = "DEFAULT";
 
 impl Catalog<'_> {
     /// How `schema`.`name` is partitioned, if it is.
@@ -57,6 +61,24 @@ impl Catalog<'_> {
             }
         }
         Ok(found)
+    }
+
+    /// The storage of base table `schema`.`name`: its engine, and its
+    /// options given a value of their own, a number unquoted and any other
+    /// value a literal; none of a table no engine keeps.
+    pub(crate) fn storage(&self, schema: &str, name: &str) -> Result<Option<Storage>> {
+        let rows = self.rows(queries::TABLE_OPTIONS, &[schema, name])?;
+        let Some(first) = rows.first() else { return Ok(None) };
+        let options = rows
+            .iter()
+            .filter(|r| need(r, 4) != DEFAULT_SOURCE)
+            .map(|r| {
+                let value = need(r, 2);
+                let number = NUMBER_KINDS.iter().any(|k| need(r, 3).starts_with(k));
+                (need(r, 1), if number { value } else { literal(&value) })
+            })
+            .collect();
+        Ok(Some(Storage { engine: need(first, 0), options }))
     }
 
     /// The options the indexes of `schema`.`name` were given by WITH, by

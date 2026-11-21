@@ -97,6 +97,7 @@ Of a table or view, its tabs are:
 | **Indexes** | each index: its method, whether it is unique, its columns, the options WITH gave it, and what the server made it for, if it did: a key, or, on a partition, its table's index |
 | **Triggers** | each trigger: its timing, event, whether for each row or statement, and its action |
 | **Partitions** | of a partitioned table, its strategy, its key and each partition with its bound; of a partition, the table it is a partition of and its bound |
+| **Storage** | of a base table, the engine that keeps its rows, and each option of the engine given a value of its own ([Appendix G](https://github.com/turborel/turborel/blob/main/doc/appendix/g-table-options.md)) |
 | **Privileges** | each privilege granted on it, or on one of its columns: to whom, which, on which column, by whom, and whether with grant option |
 | **Dependencies** | what it uses, as the tables a view reads, and what uses it: views, routines and triggers that read it, and other tables' foreign keys that reference it |
 | **Definition** | its definition as SQL |
@@ -132,7 +133,9 @@ and drop it.
 The **Definition** tab shows the SQL that makes the object again, as
 Studio writes it from the catalog: a table's columns, its constraints,
 the indexes made by CREATE INDEX, with their methods and options, and
-its triggers, and a partitioned table's strategy and key; a partition as
+its triggers, and a partitioned table's strategy and key; a base table's
+engine, by USING, and the options of its engine it was given, by WITH
+([Appendix G](https://github.com/turborel/turborel/blob/main/doc/appendix/g-table-options.md)); a partition as
 a partition of its table, of its bound; a view's query; a routine whole;
 a sequence's options; a domain's type, default and checks; a distinct
 type's source, and a structured type's attributes and whether it is
@@ -168,11 +171,13 @@ CREATE TABLE ANN.ORDERS (
     TOTAL DECIMAL(9,2) DEFAULT 0.00,
     CONSTRAINT ORDERS_PK PRIMARY KEY (ID),
     CONSTRAINT TOTAL_NOT_NEGATIVE CHECK (TOTAL >= 0)
-);
+) USING rowstore;
 CREATE INDEX ORDERS_BY_CUSTOMER ON ANN.ORDERS (CUSTOMER);
 ```
 
-Each name is qualified by its schema, here ANN's. A type is written as
+Each name is qualified by its schema, here ANN's. The engine is named
+though it is the default, as the database it is run on may keep its
+tables in another. A type is written as
 the server names it, VARCHAR as CHARACTER VARYING, and a default as the
 server keeps it, cast to its column's type; a column of the primary key
 is NOT NULL, as the key makes it.

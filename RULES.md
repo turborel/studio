@@ -836,7 +836,10 @@ The review checklist:
   neither is written by the table's definition.
 - **Definitions:** written by Studio of what it read, each name
   qualified and delimited where Turborel's lexer would read it otherwise;
-  each kind made again of its definition by a live test.
+  a base table's engine always named by USING, as the database run on
+  may keep its tables in another, and its options of a value of their
+  own by WITH, of TABLE_OPTIONS; each kind made again of its definition
+  by a live test.
 - **Favourites:** kept with the saved connection, at most 500.
 - *Why:* the Information Schema is the standard's description of a
   database, so the explorer shows what a user may see and nothing else.

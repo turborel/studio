@@ -118,9 +118,22 @@ pub fn a_table_is_made_again_of_its_definition(live: &Live) {
     run_script(&manager, id, &definition);
     let after = catalog.table(OWNER, "CAT_R").unwrap();
     assert_eq!((&after.columns, &after.constraints, &after.indexes), (&before.columns, &before.constraints, &before.indexes));
+    assert_eq!(after.storage.as_ref().map(|s| s.engine.as_str()), Some("rowstore"));
     for kind in [ScriptAs::Select, ScriptAs::Alter] {
         run_script(&manager, id, &script(&before, kind));
     }
+    run_script(
+        &manager,
+        id,
+        "CREATE TABLE CAT_STORED (REGION VARCHAR(10), N INTEGER) USING columnstore WITH (COLUMNSTORE.FREEZE_DELAY = 60, COLUMNSTORE.ORDER = 'REGION', COLUMNSTORE.IMPRINTS = 'ON')",
+    );
+    let stored = catalog.table(OWNER, "CAT_STORED").unwrap();
+    let options: Vec<&str> = stored.storage.as_ref().unwrap().options.iter().map(|(o, _)| o.as_str()).collect();
+    assert_eq!(options, ["COLUMNSTORE.FREEZE_DELAY", "COLUMNSTORE.IMPRINTS", "COLUMNSTORE.ORDER"]);
+    run_script(&manager, id, "DROP TABLE CAT_STORED CASCADE");
+    run_script(&manager, id, &create(&stored));
+    assert_eq!(catalog.table(OWNER, "CAT_STORED").unwrap().storage, stored.storage);
+    run_script(&manager, id, "DROP TABLE CAT_STORED CASCADE");
     manager.close(id).unwrap();
 }
 

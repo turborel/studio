@@ -62,6 +62,7 @@ fn table(name: &str, columns: Vec<Column>, constraints: Vec<Constraint>, indexes
         view: None,
         partitioning: None,
         partition_of: None,
+        storage: None,
     }
 }
 

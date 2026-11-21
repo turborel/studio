@@ -46,6 +46,7 @@ const DEPT: TableDetail = {
   view: null,
   partitioning: null,
   partitionOf: null,
+  storage: null,
 };
 
 const STAFF: TableDetail = {

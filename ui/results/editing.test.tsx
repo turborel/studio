@@ -46,6 +46,7 @@ const ITEMS: TableDetail = {
   view: null,
   partitioning: null,
   partitionOf: null,
+  storage: null,
 };
 
 /** What a statement gave: the rows of ITEMS, or of a change, `affected` rows. */

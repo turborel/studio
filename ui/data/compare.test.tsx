@@ -29,6 +29,7 @@ function table(name: string, columns: [string, string][], key = true): TableDeta
     view: null,
     partitioning: null,
     partitionOf: null,
+    storage: null,
   };
 }
 

@@ -107,6 +107,7 @@ each as the session's user may see it.
 | S-VIEW-23 | USER_DEFINED_TYPES, ATTRIBUTES, DIRECT_SUPERTYPES, METHOD_SPECIFICATIONS, METHOD_SPECIFICATION_PARAMETERS | user-defined types, with their supertypes, references and methods | done |
 | S-VIEW-24 | STATEMENT_STATISTICS | the monitor's statements and the analyzer's top statements by total time, each query's plan opened ([DOC operator/11-monitoring.md Statement statistics]) | done |
 | S-VIEW-25 | TABLE_STATISTICS, INDEX_STATISTICS | the monitor's tables and indexes, the analyzer's unused indexes and sizes, and the reports of sizes ([DOC operator/11-monitoring.md Table and index statistics]) | done |
+| S-VIEW-26 | TABLE_OPTIONS | a base table's engine and its options of a value of their own, shown and written in its definition by USING and WITH ([DOC appendix/g-table-options.md Appendix G: Table Options *(extension)*]) | done |
 
 ## turborel-client
 

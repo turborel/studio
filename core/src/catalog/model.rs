@@ -147,6 +147,17 @@ pub struct Partition {
     pub partitioned: bool,
 }
 
+/// A base table's storage: the engine that keeps its rows, and the options
+/// of the engine given it a value of their own, each as SQL writes it.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Storage {
+    /// Its engine, as `rowstore` or `columnstore`.
+    pub engine: String,
+    /// Its options of a value of their own, each its name and its value.
+    pub options: Vec<(String, String)>,
+}
+
 /// How a partitioned table is partitioned.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -243,6 +254,8 @@ pub struct TableDetail {
     pub partitioning: Option<Partitioning>,
     /// The table it is a partition of, if it is one.
     pub partition_of: Option<PartitionOf>,
+    /// Its storage, of a base table.
+    pub storage: Option<Storage>,
 }
 
 /// A routine's parameter.

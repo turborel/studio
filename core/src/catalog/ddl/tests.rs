@@ -99,6 +99,7 @@ fn table() -> TableDetail {
         view: None,
         partitioning: None,
         partition_of: None,
+        storage: None,
     }
 }
 
@@ -115,6 +116,20 @@ fn a_table_is_written_whole() {
          ON DELETE CASCADE,\n    CONSTRAINT C_CHECK1 CHECK (T_ID > 0) DEFERRABLE\n);\nCREATE INDEX C_T ON ANN.C (T_ID);\nCREATE TRIGGER ANN.TR AFTER INSERT \
          ON ANN.C\nFOR EACH ROW\nDELETE FROM T WHERE ID = 0;\n"
     );
+}
+
+/// [DOC sql/statements/create-table.md SYNOPSIS] [DESIGN] D33: a base
+/// table is written with its engine, and the options of its engine given a
+/// value of their own, after its partitioning.
+#[test]
+fn a_tables_storage_is_written() {
+    use crate::catalog::model::Storage;
+    let options = vec![("COLUMNSTORE.FREEZE_DELAY".to_owned(), "60".to_owned()), ("COLUMNSTORE.ORDER".to_owned(), "'region'".to_owned())];
+    let stored =
+        TableDetail { storage: Some(Storage { engine: "columnstore".into(), options }), indexes: vec![], triggers: vec![], ..table() };
+    assert!(create(&stored).contains("\n) USING columnstore WITH (COLUMNSTORE.FREEZE_DELAY = 60, COLUMNSTORE.ORDER = 'region');\n"));
+    let plain = TableDetail { storage: Some(Storage { engine: "rowstore".into(), options: vec![] }), ..stored };
+    assert!(create(&plain).contains("\n) USING rowstore;\n"));
 }
 
 /// [DESIGN] D33: a table is scripted as each statement of its rows, by its

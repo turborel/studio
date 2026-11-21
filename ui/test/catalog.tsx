@@ -145,6 +145,7 @@ export const STAFF: TableDetail = {
   view: null,
   partitioning: null,
   partitionOf: null,
+  storage: { engine: "rowstore", options: [["STATISTICS.SAMPLE", "20000"]] },
 };
 
 /** The users and roles. */

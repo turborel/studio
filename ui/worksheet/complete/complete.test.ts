@@ -41,6 +41,7 @@ function table(
     view: null,
     partitioning: null,
     partitionOf: null,
+    storage: null,
   };
 }
 

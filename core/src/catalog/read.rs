@@ -20,6 +20,8 @@ const IS_NOT_NULL: &str = " IS NOT NULL";
 const CHECK: &str = "CHECK";
 /// A view's kind, as TABLES' TABLE_TYPE.
 const VIEW: &str = "VIEW";
+/// A base table's TABLE_TYPE: of a table an engine keeps, its storage written.
+const BASE_TABLE: &str = "BASE TABLE";
 
 /// A type as SQL writes it, of the Information Schema's DATA_TYPE and its
 /// length, precision and scale.
@@ -109,7 +111,9 @@ impl Catalog<'_> {
         if partitioning.is_some() {
             indexes.extend(self.templates(schema, name)?);
         }
+        let storage = if kind == BASE_TABLE { self.storage(schema, name)? } else { None };
         Ok(TableDetail {
+            storage,
             schema: schema.to_owned(),
             name: name.to_owned(),
             constraints: self.constraints(schema, name, &columns)?,

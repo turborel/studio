@@ -144,7 +144,19 @@ fn create_table(table: &TableDetail, name: &str) -> String {
     let mut parts: Vec<String> = table.columns.iter().map(column).collect();
     parts.extend(table.constraints.iter().map(constraint));
     let body = parts.iter().map(|p| format!("{INDENT}{p}")).collect::<Vec<_>>().join(",\n");
-    format!("CREATE TABLE {name} (\n{body}\n){partitioned}{END}")
+    format!("CREATE TABLE {name} (\n{body}\n){partitioned}{}{END}", storage(table))
+}
+
+/// A base table's USING and WITH: its engine, and its options given a
+/// value of their own ([DOC sql/statements/create-table.md DESCRIPTION]).
+fn storage(table: &TableDetail) -> String {
+    let Some(storage) = &table.storage else { return String::new() };
+    let with = if storage.options.is_empty() {
+        String::new()
+    } else {
+        format!(" WITH ({})", list(storage.options.iter().map(|(option, value)| format!("{option} = {value}"))))
+    };
+    format!(" USING {}{with}", storage.engine)
 }
 
 /// A column's definition.

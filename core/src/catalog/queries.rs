@@ -138,6 +138,12 @@ pub const PARTITION_OF: &str = "SELECT PARENT_TABLE_SCHEMA, PARENT_TABLE_NAME, B
 pub const PARTITION_INDEXES: &str = "SELECT TEMPLATE_NAME, PARTITION_SCHEMA, PARTITION_NAME, INDEX_NAME FROM INFORMATION_SCHEMA.PARTITION_INDEXES \
      WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? ORDER BY TEMPLATE_NAME, PARTITION_SCHEMA, PARTITION_NAME";
 
+/// A table's storage: its engine, and each option of it given a value of
+/// its own, its name, its value and the kind of value it takes
+/// ([DOC appendix/g-table-options.md Appendix G: Table Options *(extension)*]).
+pub const TABLE_OPTIONS: &str = "SELECT ENGINE_NAME, OPTION_NAME, OPTION_VALUE, VALUE_KIND, VALUE_SOURCE FROM INFORMATION_SCHEMA.TABLE_OPTIONS \
+     WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? ORDER BY OPTION_NAME";
+
 /// The options a table's indexes were given by WITH, each its index's
 /// name, its own name, its value and the kind of value it takes.
 pub const INDEX_OPTIONS: &str = "SELECT INDEX_NAME, OPTION_NAME, OPTION_VALUE, VALUE_KIND FROM INFORMATION_SCHEMA.INDEX_OPTIONS \

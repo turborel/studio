@@ -253,6 +253,19 @@ function TableDetails({ connection, detail }: { connection: number; detail: Tabl
   if (detail.partitioning !== null || detail.partitionOf !== null) {
     parts.push(["Partitions", () => <Partitions detail={detail} />]);
   }
+  const storage = detail.storage;
+  if (storage !== null) {
+    parts.push([
+      "Storage",
+      () => (
+        <Table
+          label="Storage"
+          headings={["Engine or option", "Value"]}
+          rows={[["Engine", storage.engine], ...storage.options.map(([option, value]) => [option, value])]}
+        />
+      ),
+    ]);
+  }
   parts.push([
     "Dependencies",
     () => <DependencyList connection={connection} schema={detail.schema} name={detail.name} />,
