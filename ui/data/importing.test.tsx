@@ -49,6 +49,11 @@ describe("the import wizard's reckoning", () => {
       "values up to 100 characters may not fit VARCHAR(10)",
     );
     expect(castNote(inferred("DATE"), column("T", "TIMESTAMP")).conflict).toBeNull();
+    expect(familyOf("GEOMETRY")).toBe("other");
+    expect(castNote(inferred("DOUBLE PRECISION"), column("N", "NUMERIC(10)")).conflict).toBeNull();
+    expect(castNote(inferred("NUMERIC(12,0)"), column("N", "NUMERIC(10)")).conflict).toBe(
+      "numbers of 12 digits before the point do not fit NUMERIC(10)",
+    );
     expect(castNote(inferred("INTEGER", true), column("ID", "INTEGER", false)).conflict).toBe(
       "ID takes no null, and the file has some",
     );
@@ -195,5 +200,63 @@ describe("importing into a new table", () => {
     expect(problems).toContain("Field 3's column needs a name and a type.");
     expect(problems).toContain("Two columns have the same name.");
     expect(screen.getByRole<HTMLButtonElement>("button", { name: "Create Table and Import" }).disabled).toBe(true);
+  });
+
+  it("imports a headerless file into an existing table, and tells rows imported with none skipped [DESIGN] D63", async () => {
+    const asked = catalogBackend({
+      choose_import_file: () => "/data/plain.csv",
+      preview_import: () => ({
+        headings: null,
+        records: [["1", "Ada"]],
+        inferred: [inferred("INTEGER"), inferred("VARCHAR(10)")],
+        sheets: null,
+      }),
+      import_rows: () => ({
+        kind: "imported",
+        answer: { rows: 1, rejected: 0, skipped: [], cancelled: false, rolledBack: 0 },
+      }),
+    });
+    const store = await opened();
+    within(store, <DataDialog task={{ kind: "import", connection: 1, schema: "ANN", table: "STAFF" }} />);
+    await settle();
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Choose File…" }));
+      await settle();
+    });
+    expect(screen.getByRole("table", { name: "Preview" }).textContent).toContain("Field 2");
+    fireEvent.change(screen.getByRole("spinbutton", { name: /Commit each/u }), { target: { value: "" } });
+    fireEvent.click(screen.getByRole("radio", { name: /Skip at most/u }));
+    fireEvent.change(screen.getByRole("spinbutton", { name: "Rows that may be skipped" }), { target: { value: "" } });
+    await act(async () => {
+      await emit(STUDIO_EVENT, {
+        kind: "import",
+        connection: 9,
+        progress: { records: 1, rejected: 0, read: 1, total: 1 },
+      });
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Import" }));
+      await settle();
+    });
+    expect(asked.find((a) => a.command === "import_rows")?.args["spec"]).toMatchObject({
+      batch: 0,
+      skip: true,
+      limit: 0,
+    });
+    expect(screen.getByRole("status", { name: "What the import did" }).textContent).toBe("Imported 1 row.");
+  });
+
+  it("asks for a column when every field is left out of a new table [DESIGN] D63", async () => {
+    catalogBackend({ choose_import_file: () => "/data/x.json", preview_import: () => ({ ...BOOK, sheets: null }) });
+    const store = await opened();
+    within(store, <DataDialog task={{ kind: "importNew", connection: 1, schema: "ANN" }} />);
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Choose File…" }));
+      await settle();
+    });
+    for (const n of [1, 2, 3]) {
+      fireEvent.click(screen.getByRole("checkbox", { name: `Make a column of field ${String(n)}` }));
+    }
+    expect(screen.getByRole("list", { name: "Problems" }).textContent).toContain("Make a column of a field.");
   });
 });

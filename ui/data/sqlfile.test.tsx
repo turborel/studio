@@ -148,4 +148,76 @@ describe("Run SQL File", () => {
     expect(screen.getByText("the file is not text Studio reads")).toBeTruthy();
     expect(screen.getByRole<HTMLButtonElement>("button", { name: "Run" }).disabled).toBe(true);
   });
+
+  it("tells a stop and what was rolled back, failures past the log, a file not confirmed, and failures of its own [DESIGN] D62", async () => {
+    let chosen: string | null = null;
+    let runs = 0;
+    const asked = catalogBackend({
+      choose_sql_file: () => chosen,
+      scan_sql_file: () => [
+        { ...SCAN, destroysCount: 3 },
+        { ...ASKED, production: true },
+      ],
+      run_sql_file: (args) => {
+        runs += 1;
+        if (args["confirmed"] !== true) {
+          return { kind: "confirm", confirm: ASKED, scan: SCAN };
+        }
+        return runs > 3
+          ? refused({ sqlcode: -910, sqlstate: "TB910", message: "the session's transaction is open" })
+          : { kind: "ran", report: { ...REPORT, ending: "stopped", failed: 12, rolledBack: true } };
+      },
+      save_sql_file_log: () => null,
+    });
+    const store = await opened();
+    within(store, <DataDialog task={{ kind: "runSqlFile", connection: 1 }} />);
+    fireEvent.click(screen.getByRole("button", { name: "Choose File…" }));
+    await settle();
+    expect(screen.getByText("No file chosen.")).toBeTruthy();
+    chosen = "/data/load.sql";
+    fireEvent.click(screen.getByRole("button", { name: "Choose File…" }));
+    await settle();
+    expect(screen.getByText("and 2 more")).toBeTruthy();
+    expect(screen.getByText("This is a production connection, and the file may write.")).toBeTruthy();
+    fireEvent.click(screen.getByRole("radio", { name: "Autocommit: each statement its own" }));
+    fireEvent.click(screen.getByRole("radio", { name: /Commit every/u }));
+    fireEvent.change(screen.getByRole("spinbutton", { name: "Statements a commit follows" }), {
+      target: { value: "0" },
+    });
+    fireEvent.change(screen.getByRole("spinbutton", { name: "Statements a commit follows" }), {
+      target: { value: "250" },
+    });
+    fireEvent.click(screen.getByRole("radio", { name: "Stop, rolling back what ran since the last commit" }));
+    fireEvent.click(screen.getByRole("button", { name: "Run" }));
+    await settle();
+    fireEvent.click(screen.getByRole("button", { name: "Don't Run" }));
+    expect(screen.getByText("Not run: the file was not confirmed.")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Run" }));
+    await settle();
+    await act(async () => {
+      await emit(STUDIO_EVENT, {
+        kind: "sqlFile",
+        connection: 9,
+        progress: { statements: 1, bytes: 1, total: 2, failed: 0 },
+      });
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Run File" }));
+    await settle();
+    expect(asked.filter((a) => a.command === "run_sql_file").at(-1)?.args["options"]).toEqual({
+      transactions: { kind: "every", every: 250 },
+      stopOnError: true,
+    });
+    const report = screen.getByRole("status", { name: "What the run did" }).textContent;
+    expect(report).toContain("Stopped at a failure");
+    expect(report).toContain("What ran since the last commit was rolled back.");
+    expect(report).toContain("and 11 more failures, not kept.");
+    fireEvent.click(screen.getByRole("button", { name: "Save Log…" }));
+    await settle();
+    expect(screen.queryByText(/The log is saved/u)).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Run Again" }));
+    await settle();
+    fireEvent.click(screen.getByRole("button", { name: "Run File" }));
+    await settle();
+    expect(screen.getByText("the session's transaction is open")).toBeTruthy();
+  });
 });

@@ -384,9 +384,10 @@ export function ImportProgressView({ progress }: { readonly progress: ImportProg
 
 /** What an import did. */
 export function ImportReportView({ report }: { readonly report: ImportReport }) {
+  const rows = `${String(report.rows)} row${report.rows === 1 ? "" : "s"}`;
   const said = report.cancelled
-    ? `Cancelled: ${String(report.rows)} rows imported; the ${String(report.rolledBack)} of the batch under way were rolled back.`
-    : `Imported ${String(report.rows)} rows${report.rejected > 0 ? `; ${String(report.rejected)} skipped:` : "."}`;
+    ? `Cancelled: ${rows} imported; the ${String(report.rolledBack)} of the batch under way were rolled back.`
+    : `Imported ${rows}${report.rejected > 0 ? `; ${String(report.rejected)} skipped:` : "."}`;
   return (
     <div role="status" aria-label="What the import did">
       <p>{said}</p>
