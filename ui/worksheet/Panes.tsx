@@ -1,66 +1,18 @@
 /**
- * The panes below a worksheet's editor (RULES.md D36): its results, each a
- * run's rows read so far, more read as asked; its messages, a failure's
- * place shown in the editor by a click; and its plan.
+ * The panes below a worksheet's editor (RULES.md D36, D39): its results,
+ * a tab of each, a pinned one kept as the worksheet runs again; its
+ * messages, a failure's place shown in the editor by a click; its plan;
+ * and its runs' timings.
  */
-import type { Cell } from "../ipc/connections";
-import { fetchMore } from "../state/running";
+import { closeRun } from "../results/actions";
+import { ResultView } from "../results/ResultView";
+import { Timings } from "../results/Timings";
 import { useStore, useStudio } from "../state/store";
-import { changeWorksheet, type RunResult, worksheetOf } from "../state/worksheets";
+import { changeWorksheet, type Pane, type RunResult, worksheetOf } from "../state/worksheets";
 import { showFailure } from "./editor/actions";
 import { viewOf } from "./editor/views";
 import { PlanView } from "./PlanView";
 import { Icon } from "../icons/Icon";
-
-/** A cell as the grid shows it: its text, or NULL. */
-export function shownCell(cell: Cell): string {
-  return cell ?? "NULL";
-}
-
-/** A run's rows, read so far. */
-function Rows({ id, run }: { readonly id: string; readonly run: RunResult }) {
-  const store = useStore();
-  if (run.outcome?.kind !== "rows") {
-    return <p className="hint">{run.error === null ? "The statement gave no rows." : run.error.message}</p>;
-  }
-  return (
-    <div className="result">
-      <table className="result-table" aria-label="Result">
-        <thead>
-          <tr>
-            {run.columns.map((c, i) => (
-              <th key={`${String(i)}.${c.name ?? ""}`} scope="col" title={c.typeWritten}>
-                {c.name ?? `(${String(i + 1)})`}
-                <span className="result-type">{c.typeWritten}</span>
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {run.rows.map((row, r) => (
-            <tr key={String(r)}>
-              {row.map((cell, c) => (
-                <td key={String(c)} className={cell === null ? "null" : undefined}>
-                  {shownCell(cell)}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <div className="result-bar">
-        <span className="hint">
-          {String(run.rows.length)} rows read{run.complete ? "" : ", more to read"}
-        </span>
-        {!run.complete && (
-          <button type="button" onClick={() => void fetchMore(store, id, run.id)}>
-            Read more
-          </button>
-        )}
-      </div>
-    </div>
-  );
-}
 
 /** A result's tab's name: its number, after its connection's name where the results are of several. */
 export function resultName(
@@ -74,9 +26,45 @@ export function resultName(
   return several ? `${name}: Result ${String(i + 1)}` : `Result ${String(i + 1)}`;
 }
 
+/** The tab of result `run`: its name, and, if pinned, its pin and its close button. */
+function ResultTab(props: {
+  readonly id: string;
+  readonly run: RunResult;
+  readonly name: string;
+  readonly selected: boolean;
+}) {
+  const store = useStore();
+  const { id, run } = props;
+  return (
+    <span className="result-tab">
+      <button
+        type="button"
+        role="tab"
+        aria-selected={props.selected}
+        onClick={() => {
+          changeWorksheet(store, id, (w) => ({ ...w, shown: run.id }));
+        }}
+      >
+        {run.pinned && <Icon name="pin" />}
+        {props.name}
+      </button>
+      {run.pinned && (
+        <button
+          type="button"
+          className="tool"
+          aria-label={`Close ${props.name}`}
+          title={`Close ${props.name}`}
+          onClick={() => void closeRun(store, id, run.id)}
+        >
+          <Icon name="close" />
+        </button>
+      )}
+    </span>
+  );
+}
+
 /** The results of worksheet `id`: a tab of each run that gave rows. */
 function Results({ id }: { readonly id: string }) {
-  const store = useStore();
   const runs = useStudio((s) => worksheetOf(s, id)?.runs ?? NO_RUNS);
   const shown = useStudio((s) => worksheetOf(s, id)?.shown ?? null);
   const open = useStudio((s) => s.open);
@@ -85,26 +73,17 @@ function Results({ id }: { readonly id: string }) {
   if (run === undefined) {
     return <p className="hint">No result yet: run a statement to see its rows.</p>;
   }
+  const names = new Map(results.map((r, i) => [r.id, resultName(r, i, results, open)]));
   return (
     <>
       {results.length > 1 && (
         <div role="tablist" className="tabs" aria-label="Results">
-          {results.map((r, i) => (
-            <button
-              key={r.id}
-              type="button"
-              role="tab"
-              aria-selected={r.id === run.id}
-              onClick={() => {
-                changeWorksheet(store, id, (w) => ({ ...w, shown: r.id }));
-              }}
-            >
-              {resultName(r, i, results, open)}
-            </button>
+          {results.map((r) => (
+            <ResultTab key={r.id} id={id} run={r} name={names.get(r.id) ?? ""} selected={r.id === run.id} />
           ))}
         </div>
       )}
-      <Rows id={id} run={run} />
+      <ResultView key={run.id} id={id} run={run} names={names} />
     </>
   );
 }
@@ -150,7 +129,7 @@ export function Panes({ id }: { readonly id: string }) {
   const store = useStore();
   const pane = useStudio((s) => worksheetOf(s, id)?.pane ?? "results");
   const plans = useStudio((s) => worksheetOf(s, id)?.plans);
-  const choose = (next: "results" | "messages" | "plan") => () => {
+  const choose = (next: Pane) => () => {
     changeWorksheet(store, id, (w) => ({ ...w, pane: next }));
   };
   return (
@@ -168,11 +147,16 @@ export function Panes({ id }: { readonly id: string }) {
           <Icon name="explain" />
           Plan
         </button>
+        <button type="button" role="tab" aria-selected={pane === "timings"} onClick={choose("timings")}>
+          <Icon name="timings" />
+          Timings
+        </button>
       </div>
       <div role="tabpanel" className="pane">
         {pane === "results" && <Results id={id} />}
         {pane === "messages" && <Messages id={id} />}
         {pane === "plan" && <PlanView plans={plans ?? []} />}
+        {pane === "timings" && <Timings id={id} />}
       </div>
     </div>
   );

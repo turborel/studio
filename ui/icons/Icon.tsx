@@ -69,6 +69,24 @@ import { TreeStructureIcon } from "@phosphor-icons/react/dist/csr/TreeStructure"
 import { UserIcon } from "@phosphor-icons/react/dist/csr/User";
 import { UsersThreeIcon } from "@phosphor-icons/react/dist/csr/UsersThree";
 import { XIcon } from "@phosphor-icons/react/dist/csr/X";
+import { CopyIcon } from "@phosphor-icons/react/dist/csr/Copy";
+import { ExportIcon } from "@phosphor-icons/react/dist/csr/Export";
+import { TextTIcon } from "@phosphor-icons/react/dist/csr/TextT";
+import { CardsIcon } from "@phosphor-icons/react/dist/csr/Cards";
+import { MapTrifoldIcon } from "@phosphor-icons/react/dist/csr/MapTrifold";
+import { FunnelSimpleIcon } from "@phosphor-icons/react/dist/csr/FunnelSimple";
+import { FunnelXIcon } from "@phosphor-icons/react/dist/csr/FunnelX";
+import { SortAscendingIcon } from "@phosphor-icons/react/dist/csr/SortAscending";
+import { TimerIcon } from "@phosphor-icons/react/dist/csr/Timer";
+import { GitDiffIcon } from "@phosphor-icons/react/dist/csr/GitDiff";
+import { ArrowLeftIcon } from "@phosphor-icons/react/dist/csr/ArrowLeft";
+import { ArrowRightIcon } from "@phosphor-icons/react/dist/csr/ArrowRight";
+import { ImageIcon } from "@phosphor-icons/react/dist/csr/Image";
+import { BracketsCurlyIcon } from "@phosphor-icons/react/dist/csr/BracketsCurly";
+import { CodeIcon } from "@phosphor-icons/react/dist/csr/Code";
+import { BinaryIcon } from "@phosphor-icons/react/dist/csr/Binary";
+import { VectorThreeIcon } from "@phosphor-icons/react/dist/csr/VectorThree";
+import { PushPinSlashIcon } from "@phosphor-icons/react/dist/csr/PushPinSlash";
 
 /** The colour an icon takes, by what it does: a theme token's, or the text's. */
 export type Tone = "plain" | "run" | "stop" | "commit" | "rollback" | "connect" | "disconnect";
@@ -143,6 +161,25 @@ const ICONS = {
   outline: [ListBulletsIcon, "plain"],
   autocommit: [CheckSquareIcon, "commit"],
   closeOthers: [XSquareIcon, "plain"],
+  copy: [CopyIcon, "plain"],
+  export: [ExportIcon, "plain"],
+  grid: [TableIcon, "plain"],
+  textView: [TextTIcon, "plain"],
+  record: [CardsIcon, "plain"],
+  plane: [MapTrifoldIcon, "plain"],
+  filter: [FunnelSimpleIcon, "plain"],
+  clearFilter: [FunnelXIcon, "plain"],
+  sort: [SortAscendingIcon, "plain"],
+  timings: [TimerIcon, "plain"],
+  compare: [GitDiffIcon, "plain"],
+  previous: [ArrowLeftIcon, "plain"],
+  next: [ArrowRightIcon, "plain"],
+  image: [ImageIcon, "plain"],
+  json: [BracketsCurlyIcon, "plain"],
+  xml: [CodeIcon, "plain"],
+  hex: [BinaryIcon, "plain"],
+  vector: [VectorThreeIcon, "plain"],
+  unpin: [PushPinSlashIcon, "plain"],
 } as const satisfies Record<string, readonly [PhosphorIcon, Tone]>;
 
 /** An icon's name. */

@@ -10,7 +10,7 @@
 /// Every command the application defines, as `src/commands.rs` registers
 /// them and `capabilities/main.json` grants them; the checks tool holds the
 /// three lists equal.
-const COMMANDS: [&str; 53] = [
+const COMMANDS: [&str; 55] = [
     "app_info",
     "open_connection",
     "close_connection",
@@ -19,6 +19,7 @@ const COMMANDS: [&str; 53] = [
     "run_statement",
     "fetch_rows",
     "close_result",
+    "result_value",
     "session_state",
     "set_autocommit",
     "ping_connection",
@@ -43,6 +44,7 @@ const COMMANDS: [&str; 53] = [
     "catalog_search",
     "catalog_definition",
     "save_text_file",
+    "export_query",
     "notify_finished",
     "sql_words",
     "split_script",

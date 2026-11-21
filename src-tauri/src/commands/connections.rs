@@ -15,6 +15,7 @@ use turborel_studio_core::connections::outcome::ResultId;
 use turborel_studio_core::connections::pages::Page;
 use turborel_studio_core::connections::session::SessionState;
 use turborel_studio_core::connections::spec::ConnectionSpec;
+use turborel_studio_core::connections::values::ValueRead;
 use turborel_studio_core::error::{Result, StudioError};
 use turborel_studio_core::events::ConnectionId;
 use turborel_studio_core::guard::policy::Guards;
@@ -100,6 +101,18 @@ pub(crate) async fn fetch_rows(
 #[tauri::command]
 pub(crate) async fn close_result(studio: State<'_, Studio>, connection: ConnectionId, result: ResultId) -> Result<()> {
     blocking(&studio, move |m| m.close_result(connection, result)).await
+}
+
+/// A large object of a result, read whole for a viewer (RULES.md D39).
+#[tauri::command]
+pub(crate) async fn result_value(
+    studio: State<'_, Studio>,
+    connection: ConnectionId,
+    result: ResultId,
+    row: u64,
+    column: usize,
+) -> Result<ValueRead> {
+    blocking(&studio, move |m| m.value(connection, result, (row, column))).await
 }
 
 /// A connection's session.

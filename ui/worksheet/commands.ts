@@ -11,7 +11,9 @@ import { setAutocommit } from "../ipc/connections";
 import { keepQuery, openSqlFile, readSqlFile, splitScript, writeSqlFile } from "../ipc/worksheet";
 import { connectSaved, isStudioError, session, show } from "../state/actions";
 import { select } from "../state/catalog";
-import { explain, runOnConnections, runStatements, stopRun, type ToRun } from "../state/running";
+import type { ExportKind } from "../ipc/results";
+import { exportRows } from "../results/actions";
+import { explain, message, runOnConnections, runStatements, stopRun, type ToRun } from "../state/running";
 import type { Store } from "../state/store";
 import {
   changeWorksheet,
@@ -19,9 +21,11 @@ import {
   closeWorksheet,
   openWorksheet,
   reopenWorksheet,
+  tell,
   worksheetOf,
 } from "../state/worksheets";
 import { formatWords } from "./dialect";
+import { bound, substituted, variableNames } from "./variables";
 import { changeCase, formatScript, goToBookmark, selected, statementAtCursor, toggleBookmark } from "./editor/actions";
 import { connectionOf, tableDetail, tableNamed } from "./editor/catalog";
 import { viewOf } from "./editor/views";
@@ -91,6 +95,40 @@ export async function explainCurrent(store: Store, analyze: boolean): Promise<vo
   if (statement !== undefined) {
     await explain(store, at.id, statement, analyze);
   }
+}
+
+/**
+ * Runs the statement at the cursor, or the selection's first, straight to a file, as CSV or native rows: its rows
+ * written as they come and never shown (RULES.md D39). A statement of parameters, or of script variables with no
+ * value, is not run so.
+ */
+export async function runToFile(store: Store, kind: ExportKind): Promise<void> {
+  const at = active(store);
+  if (at?.view === undefined) {
+    return;
+  }
+  const chosen = selected(at.view);
+  const [first] = chosen === null ? [] : await statementsOf(chosen.text, chosen.from);
+  const statement = first ?? (await atCursor(at.view));
+  const w = worksheetOf(store.current(), at.id);
+  if (statement === undefined || w === undefined) {
+    return;
+  }
+  if (w.connection === null) {
+    tell(store, at.id, message("error", "The worksheet has no open connection: choose one."));
+    return;
+  }
+  const missing = variableNames(statement.sql).filter((n) => w.variables[n] === undefined);
+  const sent = missing.length > 0 ? null : bound(substituted(statement.sql, w.variables));
+  if (sent === null || sent.names.length > 0) {
+    tell(
+      store,
+      at.id,
+      message("error", "A statement of parameters, or of script variables with no value, is not run to a file."),
+    );
+    return;
+  }
+  await exportRows(store, at.id, { connection: w.connection, sql: sent.sql }, kind);
 }
 
 /** Stops the active worksheet's run. */

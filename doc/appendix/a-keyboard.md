@@ -26,6 +26,8 @@ are bound.
 | Run Script on a Folder's Connections… | Worksheet | | |
 | Explain | Worksheet | Cmd+E | Ctrl+E |
 | Explain Analyze | Worksheet | Cmd+Shift+E | Ctrl+Shift+E |
+| Run to CSV File… | Worksheet | | |
+| Run to Native Rows File… | Worksheet | | |
 | Format | Worksheet | Cmd+Shift+F | Ctrl+Shift+F |
 | Toggle Comment | Worksheet | Cmd+/ | Ctrl+/ |
 | Upper Case | Worksheet | Cmd+Shift+U | Ctrl+Shift+U |

@@ -1,0 +1,241 @@
+/* The results (RULES.md D39): the toolbar, the grid and its other views, the value viewer, and the timings. */
+
+.result {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.result-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.result-toolbar label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.tool[aria-pressed="true"] {
+  background: var(--selection);
+  color: var(--on-selection);
+}
+
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 0;
+}
+
+.filter-bar label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 12px;
+}
+
+.filter-bar input {
+  flex: 1;
+  font-family: inherit;
+}
+
+.result-body {
+  flex: 1;
+  display: flex;
+  min-height: 160px;
+}
+
+.result-main {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+}
+
+.result-grid {
+  height: 100%;
+  min-height: 160px;
+}
+
+.result-viewer {
+  width: 40%;
+  min-width: 240px;
+  overflow: auto;
+  padding: 0 6px;
+  border-left: 1px solid var(--border);
+}
+
+.result-text,
+.value-text {
+  margin: 0;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 12px;
+}
+
+.value-wrap {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.value-image {
+  max-width: 100%;
+}
+
+.value-wrap-choice {
+  margin-left: auto;
+  font-size: 12px;
+}
+
+.json-node ul {
+  list-style: none;
+  margin: 0;
+  padding-left: 16px;
+}
+
+.json-node summary,
+.json-node li {
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 12px;
+}
+
+.json-key {
+  color: var(--accent-text);
+}
+
+.json-null,
+.json-boolean {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.record-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.record-table th {
+  vertical-align: top;
+}
+
+.graph-choice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 12px;
+}
+
+.graph-view {
+  height: 360px;
+  border: 1px solid var(--border);
+}
+
+.graph-node {
+  font-size: 11px;
+}
+
+.plane svg {
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.plane-shape {
+  stroke: var(--accent-text);
+  fill: var(--accent-text);
+  vector-effect: non-scaling-stroke;
+}
+
+path.plane-shape {
+  fill: none;
+}
+
+path.plane-area {
+  fill: var(--selection);
+  fill-opacity: 0.6;
+}
+
+.plane-selected {
+  stroke: var(--icon-run);
+  fill: var(--icon-run);
+}
+
+path.plane-selected.plane-area {
+  fill: var(--icon-run);
+  fill-opacity: 0.3;
+}
+
+.vector-bar {
+  fill: var(--accent-text);
+}
+
+.compare-left td:first-child {
+  color: var(--danger);
+}
+
+.compare-right td:first-child {
+  color: var(--icon-commit);
+}
+
+.compare-choice select {
+  max-width: 180px;
+}
+
+.menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+}
+
+.cell-menu {
+  position: fixed;
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 25%);
+}
+
+.cell-menu button {
+  display: block;
+  width: 100%;
+  padding: 4px 12px;
+  text-align: left;
+  background: none;
+  border: none;
+  color: var(--text);
+}
+
+.cell-menu button:hover,
+.cell-menu button:focus-visible {
+  background: var(--selection);
+  color: var(--on-selection);
+}
+
+.result-tab {
+  display: inline-flex;
+  align-items: center;
+}
+
+.timings table {
+  margin-top: 4px;
+}
+
+.timing-failed td {
+  color: var(--danger);
+}
+
+.status-cells {
+  margin-left: auto;
+}

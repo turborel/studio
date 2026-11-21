@@ -45,32 +45,33 @@ shows what it gives. These rows say how each kind is shown.
 ## Types
 
 How each of Turborel's types
-([DOC sql/02-data-types.md Data Types]) is shown in the grid and edited
-in a table's rows.
+([DOC sql/02-data-types.md Data Types]) is shown in the grid and its
+viewers: as the text the server's value gives. Each is edited in a
+table's rows as it is shown, from M6 (S-CLIENT-22).
 
-| ID | Types | Shown and edited | Status |
+| ID | Types | Shown | Status |
 |---|---|---|---|
-| S-TYPE-1 | CHARACTER, CHARACTER VARYING | as text | not yet |
-| S-TYPE-2 | BINARY, BINARY VARYING | as hex | not yet |
-| S-TYPE-3 | CLOB, BLOB | inline when whole, else by locator, a chunk at a time, in the text, hex or image viewer | not yet |
-| S-TYPE-4 | BOOLEAN | TRUE, FALSE or null | not yet |
-| S-TYPE-5 | SMALLINT, INTEGER, BIGINT, NUMERIC, DECIMAL | exact, as the server's text, never through a float (R-NUM-1) | not yet |
-| S-TYPE-6 | REAL, DOUBLE PRECISION, FLOAT | as the double's shortest text | not yet |
-| S-TYPE-7 | DECFLOAT | exact, as text | not yet |
-| S-TYPE-8 | DATE, TIME, TIMESTAMP, with or without time zone | as SQL's literal text | not yet |
-| S-TYPE-9 | INTERVAL | as SQL's literal text | not yet |
-| S-TYPE-10 | Arrays | as text, each element shown in the details | not yet |
-| S-TYPE-11 | Rows | as text, each field shown in the details | not yet |
-| S-TYPE-12 | Multisets | as text | not yet |
-| S-TYPE-13 | Distinct types | as their source type | not yet |
-| S-TYPE-14 | Structured types | as text of their attributes | not yet |
-| S-TYPE-15 | Reference types | as text | not yet |
-| S-TYPE-16 | XML | in the XML viewer, as text, never rendered | not yet |
-| S-TYPE-17 | JSON | in the JSON viewer, as text, never run | not yet |
-| S-TYPE-18 | UUID | as its text | not yet |
-| S-TYPE-19 | Vectors | as text | not yet |
-| S-TYPE-20 | Spatial types | as text | not yet |
-| S-TYPE-21 | Other types of plug-ins | as the text the server gives | not yet |
+| S-TYPE-1 | CHARACTER, CHARACTER VARYING | as text | done |
+| S-TYPE-2 | BINARY, BINARY VARYING | as hexadecimal text; in the hex and image viewers as octets | done |
+| S-TYPE-3 | CLOB, BLOB | whole in its row where it was sent whole; else by what it is, read whole by its locator, a chunk at a time, for the text, hex or image viewer (S-LIMIT-3) | done |
+| S-TYPE-4 | BOOLEAN | TRUE or FALSE; unknown as NULL | done |
+| S-TYPE-5 | SMALLINT, INTEGER, BIGINT, NUMERIC, DECIMAL | exact, as the server's text, with its scale, never through a float (R-NUM-1) | done |
+| S-TYPE-6 | REAL, DOUBLE PRECISION, FLOAT | as the server's text, as `1.5E0` | done |
+| S-TYPE-7 | DECFLOAT | exact, as the server's text | done |
+| S-TYPE-8 | DATE, TIME, TIMESTAMP, with or without time zone | as the server's text, as `2024-02-29` | done |
+| S-TYPE-9 | INTERVAL | as the server's text, its qualifier in the column's type | done |
+| S-TYPE-10 | Arrays | as the server's text, as `ARRAY[1, 2]` | done |
+| S-TYPE-11 | Rows | as the server's text, as `ROW(1, 'a')` | done |
+| S-TYPE-12 | Multisets | as the server's text, as `MULTISET[3]` | done |
+| S-TYPE-13 | Distinct types | as their source type's values | done |
+| S-TYPE-14 | Structured types | as the server's text of their attributes, as `ANN.ADDRESS('Main', 'Oslo')` | done |
+| S-TYPE-15 | Reference types | as the server's text, as `REF(…)` | done |
+| S-TYPE-16 | XML | as text; in the XML viewer laid out, never rendered | done |
+| S-TYPE-17 | JSON | as text; in the JSON viewer as a tree, never run | done |
+| S-TYPE-18 | UUID | as its text | done |
+| S-TYPE-19 | Vectors | as text; in the vector viewer, its elements and figures | done |
+| S-TYPE-20 | Spatial types | as well-known text; on a plane | done |
+| S-TYPE-21 | Types beyond the standard, as VECTOR, and those of plug-ins | as the text the server gives | done |
 
 ## The Information Schema
 
@@ -130,9 +131,9 @@ them.
 | S-CLIENT-18 | The session's status and settings ([CLIENT What the server tells]) | the status bar: user, schema, transaction, read-only, replica | done |
 | S-CLIENT-19 | Rows affected, generated values and server time ([CLIENT What the server tells]) | the messages pane and the status bar | done |
 | S-CLIENT-20 | A failure's diagnostics ([CLIENT What the server tells]) | the messages pane | done |
-| S-CLIENT-21 | Large objects ([CLIENT Large objects]) | the viewers, a chunk at a time; edited values written by `create_lob` | not yet |
+| S-CLIENT-21 | Large objects ([CLIENT Large objects]) | read whole for the viewers, a chunk at a time, by `read_lob`; edited values written by `create_lob` from M6 (S-CLIENT-22) | done |
 | S-CLIENT-22 | Copying ([CLIENT Copying and exporting]) | importing CSV | not yet |
-| S-CLIENT-23 | Exporting, CSV and native ([CLIENT Copying and exporting]) | the grid's export | not yet |
+| S-CLIENT-23 | Exporting, CSV and native ([CLIENT Copying and exporting]) | a result's export, and a statement run straight to a file | done |
 | S-CLIENT-24 | Reading CSV ([CLIENT Importing]) | importing CSV | not yet |
 | S-CLIENT-25 | Ping and reset ([CLIENT Controlling the session]) | checking a connection; a session is not reset | done |
 | S-CLIENT-26 | What a connection asks for ([CLIENT What a connection asks for]) | the attribute `application`, Turborel Studio | done |
@@ -163,7 +164,7 @@ never sent.
 | S-CAP-14 | `copy` | importing CSV | not yet |
 | S-CAP-15 | `row-counts` | rows affected | done |
 | S-CAP-16 | `generated-values` | identity values generated | done |
-| S-CAP-17 | `fetch-ends` | a cursor's transaction under autocommit | not yet |
+| S-CAP-17 | `fetch-ends` | a cursor's transaction under autocommit, ended as its last row is read or it is closed; the session read again then | done |
 | S-CAP-18 | `conditions` | a statement's warnings | done |
 | S-CAP-19 | `declared-types` | columns' declared types | done |
 
@@ -208,7 +209,7 @@ makes them.
 | S-IMPL-2 | A worksheet's transactions: autocommit or not | the connection's, transactions held until Commit or Rollback, Autocommit a toggle of the worksheet's toolbar | done |
 | S-IMPL-3 | Connection statements in a worksheet | refused (S-STMT-11) | done |
 | S-IMPL-4 | How a script is split | as the server splits it (S-STMT-12) | done |
-| S-IMPL-5 | How a value is shown | as text the server's value gives, exact numbers never through a float | not yet |
+| S-IMPL-5 | How a value is shown | as text the server's value gives, exact numbers never through a float | done |
 | S-IMPL-6 | TLS of a new connection | verify-full, trusting the platform's authorities where the settings name none, below every layer that names a mode; a local socket uses no TLS | done |
 | S-IMPL-7 | The application's name, as the server is told it | Turborel Studio, unless the settings name another | done |
 
@@ -217,7 +218,7 @@ makes them.
 | ID | Limit | Studio's | Status |
 |---|---|---|---|
 | S-LIMIT-1 | The rows a result keeps in memory | 8 pages of 500 rows; the rest spooled to disk, sealed, at most 1 GiB a result | done |
-| S-LIMIT-2 | The text of a cell the grid draws | set in M5 | not yet |
-| S-LIMIT-3 | A large object's viewer reads at most | set in M5 | not yet |
+| S-LIMIT-2 | The text of a cell the grid draws | its first 500 characters; the value viewer shows it whole | done |
+| S-LIMIT-3 | A large object's viewer reads at most | its first 16 MiB, a chunk of 256 KiB at a time | done |
 | S-LIMIT-4 | A worksheet's history | 1000 statements, each at most 64 KiB | done |
 | S-LIMIT-5 | The rows the assistant's `run_query` returns | set in M9 | not yet |

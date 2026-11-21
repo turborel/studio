@@ -69,6 +69,8 @@ export interface StudioState {
   readonly reservedWords: readonly string[];
   readonly queries: readonly FavouriteQuery[];
   readonly projects: readonly string[];
+  /** What the status bar tells of the result's cells selected, if any are. */
+  readonly cellSummary: string | null;
 }
 
 /** The state before anything is loaded. */
@@ -88,6 +90,7 @@ export const INITIAL: StudioState = {
   reservedWords: [],
   queries: [],
   projects: [],
+  cellSummary: null,
 };
 
 /** The store of a window: its state, and who reads it. */

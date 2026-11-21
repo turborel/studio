@@ -12,30 +12,11 @@ Code never cites this file (R-DOC-5).
 - Waiting on the server, shown as unavailable until Turborel has it: a
   debugger of SQL routines, with breakpoints and stepping.
 
-## M5 Results grid
-
-- Paged, virtualized rows with declared types (S-TYPE-1 to S-TYPE-21,
-  S-IMPL-5, S-LIMIT-2).
-- Sort, filter, copy and export, as CSV and native (S-CLIENT-23).
-- Viewers of large objects, JSON and XML; several results per script
-  (S-CLIENT-21, S-LIMIT-3).
-- A result tab pinned, so the next run opens one beside it.
-- A query's cursor under autocommit, its transaction ended as its last
-  row is fetched or it is closed (S-CAP-17).
-- Results as a grid, as text, or to a file; columns frozen; one row as a
-  form.
-- The status bar's count, sum, average, least and greatest of the cells
-  selected.
-- Copy with or without headers, as CSV, TSV, JSON, Markdown or INSERT.
-- Two results compared; timing and rows of each run, compared across
-  runs.
-- Viewers of spatial values on a map or plane, property graph results as
-  nodes and edges, and vectors.
-
 ## M6 Data and definitions
 
-- Editing rows, staged and run in a transaction; importing CSV by copy
-  (S-CLIENT-22, S-CLIENT-24).
+- Editing rows, staged and run in a transaction, each type edited as it
+  is shown, a large object written by `create_lob`; importing CSV by
+  copy (S-CLIENT-22, S-CLIENT-24).
 - Edit a table's first N rows, or a filtered set, in the grid.
 - A data compare of two tables or connections, writing the statements
   that sync them.

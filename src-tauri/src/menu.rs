@@ -37,6 +37,8 @@ pub const MENUS: [(&str, &[Item]); 6] = [
             Some(("worksheet.runOnFolder", "Run Script on a Folder's Connections…")),
             Some(("worksheet.explain", "Explain")),
             Some(("worksheet.explainAnalyze", "Explain Analyze")),
+            Some(("worksheet.runToCsv", "Run to CSV File…")),
+            Some(("worksheet.runToNative", "Run to Native Rows File…")),
             None,
             Some(("worksheet.format", "Format")),
             Some(("worksheet.comment", "Toggle Comment")),

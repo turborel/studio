@@ -1,9 +1,11 @@
 //! Running statements and paging their results (`[CLIENT Running
 //! statements]`, `[CLIENT Prepared statements]`).
 
+use turborel_client::export::ExportFormat;
 use turborel_studio_core::connections::manager::RunAnswer;
 use turborel_studio_core::connections::outcome::Outcome;
 use turborel_studio_core::connections::pages::PAGE_ROWS;
+use turborel_studio_core::connections::values::ValueRead;
 
 use crate::Live;
 use crate::connect::column;
@@ -172,5 +174,147 @@ pub fn a_plan_is_explained_and_analyzed(live: &Live) {
         let _ = manager.close_result(id, result);
     }
     crate::run(&manager, id, "DROP TABLE PLANNED CASCADE").unwrap();
+    manager.close(id).unwrap();
+}
+
+/// [CLIENT Large objects] [DESIGN] D39: a large object past what a row
+/// holds whole is shown by what it is, and read whole for a viewer, a
+/// character one as its text, a binary one in Base64, in a transaction or,
+/// of autocommit, while its result is open; one that came whole is
+/// refused, as its cell holds it.
+pub fn a_large_object_is_read_whole(live: &Live) {
+    let (manager, _) = live.manager();
+    let id = live.owner(&manager);
+    manager.set_autocommit(id, true).unwrap();
+    crate::run(&manager, id, "CREATE TABLE DOCS (ID INTEGER, BODY CLOB(1M), SCAN BLOB(1M))").unwrap();
+    manager.set_autocommit(id, false).unwrap();
+    let text = "abc".repeat(30_000);
+    let insert = format!("INSERT INTO DOCS VALUES (1, ?, X'{}')", "78".repeat(70_000));
+    let RunAnswer::Ran(_) = manager.run_with(id, (&insert, &[Some(text.clone())]), false).unwrap() else { panic!("asked") };
+    crate::run(&manager, id, "INSERT INTO DOCS VALUES (2, 'short', NULL)").unwrap();
+    crate::run(&manager, id, "COMMIT").unwrap();
+    let Outcome::Rows { result, page, .. } = crate::run(&manager, id, "SELECT BODY, SCAN FROM DOCS ORDER BY ID").unwrap().outcome else {
+        panic!("no rows")
+    };
+    assert_eq!(page.rows[0][0].as_deref(), Some("<CHARACTER LARGE OBJECT of 90000 characters>"));
+    assert_eq!(page.lobs, [(0, 0), (0, 1)]);
+    assert_eq!(page.rows[1][0].as_deref(), Some("short"));
+    let ValueRead::Text { text: read, octets, cut } = manager.value(id, result, (0, 0)).unwrap() else { panic!("not text") };
+    assert_eq!((read.len(), octets, cut), (90_000, 90_000, false));
+    assert_eq!(read, text);
+    let ValueRead::Binary { base64, octets, .. } = manager.value(id, result, (0, 1)).unwrap() else { panic!("not binary") };
+    assert_eq!((octets, base64.len()), (70_000, 93_336));
+    assert_eq!(manager.value(id, result, (1, 0)).unwrap_err().sqlstate, "TB910");
+    assert_eq!(manager.value(id, result + 99, (0, 0)).unwrap_err().sqlstate, "TB910");
+    crate::run(&manager, id, "COMMIT").unwrap();
+    manager.set_autocommit(id, true).unwrap();
+    let Outcome::Rows { result, .. } = crate::run(&manager, id, "SELECT BODY FROM DOCS ORDER BY ID").unwrap().outcome else {
+        panic!("no rows")
+    };
+    let read = manager.value(id, result, (0, 0));
+    assert!(matches!(read, Ok(ValueRead::Text { octets: 90_000, .. })), "{read:?}");
+    manager.close_result(id, result).unwrap();
+    crate::run(&manager, id, "DROP TABLE DOCS CASCADE").unwrap();
+    manager.close(id).unwrap();
+}
+
+/// [CLIENT Copying and exporting] [DESIGN] D39: a query's rows are written
+/// to a file as CSV, its header the columns' names, or as native rows, read
+/// back whole; a statement that is no query is not exported.
+pub fn a_result_is_exported(live: &Live) {
+    let (manager, _) = live.manager();
+    let id = live.owner(&manager);
+    let dir = live.server.dir.join("exports");
+    std::fs::create_dir_all(&dir).unwrap();
+    let csv = dir.join("rows.csv");
+    let query = "VALUES (1, 'a, b'), (2, CAST(NULL AS VARCHAR(4)))";
+    assert_eq!(manager.export(id, query, (&csv, ExportFormat::Csv)).unwrap(), 2);
+    let written = std::fs::read_to_string(&csv).unwrap();
+    assert_eq!(written.lines().nth(1), Some("1,\"a, b\""));
+    let native = dir.join("rows.native");
+    assert_eq!(manager.export(id, query, (&native, ExportFormat::Native)).unwrap(), 2);
+    let (columns, rows) = turborel_client::export::read_native(&mut std::fs::File::open(&native).unwrap()).unwrap();
+    assert_eq!((columns.len(), rows.len()), (2, 2));
+    assert_eq!(manager.export(id, "DELETE FROM NOPE WHERE 1 = 1", (&csv, ExportFormat::Csv)).unwrap_err().sqlstate, "TB910");
+    assert_eq!(manager.export(id, query, (&dir.join("none").join("rows.csv"), ExportFormat::Csv)).unwrap_err().sqlstate, "TB910");
+    assert_eq!(manager.export(id, "SELECT * FROM NOPE", (&csv, ExportFormat::Csv)).unwrap_err().sqlstate, "2A000");
+    manager.close(id).unwrap();
+}
+
+/// [CLIENT What the server tells] [DESIGN] D39: under autocommit, a query's
+/// cursor keeps its transaction while rows are left to read, and ends it
+/// as its last row is read, as `fetch-ends` grants, the session telling
+/// it; a result closed before then ends it too.
+pub fn a_cursor_ends_its_transaction_under_autocommit(live: &Live) {
+    let (manager, _) = live.manager();
+    let id = live.owner(&manager);
+    manager.set_autocommit(id, true).unwrap();
+    let many = "WITH RECURSIVE N (I) AS (VALUES (CAST(1 AS INTEGER)) UNION ALL SELECT I + 1 FROM N WHERE I < 1200) SELECT I FROM N";
+    let Outcome::Rows { result, page, .. } = crate::run(&manager, id, many).unwrap().outcome else { panic!("no rows") };
+    assert!(!page.complete);
+    assert!(manager.session(id).unwrap().transaction.active);
+    let rest = manager.rows(id, result, (page.rows_read, 10_000)).unwrap();
+    assert!(rest.complete);
+    assert!(!manager.session(id).unwrap().transaction.active);
+    manager.close_result(id, result).unwrap();
+    let Outcome::Rows { result, .. } = crate::run(&manager, id, many).unwrap().outcome else { panic!("no rows") };
+    assert!(manager.session(id).unwrap().transaction.active);
+    manager.close_result(id, result).unwrap();
+    assert!(!manager.session(id).unwrap().transaction.active);
+    manager.close(id).unwrap();
+}
+
+/// [DOC sql/02-data-types.md Data Types] [RULE] R-NUM-1: a value of each
+/// of Turborel's types is shown as the text the server's value gives:
+/// character and binary strings, truth values, exact numbers with their
+/// scale, approximate numbers, datetimes, intervals, arrays, rows,
+/// multisets, JSON, XML, vectors, geometries and UUIDs; and of the user's
+/// types, a distinct type's as its source's, a structured type's and a
+/// reference's.
+pub fn every_type_is_shown_as_its_text(live: &Live) {
+    let (manager, _) = live.manager();
+    let id = live.owner(&manager);
+    let cases = [
+        ("CAST('abc' AS VARCHAR(5))", "abc"),
+        ("X'0aFF'", "0AFF"),
+        ("TRUE", "TRUE"),
+        ("CAST(12.50 AS DECIMAL(5,2))", "12.50"),
+        ("CAST(1.5 AS DOUBLE PRECISION)", "1.5E0"),
+        ("DATE '2024-02-29'", "2024-02-29"),
+        ("TIMESTAMP '2024-02-29 13:04:05+02:00'", "2024-02-29 13:04:05+02:00"),
+        ("INTERVAL '3' DAY", "3"),
+        ("ARRAY[1, 2]", "ARRAY[1, 2]"),
+        ("ROW(1, 'a')", "ROW(1, 'a')"),
+        ("MULTISET[3]", "MULTISET[3]"),
+        ("CAST('{\"a\":1}' AS JSON)", "{\"a\":1}"),
+        ("XMLELEMENT(NAME \"a\", 1)", "<a>1</a>"),
+        ("CAST('[1,2]' AS VECTOR(2))", "[1,2]"),
+        ("ST_POINT(1, 2)", "POINT (1 2)"),
+        ("CAST('6ba7b810-9dad-11d1-80b4-00c04fd430c8' AS UUID)", "6ba7b810-9dad-11d1-80b4-00c04fd430c8"),
+    ];
+    let sql = format!("VALUES ({})", cases.iter().map(|(value, _)| *value).collect::<Vec<_>>().join(", "));
+    let Outcome::Rows { page, columns, .. } = crate::run(&manager, id, &sql).unwrap().outcome else { panic!("no rows") };
+    let shown: Vec<&str> = page.rows[0].iter().map(|c| c.as_deref().unwrap_or("NULL")).collect();
+    assert_eq!(shown, cases.iter().map(|(_, text)| *text).collect::<Vec<_>>());
+    assert_eq!(columns[3].type_written, "NUMERIC(5,2)");
+    manager.set_autocommit(id, true).unwrap();
+    for ddl in [
+        "CREATE TYPE SHOWN_MONEY AS DECIMAL(10,2)",
+        "CREATE TYPE SHOWN_ADDRESS AS (STREET VARCHAR(30), CITY VARCHAR(20)) NOT FINAL",
+        "CREATE TABLE SHOWN_PLACES OF SHOWN_ADDRESS (REF IS PID SYSTEM GENERATED)",
+        "INSERT INTO SHOWN_PLACES (STREET, CITY) VALUES ('Main', 'Oslo')",
+    ] {
+        crate::run(&manager, id, ddl).unwrap();
+    }
+    let Outcome::Rows { page, .. } = crate::run(&manager, id, "SELECT SHOWN_MONEY(5), DEREF(PID), PID FROM SHOWN_PLACES").unwrap().outcome
+    else {
+        panic!("no rows")
+    };
+    assert_eq!(page.rows[0][0].as_deref(), Some("5.00"));
+    assert_eq!(page.rows[0][1].as_deref(), Some("ANN.SHOWN_ADDRESS('Main', 'Oslo')"));
+    assert!(page.rows[0][2].as_deref().is_some_and(|r| r.starts_with("REF(")));
+    for ddl in ["DROP TABLE SHOWN_PLACES CASCADE", "DROP TYPE SHOWN_ADDRESS CASCADE", "DROP TYPE SHOWN_MONEY CASCADE"] {
+        crate::run(&manager, id, ddl).unwrap();
+    }
     manager.close(id).unwrap();
 }

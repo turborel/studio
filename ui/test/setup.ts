@@ -1,6 +1,7 @@
 /**
  * The one Vitest setup (RULES.md R-TEST-7): what jsdom lacks of a
- * webview, given to every test, and the IPC cleared after each.
+ * webview, given to every test, the results grid's canvas a table, and
+ * the IPC cleared after each.
  */
 import { clearMocks } from "@tauri-apps/api/mocks";
 import { cleanup } from "@testing-library/react";
@@ -45,6 +46,11 @@ window.matchMedia = mediaQueryList;
 Range.prototype.getClientRects = noRects;
 Range.prototype.getBoundingClientRect = () => new DOMRect();
 globalThis.ResizeObserver = NoResizeObserver;
+
+vi.mock("@glideapps/glide-data-grid", async (actual) => {
+  const { TableGrid } = await import("./grid");
+  return { ...(await actual<Record<string, unknown>>()), DataEditor: TableGrid };
+});
 
 afterEach(async () => {
   cleanup();

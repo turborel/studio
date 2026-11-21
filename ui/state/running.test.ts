@@ -17,7 +17,7 @@ function rowsRan(rows: (string | null)[][], complete = true): { kind: "ran"; ans
         kind: "rows",
         result: 3,
         columns: [{ name: "N", typeWritten: "INTEGER", typeName: "INTEGER", notNull: false }],
-        page: { from: 0, rows, rowsRead: rows.length, complete },
+        page: { from: 0, rows, rowsRead: rows.length, complete, lobs: [] },
       },
       warnings: [],
       serverTime: { total: 2000, queued: 0, locks: 0 },
@@ -246,7 +246,7 @@ describe("a run", () => {
           // eslint-disable-next-line @typescript-eslint/only-throw-error -- the backend rejects with Studio's error, not an Error
           throw failing(null);
         }
-        return { from: 1, rows: [["2"]], rowsRead: 2, complete: true };
+        return { from: 1, rows: [["2"]], rowsRead: 2, complete: true, lobs: [] };
       },
     });
     const [store, id] = await sheet("");
@@ -285,6 +285,7 @@ describe("a run", () => {
         rows: [["SeqScan ANN.T  (rows=4, cost=3.7)  (actual rows=4)"], ["-- ran: 4 rows"]],
         rowsRead: 3,
         complete: true,
+        lobs: [],
       }),
     });
     const [store, id] = await sheet("");

@@ -15,7 +15,7 @@ and at the top of the window on Linux and Windows. Its menus are:
 |---|---|
 | **File** | New Connection…, New Worksheet, Open File…, Save, Save As…, Reopen Closed Worksheet, History…, Settings…, Close Window |
 | **Edit** | Undo, Redo, Cut, Copy, Paste, Select All |
-| **Worksheet** | Run Statement, Run Script, Run Script on a Folder's Connections…, Explain, Explain Analyze, Format, Toggle Comment, Upper Case, Lower Case, Find and Replace…, Toggle Bookmark, Next Bookmark, Previous Bookmark, Go to Definition, Describe, Split Editor, Outline, Add to Favourite Queries…, Autocommit, Pin Tab, Close Worksheet, Close Other Worksheets |
+| **Worksheet** | Run Statement, Run Script, Run Script on a Folder's Connections…, Explain, Explain Analyze, Run to CSV File…, Run to Native Rows File…, Format, Toggle Comment, Upper Case, Lower Case, Find and Replace…, Toggle Bookmark, Next Bookmark, Previous Bookmark, Go to Definition, Describe, Split Editor, Outline, Add to Favourite Queries…, Autocommit, Pin Tab, Close Worksheet, Close Other Worksheets |
 | **Connection** | Disconnect, Reconnect, Cancel Statement, Refresh Catalog, Commit, Rollback |
 | **View** | Command Palette…, Theme: System, Theme: Light, Theme: Dark, Zoom In, Zoom Out, Actual Size, Reset Layout |
 | **Window** | Minimize, Full Screen |

@@ -11,12 +11,14 @@ use std::sync::mpsc::{Receiver, Sender};
 use turborel::value::Value;
 use turborel_client::Notice;
 use turborel_client::agent::Connected;
+use turborel_client::export::ExportFormat;
 use turborel_client::statements::Statement;
 
 use crate::connections::cells::ColumnInfo;
 use crate::connections::outcome::{Outcome, Ran, ResultId, ServerTime};
 use crate::connections::pages::{PAGE_ROWS, Page, Pages};
 use crate::connections::session::SessionState;
+use crate::connections::values::ValueRead;
 use crate::error::{DiagnosticsView, Result, StudioError};
 use crate::events::{ConnectionId, Event, EventSink};
 
@@ -51,6 +53,10 @@ pub(crate) enum Request {
     Catalog { sql: String, params: Vec<String>, cap: u32 },
     /// The columns a statement would give, prepared and let go, not run.
     Describe(String),
+    /// A large object of a result, read whole for a viewer.
+    Value { result: ResultId, row: u64, column: usize },
+    /// A query's rows written to a file as they come, as CSV or native.
+    Export { sql: String, path: PathBuf, format: ExportFormat },
     /// Ask whether the server answers.
     Ping,
     /// End the connection, and the worker.
@@ -64,6 +70,8 @@ pub(crate) enum Reply {
     Rows(Vec<Vec<crate::connections::cells::Cell>>),
     Columns(Vec<ColumnInfo>),
     Types(Vec<String>),
+    Value(ValueRead),
+    Exported(u64),
     Page(Page),
     Session(SessionState),
     Done,
@@ -179,6 +187,8 @@ impl Worker {
             Request::Ping => self.connection()?.ping().map(|()| Reply::Done).map_err(StudioError::from),
             Request::Catalog { sql, params, cap } => self.catalog(&sql, &params, cap).map(Reply::Rows),
             Request::Describe(sql) => self.describe(&sql).map(Reply::Columns),
+            Request::Value { result, row, column } => self.value(result, row, column).map(Reply::Value),
+            Request::Export { sql, path, format } => self.export(&sql, &path, format).map(Reply::Exported),
             Request::Terminate => self.terminate().map(|()| Reply::Done),
         }
     }
@@ -341,6 +351,35 @@ impl Worker {
         }
         let _ = connection.deallocate(statement); // Let go; the rows, or the failure, are what is told.
         Ok(read?.rows.iter().map(crate::connections::cells::cells).collect())
+    }
+
+    /// The large object of `result`'s row `row`, column `column`, that came
+    /// by its locator, read a chunk at a time, at most `MAX_VALUE_BYTES`.
+    fn value(&mut self, result: ResultId, row: u64, column: usize) -> Result<ValueRead> {
+        let Worker { connection, results, .. } = self;
+        let connection = connection.as_mut().ok_or_else(|| StudioError::lost("[DESIGN] the connection is ended"))?;
+        let open = results.get(&result).ok_or_else(|| StudioError::misuse(format!("[DESIGN] result {result} is not open")))?;
+        let lob = open.pages.lob(row, column).ok_or_else(|| StudioError::misuse("[DESIGN] the value came whole, in its row"))?;
+        let wanted = crate::connections::values::wanted(lob);
+        let mut bytes = Vec::new();
+        while u64::try_from(bytes.len()).unwrap_or(u64::MAX) < wanted {
+            let from = u64::try_from(bytes.len()).unwrap_or(u64::MAX);
+            let count = wanted.saturating_sub(from).min(crate::connections::values::CHUNK_BYTES);
+            let chunk = connection.read_lob(lob, (from, count), false)?;
+            if chunk.is_empty() {
+                break;
+            }
+            bytes.extend(chunk);
+        }
+        Ok(crate::connections::values::read(lob, &bytes))
+    }
+
+    /// Runs the query `sql` and writes its rows to `path` as `format` says,
+    /// as they come: how many.
+    fn export(&mut self, sql: &str, path: &std::path::Path, format: ExportFormat) -> Result<u64> {
+        let mut file = std::fs::File::create(path).map_err(|e| StudioError::misuse(format!("[DESIGN] {}: {e}", path.display())))?;
+        let connection = self.connection()?;
+        connection.export(sql, &mut file, format).map_err(StudioError::from)
     }
 
     /// The types of `sql`'s dynamic parameters, in order, as SQL writes

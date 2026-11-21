@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-export-query"
+description = "Enables the export_query command without any pre-configured scope."
+commands.allow = ["export_query"]
+
+[[permission]]
+identifier = "deny-export-query"
+description = "Denies the export_query command without any pre-configured scope."
+commands.deny = ["export_query"]

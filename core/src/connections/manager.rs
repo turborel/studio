@@ -213,7 +213,14 @@ impl ConnectionManager {
         }
         match self.ask(id, Request::Run { sql: sql.to_owned(), read_only: guards.read_only, values: values.to_vec() })? {
             Reply::Ran(ran) => Ok(RunAnswer::Ran(ran)),
-            Reply::Rows(_) | Reply::Columns(_) | Reply::Types(_) | Reply::Page(_) | Reply::Session(_) | Reply::Done => Err(unexpected()),
+            Reply::Rows(_)
+            | Reply::Columns(_)
+            | Reply::Types(_)
+            | Reply::Value(_)
+            | Reply::Exported(_)
+            | Reply::Page(_)
+            | Reply::Session(_)
+            | Reply::Done => Err(unexpected()),
         }
     }
 
@@ -226,7 +233,14 @@ impl ConnectionManager {
     pub fn rows(&self, id: ConnectionId, result: ResultId, (from, count): (u64, u32)) -> Result<Page> {
         match self.ask(id, Request::Rows { result, from, count })? {
             Reply::Page(page) => Ok(page),
-            Reply::Ran(_) | Reply::Rows(_) | Reply::Columns(_) | Reply::Types(_) | Reply::Session(_) | Reply::Done => Err(unexpected()),
+            Reply::Ran(_)
+            | Reply::Rows(_)
+            | Reply::Columns(_)
+            | Reply::Types(_)
+            | Reply::Value(_)
+            | Reply::Exported(_)
+            | Reply::Session(_)
+            | Reply::Done => Err(unexpected()),
         }
     }
 
@@ -273,7 +287,14 @@ impl ConnectionManager {
         let request = Request::Catalog { sql: sql.to_owned(), params: params.to_vec(), cap };
         match self.ask(id, request)? {
             Reply::Rows(rows) => Ok(rows),
-            Reply::Ran(_) | Reply::Columns(_) | Reply::Types(_) | Reply::Page(_) | Reply::Session(_) | Reply::Done => Err(unexpected()),
+            Reply::Ran(_)
+            | Reply::Columns(_)
+            | Reply::Types(_)
+            | Reply::Value(_)
+            | Reply::Exported(_)
+            | Reply::Page(_)
+            | Reply::Session(_)
+            | Reply::Done => Err(unexpected()),
         }
     }
 
@@ -286,7 +307,14 @@ impl ConnectionManager {
     pub fn describe(&self, id: ConnectionId, sql: &str) -> Result<Vec<crate::connections::cells::ColumnInfo>> {
         match self.ask(id, Request::Describe(sql.to_owned()))? {
             Reply::Columns(columns) => Ok(columns),
-            Reply::Ran(_) | Reply::Rows(_) | Reply::Types(_) | Reply::Page(_) | Reply::Session(_) | Reply::Done => Err(unexpected()),
+            Reply::Ran(_)
+            | Reply::Rows(_)
+            | Reply::Types(_)
+            | Reply::Value(_)
+            | Reply::Exported(_)
+            | Reply::Page(_)
+            | Reply::Session(_)
+            | Reply::Done => Err(unexpected()),
         }
     }
 
@@ -303,7 +331,68 @@ impl ConnectionManager {
         }
         match self.ask(id, Request::Parameters(sql.to_owned()))? {
             Reply::Types(types) => Ok(types),
-            Reply::Ran(_) | Reply::Rows(_) | Reply::Columns(_) | Reply::Page(_) | Reply::Session(_) | Reply::Done => Err(unexpected()),
+            Reply::Ran(_)
+            | Reply::Rows(_)
+            | Reply::Columns(_)
+            | Reply::Value(_)
+            | Reply::Exported(_)
+            | Reply::Page(_)
+            | Reply::Session(_)
+            | Reply::Done => Err(unexpected()),
+        }
+    }
+
+    /// The large object of `result`'s row `row`, column `column`, on
+    /// connection `id`, that came by its locator, read whole for a viewer,
+    /// at most `MAX_VALUE_BYTES` of it.
+    ///
+    /// # Errors
+    ///
+    /// SQLCODE -910 for an unknown connection or result, or a value that
+    /// came whole in its row; the read's, as SQLSTATE 0F001 of a locator its
+    /// transaction's end let go.
+    pub fn value(&self, id: ConnectionId, result: ResultId, (row, column): (u64, usize)) -> Result<crate::connections::values::ValueRead> {
+        match self.ask(id, Request::Value { result, row, column })? {
+            Reply::Value(value) => Ok(value),
+            Reply::Ran(_)
+            | Reply::Rows(_)
+            | Reply::Columns(_)
+            | Reply::Types(_)
+            | Reply::Exported(_)
+            | Reply::Page(_)
+            | Reply::Session(_)
+            | Reply::Done => Err(unexpected()),
+        }
+    }
+
+    /// Runs the query `sql` on connection `id` and writes its rows to `path`,
+    /// as CSV or native rows, as they come: how many. Only a query is
+    /// exported, as its guards judge it, a read (RULES.md D39).
+    ///
+    /// # Errors
+    ///
+    /// SQLCODE -910 for an unknown connection or a statement that is no
+    /// query; the file's; the query's.
+    pub fn export(
+        &self,
+        id: ConnectionId,
+        sql: &str,
+        (path, format): (&std::path::Path, turborel_client::export::ExportFormat),
+    ) -> Result<u64> {
+        let classified = crate::guard::classify::classify(sql);
+        if classified.class != crate::guard::classify::Class::Read {
+            return Err(StudioError::misuse("[DESIGN] an export runs a query, which reads alone"));
+        }
+        match self.ask(id, Request::Export { sql: sql.to_owned(), path: path.to_owned(), format })? {
+            Reply::Exported(rows) => Ok(rows),
+            Reply::Ran(_)
+            | Reply::Rows(_)
+            | Reply::Columns(_)
+            | Reply::Types(_)
+            | Reply::Value(_)
+            | Reply::Page(_)
+            | Reply::Session(_)
+            | Reply::Done => Err(unexpected()),
         }
     }
 
@@ -391,7 +480,14 @@ impl Drop for ConnectionManager {
 fn session(reply: Reply) -> Result<SessionState> {
     match reply {
         Reply::Session(session) => Ok(session),
-        Reply::Ran(_) | Reply::Rows(_) | Reply::Columns(_) | Reply::Types(_) | Reply::Page(_) | Reply::Done => Err(unexpected()),
+        Reply::Ran(_)
+        | Reply::Rows(_)
+        | Reply::Columns(_)
+        | Reply::Types(_)
+        | Reply::Value(_)
+        | Reply::Exported(_)
+        | Reply::Page(_)
+        | Reply::Done => Err(unexpected()),
     }
 }
 

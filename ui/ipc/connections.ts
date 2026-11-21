@@ -96,6 +96,8 @@ export interface Page {
   readonly rows: readonly (readonly Cell[])[];
   readonly rowsRead: number;
   readonly complete: boolean;
+  /** The cells of these rows that are large objects not sent whole: each its row in the result and its column. */
+  readonly lobs: readonly (readonly [number, number])[];
 }
 
 /** A statement's outcome. */

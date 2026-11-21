@@ -19,6 +19,7 @@ import {
   openPath,
   runCurrent,
   runScript,
+  runToFile,
   saveCurrent,
   stopCurrent,
   toggleAutocommit,
@@ -61,7 +62,7 @@ function ran(rows: string[][] | null): Ran {
             kind: "rows",
             result: 1,
             columns: [{ name: "PLAN", typeWritten: "VARCHAR(100)", typeName: null, notNull: false }],
-            page: { from: 0, rows, rowsRead: rows.length, complete: true },
+            page: { from: 0, rows, rowsRead: rows.length, complete: true, lobs: [] },
           },
     warnings: [],
     serverTime: null,
@@ -326,7 +327,7 @@ describe("a worksheet's panel", () => {
     expect(screen.getByText("This worksheet is closed.")).toBeTruthy();
   });
 
-  it("shows its results, read more as asked, its messages, a failure's place, and its plan [DESIGN] D36", async () => {
+  it("shows its results, more read as the grid nears the last read, its messages, a failure's place, and its plan [DESIGN] D36", async () => {
     const { store, id } = await shown("VALUES (1)", {
       run_statement: () => ({
         kind: "ran",
@@ -336,20 +337,19 @@ describe("a worksheet's panel", () => {
             kind: "rows",
             result: 1,
             columns: [{ name: null, typeWritten: "INTEGER", typeName: null, notNull: false }],
-            page: { from: 0, rows: [["1"], [null]], rowsRead: 2, complete: false },
+            page: { from: 0, rows: [["1"], [null]], rowsRead: 2, complete: false, lobs: [] },
           },
         },
       }),
-      fetch_rows: () => ({ from: 2, rows: [["3"]], rowsRead: 3, complete: true }),
+      fetch_rows: () => ({ from: 2, rows: [["3"]], rowsRead: 3, complete: true, lobs: [] }),
     });
     expect(screen.getByText("No result yet: run a statement to see its rows.")).toBeTruthy();
     await act(() => runCurrent(store));
-    const result = screen.getByRole("table", { name: "Result" });
+    const result = screen.getByRole("table", { name: "Result grid" });
     expect(inside(result).getByText("(1)")).toBeTruthy();
-    expect(inside(result).getByText("NULL").className).toBe("null");
-    fireEvent.click(screen.getByRole("button", { name: "Read more" }));
+    expect(inside(result).getByRole("button", { name: "Cell 0,1" }).textContent).toBe("NULL");
     await settle();
-    expect(screen.getByText("3 rows read")).toBeTruthy();
+    expect(screen.getByText(/^3 rows read;/u)).toBeTruthy();
     await act(() => runScript(store));
     act(() => {
       changeWorksheet(store, id, (w) => ({ ...w, runs: [...w.runs, { ...must(w.runs[0]), id: 2 }] }));
@@ -394,5 +394,42 @@ describe("an editor alone", () => {
     const store = await opened();
     within(store, <Editor id="none" />);
     expect(viewOf("none")?.state.doc.toString()).toBe("");
+  });
+
+  it("runs the statement at the cursor straight to a file, but one of parameters or of variables with no value [DESIGN] D39", async () => {
+    const { asked, store, id, view } = await shown("VALUES (1); VALUES (?); VALUES (${n})", {
+      export_query: () => ({ path: "/tmp/one.rows", rows: 1 }),
+    });
+    const exported = () =>
+      asked
+        .filter((a) => a.command === "export_query")
+        .map((a) => {
+          const request = a.args["request"] as Record<string, unknown>;
+          return [request["sql"], request["kind"]];
+        });
+    act(() => view?.dispatch({ selection: EditorSelection.cursor(1) }));
+    await act(() => runToFile(store, "native"));
+    expect(exported()).toEqual([["VALUES (1)", "native"]]);
+    expect(worksheetOf(store.current(), id)?.messages.at(-1)?.text).toBe("Exported 1 rows to /tmp/one.rows.");
+    act(() => view?.dispatch({ selection: EditorSelection.range(12, 22) }));
+    await act(() => runToFile(store, "csv"));
+    act(() => view?.dispatch({ selection: EditorSelection.cursor(25) }));
+    await act(() => runToFile(store, "csv"));
+    expect(exported()).toHaveLength(1);
+    expect(worksheetOf(store.current(), id)?.messages.at(-1)?.text).toBe(
+      "A statement of parameters, or of script variables with no value, is not run to a file.",
+    );
+    act(() => {
+      changeWorksheet(store, id, (w) => ({ ...w, variables: { n: "7" } }));
+    });
+    await act(() => runToFile(store, "csv"));
+    expect(exported().at(-1)).toEqual(["VALUES (7)", "csv"]);
+    act(() => {
+      changeWorksheet(store, id, (w) => ({ ...w, connection: null }));
+    });
+    await act(() => runToFile(store, "csv"));
+    expect(worksheetOf(store.current(), id)?.messages.at(-1)?.text).toBe(
+      "The worksheet has no open connection: choose one.",
+    );
   });
 });

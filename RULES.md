@@ -78,6 +78,7 @@ Each is told in full in [§7](#7-the-decisions).
 | D36 | Worksheets: scripts split as the server splits them, run through the guards |
 | D37 | The editor: CodeMirror 6 in Turborel's SQL |
 | D38 | A run's end notified by the platform, from the backend |
+| D39 | Results: paged in a canvas grid, sorted and filtered on the server, values read whole for their viewers |
 | D40 | Completion: of the place, from the parser's scope and the catalog's cache |
 
 ---
@@ -88,7 +89,7 @@ Each is told in full in [§7](#7-the-decisions).
 |---|---|
 | `Cargo.toml` | the Rust workspace: the version (D5), the pinned Turborel commit (D10), every Rust dependency and the lints |
 | `core/` | `turborel-studio-core`, the backend: everything Studio does but draw, tested without a window (D1) |
-| `core/src/connections/` | the connection manager and its workers (D24), settings (D26), statements' outcomes, and results paged (D25) |
+| `core/src/connections/` | the connection manager and its workers (D24), settings (D26), statements' outcomes, results paged (D25), and values read whole and exports (D39) |
 | `core/src/guard/` | statements classified, and the guards on what runs (D29) |
 | `core/src/catalog/` | the catalog read from the Information Schema, and the definitions written of it (D33) |
 | `core/src/worksheet/` | scripts split, the history, the worksheets and queries kept, and the files a worksheet may use (D36) |
@@ -110,6 +111,7 @@ Each is told in full in [§7](#7-the-decisions).
 | `ui/explorer/` | the catalog's tree, the details panel and the definition view (D33) |
 | `ui/worksheet/` | the worksheet, its editor, panes, plan view, formatter and dialogs (D36, D37) |
 | `ui/worksheet/complete/` | completion, and the copy of Turborel's built-in functions (D40) |
+| `ui/results/` | a result's grid, its views and viewers, its copies, exports and comparisons, and the timings (D39) |
 | `ui/state/` | the window's store and its actions (D31) |
 | `ui/commands/` | the commands and their keys (D30) |
 | `ui/test/` | the one Vitest setup and the one mock of the backend (R-TEST-7) |
@@ -487,10 +489,17 @@ The review checklist:
 #### D13. Glide Data Grid for results
 
 - **Chosen:** `@glideapps/glide-data-grid` 6.0.3, MIT, with its peer
-  packages, from M5.
+  packages `lodash` 4.18.1, `marked` 4.3.0 and
+  `react-responsive-carousel` 3.2.23, from M5; `minimatch` 11.0.4 put
+  under its build tool's packages, whose own was found vulnerable.
 - **Readiness:** 6.0.3 is its makers' latest stable release.
 - **Use:** a canvas grid that asks for the cells it draws, so the
-  backend's pages fill it as it scrolls (R-SAFE-1).
+  backend's pages fill it as it scrolls (R-SAFE-1). A header's click
+  sorts and selects nothing; a drag selects a range, a row's number its
+  row. Its overlay editor is not used, so it needs no portal.
+- **Tests:** jsdom has no canvas, so the one setup gives the tests a
+  table in its place that asks for its cells as the grid does
+  (R-TEST-7).
 - *Why:* a virtualized canvas grid draws millions of rows without a DOM
   node each.
 
@@ -503,11 +512,15 @@ The review checklist:
   (from M2), in Studio's colours (D20).
 - *Why:* panels that dock, tab and float, with layouts as data.
 
-#### D15. React Flow and dagre for schema diagrams
+#### D15. React Flow and dagre for diagrams
 
-- **Chosen:** `@xyflow/react` and `@dagrejs/dagre`, MIT, from M7.
+- **Chosen:** `@xyflow/react` 12.12.1 and `@dagrejs/dagre` 3.1.3, MIT,
+  from M5.
 - **Readiness:** each its makers' stable major release.
-- **Use:** tables as nodes and foreign keys as edges, laid out by dagre.
+- **Use:** a result's rows as nodes and edges (D39), and, from M7, tables
+  as nodes and foreign keys as edges, laid out by dagre. Its attribution
+  link is hidden, as its MIT license allows: a link would lead the
+  webview to a remote page (R-SEC-4).
 - *Why:* diagrams of many tables, laid out automatically.
 
 #### D16. The keychain through keyring-core and each platform's store
@@ -859,6 +872,40 @@ The review checklist:
   window is hidden.
 - *Why:* a long statement is waited on in another window, and its end
   should not be missed.
+
+#### D39. Results: paged in a canvas grid, sorted and filtered on the server, values read whole for their viewers
+
+- **Grid:** Glide Data Grid (D13); the next page read as it scrolls
+  within 100 rows of the last read; each header its name and declared
+  type; at most 500 characters of a value drawn (S-LIMIT-2).
+- **Sort and filter:** the query run again within
+  `SELECT * FROM (…) AS "Q" (names) WHERE … ORDER BY …`, through the
+  guards, with its parameters' values; each column named by its name, or
+  by its place where it has none or shares one. Only a query; the old
+  result closed once the new has come, kept if it fails.
+- **Views:** grid, text, a row as a form, nodes and edges (D15), and a
+  plane of spatial values; columns frozen.
+- **Values:** a large object sent by its locator is read whole by the
+  worker, a chunk of 256 KiB at a time, at most 16 MiB (S-LIMIT-3), a
+  character one as text, a binary one in Base64; each page says which
+  of its cells came so. Images by their first octets, never SVG.
+- **Plane, not map:** a map's tiles would be remote content (R-SEC-4),
+  so spatial values are drawn on a plane alone.
+- **Status bar:** exact numbers summed as decimals, never through a float
+  (R-NUM-1); the average six digits past their scale.
+- **Copy:** CSV as turborel-client's export writes it, tab-separated,
+  JSON, Markdown and INSERT, each value a literal of its type.
+- **Export:** turborel-client's `export`, run by the worker, to the file
+  the platform's dialog chooses, opened by the backend (R-SEC-5); a query
+  alone, as the guards classify it.
+- **Pins and comparisons:** a pinned result kept open as the worksheet
+  runs again; two results compared by their rows read, as multisets.
+- **Timings:** each run's time and rows kept in the window, compared with
+  the run of the same statement on the same connection before.
+- **Autocommit:** the session read again as a result's last row is read
+  or it is closed, as `fetch-ends` ends its transaction (S-CAP-17).
+- *Why:* results of any size shown, sorted and filtered as the database
+  would, and every value seen as what it is.
 
 #### D40. Completion: of the place, from the parser's scope and the catalog's cache
 

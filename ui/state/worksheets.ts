@@ -3,6 +3,7 @@
  * it runs on, its runs and messages, the values its markers were given,
  * its bookmarks; made, closed, reopened and kept between sessions.
  */
+import type { Query } from "../results/requery";
 import type { Cell, ColumnInfo, Outcome, ServerTime, StudioError } from "../ipc/connections";
 import { keepWorksheets, type KeptWorksheet, loadWorksheets, type Piece } from "../ipc/worksheet";
 import type { Plan } from "../worksheet/plan";
@@ -29,6 +30,27 @@ export interface RunResult {
   readonly serverTime: ServerTime | null;
   /** The plan, of EXPLAIN. */
   readonly plan: Plan | null;
+  /** The values its dynamic parameters were given, so it is run again sorted or filtered with them. */
+  readonly values: readonly (string | null)[];
+  /** The cells of the rows read that are large objects not sent whole, each `row:column`. */
+  readonly lobs: readonly string[];
+  /** Whether its result's tab is pinned, so the worksheet's next run leaves it open. */
+  readonly pinned: boolean;
+  /** How its result is sorted and filtered, run again; null as written. */
+  readonly query: Query | null;
+}
+
+/** A run's time and rows, kept so runs of a statement are compared. */
+export interface Timing {
+  readonly sql: string;
+  readonly connection: number;
+  readonly at: number;
+  readonly millis: number;
+  /** The server's time, in microseconds, where it tells it. */
+  readonly serverMicros: number | null;
+  /** The rows it gave or changed, if it says. */
+  readonly rows: number | null;
+  readonly failed: boolean;
 }
 
 /** A line of the messages pane. */
@@ -64,7 +86,7 @@ export interface WorksheetState {
   /** The result shown, by its run's identifier. */
   readonly shown: number | null;
   /** The part of its pane shown below the editor. */
-  readonly pane: "results" | "messages" | "plan";
+  readonly pane: Pane;
   /** Whether its editor is split, a second view of its text below the first. */
   readonly split: boolean;
   /** Whether the outline of its statements is shown. */
@@ -73,12 +95,19 @@ export interface WorksheetState {
   readonly plans: readonly Plan[];
   /** Its statements, as last split. */
   readonly pieces: readonly Piece[];
+  /** Its runs' times and rows, the latest last. */
+  readonly timings: readonly Timing[];
 }
+
+/** The parts of a worksheet's pane. */
+export type Pane = "results" | "messages" | "plan" | "timings";
 
 /** The most messages a worksheet keeps. */
 export const MAX_MESSAGES = 500;
 /** The most runs a worksheet keeps. */
 export const MAX_RUNS = 50;
+/** The most timings a worksheet keeps. */
+export const MAX_TIMINGS = 500;
 /** How long the worksheets wait, unchanged, before they are kept, in milliseconds. */
 export const KEEP_AFTER_MS = 1000;
 /** The title of a worksheet made new. */
@@ -112,6 +141,7 @@ export function freshWorksheet(
     outline: false,
     plans: [],
     pieces: [],
+    timings: [],
   };
 }
 

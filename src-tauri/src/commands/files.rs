@@ -10,7 +10,10 @@ use std::sync::Arc;
 
 use tauri::{AppHandle, Runtime, State};
 use tauri_plugin_dialog::DialogExt;
+use turborel_studio_core::connections::manager::MAX_SQL_BYTES;
+use turborel_studio_core::connections::values::ExportFormat;
 use turborel_studio_core::error::{Result, StudioError};
+use turborel_studio_core::events::ConnectionId;
 
 use crate::state::Studio;
 
@@ -42,6 +45,72 @@ pub(crate) async fn save_text_file<R: Runtime>(
         std::fs::write(&path, text).map_err(|e| StudioError::misuse(format!("[DESIGN] cannot write {}: {e}", path.display())))?;
         files.choose(&path)?;
         Ok(Some(path.display().to_string()))
+    })
+    .await
+    .map_err(|e| StudioError::misuse(format!("[DESIGN] the request did not finish: {e}")))?
+}
+
+/// How a query's rows are exported: CSV, or Turborel's native rows.
+#[derive(Debug, Clone, Copy, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) enum ExportKind {
+    /// A header of the columns' names, then a record of each row.
+    Csv,
+    /// The protocol's own frames, every value as it was.
+    Native,
+}
+
+/// The extension of each kind's file, and the name its filter shows.
+const EXPORT_FILES: [(&str, &str); 2] = [("csv", "CSV"), ("rows", "Turborel native rows")];
+
+/// A query's rows exported: the file, and how many rows.
+#[derive(Debug, Clone, serde::Serialize)]
+pub(crate) struct Exported {
+    /// The file written.
+    path: String,
+    /// The rows written.
+    rows: u64,
+}
+
+/// What to export: the query `sql` on `connection`, as `kind` says, to a
+/// file the dialog suggests `name` for.
+#[derive(Debug, Clone, serde::Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub(crate) struct ExportRequest {
+    connection: ConnectionId,
+    sql: String,
+    kind: ExportKind,
+    name: String,
+}
+
+/// Asks where to export the rows of `request`'s query, and runs it, its
+/// rows written to the file as they come: the file and the rows, or none
+/// if the user cancelled (RULES.md D39).
+#[tauri::command]
+pub(crate) async fn export_query<R: Runtime>(
+    app: AppHandle<R>,
+    studio: State<'_, Studio>,
+    request: ExportRequest,
+) -> Result<Option<Exported>> {
+    let ExportRequest { connection, sql, kind, name } = request;
+    if sql.len() > MAX_SQL_BYTES || name.chars().count() > MAX_NAME_CHARS || name.contains(['/', '\\', '\0']) {
+        return Err(StudioError::misuse(format!(
+            "[DESIGN] a query exported is at most {MAX_SQL_BYTES} bytes, its file's name a name alone"
+        )));
+    }
+    let manager = Arc::clone(&studio.connections);
+    tauri::async_runtime::spawn_blocking(move || {
+        let ((extension, label), format) = match kind {
+            ExportKind::Csv => (EXPORT_FILES[0], ExportFormat::Csv),
+            ExportKind::Native => (EXPORT_FILES[1], ExportFormat::Native),
+        };
+        let dialog = app.dialog().file().add_filter(label, &[extension]).set_file_name(format!("{name}.{extension}"));
+        let Some(chosen) = dialog.blocking_save_file() else {
+            return Ok(None);
+        };
+        let path = chosen.into_path().map_err(|e| StudioError::misuse(format!("[DESIGN] the path chosen is not a file's: {e}")))?;
+        let rows = manager.export(connection, &sql, (&path, format))?;
+        Ok(Some(Exported { path: path.display().to_string(), rows }))
     })
     .await
     .map_err(|e| StudioError::misuse(format!("[DESIGN] the request did not finish: {e}")))?

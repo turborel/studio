@@ -2,11 +2,13 @@
 //! a cursor's fetch gives is a page, spooled as it comes, the latest few
 //! kept in memory; rows asked for past those read are fetched first.
 
-use std::collections::VecDeque;
+use std::collections::{BTreeMap, VecDeque};
 use std::sync::Arc;
 
 use serde::Serialize;
 use turborel::storage::Row;
+use turborel::value::Value;
+use turborel::value::lob::Lob;
 
 use crate::connections::cells::{Cell, cells};
 use crate::connections::spool::Spool;
@@ -32,6 +34,10 @@ pub struct Page {
     pub rows_read: u64,
     /// Whether every row has been read, so `rows_read` is the result's.
     pub complete: bool,
+    /// The cells of these rows that are large objects that came by their
+    /// locators, each its row in the result and its column: each such
+    /// cell's text says what it is, and a viewer reads it whole.
+    pub lobs: Vec<(u64, usize)>,
 }
 
 /// What gives a result's next batch: its rows, and whether more follow.
@@ -47,6 +53,9 @@ pub struct Pages {
     cache: VecDeque<(usize, Arc<Vec<Vec<Cell>>>)>,
     rows_read: u64,
     complete: bool,
+    /// The large objects of the rows read that came by their locators, not
+    /// whole, by row and column, so a viewer reads them whole.
+    lobs: BTreeMap<(u64, usize), Lob>,
 }
 
 impl Pages {
@@ -57,7 +66,14 @@ impl Pages {
     ///
     /// The spool's.
     pub fn new(dir: &std::path::Path, first: &[Row], more: bool) -> Result<Pages> {
-        let mut pages = Pages { spool: Spool::new(dir)?, starts: Vec::new(), cache: VecDeque::new(), rows_read: 0, complete: !more };
+        let mut pages = Pages {
+            spool: Spool::new(dir)?,
+            starts: Vec::new(),
+            cache: VecDeque::new(),
+            rows_read: 0,
+            complete: !more,
+            lobs: BTreeMap::new(),
+        };
         pages.add(first, more)?;
         Ok(pages)
     }
@@ -65,6 +81,16 @@ impl Pages {
     /// Adds a batch of rows as the next page.
     fn add(&mut self, rows: &[Row], more: bool) -> Result<()> {
         let page: Vec<Vec<Cell>> = rows.iter().map(cells).collect();
+        for (i, row) in rows.iter().enumerate() {
+            let at = self.rows_read.saturating_add(u64::try_from(i).unwrap_or(u64::MAX));
+            for (column, value) in row.iter().enumerate() {
+                if let Value::Lob(lob) = value
+                    && lob.locator().is_some()
+                {
+                    self.lobs.insert((at, column), lob.clone());
+                }
+            }
+        }
         let bytes = serde_json::to_vec(&page).map_err(|e| StudioError::misuse(format!("[DESIGN] a page cannot be kept: {e}")))?;
         let number = self.spool.append(&bytes)?;
         self.starts.push(self.rows_read);
@@ -124,7 +150,14 @@ impl Pages {
             let wanted = usize::try_from(until.saturating_sub(start.max(from))).unwrap_or(usize::MAX);
             found.extend(page.iter().skip(skip).take(wanted).cloned());
         }
-        Ok(Page { from, rows: found, rows_read: self.rows_read, complete: self.complete })
+        let lobs = self.lobs.range((from, 0)..(until, 0)).map(|(at, _)| *at).collect();
+        Ok(Page { from, rows: found, rows_read: self.rows_read, complete: self.complete, lobs })
+    }
+
+    /// The large object of row `row`, column `column`, if it came by its
+    /// locator.
+    pub fn lob(&self, row: u64, column: usize) -> Option<&Lob> {
+        self.lobs.get(&(row, column))
     }
 
     /// The rows read so far, and whether they are all.

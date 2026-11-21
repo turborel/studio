@@ -23,7 +23,7 @@ function rowsOf(n: number): { kind: "ran"; answer: Ran } {
         kind: "rows",
         result: n,
         columns: [{ name: "N", typeWritten: "INTEGER", typeName: null, notNull: false }],
-        page: { from: 0, rows: [[String(n)]], rowsRead: 1, complete: true },
+        page: { from: 0, rows: [[String(n)]], rowsRead: 1, complete: true, lobs: [] },
       },
       warnings: [],
       serverTime: null,

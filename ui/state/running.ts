@@ -10,8 +10,10 @@ import {
   closeResult,
   type Confirm,
   fetchRows,
+  type Page,
   type Ran,
   runStatement,
+  sessionState,
   type StatementClass,
   type StudioError,
 } from "../ipc/connections";
@@ -23,7 +25,16 @@ import { bound, substituted, variableNames } from "../worksheet/variables";
 import { isStudioError, session } from "./actions";
 import { loadSchemas } from "./catalog";
 import type { Given, Store } from "./store";
-import { changeWorksheet, MAX_RUNS, type Message, type RunResult, tell, worksheetOf } from "./worksheets";
+import {
+  changeWorksheet,
+  MAX_RUNS,
+  MAX_TIMINGS,
+  type Message,
+  type RunResult,
+  tell,
+  type Timing,
+  worksheetOf,
+} from "./worksheets";
 
 /** A statement to run, by its place in the worksheet's text. */
 export interface ToRun {
@@ -46,7 +57,7 @@ const SECOND = 1000;
 const stopping = new Set<string>();
 
 /** Studio's failure of `thrown`. */
-function failure(thrown: unknown): StudioError {
+export function failure(thrown: unknown): StudioError {
   return isStudioError(thrown)
     ? thrown
     : {
@@ -81,12 +92,12 @@ export function failureText(error: StudioError): string {
 }
 
 /** A message, now. */
-function message(kind: Message["kind"], text: string, position: number | null = null): Message {
+export function message(kind: Message["kind"], text: string, position: number | null = null): Message {
   return { at: Date.now(), kind, text, position };
 }
 
 /** Asks the user about what the guards ask: whether to run. */
-function confirmed(store: Store, confirm: Confirm): Promise<boolean> {
+export function confirmed(store: Store, confirm: Confirm): Promise<boolean> {
   return new Promise((answer) => {
     store.update((now) => ({
       ...now,
@@ -141,11 +152,55 @@ function asked(
 async function clearRuns(store: Store, id: string): Promise<void> {
   const w = worksheetOf(store.current(), id);
   for (const run of w?.runs ?? []) {
-    if (run.outcome?.kind === "rows" && !run.complete) {
+    if (run.outcome?.kind === "rows" && !run.pinned) {
       await closeResult(run.connection, run.outcome.result).catch(() => undefined);
     }
   }
-  changeWorksheet(store, id, (x) => ({ ...x, runs: [], shown: null }));
+  for (const connection of new Set((w?.runs ?? []).filter((r) => !r.pinned).map((r) => r.connection))) {
+    await sessionAgain(store, connection);
+  }
+  changeWorksheet(store, id, (x) => {
+    const kept = x.runs.filter((r) => r.pinned);
+    return { ...x, runs: kept, shown: kept.some((r) => r.id === x.shown) ? x.shown : null };
+  });
+}
+
+/**
+ * Reads connection `connection`'s session again, as a result's last row read or its closing may end its
+ * transaction under autocommit (CONFORMANCE.md S-CAP-17).
+ */
+export async function sessionAgain(store: Store, connection: number): Promise<void> {
+  const now = await sessionState(connection).catch(() => null);
+  if (now !== null) {
+    session(store, connection, now);
+  }
+}
+
+/** The number of worksheet `id`'s next run: past every run it keeps. */
+function nextRun(store: Store, id: string): number {
+  const runs = worksheetOf(store.current(), id)?.runs ?? [];
+  return runs.reduce((most, r) => Math.max(most, r.id), 0) + 1;
+}
+
+/** The cells of `page` that are large objects not sent whole, as a run keeps them. */
+export function lobKeys(page: Page): string[] {
+  return page.lobs.map(([row, column]) => `${String(row)}:${String(column)}`);
+}
+
+/** Keeps `run`'s time and rows among worksheet `id`'s timings. */
+function timed(store: Store, id: string, run: RunResult): void {
+  const outcome = run.outcome;
+  const rows = outcome === null ? null : outcome.kind === "rows" ? outcome.page.rowsRead : outcome.rowsAffected;
+  const timing: Timing = {
+    sql: run.sql,
+    connection: run.connection,
+    at: run.started,
+    millis: run.millis ?? 0,
+    serverMicros: run.serverTime?.total ?? null,
+    rows,
+    failed: run.error !== null,
+  };
+  changeWorksheet(store, id, (x) => ({ ...x, timings: [...x.timings, timing].slice(-MAX_TIMINGS) }));
 }
 
 /** The script variables of `statements` without a value in worksheet `id`. */
@@ -209,8 +264,13 @@ async function valuesFor(
   return given === null ? null : names.map((n) => given.binds[n] ?? null);
 }
 
-/** A run of `statement`, as sent, before it has run. */
-function begun(runId: number, statement: ToRun, sent: string, connection: number): RunResult {
+/** A run of `statement`, as sent with `values`, before it has run. */
+function begun(
+  runId: number,
+  statement: ToRun,
+  { sent, values }: { sent: string; values: readonly (string | null)[] },
+  connection: number,
+): RunResult {
   return {
     id: runId,
     sql: sent,
@@ -227,6 +287,10 @@ function begun(runId: number, statement: ToRun, sent: string, connection: number
     error: null,
     serverTime: null,
     plan: null,
+    values,
+    lobs: [],
+    pinned: false,
+    query: null,
   };
 }
 
@@ -236,7 +300,12 @@ async function finished(store: Store, id: string, base: RunResult, ran: Ran, mil
   const outcome = ran.outcome;
   const rows =
     outcome.kind === "rows"
-      ? { columns: outcome.columns, rows: outcome.page.rows, complete: outcome.page.complete }
+      ? {
+          columns: outcome.columns,
+          rows: outcome.page.rows,
+          complete: outcome.page.complete,
+          lobs: lobKeys(outcome.page),
+        }
       : {};
   const done: RunResult = { ...base, millis, outcome, warnings: ran.warnings, serverTime: ran.serverTime, ...rows };
   changeWorksheet(store, id, (x) => ({
@@ -245,6 +314,7 @@ async function finished(store: Store, id: string, base: RunResult, ran: Ran, mil
     pane: outcome.kind === "rows" ? "results" : x.pane,
   }));
   tell(store, id, ...said(ran, millis));
+  timed(store, id, done);
   await remember(store, done);
 }
 
@@ -262,6 +332,7 @@ async function failed(store: Store, id: string, base: RunResult, thrown: unknown
   if (view !== undefined && at !== null) {
     showFailure(view, at);
   }
+  timed(store, id, { ...base, millis, error });
   await remember(store, { ...base, millis, error });
 }
 
@@ -274,7 +345,7 @@ async function runOne(store: Store, id: string, connection: number, statement: T
     tell(store, id, message("notice", "Not run: no values were given."));
     return false;
   }
-  const base = begun(runId, statement, sent, connection);
+  const base = begun(runId, statement, { sent, values }, connection);
   changeWorksheet(store, id, (x) => ({ ...x, runs: [...x.runs, base].slice(-MAX_RUNS), shown: runId }));
   const clock = performance.now();
   try {
@@ -385,7 +456,7 @@ export async function runStatements(store: Store, id: string, statements: readon
   }
   await asRun(store, id, async () => {
     await clearRuns(store, id);
-    await runAll(store, id, connection, statements, 1);
+    await runAll(store, id, connection, statements, nextRun(store, id));
   });
 }
 
@@ -410,7 +481,7 @@ export async function runOnConnections(
   }
   await asRun(store, id, async () => {
     await clearRuns(store, id);
-    let next = 1;
+    let next = nextRun(store, id);
     for (const connection of connections) {
       if (stopping.has(id)) {
         break;
@@ -445,9 +516,14 @@ export async function fetchMore(store: Store, id: string, runId: number): Promis
     changeWorksheet(store, id, (x) => ({
       ...x,
       runs: x.runs.map((r) =>
-        r.id === runId ? { ...r, rows: [...r.rows, ...page.rows], complete: page.complete } : r,
+        r.id === runId
+          ? { ...r, rows: [...r.rows, ...page.rows], complete: page.complete, lobs: [...r.lobs, ...lobKeys(page)] }
+          : r,
       ),
     }));
+    if (page.complete) {
+      await sessionAgain(store, run.connection);
+    }
   } catch (thrown: unknown) {
     const error = failure(thrown);
     tell(store, id, message("error", `${error.sqlstate} (${String(error.sqlcode)}): ${error.message}`));
