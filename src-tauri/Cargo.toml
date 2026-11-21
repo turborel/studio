@@ -1,6 +1,6 @@
 [package]
 name = "turborel-studio"
-description = "Turborel Studio, Turborel's desktop database IDE: the Tauri application over turborel-studio-core (RULES.md D1, D9)."
+description = "Turborel Studio, Turborel's desktop database IDE for its servers and embedded databases: the Tauri application over turborel-studio-core (RULES.md D1, D9)."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

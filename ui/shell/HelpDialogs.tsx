@@ -1,6 +1,7 @@
 /**
  * The About box and the list of keyboard shortcuts (RULES.md D5, D30):
- * Studio's version and the Turborel commit its client is built from, and
+ * Studio's version and the Turborel commit its client and its embedded
+ * engine are built from, and
  * each command's key as it is bound now.
  */
 import { useEffect, useState } from "react";
@@ -24,11 +25,11 @@ export function AboutDialog() {
   };
   return (
     <Modal title="About Turborel Studio" onClose={close}>
-      <p>Turborel Studio, the desktop database IDE for Turborel.</p>
+      <p>Turborel Studio, the desktop database IDE for Turborel, its servers and its embedded databases.</p>
       <dl className="about">
         <dt>Version</dt>
         <dd>{info?.version ?? "…"}</dd>
-        <dt>Turborel client commit</dt>
+        <dt>Turborel commit, of its client and engine</dt>
         <dd>
           <code>{info?.turborelCommit ?? "…"}</code>
         </dd>

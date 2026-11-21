@@ -69,6 +69,11 @@ named.
   includes them, request by request.
 - **The user's machine:** from what a server, a file, a model or a Live
   Session's peer sends.
+- **An embedded database's files:** a database Studio opens in its own
+  process is never opened against another process's lock, so a server's
+  or a program's database is not written by two at once; a mistyped path
+  never becomes a new database; and a database is closed with a
+  checkpoint, or recovered as the engine recovers it.
 - **What a presenter shares:** only the tabs picked, filtered by the
   backend before they leave: never a connection, its settings or a
   secret; of production, no values unless the session says.
@@ -82,7 +87,11 @@ named.
   values and routine bodies are shown as text, never run or rendered as
   markup, and given to a model as data, never as instructions.
 - **A file** Studio is given to open: a model, saved connections or an
-  import, each read with its size bounded and its contents checked.
+  import, each read with its size bounded and its contents checked; and
+  an embedded database's folder, which only the platform's dialog, or a
+  saved connection, names to the backend, so the window cannot name
+  another folder to open or make a database in. Its files are the
+  engine's to read, with the checks its own format makes.
 - **A model's answers:** the assistant's tools read, or propose SQL for
   the user to run; none runs a statement that writes, and none acts
   without the user.

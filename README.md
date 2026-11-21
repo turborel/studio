@@ -16,10 +16,14 @@
 
 Turborel Studio is the desktop database IDE for
 [Turborel](https://github.com/turborel/turborel), a relational database
-system. It connects to a Turborel server, `turboreld`, through
-Turborel's own client library, turborel-client, and gives a person who
-works with the database one window for it:
+system. It opens both of Turborel's modes: a Turborel server,
+`turboreld`, through Turborel's own client library, turborel-client;
+and an embedded database, in a folder or in memory, opened in Studio's
+own process through the `turborel` crate's embedded library. It gives a
+person who works with the database one window for it:
 
+- server connections, and embedded databases opened, made new, or made
+  in memory as a scratch database that is never saved;
 - a Connections and Object Explorer tree of the catalog;
 - tabbed SQL worksheets, each with its results and messages;
 - a results grid that reads a query's rows a page at a time;
@@ -29,10 +33,12 @@ works with the database one window for it:
 - an analyzer of indexes and plans;
 - an assistant, off until the user turns it on;
 - live sessions, a workspace shared with others as it is worked in;
-- a monitor of the server, its sessions, users and replication.
+- a monitor of the server or the database, its sessions, settings,
+  plug-ins, users and replication.
 
 It runs on Linux, macOS and Windows, built with Tauri: a Rust backend
-over turborel-client, and a front end in TypeScript and React. Passwords
+over turborel-client and the `turborel` crate, and a front end in
+TypeScript and React. Passwords
 and keys stay in the operating system's keychain, and the webview never
 sees them ([SECURITY.md](SECURITY.md)).
 
@@ -45,8 +51,12 @@ what is open.
 - Linux, macOS or Windows, with the platform's webview: WebKitGTK 4.1 on
   Linux, WKWebView on macOS, WebView2 on Windows
   ([RULES.md](RULES.md) D3).
-- A Turborel server of the same release
+- For server connections, a Turborel server of the same release
   ([running the server](https://github.com/turborel/turborel/blob/main/doc/operator/02-turboreld.md)).
+  An embedded or in-memory database needs no server: Studio holds
+  Turborel's engine itself, at the commit it is pinned to
+  ([Versions](doc/appendix/c-versions.md)). A database another alpha
+  build of Turborel made may not open with it, and Studio says so.
 
 ## Building
 

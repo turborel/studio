@@ -6,8 +6,10 @@ file disagrees with [RULES.md](RULES.md) or
 
 Turborel Studio is the desktop database IDE for Turborel, a relational
 database system: a Tauri application with a Rust backend over
-turborel-client, Turborel's own client library, and a front end in
-TypeScript and React. See [README.md](README.md).
+turborel-client, Turborel's own client library, and the `turborel`
+crate's embedded library, which opens embedded and in-memory databases
+in Studio's own process (RULES.md D59), and a front end in TypeScript
+and React. See [README.md](README.md).
 
 ## Before you change anything
 

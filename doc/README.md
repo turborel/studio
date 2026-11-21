@@ -2,11 +2,12 @@
 
 Turborel Studio is the desktop database IDE for Turborel, a relational
 database system. It connects to a Turborel server, `turboreld`, through
-Turborel's own client library, and gives one window for the work done
-with a database: browsing its catalog, writing and running SQL, reading
+Turborel's own client library, and opens an embedded database, in a
+folder or in memory, in its own process through Turborel's embedded
+library. It gives one window for the work done with a database: browsing its catalog, writing and running SQL, reading
 and editing its rows, modeling and comparing schemas, analyzing indexes
 and plans, asking an assistant, sharing the workspace live, and watching
-the server. This set of manuals describes it for those who use it. The
+the server or the database. This set of manuals describes it for those who use it. The
 SQL Studio runs, and the server, are described in Turborel's own
 manuals,
 [The Turborel Documentation Set](https://github.com/turborel/turborel/blob/main/doc/README.md).

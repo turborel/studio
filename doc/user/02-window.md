@@ -122,7 +122,8 @@ one, it shows the active connection:
 - **Replica** where the server takes no changes;
 - the server's time for the last statement, in milliseconds;
 - how the connection reaches the server: **TLS**, **Local socket**, or
-  **NOT SECURE**, shown white on red, for one over plain TCP;
+  **NOT SECURE**, shown white on red, for one over plain TCP; or, of an
+  embedded database, **Embedded**, or **In-memory, not saved**;
 - **Connection lost: reconnect to go on**, once the server is lost.
 
 A connection of an environment, or given a colour of its own, tints the

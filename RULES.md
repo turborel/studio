@@ -39,7 +39,7 @@ Each is told in full in [§7](#7-the-decisions).
 | # | Decision |
 |---|---|
 | **The subjects every Turborel repository decides** | |
-| D1 | A Tauri application: a Rust backend over turborel-client, a webview that holds no secret |
+| D1 | A Tauri application: a Rust backend over turborel-client and the embedded engine, a webview that holds no secret |
 | D2 | The front end: React and TypeScript on Vite |
 | D3 | The platforms and the toolchains |
 | D4 | One command runs every check, before each commit and in CI on three platforms |
@@ -374,11 +374,12 @@ The review checklist:
 
 ### The subjects every Turborel repository decides
 
-#### D1. A Tauri application: a Rust backend over turborel-client, a webview that holds no secret
+#### D1. A Tauri application: a Rust backend over turborel-client and the embedded engine, a webview that holds no secret
 
 - **Backend:** `core/` does the work: the connection manager, each
-  connection on a worker thread of its own, the catalog, the analyzer,
-  models and the assistant. It has no user interface, and is tested
+  connection, to a server through turborel-client or to an embedded
+  database through the `turborel` crate (D59), on a worker thread of its
+  own, the catalog, the analyzer, models and the assistant. It has no user interface, and is tested
   without a window.
 - **Application:** `src-tauri/` holds the window and the commands, each
   a thin layer that validates its arguments and calls `core`.
@@ -670,8 +671,9 @@ The review checklist:
 - **Commands:** each runs on Tauri's pool of blocking threads, so the
   window never waits on a server; that pool is Tauri's runtime's, not
   Studio's.
-- **Cancel:** through turborel-client's canceller, from the caller's
-  thread, while the worker waits on its statement.
+- **Cancel:** through turborel-client's canceller, or an embedded
+  session's own (D59), from the caller's thread, while the worker waits
+  on its statement.
 - **Lost:** a connection lost is told once, as the event `Lost`, and
   takes no more until it is reconnected by the settings it was made by.
 - **Events:** notices and losses go to one hub, the backend's one stream

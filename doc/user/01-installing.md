@@ -89,11 +89,16 @@ each system asks before it opens one:
   install the `.deb` with
   `sudo apt install ./turborel-studio-nightly-linux-x64.deb`.
 
-## A server to connect to
+## A server, or none
 
 Studio connects to a Turborel server of the same release. Turborel's
 [Running the Server](https://github.com/turborel/turborel/blob/main/doc/operator/02-turboreld.md)
-says how to start one. The latest alpha of Turborel is built for Linux,
+says how to start one. An embedded database, in a folder or in memory,
+needs no server: Studio holds Turborel's engine itself, at the commit
+**Help > About** names, and opens one in its own process
+([Embedded databases](03-connections.md#embedded-databases)). A database
+another alpha build of Turborel made may not open with that engine, and
+Studio says so. The latest alpha of Turborel is built for Linux,
 macOS and Windows as the pre-release
 [nightly](https://github.com/turborel/turborel/releases/tag/nightly),
 and as the image `ghcr.io/turborel/turborel:nightly`.

@@ -2,7 +2,7 @@
   "name": "turborel-studio",
   "private": true,
   "version": "0.0.0",
-  "description": "Turborel Studio, Turborel's desktop database IDE: its front end.",
+  "description": "Turborel Studio, Turborel's desktop database IDE for its servers and embedded databases: its front end.",
   "license": "BSD-2-Clause-Patent",
   "repository": "github:turborel/studio",
   "type": "module",

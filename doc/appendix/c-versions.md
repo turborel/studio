@@ -12,4 +12,5 @@ promised: its behaviour and its files may change in any build.
 | 0.0.0 (alpha) | 0.0.0 (alpha) | 1 |
 
 Studio reaches a server through turborel-client, Turborel's own client
-library, built from one commit of Turborel's main.
+library, and opens an embedded database through Turborel's engine, the
+`turborel` crate, both built from one commit of Turborel's main.
