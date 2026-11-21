@@ -92,7 +92,14 @@ fn wait_for(session: &str, selector: &str) -> Result<()> {
         }
         std::thread::sleep(Duration::from_millis(500));
     }
-    fail(format!("the window drew no {selector} within {} seconds", DRAWN_WITHIN.as_secs()))
+    let shown = request(
+        "POST",
+        &format!("/session/{session}/execute/sync"),
+        Some(&serde_json::json!({"script": "return document.body.innerText.slice(0, 600)", "args": []})),
+    )
+    .map(|(_, v)| v.pointer("/value").map(ToString::to_string).unwrap_or_default())
+    .unwrap_or_default();
+    fail(format!("the window drew no {selector} within {} seconds; it showed: {shown}", DRAWN_WITHIN.as_secs()))
 }
 
 /// tauri-driver, started with `home` as its home, so the application's

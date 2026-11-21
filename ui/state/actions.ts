@@ -3,7 +3,7 @@
  * through `ui/ipc/` (R-TS-3) and changes the store with what it gives. A
  * failure is kept as the state's error, which the window shows.
  */
-import { listReports } from "../ipc/analyzer";
+import { listReports, type ReportList } from "../ipc/analyzer";
 import {
   cancelStatement,
   closeConnection,
@@ -18,7 +18,7 @@ import {
   type StudioError,
 } from "../ipc/connections";
 import type { StudioEvent } from "../ipc/events";
-import { listQueries, projectFolders, sqlWords } from "../ipc/worksheet";
+import { type FavouriteQuery, listQueries, projectFolders, sqlWords } from "../ipc/worksheet";
 import { loadSettings, saveSettings, setAsideNotices, type Settings } from "../ipc/preferences";
 import {
   deleteSavedConnection,
@@ -26,10 +26,12 @@ import {
   listSavedConnections,
   openSavedConnection,
   type PasswordChange,
+  type KeychainStatus,
   type SavedConnection,
+  type SavedList,
   saveConnection,
 } from "../ipc/saved";
-import type { Dialog, OpenConnection, Store } from "./store";
+import type { Dialog, OpenConnection, Store, StudioState } from "./store";
 import { tell } from "./worksheets";
 
 /** Whether `thrown` is Studio's error, as the backend fails. */
@@ -60,33 +62,57 @@ export async function attempt<T>(store: Store, work: () => Promise<T>): Promise<
 
 /** Loads the settings, the saved connections, the keychain's status, Turborel's reserved words, the favourite queries, the reports and the project folders. */
 export async function loadAll(store: Store): Promise<void> {
-  const [settings, saved, keychain, reservedWords, queries, projects, reports] = await Promise.allSettled([
-    loadSettings(),
-    listSavedConnections(),
-    keychainStatus(),
-    sqlWords(),
-    listQueries(),
-    projectFolders(),
-    listReports(),
-  ]);
-  // Each part that came is kept, so one that did not leaves the others (D49).
-  const kept = <T>(r: PromiseSettledResult<T>, or: T): T => (r.status === "fulfilled" ? r.value : or);
-  store.update((now) => ({
-    ...now,
-    settings: kept(settings, now.settings),
-    saved: kept(saved, now.saved),
-    keychain: kept(keychain, now.keychain),
-    reservedWords: kept(reservedWords, now.reservedWords),
-    queries: kept(queries, now.queries),
-    projects: kept(projects, now.projects),
-    reports: kept(reports, now.reports),
-  }));
-  const failed = [settings, saved, keychain, reservedWords, queries, projects, reports].find(
-    (r) => r.status === "rejected",
-  );
+  // The files first, then what the keychain is asked of, which may be slow
+  // to answer: each part kept as it comes, so one that did not, or is late,
+  // leaves the others shown, and the files set aside told at once (D49).
+  await Promise.all([loadFiles(store), loadKeyed(store)]);
+}
+
+/** Keeps each part of `parts` that came, by `keep`, and tells the first that did not. */
+async function settled<T extends readonly unknown[]>(
+  store: Store,
+  parts: { readonly [K in keyof T]: Promise<T[K]> },
+  keep: (now: StudioState, got: { readonly [K in keyof T]: T[K] | undefined }) => StudioState,
+): Promise<void> {
+  const results = await Promise.allSettled(parts);
+  const got = results.map((r) => (r.status === "fulfilled" ? r.value : undefined)) as unknown as {
+    readonly [K in keyof T]: T[K] | undefined;
+  };
+  store.update((now) => keep(now, got));
+  const failed = results.find((r) => r.status === "rejected");
   if (failed !== undefined) {
     await attempt(store, () => Promise.reject(failed.reason as Error));
   }
+}
+
+/** Loads Studio's own files: the settings, the favourite queries, the project folders, the reports, and the reserved words; then tells the files set aside. */
+async function loadFiles(store: Store): Promise<void> {
+  await settled<[Settings, string[], FavouriteQuery[], string[], ReportList]>(
+    store,
+    [loadSettings(), sqlWords(), listQueries(), projectFolders(), listReports()],
+    (now, [settings, reservedWords, queries, projects, reports]) => ({
+      ...now,
+      settings: settings ?? now.settings,
+      reservedWords: reservedWords ?? now.reservedWords,
+      queries: queries ?? now.queries,
+      projects: projects ?? now.projects,
+      reports: reports ?? now.reports,
+    }),
+  );
+  await tellSetAside(store);
+}
+
+/** Loads the saved connections, whose passwords the keychain is asked of, and the keychain's status; then tells the files set aside. */
+async function loadKeyed(store: Store): Promise<void> {
+  await settled<[SavedList, KeychainStatus]>(
+    store,
+    [listSavedConnections(), keychainStatus()],
+    (now, [saved, keychain]) => ({
+      ...now,
+      saved: saved ?? now.saved,
+      keychain: keychain ?? now.keychain,
+    }),
+  );
   await tellSetAside(store);
 }
 

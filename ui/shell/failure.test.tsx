@@ -71,10 +71,14 @@ describe("a failure the window did not handle", () => {
 
 describe("loading the window's state", () => {
   it("keeps each part that came when another did not, and tells the files set aside [DESIGN] D49", async () => {
+    let told = 0;
     mockBackend({
       list_queries: () => Promise.reject(new Error("queries.json: no")),
       sql_words: () => ["SELECT"],
-      set_aside_notices: () => ["/c/queries.json did not fit, so Studio set it aside"],
+      set_aside_notices: () => {
+        told += 1;
+        return told === 1 ? ["/c/queries.json did not fit, so Studio set it aside"] : [];
+      },
     });
     const store = new Store();
     await loadAll(store);
