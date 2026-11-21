@@ -51,6 +51,7 @@ export function SchemaActions({ connection, schema }: { readonly connection: num
   return (
     <div className="details-actions" role="group" aria-label="Schema actions">
       <Action icon="table" name="Create Table…" task={{ kind: "createTable", connection, schema }} />
+      <Action icon="definition" name="Generate Script…" task={{ kind: "generate", connection, schema }} />
     </div>
   );
 }

@@ -8,7 +8,7 @@ are imported into a table, a table's rows exported to a file, and two
 tables' rows compared. A table is made, or altered, by a dialog that
 writes its DDL as it is filled in. A base table's details, in the
 explorer, offer each of its tasks, and a schema's details **Create
-Table…**:
+Table…** and **Generate Script…**:
 
 | Action | What it does |
 |---|---|
@@ -18,6 +18,7 @@ Table…**:
 | **Compare Rows…** | compares the table's rows with another table's, and writes the statements that make the other's rows the same |
 | **Alter Table…** | alters the table, an action of ALTER TABLE at a time |
 | **Create Table…** | makes a table in the schema |
+| **Generate Script…** | writes the definitions of the schema's objects chosen, in a worksheet |
 
 ## Editing rows
 
@@ -197,3 +198,13 @@ connection, to be read, changed and run there; **Run** opens it and runs
 it at once. It runs as any script does, through the connection's guards,
 in the session's transaction, and the explorer reads the catalog again
 after it.
+
+## Generating a script
+
+**Generate Script…** lists the schema's objects, each chosen at first:
+its user-defined types, domains, sequence generators, base tables,
+views and routines, in that order. **Choose None** and **Choose All**
+choose them together. **Open in Worksheet** opens, in a worksheet of
+the connection, the definition of each object chosen, as the explorer's
+**Definition** writes it ([The Object Explorer](04-explorer.md#the-definition)),
+in that order, a blank line between each.

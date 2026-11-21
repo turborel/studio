@@ -4,6 +4,7 @@
  */
 import { EditRowsDialog, ExportDialog } from "./TableTasks";
 import { CompareDialog } from "./CompareDialog";
+import { GenerateDialog } from "./GenerateDialog";
 import { ImportDialog } from "./ImportDialog";
 import { AlterTableDialog, CreateTableDialog } from "./TableDialogs";
 import type { DataTask } from "./tasks";
@@ -23,5 +24,7 @@ export function DataDialog({ task }: { readonly task: DataTask }) {
       return <CreateTableDialog connection={task.connection} schema={task.schema} />;
     case "compare":
       return <CompareDialog of={task} />;
+    case "generate":
+      return <GenerateDialog connection={task.connection} schema={task.schema} />;
   }
 }

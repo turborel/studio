@@ -101,8 +101,9 @@ Of a table or view, its tabs are:
 Above a base table's tabs, **Edit Rows…**, **Import…**, **Export…**,
 **Compare Rows…** and **Alter Table…** edit its rows, import a file's rows
 into it, export its rows, compare them with another table's, and alter
-it; above a schema's definition, **Create Table…** makes a table in it
-([Editing Data](07-editing-data.md)).
+it; above a schema's definition, **Create Table…** makes a table in it,
+and **Generate Script…** writes the definitions of the objects chosen
+of it ([Editing Data](07-editing-data.md)).
 
 **Partitions** is shown only of a partitioned table or a partition. The
 index a partitioned table's index made on a partition is named by the

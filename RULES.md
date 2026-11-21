@@ -999,6 +999,9 @@ The review checklist:
 - **Run:** the DDL opened in a worksheet of the connection, and run there
   if asked, as any script, through its guards, the catalog read again
   after.
+- **Generated:** a schema's objects chosen scripted by their definitions
+  (D33), types, domains and sequences first, then base tables, views and
+  routines, opened in a worksheet.
 - *Why:* the DDL is seen, and can be changed, before it runs.
 
 #### D45. Rows compared by the target's key, synced by a script
