@@ -194,7 +194,8 @@ is open: **Commit** commits each, **Roll Back** rolls each back, and
 **Cancel** keeps Studio open. A commit that fails is told, and Studio
 stays open. Closing the window a second time within ten seconds of being
 asked quits at once, each open transaction rolled back, so a window that
-cannot answer never keeps Studio open.
+cannot answer never keeps Studio open; with no window left, Studio quits
+at once.
 
 ## Embedded databases
 

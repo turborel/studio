@@ -1498,8 +1498,8 @@ The review checklist:
 - **In memory:** a scratch database, marked not saved, gone as it closes.
 - **Closing:** disconnecting asks first how an open transaction ends;
   quitting asks once for all, a second request within ten seconds
-  quitting at once, so a window that cannot answer never keeps Studio
-  open. Closing a database writes a checkpoint and gives up its lock;
+  quitting at once, and Studio quitting at once with no window left to
+  ask, so a window that cannot answer never keeps Studio open. Closing a database writes a checkpoint and gives up its lock;
   one not closed is recovered as it opens again, and Studio says so.
 - **Plug-ins, keys and versions:** the plug-ins `turboreld` registers
   (SIMD, LZ4, AES-256-GCM and ChaCha20-Poly1305 of the keys directory

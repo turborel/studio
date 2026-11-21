@@ -110,9 +110,15 @@ pub fn context<R: Runtime>() -> tauri::Context<R> {
 const QUIT_AGAIN_WITHIN: Duration = Duration::from_secs(10);
 
 /// Whether quitting waits for the window to ask how each open transaction
-/// ends (RULES.md D59): not if it was asked within `QUIT_AGAIN_WITHIN`, so
-/// a second request quits; else it is asked now.
+/// ends (RULES.md D59): not if no window is left to ask, nor if it was
+/// asked within `QUIT_AGAIN_WITHIN`, so a second request quits; else it is
+/// asked now.
 fn ask_before_quitting<R: Runtime>(app: &AppHandle<R>) -> bool {
+    // With no window left, none can ask: Studio quits, rather than wait
+    // for a request that never comes, holding its single instance.
+    if app.webview_windows().is_empty() {
+        return false;
+    }
     let Some(studio) = app.try_state::<Studio>() else { return false };
     let mut asked = studio.quit_asked.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
     if asked.is_some_and(|at| at.elapsed() < QUIT_AGAIN_WITHIN) {

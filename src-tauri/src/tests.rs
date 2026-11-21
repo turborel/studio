@@ -424,3 +424,21 @@ fn a_link_opened_waits_for_the_window() {
     assert!(taken["why"].as_str().unwrap().contains("not an invitation"), "{taken}");
     assert_eq!(answer(&window, "take_live_link", serde_json::json!({})), serde_json::Value::Null);
 }
+
+/// [DESIGN] D59 D66: with no window left to ask, quitting is not held for
+/// the window's answer, so no Studio is left running with nothing to
+/// show, holding its single instance.
+#[test]
+fn quitting_with_no_window_is_not_held() {
+    let (app, window) = window();
+    assert!(crate::ask_before_quitting(app.handle()));
+    window.close().unwrap();
+    drop(window);
+    for _ in 0..100 {
+        if tauri::Manager::webview_windows(app.handle()).is_empty() {
+            break;
+        }
+        std::thread::sleep(std::time::Duration::from_millis(10));
+    }
+    assert!(!crate::ask_before_quitting(app.handle()));
+}
