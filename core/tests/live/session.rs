@@ -1,9 +1,11 @@
 //! A connection's session: cancel, transactions, loss and reconnection,
 //! and the manager's workers (`[CLIENT Running statements]`).
 
-use turborel_studio_core::connections::manager::WORKER_PREFIX;
+use turborel_studio_core::connections::manager::{ConnectionManager, WORKER_PREFIX};
+use turborel_studio_core::connections::outcome::{Outcome, ResultId};
 use turborel_studio_core::connections::spec::ConnectionSpec;
-use turborel_studio_core::events::Event;
+use turborel_studio_core::error::StudioError;
+use turborel_studio_core::events::{ConnectionId, Event};
 use turborel_studio_core::guard::policy::Guards;
 
 use crate::connect::column;
@@ -17,13 +19,11 @@ const CANCELLED: i32 = -920;
 /// How many times the test asks to cancel before it gives up.
 const CANCEL_TRIES: u32 = 600;
 
-/// [CLIENT Running statements] A statement running is cancelled from
-/// another thread through the canceller, and fails as cancelled.
-pub fn a_running_statement_is_cancelled(live: &Live) {
-    let (manager, _) = live.manager();
-    let id = live.owner(&manager);
-    let error = std::thread::scope(|scope| {
-        let running = scope.spawn(|| crate::run(&manager, id, LONG));
+/// `sql` run on connection `id`, cancelled from another thread through
+/// the canceller until it fails; its failure.
+fn cancelled(manager: &ConnectionManager, id: ConnectionId, sql: &str) -> StudioError {
+    std::thread::scope(|scope| {
+        let running = scope.spawn(|| crate::run(manager, id, sql));
         let mut tries = 0;
         while !running.is_finished() && tries < CANCEL_TRIES {
             manager.cancel(id).unwrap();
@@ -31,9 +31,39 @@ pub fn a_running_statement_is_cancelled(live: &Live) {
             std::thread::sleep(std::time::Duration::from_millis(50));
         }
         running.join().unwrap().unwrap_err()
-    });
+    })
+}
+
+/// [CLIENT Running statements] A statement running is cancelled from
+/// another thread through the canceller, and fails as cancelled.
+pub fn a_running_statement_is_cancelled(live: &Live) {
+    let (manager, _) = live.manager();
+    let id = live.owner(&manager);
+    let error = cancelled(&manager, id, LONG);
     assert_eq!(error.sqlcode, CANCELLED, "{error}");
     assert_eq!(column(&manager, id, "VALUES (1)"), [Some("1".to_owned())]);
+    manager.close(id).unwrap();
+}
+
+/// The result `sql` gave on connection `id`, closed.
+fn result_of(manager: &ConnectionManager, id: ConnectionId, sql: &str) -> ResultId {
+    let Outcome::Rows { result, .. } = crate::run(manager, id, sql).unwrap().outcome else { panic!("no rows") };
+    manager.close_result(id, result).unwrap();
+    result
+}
+
+/// [CLIENT Running statements] [DESIGN] D25: a query that fails, or is
+/// cancelled, in its first fetch is answered by its failure alone, so the
+/// worksheet shows the error and no result, not even its columns.
+pub fn a_query_failed_before_its_rows_is_its_error_alone(live: &Live) {
+    let (manager, _) = live.manager();
+    let id = live.owner(&manager);
+    let first = result_of(&manager, id, "VALUES (1)");
+    assert_eq!(cancelled(&manager, id, LONG).sqlcode, CANCELLED);
+    let error = crate::run(&manager, id, "SELECT 1 / (N - 1) FROM (VALUES (1)) AS T(N)").unwrap_err();
+    assert_eq!(error.sqlstate, "22012", "{error}");
+    assert_eq!(result_of(&manager, id, "VALUES (2)"), first + 1, "a failed query kept no result");
+    assert!(!manager.session(id).unwrap().lost);
     manager.close(id).unwrap();
 }
 

@@ -211,7 +211,9 @@ rule of the standard it broke, and its diagnostics' detail, hint, the
 schema, table and column it is about, and its constraint, where the
 server gives them. A failure at a place in the statement is
 underlined in the editor, and the cursor moved there; clicking its
-message moves it there again.
+message moves it there again. A query that fails, or is cancelled,
+before its first rows are sent gave no result: the messages pane tells
+its failure alone, and **Results** shows no tab and no columns for it.
 
 ## The plan
 

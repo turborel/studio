@@ -9,6 +9,20 @@ import { CompareView, PlaneOfResult, RecordView, spatialColumns } from "./Result
 import { viewedAt } from "./ResultView";
 import { Timings } from "./Timings";
 import { ValueViewer } from "./viewers/ValueViewer";
+import { runStatements } from "../state/running";
+import { Panes } from "../worksheet/Panes";
+
+/** What VALUES (1) gives: one row of one column. */
+const DONE_ROWS = {
+  outcome: {
+    kind: "rows",
+    result: 9,
+    columns: [{ name: null, typeWritten: "INTEGER", typeName: null, notNull: true }],
+    page: { from: 0, rows: [["1"]], rowsRead: 1, complete: true, lobs: [] },
+  },
+  warnings: [],
+  serverTime: null,
+};
 
 /** A column. */
 function col(name: string | null, typeWritten = "VARCHAR(30)"): ColumnInfo {
@@ -175,6 +189,36 @@ describe("the results' views at their edges", () => {
     ).toBeTruthy();
     expect(screen.getByText("this")).toBeTruthy();
     expect(screen.getByText("other")).toBeTruthy();
+  });
+
+  it("shows a query failed before its rows as its error alone, no result tab nor header [DESIGN] D25 [CLIENT Running statements]", async () => {
+    const cancelled = { sqlcode: -920, sqlstate: "TB920", message: "the statement was cancelled" };
+    catalogBackend({
+      run_statement: (args) =>
+        String(args["sql"]).startsWith("VALUES")
+          ? { kind: "ran", answer: { ...DONE_ROWS, session: SESSION } }
+          : refused({ ...cancelled, rule: null, position: null, active: true, diagnostics: null }),
+    });
+    const store = await opened();
+    const id = openWorksheet(store, "");
+    within(store, <Panes id={id} />);
+    const sql = "SELECT COUNT(*) FROM T";
+    await act(() => runStatements(store, id, [{ sql, from: 0, to: sql.length }]));
+    await settle();
+    expect(worksheetOf(store.current(), id)?.pane).toBe("messages");
+    expect(screen.getByLabelText("Messages").textContent).toContain("TB920 (-920): the statement was cancelled");
+    fireEvent.click(screen.getByRole("tab", { name: "Results" }));
+    expect(screen.getByText("No result yet: run a statement to see its rows.")).toBeTruthy();
+    expect(screen.queryByRole("columnheader")).toBeNull();
+    expect(screen.queryByRole("tablist", { name: "Results" })).toBeNull();
+    await act(() => runStatements(store, id, [{ sql: "VALUES (1)", from: 0, to: 10 }]));
+    await settle();
+    expect(screen.getAllByRole("columnheader").length).toBeGreaterThan(0);
+    await act(() => runStatements(store, id, [{ sql, from: 0, to: sql.length }]));
+    await settle();
+    fireEvent.click(screen.getByRole("tab", { name: "Results" }));
+    expect(screen.queryByRole("columnheader")).toBeNull();
+    expect(worksheetOf(store.current(), id)?.runs.map((r) => r.outcome)).toEqual([null]);
   });
 
   it("tells a vector it cannot read, and a failure that is no error's [DESIGN] D39", async () => {
