@@ -8,7 +8,7 @@ status bar.
 
 ![The Studio window: the explorer of the demo shop's connections and catalog on the left, a worksheet of a query and its rows in the middle, the details on the right, and the status bar below](../images/window-light.png)
 
-[The same, in the dark theme](../images/window-dark.png).
+![The Studio window: the explorer of the demo shop's connections and catalog on the left, a worksheet of a query and its rows in the middle, the details on the right, and the status bar below](../images/window-dark.png)
 
 ## The menu bar
 
@@ -89,7 +89,7 @@ through the connection's guards, as one typed would
 
 ![A table's context menu in the explorer, of the demo shop's ORDERS](../images/context-menu-light.png)
 
-[The same, in the dark theme](../images/context-menu-dark.png).
+![A table's context menu in the explorer, of the demo shop's ORDERS](../images/context-menu-dark.png)
 
 | Of | Its menu |
 |---|---|

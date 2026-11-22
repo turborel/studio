@@ -148,6 +148,25 @@ A change to the assistant says what it sends, and shows that the user
 sees it before it goes, and that no tool acts without the user
 (R-SEC-12).
 
+## The manual's pictures
+
+`cargo xtask screenshots` makes the manual's pictures (RULES.md D60);
+none is made by hand. Each is a pair, `NAME-light.png` and
+`NAME-dark.png`, or `.gif`, shown on the page one after the other, each
+its own paragraph, of the same alt text, which says what the picture
+shows:
+
+```markdown
+![The explorer's tree of the demo shop](../images/explorer-tree-light.png)
+
+![The explorer's tree of the demo shop](../images/explorer-tree-dark.png)
+```
+
+The documentation site shows the one of the reader's theme. The
+manual's check refuses an image of no alt text, a light image without
+its dark one after it, a pair of different alt texts, an image linked
+rather than shown, and an image no page shows.
+
 ## Adding an import format
 
 The import wizard reads each format through a plug-in, one

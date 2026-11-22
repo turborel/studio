@@ -46,7 +46,7 @@ are in groups:
 
 ![The New Connection dialog: its name, folder, environment and colour, and a server's URI, hosts, port, user and password](../images/connection-dialog-light.png)
 
-[The same, in the dark theme](../images/connection-dialog-dark.png).
+![The New Connection dialog: its name, folder, environment and colour, and a server's URI, hosts, port, user and password](../images/connection-dialog-dark.png)
 
 Each setting is turborel-client's own, of the same name, as Turborel's
 [Settings, Pipelines and Pools](https://github.com/turborel/turborel/blob/main/doc/client/02-library-connections.md)
@@ -101,7 +101,7 @@ named pipe on Windows, uses no TLS, as only its machine reaches it.
 
 ![The New Connection dialog with its TLS part open: the TLS mode verify-full, the authorities, client certificate and key, and the server name db.example](../images/connection-tls-light.png)
 
-[The same, in the dark theme](../images/connection-tls-dark.png).
+![The New Connection dialog with its TLS part open: the TLS mode verify-full, the authorities, client certificate and key, and the server name db.example](../images/connection-tls-dark.png)
 
 A mode of `prefer` or `disable` may connect over plain TCP. A password
 is never sent so: such a connection is refused before anything is sent
@@ -139,7 +139,7 @@ and **New In-Memory Database**; then **Refresh**, **Filter** and
 
 ![Connecting: the demo shop's saved connection double-clicked, its catalog filling, then its schema, its tables and a table's columns opened](../images/connecting-light.gif)
 
-[The same, in the dark theme](../images/connecting-dark.gif).
+![Connecting: the demo shop's saved connection double-clicked, its catalog filling, then its schema, its tables and a table's columns opened](../images/connecting-dark.gif)
 
 Below it the explorer lists the connections in sections, each folded or
 opened by its heading:
@@ -236,7 +236,7 @@ named `studio-connection-` and its number.
 
 ![The status bar of three connections, one above another: a server's by a local socket, the embedded demo shop's, and a database in memory, not saved](../images/status-bar-light.png)
 
-[The same, in the dark theme](../images/status-bar-dark.png).
+![The status bar of three connections, one above another: a server's by a local socket, the embedded demo shop's, and a database in memory, not saved](../images/status-bar-dark.png)
 
 The status bar says **Embedded** of a database in a folder, and
 **In-memory, not saved** of one in memory, where a server's connection
@@ -254,7 +254,7 @@ mistyped path never becomes a new, empty database.
 
 ![The Open Database dialog: its database folder to choose, its name, folder in the explorer, environment and colour](../images/open-database-light.png)
 
-[The same, in the dark theme](../images/open-database-dark.png).
+![The Open Database dialog: its database folder to choose, its name, folder in the explorer, environment and colour](../images/open-database-dark.png)
 
 | Field | What it says |
 |---|---|
@@ -281,7 +281,7 @@ makes the database and saves it, to be opened, not made, thereafter.
 
 ![The New Database dialog: its folder to choose, its name, and its owner, DEMO](../images/new-database-light.png)
 
-[The same, in the dark theme](../images/new-database-dark.png).
+![The New Database dialog: its folder to choose, its name, and its owner, DEMO](../images/new-database-dark.png)
 
 ### A database in memory
 
@@ -293,7 +293,7 @@ in upper case.
 
 ![The explorer's open connections: the demo shop, and a database in memory marked not saved](../images/in-memory-light.png)
 
-[The same, in the dark theme](../images/in-memory-dark.png).
+![The explorer's open connections: the demo shop, and a database in memory marked not saved](../images/in-memory-dark.png)
 
 ### A database another program holds
 

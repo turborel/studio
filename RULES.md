@@ -206,7 +206,7 @@ The tools named by "the formatter", "the linters", "the type checker" and
 | R-DOC-4 | Behaviour Turborel governs **shall** cite Turborel's manual by its heading; Studio's own choices cite their decision (D6). Code cites RULES.md, CONFORMANCE.md and Turborel's manual, never TODO.md. | review; the checks tool |
 | R-DOC-5 | No commented-out code, and no open-work markers in code: open work goes in TODO.md, which code never names. | the checks tool |
 | R-DOC-6 | Every Rust source file **shall** begin with a doc comment giving its responsibility; every TypeScript module with a TSDoc block. | the checks tool; review |
-| R-DOC-7 | A change a user can see **shall** update the manual, `doc/`, in the same commit; every claim is checked against the code, and every example and step is run. The manual keeps Turborel's layout, which turborel.com's documentation site reads: each page opens with its `# Title` and a line holding only `[Contents](README.md)`, each volume's README.md lists its pages, links within `doc/` and to this repository's files are relative links that resolve, a link to Turborel's own manual is its GitHub address, `user/01-installing.md` keeps its name, and `doc/` holds no file but its pages and, in `doc/images/`, the images `cargo xtask screenshots` makes (D60): PNG, GIF or SVG, each shown or linked by a page, each picture's alt text saying what it shows, an animation at most 2 MiB. | review; the checks tool |
+| R-DOC-7 | A change a user can see **shall** update the manual, `doc/`, in the same commit; every claim is checked against the code, and every example and step is run. The manual keeps Turborel's layout, which turborel.com's documentation site reads: each page opens with its `# Title` and a line holding only `[Contents](README.md)`, each volume's README.md lists its pages, links within `doc/` and to this repository's files are relative links that resolve, a link to Turborel's own manual is its GitHub address, `user/01-installing.md` keeps its name, and `doc/` holds no file but its pages and, in `doc/images/`, the images `cargo xtask screenshots` makes (D60): PNG, GIF or SVG, each shown by a page, a theme's picture as its pair, the light image then the dark of the same alt text, each picture's alt text saying what it shows, an animation at most 2 MiB. | review; the checks tool |
 | R-DOC-8 | No document or comment gives timings or speedups; figures go in TODO.md or a commit message. | review |
 | R-DOC-9 | The README is never stale: a commit that changes what Studio does, needs or supports (a feature, a mode, a requirement, building or installing, its status) **shall** update README.md, and the pages of the manual it touches, in that same commit; each is read against the change before it is pushed. The README's feature list links the chapter of the User's Guide of each feature, so a chapter of a new feature fails the check until the README names it. | review; the checks tool |
 
@@ -1544,8 +1544,10 @@ The review checklist:
   what moves, of the `gif` crate, MIT or Apache-2.0, cropped to its part,
   a frame the same as the one before merged into it, and at most 2 MiB;
   the ER diagram also as SVG, written by Studio's own Export as SVG. A
-  page shows the light picture, and links the dark one beside it. A scene
-  that fails is pictured beside the images, and the run fails.
+  page shows each picture as its pair, the light image, then the dark
+  one of the same alt text, a paragraph each: the documentation site
+  shows the one of the reader's theme. A scene that
+  fails is pictured beside the images, and the run fails.
 - **Where it runs:** where tauri-driver runs, Linux under a display
   server: the workflow `screenshots` runs it as the window's code changes
   on main, or by hand, with the nightly image's server, and keeps the

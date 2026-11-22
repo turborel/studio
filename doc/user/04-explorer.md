@@ -15,7 +15,7 @@ can be done with it ([The Window](02-window.md#context-menus)).
 
 ![The catalog's tree: the schema DEMO, its tables and views, and the table ORDERS opened on its columns, keys and index, each of its own icon](../images/explorer-tree-light.png)
 
-[The same, in the dark theme](../images/explorer-tree-dark.png).
+![The catalog's tree: the schema DEMO, its tables and views, and the table ORDERS opened on its columns, keys and index, each of its own icon](../images/explorer-tree-dark.png)
 
 The tree's first level holds the schemas, then **Users and Roles**. A
 schema opens on its folders:
@@ -73,7 +73,7 @@ Escape in the field, hides it and clears it.
 
 ![The catalog filtered by ORDER: the tables and view whose names hold it, their schema and folders opened](../images/explorer-filter-light.png)
 
-[The same, in the dark theme](../images/explorer-filter-dark.png).
+![The catalog filtered by ORDER: the tables and view whose names hold it, their schema and folders opened](../images/explorer-filter-dark.png)
 
 Of names, the field keeps the objects whose names hold what is typed,
 in any case, with their schemas and folders opened; Users and Roles are
@@ -105,11 +105,11 @@ The details panel, on the right, shows the object selected.
 
 ![The details panel of the table DEMO.ORDERS: its actions, its tabs, and its columns with their types](../images/explorer-details-light.png)
 
-[The same, in the dark theme](../images/explorer-details-dark.png).
+![The details panel of the table DEMO.ORDERS: its actions, its tabs, and its columns with their types](../images/explorer-details-dark.png)
 
 ![The details panel's Dependencies of DEMO.ORDERS: it uses nothing, and is used by the view CUSTOMER_TOTALS and the foreign key ORDER_LINES_FOREIGN1](../images/explorer-dependencies-light.png)
 
-[The same, in the dark theme](../images/explorer-dependencies-dark.png).
+![The details panel's Dependencies of DEMO.ORDERS: it uses nothing, and is used by the view CUSTOMER_TOTALS and the foreign key ORDER_LINES_FOREIGN1](../images/explorer-dependencies-dark.png)
 
 Of a table or view, its tabs are:
 
@@ -171,11 +171,11 @@ its views and its routines.
 
 ![The details panel's Definition of DEMO.ORDERS: its CREATE TABLE, with Script as, Copy, Save and Open in Worksheet](../images/explorer-definition-light.png)
 
-[The same, in the dark theme](../images/explorer-definition-dark.png).
+![The details panel's Definition of DEMO.ORDERS: its CREATE TABLE, with Script as, Copy, Save and Open in Worksheet](../images/explorer-definition-dark.png)
 
 ![The table ORDERS's context menu, Script As, then SELECT, then To Worksheet, and the SELECT of its columns in a new worksheet](../images/script-as-light.gif)
 
-[The same, in the dark theme](../images/script-as-dark.gif).
+![The table ORDERS's context menu, Script As, then SELECT, then To Worksheet, and the SELECT of its columns in a new worksheet](../images/script-as-dark.gif)
 
 A routine's body and a trigger's action are shown to the owner of their
 schema alone: to another user, the definition holds a comment saying so

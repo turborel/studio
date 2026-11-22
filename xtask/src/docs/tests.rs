@@ -30,16 +30,29 @@ fn an_image_is_kept_in_its_folder_alone() {
 }
 
 /// [RULE] R-DOC-7 [DESIGN] D60: an image says what it shows, and is
-/// known as the file it links, as is a theme's other picture linked
-/// beside it; an animation is bounded in size.
+/// known as the file it shows; a picture of a theme is shown as its pair,
+/// the light image, then at once the dark one of the same alt text, as the
+/// documentation site shows the one of the reader's theme; an alt text of
+/// another picture, "The same", is refused; an image is shown, never
+/// linked alone; and an animation is bounded in size.
 #[test]
 fn an_image_says_what_it_shows() {
-    let text = "![The window](../images/w.png) and ![](../images/x.gif), [dark](../images/w-dark.png)\n```\n![no](y.png)\n```\n";
+    let text = "![The window](../images/w.png) and ![](../images/x.gif)\n```\n![no](y.png)\n```\n";
     assert_eq!(images(text), [("The window".to_owned(), "../images/w.png".to_owned()), (String::new(), "../images/x.gif".to_owned())]);
     let mut linked = Vec::new();
     let problems = image_problems("doc/user/02-window.md", text, &mut linked);
     assert_eq!(problems.len(), 1);
-    assert_eq!(linked, ["doc/images/w.png", "doc/images/x.gif", "doc/images/w-dark.png"]);
+    assert_eq!(linked, ["doc/images/w.png", "doc/images/x.gif"]);
+    let pair = "![The window](../images/w-light.png)\n\n![The window](../images/w-dark.png)\n";
+    assert_eq!(image_problems("doc/user/02-window.md", pair, &mut Vec::new()), Vec::<String>::new());
+    let linked_alone = "![The window](../images/w-light.png)\n\n[The window, dark](../images/w-dark.png).\n";
+    let problems = image_problems("doc/user/02-window.md", linked_alone, &mut Vec::new());
+    assert_eq!(problems.len(), 2, "{problems:?}");
+    assert!(problems.iter().any(|p| p.contains("linked, not shown")));
+    let same = "![The window](../images/w-light.png)\n\n![The same, in the dark theme](../images/w-dark.png)\n";
+    assert_eq!(image_problems("doc/user/02-window.md", same, &mut Vec::new()).len(), 3);
+    let other = "![The window](../images/w-light.png)\n\n![The worksheet](../images/w-dark.png)\n";
+    assert_eq!(image_problems("doc/user/02-window.md", other, &mut Vec::new()).len(), 2);
     assert_eq!(animation_problems("doc/images/x.gif", 2 * 1024 * 1024), Vec::<String>::new());
     assert_eq!(animation_problems("doc/images/x.gif", 2 * 1024 * 1024 + 1).len(), 1);
     assert_eq!(animation_problems("doc/images/x.png", 9 * 1024 * 1024), Vec::<String>::new());

@@ -56,7 +56,7 @@ Tables of a Schema…** reads them.
 
 ![A model imported of the DDL script shop.sql: its tables drawn, and the view and the INSERT left out of the model, each by its line](../images/import-ddl-light.png)
 
-[The same, in the dark theme](../images/import-ddl-dark.png).
+![A model imported of the DDL script shop.sql: its tables drawn, and the view and the INSERT left out of the model, each by its line](../images/import-ddl-dark.png)
 
 What a model does not hold is left out of it, and listed under the
 diagram by its line, with why, until **Dismiss**:
@@ -91,9 +91,9 @@ element tables.
 
 ![The model of the demo shop's schema: its five tables, their columns and keys, joined by their foreign keys](../images/er-diagram-light.png)
 
-[The same, in the dark theme](../images/er-diagram-dark.png).
+![The model of the demo shop's schema: its five tables, their columns and keys, joined by their foreign keys](../images/er-diagram-dark.png)
 
-![The same diagram as Export as SVG writes it: the five tables of the demo shop, their columns, types and keys, and the foreign keys between them](../images/er-diagram.svg)
+![The diagram as Export as SVG writes it: the five tables of the demo shop, their columns, types and keys, and the foreign keys between them](../images/er-diagram.svg)
 
 Tables are laid out from left to right along their foreign keys; a table
 already placed keeps its place, and a table dragged keeps the place it is
@@ -141,7 +141,7 @@ the comparison:
 
 ![The schema DEMO compared with STAGING: the differences, each of its table, above the script that makes STAGING match](../images/schema-compare-light.png)
 
-[The same, in the dark theme](../images/schema-compare-dark.png).
+![The schema DEMO compared with STAGING: the differences, each of its table, above the script that makes STAGING match](../images/schema-compare-dark.png)
 
 Constraints and indexes are matched by what they are, their columns,
 condition, references and rules, or columns and method, not by their
@@ -189,7 +189,7 @@ once the builder is closed by **Done**.
 
 ![The query builder: ORDERS and CUSTOMERS joined by their foreign key, NAME and the sum of TOTAL chosen, and the query it writes](../images/query-builder-light.png)
 
-[The same, in the dark theme](../images/query-builder-dark.png).
+![The query builder: ORDERS and CUSTOMERS joined by their foreign key, NAME and the sum of TOTAL chosen, and the query it writes](../images/query-builder-dark.png)
 
 - **Add Table** picks a table, named by its first letter and a number, as
   `S1`. A table joins one picked before it as a foreign key of either

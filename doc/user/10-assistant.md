@@ -32,7 +32,7 @@ Settings…** in the panel, opens its settings:
 
 ![The Assistant Settings: the assistant on, of the user's own model at localhost, its wire format and tools, and the connection's policy](../images/assistant-settings-light.png)
 
-[The same, in the dark theme](../images/assistant-settings-dark.png).
+![The Assistant Settings: the assistant on, of the user's own model at localhost, its wire format and tools, and the connection's policy](../images/assistant-settings-dark.png)
 
 A key is kept in the operating system's keychain alone. Once saved it is
 never shown again, not even to the window: the settings say only
@@ -57,7 +57,7 @@ connection, which must be a saved one. Write a question and click
 
 ![A question asked of the assistant: what will be sent shown and sent, the table ORDERS described by a tool, and the answer with its tokens](../images/assistant-question-light.gif)
 
-[The same, in the dark theme](../images/assistant-question-dark.gif).
+![A question asked of the assistant: what will be sent shown and sent, the table ORDERS described by a tool, and the answer with its tokens](../images/assistant-question-dark.gif)
 
 Every request also holds the schema's context: the session's schema's
 tables and views, each with its columns and their types, its keys, its
@@ -93,7 +93,7 @@ waits 30 minutes for its answer, then is taken as no.
 
 ![What will be sent, shown before the request: the request's body, which holds no key, with Send and Don't Send](../images/assistant-preview-light.png)
 
-[The same, in the dark theme](../images/assistant-preview-dark.png).
+![What will be sent, shown before the request: the request's body, which holds no key, with Send and Don't Send](../images/assistant-preview-dark.png)
 
 ### Asking Claude
 
@@ -124,7 +124,7 @@ before it runs:
 
 ![The assistant asking to run a query, READ ONLY: its SQL counting the customers of each city, its purpose and its class, with Run and Don't Run](../images/assistant-approval-light.png)
 
-[The same, in the dark theme](../images/assistant-approval-dark.png).
+![The assistant asking to run a query, READ ONLY: its SQL counting the customers of each city, its purpose and its class, with Run and Don't Run](../images/assistant-approval-dark.png)
 
 A table or schema the policy hides is left out of every list, and no
 tool tells of it. `run_query` shows the query, its class, the objects
@@ -210,7 +210,7 @@ rule named:
 
 ![A DROP TABLE the model called for, blocked, its rule named in red, and the answer that follows](../images/assistant-blocked-light.png)
 
-[The same, in the dark theme](../images/assistant-blocked-dark.png).
+![A DROP TABLE the model called for, blocked, its rule named in red, and the answer that follows](../images/assistant-blocked-dark.png)
 
 A name written alone is judged as of the session's schema too, and a
 rule of a table catches the table written without its schema.
@@ -270,4 +270,4 @@ them. The log never holds a key, nor a row's value
 
 ![The assistant's log: each request, its model, connection, what it sent, its tools, how it stopped and its tokens](../images/assistant-log-light.png)
 
-[The same, in the dark theme](../images/assistant-log-dark.png).
+![The assistant's log: each request, its model, connection, what it sent, its tools, how it stopped and its tokens](../images/assistant-log-dark.png)

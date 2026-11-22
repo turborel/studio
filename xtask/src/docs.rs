@@ -164,24 +164,54 @@ fn resolved(base: &Path, target: &str) -> String {
     parts.join("/")
 }
 
+/// The stem and theme of an image named `NAME-light.EXT` or `NAME-dark.EXT`.
+fn themed(target: &str) -> Option<(&str, &str)> {
+    let name = target.rsplit_once('.').map_or(target, |(stem, _)| stem);
+    name.strip_suffix("-light").map(|stem| (stem, "light")).or_else(|| name.strip_suffix("-dark").map(|stem| (stem, "dark")))
+}
+
 /// What is wrong with the images of the Markdown file `path`, of `text`:
-/// an alt text that is empty. Each image it shows, and each it links, as
-/// a theme's other picture is linked beside the one shown, as a path from
-/// the root, is added to `linked`.
+/// an alt text that is empty, or that begins "The same", which says of
+/// another picture rather than of what it shows; a picture of a theme
+/// shown without its pair, the light image then at once the dark, of the
+/// same alt text, as the documentation site shows the one of the reader's
+/// theme; and an image linked rather than shown. Each image it shows, as
+/// a path from the root, is added to `linked`.
 fn image_problems(path: &str, text: &str, linked: &mut Vec<String>) -> Vec<String> {
     let base = Path::new(path).parent().map_or_else(PathBuf::new, Path::to_path_buf);
+    let shown = images(text);
     let mut problems = Vec::new();
-    for (alt, target) in images(text) {
-        if alt.trim().is_empty() {
-            problems.push(format!("{path}: the image {target} says not what it shows: its alt text is empty (R-DOC-7)"));
+    for (at, (alt, target)) in shown.iter().enumerate() {
+        if alt.trim().is_empty() || alt.starts_with("The same") {
+            problems
+                .push(format!("{path}: the image {target} says not what it shows: its alt text is empty, or of another picture (R-DOC-7)"));
         }
-        linked.push(resolved(&base, &target));
+        // The image at `near`, if it is this one's partner of `theme`, of the same alt text.
+        let paired = |near: Option<usize>, theme: &str| {
+            let partner = themed(target).map(|(stem, _)| (stem, theme));
+            near.and_then(|n| shown.get(n)).is_some_and(|(a, t)| a == alt && themed(t) == partner)
+        };
+        match themed(target).map(|(_, theme)| theme) {
+            Some("light") if !paired(at.checked_add(1), "dark") => {
+                problems.push(format!("{path}: the image {target} is not followed by its dark one of the same alt text, the pair the site shows by theme (R-DOC-7)"));
+            }
+            Some("dark") if !paired(at.checked_sub(1), "light") => {
+                problems.push(format!(
+                    "{path}: the image {target} does not follow its light one of the same alt text, as the site pairs them (R-DOC-7)"
+                ));
+            }
+            _ => {}
+        }
+        linked.push(resolved(&base, target));
     }
-    for link in links(text).iter().filter(|l| IMAGE_KINDS.iter().any(|k| ext_is(l, k))) {
-        let image = resolved(&base, link);
-        if !linked.contains(&image) {
-            linked.push(image);
+    let mut links = links(text);
+    for (_, target) in &shown {
+        if let Some(at) = links.iter().position(|l| l == target) {
+            links.remove(at);
         }
+    }
+    for link in links.iter().filter(|l| IMAGE_KINDS.iter().any(|k| ext_is(l, k))) {
+        problems.push(format!("{path}: the image {link} is linked, not shown: a picture is shown, its pair by theme (R-DOC-7)"));
     }
     problems
 }

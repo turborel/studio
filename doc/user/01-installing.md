@@ -105,4 +105,4 @@ and as the image `ghcr.io/turborel/turborel:nightly`.
 
 ![The About Turborel Studio dialog: Studio's version, and the Turborel commit of its client and engine](../images/about-light.png)
 
-[The same, in the dark theme](../images/about-dark.png).
+![The About Turborel Studio dialog: Studio's version, and the Turborel commit of its client and engine](../images/about-dark.png)

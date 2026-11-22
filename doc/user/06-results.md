@@ -24,7 +24,7 @@ last row read, the next page is read.
 
 ![A result's grid scrolled across, its ID and NAME columns frozen, and LEDGER_KEY of type DECIMAL(38,0), its values of 38 digits](../images/result-grid-light.png)
 
-[The same, in the dark theme](../images/result-grid-dark.png).
+![A result's grid scrolled across, its ID and NAME columns frozen, and LEDGER_KEY of type DECIMAL(38,0), its values of 38 digits](../images/result-grid-dark.png)
 
 - Each column's header gives its name, or its place in parentheses if
   it has none, and below the name its declared type, as SQL writes it.
@@ -93,7 +93,7 @@ The toolbar's first group chooses how a result is shown:
 
 ![The record view of a result: one row, a column a line, with Previous Row and Next Row](../images/record-view-light.png)
 
-[The same, in the dark theme](../images/record-view-dark.png).
+![The record view of a result: one row, a column a line, with Previous Row and Next Row](../images/record-view-dark.png)
 
 A cell's menu, or a header's, by the secondary button, or Shift+F10 on
 the cell selected ([The Window](02-window.md#context-menus)), also opens
@@ -118,7 +118,7 @@ Count 2 of 2 · Sum 3 · Average 1.5 · Min 1 · Max 2
 
 ![Six cells of the orders' totals selected in the grid, and the status bar giving their count, sum, average, least and greatest](../images/selection-sums-light.png)
 
-[The same, in the dark theme](../images/selection-sums-dark.png).
+![Six cells of the orders' totals selected in the grid, and the status bar giving their count, sum, average, least and greatest](../images/selection-sums-dark.png)
 
 Exact numbers, of INTEGER, DECIMAL and the other exact types, are summed
 exactly, every digit kept, up to the 38 digits a DECIMAL may hold and
@@ -154,15 +154,15 @@ the value's text is:
 
 ![The value viewer of a JSON document of an order, drawn as a tree of its members](../images/viewer-json-light.png)
 
-[The same, in the dark theme](../images/viewer-json-dark.png).
+![The value viewer of a JSON document of an order, drawn as a tree of its members](../images/viewer-json-dark.png)
 
 ![The value viewer of an XML document of an order, drawn as its elements and attributes](../images/viewer-xml-light.png)
 
-[The same, in the dark theme](../images/viewer-xml-dark.png).
+![The value viewer of an XML document of an order, drawn as its elements and attributes](../images/viewer-xml-dark.png)
 
 ![The value viewer of a binary string, its octets in hexadecimal, sixteen a line, each line's offset first](../images/viewer-binary-light.png)
 
-[The same, in the dark theme](../images/viewer-binary-dark.png).
+![The value viewer of a binary string, its octets in hexadecimal, sixteen a line, each line's offset first](../images/viewer-binary-dark.png)
 
 A large object longer than its row holds is sent by its locator, and its
 cell says what it is, as `<CHARACTER LARGE OBJECT of 90000 characters>`.
@@ -185,7 +185,7 @@ map are remote content, which Studio never loads.
 
 ![The plane view of four shapes of a shop: its floor with a hole, its counter, its door and a shelf](../images/spatial-light.png)
 
-[The same, in the dark theme](../images/spatial-dark.png).
+![The plane view of four shapes of a shop: its floor with a hole, its counter, its door and a shelf](../images/spatial-dark.png)
 
 ## Graphs
 
@@ -205,7 +205,7 @@ from left to right, in one of two ways:
 
 ![The graph view of the paths from order 1, through each product of its lines, to the other orders of that product, of the property graph STAGING.SHOP](../images/graph-light.png)
 
-[The same, in the dark theme](../images/graph-dark.png).
+![The graph view of the paths from order 1, through each product of its lines, to the other orders of that product, of the property graph STAGING.SHOP](../images/graph-dark.png)
 
 A result is read as paths if the first row that holds a value holds a
 path; else, of two columns or more, from its first column to its
@@ -229,7 +229,7 @@ header; the toolbar's menu **⋯** chooses **Copy without Headers**, or
 
 ![Cells of the customers selected, and their menu's Copy As open on CSV, Tab-Separated, JSON, Markdown and INSERT Statements](../images/copy-as-light.png)
 
-[The same, in the dark theme](../images/copy-as-dark.png).
+![Cells of the customers selected, and their menu's Copy As open on CSV, Tab-Separated, JSON, Markdown and INSERT Statements](../images/copy-as-dark.png)
 
 Of the columns ID, NAME and PRICE, a row of `1`, `Ada, Countess` and
 `10.50` is copied as CSV, with headers, as:
@@ -275,7 +275,7 @@ with the next run.
 
 ![Two results of the products compared: the rows in both, those only in this one and those only in the other](../images/result-compare-light.png)
 
-[The same, in the dark theme](../images/result-compare-dark.png).
+![Two results of the products compared: the rows in both, those only in this one and those only in the other](../images/result-compare-dark.png)
 
 **Compare with…** compares the result with another of the worksheet's,
 row by row, of the rows read of each: each row of one is matched with an

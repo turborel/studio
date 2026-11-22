@@ -35,7 +35,7 @@ certificate's fingerprint, and the addresses it is reached at.
 
 ![Live Sessions: a session presented by Demo presenter, its invitation and participants in the Live Session panel](../images/live-session-light.png)
 
-[The same, in the dark theme](../images/live-session-dark.png).
+![Live Sessions: a session presented by Demo presenter, its invitation and participants in the Live Session panel](../images/live-session-dark.png)
 
 ### Inviting
 
@@ -49,7 +49,7 @@ each viewer.
 
 ![A new invitation of the session: its code, for one person until a time, with Copy Invitation and Copy Invite Link](../images/live-invite-light.png)
 
-[The same, in the dark theme](../images/live-invite-dark.png).
+![A new invitation of the session: its code, for one person until a time, with Copy Invitation and Copy Invite Link](../images/live-invite-dark.png)
 
 **Copy Invite Link** copies the same invitation as a link, which pastes
 into any chat or ticket and opens Studio when clicked:
@@ -76,7 +76,7 @@ or waiting at once.
 
 ![Ann asking to join, with the safety code to compare, and Refuse and Admit](../images/live-admit-light.png)
 
-[The same, in the dark theme](../images/live-admit-dark.png).
+![Ann asking to join, with the safety code to compare, and Refuse and Admit](../images/live-admit-dark.png)
 
 ### What is shared
 
@@ -132,7 +132,7 @@ only when you run it, through the guards every statement runs through
 
 ![A viewer's suggestion landing in the presenter's panel, its SQL shown, then opened in a worksheet of its own](../images/live-suggestion-light.gif)
 
-[The same, in the dark theme](../images/live-suggestion-dark.gif).
+![A viewer's suggestion landing in the presenter's panel, its SQL shown, then opened in a worksheet of its own](../images/live-suggestion-dark.gif)
 
 **Make Presenter** hands your role to a viewer: their Studio shares the
 tabs they pick, filtered by their own settings, and you and the others
@@ -149,7 +149,7 @@ invitation. Paste its code or its link and click **Join**.
 
 ![The Join a Live Session dialog, an invitation's link pasted in as its Invitation, with Cancel and Join](../images/live-join-light.png)
 
-[The same, in the dark theme](../images/live-join-dark.png).
+![The Join a Live Session dialog, an invitation's link pasted in as its Invitation, with Cancel and Join](../images/live-join-dark.png)
 
 Clicking an invitation's link opens Studio, starting it if it is not
 running, at the same dialog, filled in. Above the invitation it shows
@@ -194,11 +194,11 @@ record; a summary reaches them only if the presenter sends it.
 
 ![A session's record replayed: its timeline of moments, the suggestion among them, and the moment shown](../images/live-replay-light.png)
 
-[The same, in the dark theme](../images/live-replay-dark.png).
+![A session's record replayed: its timeline of moments, the suggestion among them, and the moment shown](../images/live-replay-dark.png)
 
 ![A record's summary for a ticket: what goes in, the conclusions written, and its preview in Markdown](../images/live-summary-light.png)
 
-[The same, in the dark theme](../images/live-summary-dark.png).
+![A record's summary for a ticket: what goes in, the conclusions written, and its preview in Markdown](../images/live-summary-dark.png)
 
 A record is a file of the user's alone, in the configuration's
 `live-records` folder ([Files](../appendix/d-files.md#live-records)).
@@ -312,7 +312,7 @@ kept in `live-sessions.json`
 
 ![The Live Sessions Settings: what each environment shares, the sharing's limits with the column TOTAL masked, and how viewers reach the presenter](../images/live-settings-light.png)
 
-[The same, in the dark theme](../images/live-settings-dark.png).
+![The Live Sessions Settings: what each environment shares, the sharing's limits with the column TOTAL masked, and how viewers reach the presenter](../images/live-settings-dark.png)
 
 A session is reached directly, through a relay, or both.
 

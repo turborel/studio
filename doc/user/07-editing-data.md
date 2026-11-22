@@ -33,7 +33,7 @@ SELECT * FROM "ANN"."STAFF" WHERE ID > 1 FETCH FIRST 50 ROWS ONLY
 
 ![Rows of the customers edited in the grid: two cities changed, the changes staged and counted, then applied](../images/edit-rows-light.gif)
 
-[The same, in the dark theme](../images/edit-rows-dark.gif).
+![Rows of the customers edited in the grid: two cities changed, the changes staged and counted, then applied](../images/edit-rows-dark.gif)
 
 The query is run, and its rows are opened to be edited. The rows of any
 result are edited too, by the result's **Edit Rows**, where its query
@@ -114,15 +114,15 @@ read:
 
 ![The import wizard into a new table: suppliers.csv chosen and found to be CSV, its first records previewed, each field's column and inferred type](../images/import-wizard-light.png)
 
-[The same, in the dark theme](../images/import-wizard-dark.png).
+![The import wizard into a new table: suppliers.csv chosen and found to be CSV, its first records previewed, each field's column and inferred type](../images/import-wizard-dark.png)
 
-![The same wizard scrolled to its CREATE TABLE of the new table SUPPLIERS, of the types inferred](../images/import-create-table-light.png)
+![The import wizard scrolled to its CREATE TABLE of the new table SUPPLIERS, of the types inferred](../images/import-create-table-light.png)
 
-[The same, in the dark theme](../images/import-create-table-dark.png).
+![The import wizard scrolled to its CREATE TABLE of the new table SUPPLIERS, of the types inferred](../images/import-create-table-dark.png)
 
 ![The import wizard: a CSV file chosen, its format found, its preview and inferred types, its CREATE TABLE, then the table made and its rows imported](../images/import-light.gif)
 
-[The same, in the dark theme](../images/import-dark.gif).
+![The import wizard: a CSV file chosen, its format found, its preview and inferred types, its CREATE TABLE, then the table made and its rows imported](../images/import-dark.gif)
 
 The fields of JSON are the keys of its first 100 objects, in the order
 they first come; a key first seen later stops the import at its
@@ -211,7 +211,7 @@ Line 7: DELETE of every row of T, with no WHERE
 
 ![Run SQL File: a month end's file scanned, what it holds told by class with its destructive statement, the run asked about, then what it did, a failure logged](../images/run-sql-file-light.gif)
 
-[The same, in the dark theme](../images/run-sql-file-dark.gif).
+![Run SQL File: a month end's file scanned, what it holds told by class with its destructive statement, the run asked about, then what it did, a failure logged](../images/run-sql-file-dark.gif)
 
 Its statements are split as a worksheet's script is, each by the line
 its code begins on, counted by what they do, and each statement that
@@ -275,7 +275,7 @@ compared as their text.
 
 ![The products compared with their staging copy, the rows the same and those to insert, update and delete, above the script that makes the copy match](../images/compare-rows-light.png)
 
-[The same, in the dark theme](../images/compare-rows-dark.png).
+![The products compared with their staging copy, the rows the same and those to insert, update and delete, above the script that makes the copy match](../images/compare-rows-dark.png)
 
 **Compare** says how many rows are the same, and how many the target
 must have inserted, updated and deleted to be the same as the source.
@@ -314,11 +314,11 @@ CREATE TABLE ANN.DEPT (
 
 ![The Create Table dialog: the table STOCK, its columns PRODUCT_ID as its primary key, ON_HAND not null and COUNTED, and the CREATE TABLE it runs](../images/create-table-light.png)
 
-[The same, in the dark theme](../images/create-table-dark.png).
+![The Create Table dialog: the table STOCK, its columns PRODUCT_ID as its primary key, ON_HAND not null and COUNTED, and the CREATE TABLE it runs](../images/create-table-dark.png)
 
 ![The Alter Table dialog of DEMO.CUSTOMERS: a column EMAIL added, and the ALTER TABLE it runs](../images/alter-table-light.png)
 
-[The same, in the dark theme](../images/alter-table-dark.png).
+![The Alter Table dialog of DEMO.CUSTOMERS: a column EMAIL added, and the ALTER TABLE it runs](../images/alter-table-dark.png)
 
 **Alter Table…** alters the table, ALTER TABLE taking one action a
 statement ([ALTER TABLE](https://github.com/turborel/turborel/blob/main/doc/sql/statements/alter-table.md)).
@@ -361,7 +361,7 @@ in that order, a blank line between each.
 
 ![The Generate Script dialog of DEMO: its objects chosen, and the tables' rows as INSERT statements](../images/generate-script-light.png)
 
-[The same, in the dark theme](../images/generate-script-dark.png).
+![The Generate Script dialog of DEMO: its objects chosen, and the tables' rows as INSERT statements](../images/generate-script-dark.png)
 
 **Save Script…** saves the same script where the platform's dialog
 chooses, and **Data** says what it carries of the base tables chosen:

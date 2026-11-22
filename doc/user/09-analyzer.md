@@ -29,7 +29,7 @@ settings, and shows six tabs:
 
 ![The analyzer's findings of DEMO: a foreign key of ORDER_LINES whose columns no index leads, and the CREATE INDEX that fixes it](../images/analyzer-findings-light.png)
 
-[The same, in the dark theme](../images/analyzer-findings-dark.png).
+![The analyzer's findings of DEMO: a foreign key of ORDER_LINES whose columns no index leads, and the CREATE INDEX that fixes it](../images/analyzer-findings-dark.png)
 
 Each finding is chosen at first; **Open Fixes in Worksheet** opens the
 fixes of those chosen in a worksheet of the connection, a blank line
@@ -50,7 +50,7 @@ to the database's owner and a holder of the role MONITOR
 
 ![The analyzer's Top Statements: the statements run, the costliest by total time first, with their calls, times, rows and bytes spilled](../images/analyzer-top-statements-light.png)
 
-[The same, in the dark theme](../images/analyzer-top-statements-dark.png).
+![The analyzer's Top Statements: the statements run, the costliest by total time first, with their calls, times, rows and bytes spilled](../images/analyzer-top-statements-dark.png)
 
 ## Usage and sizes
 
@@ -67,7 +67,7 @@ schema:
 
 ![The analyzer's Usage and Sizes: the indexes not searched, and each table's and index's rows and bytes](../images/analyzer-usage-light.png)
 
-[The same, in the dark theme](../images/analyzer-usage-dark.png).
+![The analyzer's Usage and Sizes: the indexes not searched, and each table's and index's rows and bytes](../images/analyzer-usage-dark.png)
 
 A row store table's bytes are unknown until its statistics are first
 gathered, which reading the view asks for.
@@ -147,7 +147,7 @@ If…** tries it first.
 
 ![Two plans' warnings: a sort that spilled past a small work area, and a spatial index whose entries are each judged again](../images/plan-warnings-light.png)
 
-[The same, in the dark theme](../images/plan-warnings-dark.png).
+![Two plans' warnings: a sort that spilled past a small work area, and a spatial index whose entries are each judged again](../images/plan-warnings-dark.png)
 
 ## What if
 
@@ -163,7 +163,7 @@ back before DROP INDEX. If the index cannot be made, nothing more runs.
 
 ![A query's plan read whole, an index made of its column, the query explained again, and the two plans compared side by side](../images/plan-compare-light.gif)
 
-[The same, in the dark theme](../images/plan-compare-dark.gif).
+![A query's plan read whole, an index made of its column, the query explained again, and the two plans compared side by side](../images/plan-compare-dark.gif)
 
 ```sql
 CREATE INDEX PARTS_NAME_INDEX ON ANN.PARTS (NAME);
@@ -197,7 +197,7 @@ rows are shown as a table, or in the chart view as its chart says.
 
 ![The built-in report Files drawn as a chart: the reads, writes and syncs of each kind of the database's files, as bars](../images/report-chart-light.png)
 
-[The same, in the dark theme](../images/report-chart-dark.png).
+![The built-in report Files drawn as a chart: the reads, writes and syncs of each kind of the database's files, as bars](../images/report-chart-dark.png)
 
 | Built-in report | What it shows |
 |---|---|
