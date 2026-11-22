@@ -1,7 +1,7 @@
 /**
  * An operator's kind (RULES.md D54), of its name as EXPLAIN writes it:
  * a data change, a scan, a scan by an index, a join, a semi join, an antijoin, a mark join, a range
- * join, a sort, an aggregate,
+ * join, a phase of predicate transfer, a sort, an aggregate,
  * a limit, a part run in parallel, a filter, a projection or another; and
  * its icon. A range join's search is read of its note: the value its right
  * operand is sorted on, the equalities that group those rows, and the one
@@ -23,6 +23,7 @@ export type OperatorKind =
   | "antiJoin"
   | "markJoin"
   | "rangeJoin"
+  | "transfer"
   | "sort"
   | "aggregate"
   | "limit"
@@ -41,6 +42,7 @@ export const KIND_ICONS: Readonly<Record<OperatorKind, IconName>> = {
   antiJoin: "antiJoin",
   markJoin: "markJoin",
   rangeJoin: "rangeJoin",
+  transfer: "filter",
   sort: "sort",
   aggregate: "aggregate",
   limit: "limit",
@@ -52,6 +54,7 @@ export const KIND_ICONS: Readonly<Record<OperatorKind, IconName>> = {
 
 /** The kinds, each of the names it is known by: the first that a name holds is its kind. */
 const KNOWN: readonly (readonly [OperatorKind, RegExp])[] = [
+  ["transfer", /^(PredicateTransfer|TransferredRows)$/u],
   ["change", /^(Insert|Update|Delete|Merge)$/u],
   ["indexScan", /^Index(Scan|Only)/u],
   ["rangeJoin", /^(Left)?RangeJoin$/u],
@@ -182,4 +185,22 @@ export function rangeOf(node: PlanNode): RangeSearch | null {
   const [how = "", pruned] = note.slice("sorted on ".length).split(", pruned by ");
   const [sorted = "", ...within] = how.split(" within ");
   return { sorted, within, pruned: pruned ?? null };
+}
+
+/** A phase of predicate transfer: the chain's tables it reads, and the steps it reads them in, of its line `PredicateTransfer of N leaves, M steps`. */
+export interface Transfer {
+  readonly leaves: number | null;
+  readonly steps: number | null;
+}
+
+/** The phase of predicate transfer `node` is, of its line; none of another operator. */
+export function transferOf(node: PlanNode): Transfer | null {
+  if (node.operator !== "PredicateTransfer") {
+    return null;
+  }
+  const count = (word: string) => {
+    const found = new RegExp(`(\\d+) ${word}`, "u").exec(node.detail)?.[1];
+    return found === undefined ? null : Number(found);
+  };
+  return { leaves: count("leaves?"), steps: count("steps?") };
 }

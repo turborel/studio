@@ -6,7 +6,7 @@
  * and its reads of an index.
  */
 import { Fragment } from "react";
-import { groupingOf, markOf, rangeOf, semiOf } from "./kinds";
+import { groupingOf, markOf, rangeOf, semiOf, transferOf } from "./kinds";
 import type { PlanNode } from "./plan";
 
 /** What a range join searches by, of `node` if it is one. */
@@ -156,10 +156,30 @@ function GroupingDetails({ node }: { readonly node: PlanNode }) {
   );
 }
 
+/** What phase of predicate transfer `node` does: the chain's tables read first, each filtered by those before it. */
+function TransferDetails({ node }: { readonly node: PlanNode }) {
+  const transfer = transferOf(node);
+  if (transfer === null) {
+    return null;
+  }
+  const tables = transfer.leaves === null ? "the tables" : `the ${String(transfer.leaves)} tables`;
+  const steps = transfer.steps === null ? "" : `, in ${String(transfer.steps)} steps`;
+  return (
+    <>
+      <dt>Predicate transfer</dt>
+      <dd>
+        Reads {tables} of the chain of joins below it first{steps}, each read filtered by Bloom filters of the join keys
+        of the tables read before it, so each join is given only the rows that can match
+      </dd>
+    </>
+  );
+}
+
 /** Every detail of operator `node` of its kind, and of what it did. */
 export function KindDetails({ node }: { readonly node: PlanNode }) {
   return (
     <>
+      <TransferDetails node={node} />
       <RangeDetails node={node} />
       <GroupingDetails node={node} />
       <SemiDetails node={node} />

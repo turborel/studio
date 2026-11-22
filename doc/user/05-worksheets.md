@@ -291,8 +291,13 @@ EXISTS, IN, NOT IN or SOME, ANY or ALL subquery under OR or NOT, in a
 CASE or in the select list, has an icon of its own too: its details say
 that each row of its left is given once, marked true, false or unknown
 by whether its right has a matching row, the comparison it marks by, and
-how it searches its right. An
-aggregate's details say how it groups: **Streamed**, a group made at a
+how it searches its right. A phase of predicate transfer,
+`PredicateTransfer of 3 leaves, 2 steps`, which a Turborel that plans
+one (its setting PLANNER.PREDICATE_TRANSFER) writes above a chain of
+hash joins and LEFT joins, is drawn as the plan's root, of the filter's
+icon: its details say that it reads the chain's tables first, each read
+filtered by Bloom filters of the join keys of the tables read before
+it. An aggregate's details say how it groups: **Streamed**, a group made at a
 time over its input in the order of its keys, as `Aggregate streamed
 group by [...]` is, or of its input in any order; and the keys it groups
 by and what it computes

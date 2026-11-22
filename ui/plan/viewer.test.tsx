@@ -363,6 +363,49 @@ describe("the plan viewer", () => {
     expect(screen.getByRole("complementary", { name: "Operator" }).textContent).toContain("JoinSemi join");
   });
 
+  it("draws a phase of predicate transfer as the plan's root, says what it does, and tells a plan of none from one of it [DESIGN] D54", async () => {
+    catalogBackend({ catalog_table: () => refused() });
+    const store = await opened();
+    const id = openWorksheet(store, "SELECT 1");
+    const text = [
+      "-- physical:",
+      "PredicateTransfer of 3 leaves, 2 steps",
+      "  Project PARTS.NAME, SUPPLIERS.CITY, OFFERS.PRICE",
+      "    HashJoin PARTS.ID = OFFERS.PART  (join order by DPccp: (PARTS (OFFERS SUPPLIERS)))",
+      "      SeqScan ANN.PARTS  (rows=1000, cost=1000.0)",
+      "      HashJoin OFFERS.SUPPLIER = SUPPLIERS.ID",
+      "        SeqScan ANN.OFFERS  (rows=5000, cost=5000.0)",
+      "        Filter SUPPLIERS.CITY = 'Oslo'  (est. rows=0)",
+      "          SeqScan ANN.SUPPLIERS  (rows=10, cost=10.0)",
+    ];
+    const plan = parsePlan(text);
+    const root = must(physicalRoots(plan)[0]);
+    expect([root.operator, root.detail, kindOf(root)]).toEqual([
+      "PredicateTransfer",
+      "of 3 leaves, 2 steps",
+      "transfer",
+    ]);
+    expect(root.children[0]?.operator).toBe("Project");
+    expect(operators(physicalRoots(plan))).toHaveLength(8);
+    const without = parsePlan(
+      text.filter((l) => !l.startsWith("PredicateTransfer")).map((l) => l.replace(/^ {2}/u, "")),
+    );
+    expect([...changed(physicalRoots(plan), physicalRoots(without))].map(signature)).toEqual([
+      "PredicateTransfer of 3 leaves, 2 steps",
+    ]);
+    expect(changed(physicalRoots(without), physicalRoots(plan)).size).toBe(0);
+    within(store, <PlanViewer id={id} plans={[plan]} />);
+    await settle();
+    fireEvent.click(screen.getByRole("checkbox", { name: "Show raw" }));
+    expect(document.body.textContent).toContain(text.join("\n"));
+    fireEvent.click(screen.getByRole("checkbox", { name: "Show raw" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Tree-Table" }));
+    fireEvent.click(screen.getAllByRole("row")[1] ?? document.body);
+    const details = screen.getByRole("complementary", { name: "Operator" }).textContent;
+    expect(details).toContain("Predicate transferReads the 3 tables of the chain of joins below it first, in 2 steps");
+    expect(details).toContain("Bloom filters of the join keys");
+  });
+
   it("tells a mark join, what it marks and how [DOC sql/06-queries.md Correlated subqueries]", async () => {
     catalogBackend({ catalog_table: () => refused() });
     const store = await opened();
