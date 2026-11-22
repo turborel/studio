@@ -163,9 +163,12 @@ pub fn records_scene(scene: &Scene<'_>) -> Result<()> {
 /// `path`, and ended. A window the driver drives is begun with arguments
 /// of the driver's own, so the link is not its only one.
 pub fn link_window(application: &std::path::Path, home: &std::path::Path, link: &str, path: &std::path::Path) -> Result<()> {
+    // The driven window gone first, so the one begun now is the only one.
+    std::thread::sleep(std::time::Duration::from_secs(3));
     let mut window = std::process::Command::new(application)
         .arg(link)
         .env("HOME", home)
+        .env("USER", "demo")
         .env_remove("XDG_CONFIG_HOME")
         .env_remove("XDG_CACHE_HOME")
         .env_remove("XDG_DATA_HOME")
@@ -174,9 +177,13 @@ pub fn link_window(application: &std::path::Path, home: &std::path::Path, link: 
         .spawn()
         .map_err(|e| Error(format!("cannot begin the application: {e}")))?;
     let pictured = picture_window(path);
+    let ended = window.try_wait().ok().flatten();
     let _ = window.kill(); // The window this program began, ended.
     let _ = window.wait();
-    pictured
+    match (pictured, ended) {
+        (Err(e), Some(status)) => fail(format!("{e}; the application had ended, {status}")),
+        (pictured, _) => pictured,
+    }
 }
 
 /// Waits for Studio's window, sizes it, lets it draw the dialog, and
@@ -206,6 +213,10 @@ fn picture_window(path: &std::path::Path) -> Result<()> {
     let shown = std::fs::read(&display).map_err(|e| Error(format!("{}: {e}", display.display())));
     let _ = std::fs::remove_file(&display); // Of this program's own making.
     let shown = crate::images::decode(&shown?)?;
+    // A display of nothing drawn, as a window not shown leaves it, is no picture.
+    if shown.rgba.chunks(4).take(1280 * 800).all(|p| p.get(..3) == Some(&[0, 0, 0][..])) {
+        return fail(format!("the window {id} drew nothing on the display"));
+    }
     // The window, of no manager to place it, at the display's top left.
     crate::images::write_png(&crate::images::crop(&shown, (0, 0, 1280, 800)), path)
 }

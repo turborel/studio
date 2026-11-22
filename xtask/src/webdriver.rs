@@ -55,6 +55,8 @@ impl Driver {
         let child = Command::new("tauri-driver")
             .args(["--port", &port.to_string(), "--native-port", &native.to_string()])
             .env("HOME", home)
+            // The demo's user, as a database in memory is owned by the computer's.
+            .env("USER", "demo")
             .env_remove("XDG_CONFIG_HOME")
             .env_remove("XDG_CACHE_HOME")
             .env_remove("XDG_DATA_HOME")

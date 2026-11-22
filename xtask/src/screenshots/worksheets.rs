@@ -26,7 +26,7 @@ pub fn completion_scene(scene: &Scene<'_>) -> Result<()> {
     let (x, y, w, h) = scene.rect(".worksheet-body")?;
     let mut film = scene.film(Some((x, y, w, h.min(260))));
     for word in ["SELECT ", "NAME ", "FROM ", "C", "U"] {
-        scene.write(word)?;
+        scene.type_text(word)?;
         film.frame(40)?;
     }
     scene.session.wait_for(".cm-tooltip-autocomplete")?;
@@ -91,7 +91,7 @@ pub fn history_scene(scene: &Scene<'_>) -> Result<()> {
 /// statement as it was written and as Format writes it.
 pub fn snippet_format_scene(scene: &Scene<'_>) -> Result<()> {
     scene.worksheet()?;
-    scene.write("sel")?;
+    scene.type_text("sel")?;
     scene.session.wait_for(".cm-tooltip-autocomplete")?;
     let chosen =
         "return document.querySelector('.cm-tooltip-autocomplete li[aria-selected=\"true\"] .cm-completionLabel')?.textContent === 'sel';";

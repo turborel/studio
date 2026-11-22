@@ -72,6 +72,10 @@ window.studioShare = (percent) => {
   window.dispatchEvent(new PointerEvent('pointerup', {pointerId: 1}));
   return true;
 };
+window.studioView = () => {
+  const c = [...document.querySelectorAll('.worksheet-body .cm-content')].find((e) => e.offsetParent !== null);
+  return c?.cmTile?.root?.view ?? null;
+};
 window.studioGrid = () => [...document.querySelectorAll('.result-grid')].find((e) => e.offsetParent !== null);
 window.studioCell = (column, row) => window.studioGrid()?.querySelector('[id="glide-cell-' + column + '-' + row + '"]');
 window.studioRect = (selector) => {
@@ -333,6 +337,11 @@ impl<'s> Scene<'s> {
             self.session.wait_for(".worksheet-body .cm-content")?;
         }
         self.focus_editor()?;
+        // Emptied through the editor itself, as keys may land elsewhere once a statement has run.
+        let emptied = "const v = window.studioView(); if (!v) return false; v.dispatch({changes: {from: 0, to: v.state.doc.length, insert: ''}}); v.focus(); return true;";
+        if self.session.script(emptied)?.as_bool().unwrap_or(false) {
+            return Ok(());
+        }
         self.session.press(&[CONTROL], &["a"])?;
         self.session.press(&[], &[BACKSPACE])
     }
@@ -524,8 +533,22 @@ impl<'s> Scene<'s> {
         format!("its messages: {}", told.map(|v| v.to_string()).unwrap_or_default())
     }
 
-    /// Types `text` into the worksheet's editor.
+    /// Writes `text` at the end of the shown worksheet's editor, through
+    /// the editor itself.
     pub fn write(&self, text: &str) -> Result<()> {
+        let written = format!(
+            "const v = window.studioView(); if (!v) return false; const end = v.state.doc.length; const text = {}; v.dispatch({{changes: {{from: end, insert: text}}, selection: {{anchor: end + text.length}}}}); v.focus(); return true;",
+            quoted(text)
+        );
+        if self.session.script(&written)?.as_bool().unwrap_or(false) {
+            return Ok(());
+        }
+        self.type_text(text)
+    }
+
+    /// Types `text` into the worksheet's editor, key by key, as a person
+    /// does, so what the editor offers as it is typed is drawn.
+    pub fn type_text(&self, text: &str) -> Result<()> {
         self.session.type_into("#studio-editor", text)
     }
 
