@@ -179,14 +179,17 @@ impl Session<'_> {
         if code == 200 { Ok(()) } else { fail(format!("the keys were not pressed: {answer}")) }
     }
 
-    /// Runs `script` in the page: what it returns.
+    /// Runs `script` in the page: what it returns; what it threw, told.
     pub fn script(&self, script: &str) -> Result<serde_json::Value> {
-        let (code, answer) = self.ask("POST", "/execute/sync", Some(&serde_json::json!({"script": script, "args": []})))?;
-        if code == 200 {
-            Ok(answer.pointer("/value").cloned().unwrap_or_default())
-        } else {
-            fail(format!("the page's script failed: {answer}"))
+        let caught = format!(
+            "try {{\n{script}\n}} catch (e) {{ return {{studioThrew: String(e && e.stack ? e.message + ' at ' + e.stack : e)}}; }}"
+        );
+        let (code, answer) = self.ask("POST", "/execute/sync", Some(&serde_json::json!({"script": caught, "args": []})))?;
+        let value = answer.pointer("/value").cloned().unwrap_or_default();
+        if let Some(threw) = value.get("studioThrew") {
+            return fail(format!("the page's script threw {threw}: {}", script.chars().take(160).collect::<String>()));
         }
+        if code == 200 { Ok(value) } else { fail(format!("the page's script failed: {answer}")) }
     }
 
     /// Waits until the page has an element `selector` finds.

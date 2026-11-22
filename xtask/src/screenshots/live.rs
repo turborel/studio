@@ -156,8 +156,46 @@ pub fn records_scene(scene: &Scene<'_>) -> Result<()> {
 }
 
 /// The join dialog as a link opens it, what the link holds shown before
-/// anything joins: of a window begun by the link alone.
-pub fn link_scene(scene: &Scene<'_>) -> Result<()> {
-    scene.session.wait_for("section[aria-label=\"What the link holds\"]")?;
-    scene.save_part("live-join", DIALOG)
+/// anything joins: the application begun by `link` alone, of `home`, as
+/// the platform begins it, its window pictured by the X server into
+/// `path`, and ended. A window the driver drives is begun with arguments
+/// of the driver's own, so the link is not its only one.
+pub fn link_window(application: &std::path::Path, home: &std::path::Path, link: &str, path: &std::path::Path) -> Result<()> {
+    let mut window = std::process::Command::new(application)
+        .arg(link)
+        .env("HOME", home)
+        .env_remove("XDG_CONFIG_HOME")
+        .env_remove("XDG_CACHE_HOME")
+        .env_remove("XDG_DATA_HOME")
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
+        .spawn()
+        .map_err(|e| Error(format!("cannot begin the application: {e}")))?;
+    let pictured = picture_window(path);
+    let _ = window.kill(); // The window this program began, ended.
+    let _ = window.wait();
+    pictured
+}
+
+/// Waits for Studio's window, sizes it, lets it draw the dialog, and
+/// writes its picture to `path`.
+fn picture_window(path: &std::path::Path) -> Result<()> {
+    let run = |args: &[&str]| -> Result<String> {
+        let out = std::process::Command::new("timeout")
+            .arg("30")
+            .args(args)
+            .output()
+            .map_err(|e| Error(format!("cannot run {}: {e}", args.first().copied().unwrap_or_default())))?;
+        if out.status.success() {
+            Ok(String::from_utf8_lossy(&out.stdout).trim().to_owned())
+        } else {
+            fail(format!("{} failed", args.join(" ")))
+        }
+    };
+    let found = run(&["xdotool", "search", "--sync", "--onlyvisible", "--name", "Turborel Studio"])?;
+    let id = found.lines().last().unwrap_or_default().to_owned();
+    run(&["xdotool", "windowsize", &id, "1280", "800"])?;
+    // The window loads, takes the link and opens the dialog.
+    std::thread::sleep(std::time::Duration::from_secs(8));
+    run(&["import", "-window", &id, &path.display().to_string()]).map(drop)
 }

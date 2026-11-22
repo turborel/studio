@@ -47,6 +47,26 @@ window.studioField = (label, kind) => {
   const inLabel = byLabel?.querySelector(kind) ?? (byLabel?.control?.matches(kind) ? byLabel.control : null);
   return inLabel ?? [...document.querySelectorAll(kind)].filter(shown).find((e) => e.getAttribute('aria-label') === label) ?? null;
 };
+window.studioWiden = (by) => {
+  const tall = [...document.querySelectorAll('.dv-sash')].map((s) => [s, s.getBoundingClientRect()]).filter(([, r]) => r.height > 300 && r.width < 20);
+  const found = tall.sort(([, a], [, b]) => (by > 0 ? b.left - a.left : a.left - b.left))[0];
+  if (!found) { return false; }
+  const [sash, r] = found;
+  const x = r.left + r.width / 2, y = r.top + r.height / 2;
+  sash.dispatchEvent(new PointerEvent('pointerdown', {bubbles: true, clientX: x, clientY: y, pointerId: 1, button: 0}));
+  document.dispatchEvent(new PointerEvent('pointermove', {bubbles: true, clientX: x - by, clientY: y, pointerId: 1}));
+  document.dispatchEvent(new PointerEvent('pointerup', {bubbles: true, clientX: x - by, clientY: y, pointerId: 1}));
+  return true;
+};
+window.studioShare = (percent) => {
+  const d = [...document.querySelectorAll('.worksheet-divider')].find((e) => e.offsetParent !== null);
+  if (!d) { return false; }
+  const box = d.parentElement.getBoundingClientRect();
+  d.dispatchEvent(new PointerEvent('pointerdown', {bubbles: true, pointerId: 1, button: 0}));
+  window.dispatchEvent(new PointerEvent('pointermove', {clientY: box.top + (box.height * percent) / 100, pointerId: 1}));
+  window.dispatchEvent(new PointerEvent('pointerup', {pointerId: 1}));
+  return true;
+};
 window.studioGrid = () => [...document.querySelectorAll('.result-grid')].find((e) => e.offsetParent !== null);
 window.studioCell = (column, row) => window.studioGrid()?.querySelector('[id="glide-cell-' + column + '-' + row + '"]');
 window.studioRect = (selector) => {
@@ -116,6 +136,39 @@ impl<'s> Scene<'s> {
         Ok(crop(&self.shot()?, area))
     }
 
+    /// Widens the dock's right side, its panel's group, by `by` pixels, as
+    /// its edge dragged does, so a panel there shows its tables whole;
+    /// Reset Layout sets it back.
+    pub fn widen_right(&self, by: u32) -> Result<()> {
+        self.until(&format!("return window.studioWiden({by});"), "the dock has no edge to drag")
+    }
+
+    /// Widens the explorer, the dock's left side, by `by` pixels, as its
+    /// edge dragged does; Reset Layout sets it back.
+    pub fn widen_left(&self, by: u32) -> Result<()> {
+        self.until(&format!("return window.studioWiden(-{by});"), "the dock has no edge to drag")
+    }
+
+    /// Opens or closes the explorer's section `name`, as its heading's click does.
+    pub fn explorer_section(&self, name: &str, open: bool) -> Result<()> {
+        let script = format!(
+            "const d = [...document.querySelectorAll('details.explorer-connections, details.explorer-section')].find((d) => d.querySelector('summary')?.textContent.includes({})); if (!d) return false; d.open = {open}; return true;",
+            quoted(name)
+        );
+        self.until(&script, &format!("the explorer has no section {name}"))
+    }
+
+    /// Gives the shown worksheet's editor `percent` of its height, the
+    /// panes below it the rest, as its divider dragged does.
+    pub fn editor_share(&self, percent: u32) -> Result<()> {
+        self.until(&format!("return window.studioShare({percent});"), "no worksheet's divider is shown")
+    }
+
+    /// The dock laid out as at first.
+    pub fn reset_layout(&self) -> Result<()> {
+        self.command("Reset Layout")
+    }
+
     /// The rectangle, in the screenshot's pixels, around every element
     /// `selector` finds that is shown.
     pub fn rect(&self, selector: &str) -> Result<(u32, u32, u32, u32)> {
@@ -153,7 +206,8 @@ impl<'s> Scene<'s> {
         self.session.click("[role=\"toolbar\"][aria-label=\"Toolbar\"] button[aria-label=\"Command Palette\"]")?;
         let input = "[role=\"combobox\"][aria-label=\"Command\"]";
         self.session.wait_for(input)?;
-        self.session.type_into(input, title)?;
+        // Typed without its ellipsis, which the driver may not type.
+        self.session.type_into(input, title.trim_end_matches('…'))?;
         // An option is written "Category: Title"; the one of this title alone.
         let script = format!(
             "document.getElementById('studio-target')?.removeAttribute('id'); const e = [...document.querySelectorAll('#palette-list [role=option]')].find((e) => e.textContent.trim().endsWith(': ' + {0})); if (e) {{ e.id = 'studio-target'; }} return e !== undefined;",
@@ -166,7 +220,7 @@ impl<'s> Scene<'s> {
             }
             std::thread::sleep(SETTLE);
         }
-        self.session.click("#studio-target")
+        self.click_target()
     }
 
     /// Presses Escape: a menu, a list or a dialog open is closed.
@@ -198,7 +252,20 @@ impl<'s> Scene<'s> {
     /// holds `text`, once the window draws it.
     pub fn click_text(&self, selector: &str, text: &str) -> Result<()> {
         self.wait_text(selector, text)?;
-        self.session.click("#studio-target")
+        self.click_target()
+    }
+
+    /// Clicks the element marked `studio-target`, brought into view: as a
+    /// person does, or, of one the driver deems out of reach, as the page
+    /// clicks it.
+    fn click_target(&self) -> Result<()> {
+        self.session.script("document.getElementById('studio-target')?.scrollIntoView({block: 'nearest'}); return true;")?;
+        if self.session.click("#studio-target").is_ok() {
+            return Ok(());
+        }
+        let clicked =
+            self.session.script("const e = document.getElementById('studio-target'); if (!e) return false; e.click(); return true;")?;
+        if clicked.as_bool().unwrap_or(false) { Ok(()) } else { fail("the element to click is gone") }
     }
 
     /// Clicks the button of `label`, its accessible name, wherever it is shown.
@@ -342,8 +409,39 @@ impl<'s> Scene<'s> {
         Ok(())
     }
 
-    /// Selects the catalog's row `label`, as a click does.
+    /// The state every scene begins of: no menu or dialog open; no
+    /// connection open but the demo shop's, it the active one; the
+    /// explorer's connections shown; and the catalog's schema drawn.
+    pub fn known_state(&self) -> Result<()> {
+        for _ in 0..3 {
+            self.escape()?;
+        }
+        self.helpers()?;
+        let others = "const others = [...document.querySelectorAll('[role=tree][aria-label=\"Open connections\"] button[aria-label^=\"Disconnect \"]')].filter((b) => b.getAttribute('aria-label') !== 'Disconnect Demo shop'); for (const b of others) { b.click(); } return others.length;";
+        self.session.script(others)?;
+        self.until(
+            "return document.querySelectorAll('[role=tree][aria-label=\"Open connections\"] button[aria-label^=\"Disconnect \"]').length === 1;",
+            "a connection other than the demo shop's stayed open",
+        )?;
+        self.explorer_section("Connections", true)?;
+        self.click_text("[aria-label=\"Open connections\"] button.tree-name", "Demo shop")?;
+        self.wait_text("footer.status-bar", "Demo shop")?;
+        self.wait_row("DEMO")
+    }
+
+    /// Shows the Details panel, its tab chosen in the dock.
+    pub fn details_panel(&self) -> Result<()> {
+        let script = "const t = [...document.querySelectorAll('.dv-tab')].find((t) => t.textContent.trim() === 'Details'); if (!t) return false; t.click(); return true;";
+        if !self.session.script(script)?.as_bool().unwrap_or(false) {
+            self.reset_layout()?;
+        }
+        Ok(())
+    }
+
+    /// Selects the catalog's row `label`, as a click does, the Details
+    /// panel shown.
     pub fn select_row(&self, label: &str) -> Result<()> {
+        self.details_panel()?;
         self.wait_row(label)?;
         self.session.script(&format!("window.studioRow({})?.click()", quoted(label))).map(drop)
     }
@@ -379,9 +477,13 @@ impl<'s> Scene<'s> {
         Ok(())
     }
 
-    /// Runs `sql` in the worksheet by `tool`, and waits for its grid.
+    /// Runs `sql` in a new worksheet by `tool`, so no result of another
+    /// is shown, and waits for its grid, its Results pane shown.
     pub fn result(&self, sql: &str, tool: &str) -> Result<()> {
-        self.run(sql, tool)?;
+        self.new_worksheet()?;
+        self.write(sql)?;
+        self.tool(tool)?;
+        self.click_text("[role=\"tablist\"][aria-label=\"Panes\"] [role=\"tab\"]", "Results")?;
         self.helpers()?;
         let start = Instant::now();
         while !self
@@ -395,7 +497,7 @@ impl<'s> Scene<'s> {
             }
             std::thread::sleep(SETTLE);
         }
-        Ok(())
+        self.editor_share(25)
     }
 
     /// Clicks the shown element `selector` finds whose text is `text`, all of it.
@@ -448,7 +550,22 @@ pub fn name_in_dialog(title: &str, file: &Path, opens: bool) -> Result<()> {
     }
     typed(&["key", "ctrl+a"])?;
     typed(&["type", "--delay", "20", &path])?;
-    typed(&["key", "Return"])
+    // A completion the location offers may take the first Return.
+    for _ in 0..3 {
+        typed(&["key", "Return"])?;
+        std::thread::sleep(SETTLE);
+        if typed(&["search", "--onlyvisible", "--name", title]).is_err() {
+            return Ok(());
+        }
+    }
+    fail(format!("the dialog {title} took not the path {path}"))
+}
+
+/// The whole display, as the X server shows it, written to `path` by
+/// ImageMagick's `import`, where it runs: of a scene that failed in a
+/// platform's dialog, which the window's own screenshot shows not.
+pub fn capture_display(path: &Path) {
+    let _ = std::process::Command::new("timeout").args(["20", "import", "-window", "root"]).arg(path).status(); // A picture that helps alone.
 }
 
 /// The demo's file `name`, of `xtask/screenshots/`, copied where a

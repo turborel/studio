@@ -54,11 +54,18 @@ pub fn write_settings(config: &Path, endpoint: &str) -> Result<()> {
 /// The assistant's settings: the user's own model, and the connection's policy.
 pub fn settings_scene(scene: &Scene<'_>) -> Result<()> {
     write_settings(scene.config, "http://localhost:11434")?;
+    let shown = settings_shown(scene);
+    // The scenes' model asked from here on, whatever became of the picture.
+    write_settings(scene.config, scene.model)?;
+    shown
+}
+
+/// The settings dialog, pictured and closed.
+fn settings_shown(scene: &Scene<'_>) -> Result<()> {
     scene.command("Assistant Settings…")?;
     scene.session.wait_for(DIALOG)?;
     scene.save_part("assistant-settings", DIALOG)?;
-    scene.escape()?;
-    write_settings(scene.config, scene.model)
+    scene.escape()
 }
 
 /// Sends the request shown, as Send does.
@@ -80,6 +87,7 @@ fn ask(scene: &Scene<'_>, question: &str) -> Result<()> {
 pub fn question_scene(scene: &Scene<'_>) -> Result<()> {
     scene.command("Assistant")?;
     scene.session.wait_for(PANEL)?;
+    scene.widen_right(240)?;
     let area = scene.area(PANEL)?;
     let mut film = scene.film(Some(area));
     ask(scene, "How are the orders found by their customer?")?;
@@ -127,5 +135,6 @@ pub fn log_scene(scene: &Scene<'_>) -> Result<()> {
         .session
         .script("document.querySelector('table[aria-label^=\"The assistant\"]').closest('fieldset').scrollIntoView({block: 'start'});")?;
     scene.save_part("assistant-log", "fieldset:has(table[aria-label^=\"The assistant\"])")?;
-    scene.escape()
+    scene.escape()?;
+    scene.reset_layout()
 }

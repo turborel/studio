@@ -14,12 +14,15 @@ const MONITOR: &str = "[role=\"region\"][aria-label=\"Monitor\"]";
 /// Users and roles in the explorer, a user's menu; and a table's
 /// privileges granted to a role.
 pub fn users_scene(scene: &Scene<'_>) -> Result<()> {
+    scene.explorer_section("Connections", false)?;
     scene.open_rows(&["Users and Roles", "ANN"])?;
     scene.wait_row("AUDITORS")?;
+    scene.session.script("window.studioRow('AUDITORS')?.scrollIntoView({block: 'end'});")?;
     scene.session.script("window.studioMenu(window.studioRow('ANN'));")?;
     scene.session.wait_for("[role=\"menu\"] [role=\"menuitem\"]")?;
     scene.save_part("users-roles", ".catalog, [role=\"menu\"]")?;
     scene.escape()?;
+    scene.explorer_section("Connections", true)?;
     scene.row_menu("ORDERS", &["Privileges…"])?;
     scene.session.wait_for(DIALOG)?;
     scene.tick("SELECT")?;
@@ -64,6 +67,7 @@ fn monitor_shots(scene: &Scene<'_>) -> Result<()> {
     scene.session.click(&format!("button[aria-label=\"Connect to {server}\"]"))?;
     scene.wait_text("footer.status-bar", server)?;
     scene.command("Monitor")?;
+    scene.widen_right(420)?;
     scene.click_text(&format!("{MONITOR} .monitor-head button"), "Refresh")?;
     scene.wait_text(&format!("{MONITOR} ul[aria-label=\"Waits\"]"), "waits on a lock")?;
     scene.save_part("monitor-sessions", MONITOR)?;
@@ -81,5 +85,6 @@ fn monitor_shots(scene: &Scene<'_>) -> Result<()> {
     scene.click_text("[aria-label=\"Open connections\"] button.tree-name", crate::screenshots::connections::DEMO_NAME)?;
     monitor_tab(scene, "Plug-ins", "table[aria-label=\"Plug-ins\"]")?;
     scene.save_part("monitor-plugins", MONITOR)?;
-    scene.session.click(&format!("button[aria-label=\"Disconnect {server}\"]"))
+    scene.session.click(&format!("button[aria-label=\"Disconnect {server}\"]"))?;
+    scene.reset_layout()
 }

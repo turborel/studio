@@ -89,6 +89,7 @@ pub fn table_dialogs_scene(scene: &Scene<'_>) -> Result<()> {
     scene.wait_text("pre[aria-label=\"DDL\"]", "CREATE TABLE")?;
     scene.save_part("create-table", DIALOG)?;
     scene.escape()?;
+    scene.open_rows(&["DEMO", "Tables", "CUSTOMERS"])?;
     scene.select_row("CUSTOMERS")?;
     scene.click_text("[aria-label=\"Table actions\"] button", "Alter Table…")?;
     scene.choose("Action", "addColumn")?;
@@ -103,6 +104,7 @@ pub fn table_dialogs_scene(scene: &Scene<'_>) -> Result<()> {
 /// The products compared with their staging copy's, and the script that
 /// makes the copy's rows the shop's.
 pub fn compare_rows_scene(scene: &Scene<'_>) -> Result<()> {
+    scene.open_rows(&["DEMO", "Tables", "PRODUCTS"])?;
     scene.select_row("PRODUCTS")?;
     scene.click_text("[aria-label=\"Table actions\"] button", "Compare Rows…")?;
     scene.session.wait_for(DIALOG)?;
@@ -131,6 +133,8 @@ pub fn generate_scene(scene: &Scene<'_>) -> Result<()> {
 /// animation of the dialog.
 pub fn sql_file_scene(scene: &Scene<'_>) -> Result<()> {
     let month_end = demo_file("month-end.sql")?;
+    // A file runs outside a transaction: the session's is ended first.
+    let _ = scene.command("Rollback"); // Of a session in none, there is none to end.
     scene.command("Run SQL File…")?;
     scene.session.wait_for(DIALOG)?;
     scene.click_text("[role=\"dialog\"] button", "Choose File…")?;

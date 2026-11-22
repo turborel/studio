@@ -94,8 +94,13 @@ pub fn embedded_dialogs_scene(scene: &Scene<'_>) -> Result<()> {
     scene.escape()
 }
 
-/// The status bar's part that says something: each of its parts.
-const STATUS: &str = "footer.status-bar > *";
+/// The status bar, as far as its parts reach, and a little more.
+fn status_part(scene: &Scene<'_>) -> Result<crate::images::Pixels> {
+    let (x, y, _, h) = scene.rect("footer.status-bar")?;
+    let (px, _, pw, _) = scene.rect("footer.status-bar > *")?;
+    let right = px.saturating_add(pw).saturating_add(16);
+    Ok(crate::images::crop(&scene.shot()?, (x, y, right.saturating_sub(x), h)))
+}
 
 /// A database in memory, its badge, and the status bar of each kind of
 /// connection: a server's, of a local socket, where the demo server runs;
@@ -104,26 +109,33 @@ pub fn in_memory_scene(scene: &Scene<'_>) -> Result<()> {
     scene.command("New In-Memory Database")?;
     scene.session.wait_for(".badge-unsaved")?;
     scene.save_part("in-memory", "[role=\"tree\"][aria-label=\"Open connections\"]")?;
-    let memory = scene.part(STATUS)?;
+    let memory = status_part(scene)?;
     scene.click_text("[aria-label=\"Open connections\"] button.tree-name", DEMO_NAME)?;
     scene.wait_text("footer.status-bar", DEMO_NAME)?;
-    let embedded = scene.part(STATUS)?;
+    let embedded = status_part(scene)?;
     let mut bars = Vec::new();
     if scene.session.found(&format!("button[aria-label=\"Connect to {SERVER_NAME}\"]"))? {
         scene.session.click(&format!("button[aria-label=\"Connect to {SERVER_NAME}\"]"))?;
         scene.wait_text("footer.status-bar", SERVER_NAME)?;
-        bars.push(scene.part(STATUS)?);
+        bars.push(status_part(scene)?);
         scene.session.click(&format!("button[aria-label=\"Disconnect {SERVER_NAME}\"]"))?;
     }
     bars.extend([embedded, memory]);
     scene.save_stacked("status-bar", &bars)?;
-    scene.session.click("button[aria-label=\"Disconnect In-memory\"]")?;
+    // The database in memory ended, as the active connection, by the command.
+    scene.click_text("[aria-label=\"Open connections\"] button.tree-name", "In-memory")?;
+    scene.wait_text("footer.status-bar", "In-memory")?;
+    scene.command("Disconnect")?;
+    scene.until("return document.querySelector('.badge-unsaved') === null;", "the database in memory stayed open")?;
     scene.click_text("[aria-label=\"Open connections\"] button.tree-name", DEMO_NAME)
 }
 
 /// The tree: the demo shop's schema, its tables and views, and a table's
 /// columns, keys and index, each of its icon.
 pub fn tree_scene(scene: &Scene<'_>) -> Result<()> {
+    // The connections folded and the explorer widened, so the tree shows whole.
+    scene.explorer_section("Connections", false)?;
+    scene.widen_left(120)?;
     scene.open_rows(&["DEMO", "Tables", "ORDERS", "CUSTOMER_ID"])?;
     scene.open_rows(&["DEMO", "Views", "CUSTOMER_TOTALS"])?;
     scene.save_part("explorer-tree", ".catalog")
@@ -142,6 +154,7 @@ pub fn filter_scene(scene: &Scene<'_>) -> Result<()> {
 /// The details of a table, its definition and its dependencies.
 pub fn details_scene(scene: &Scene<'_>) -> Result<()> {
     let details = "[role=\"region\"][aria-label=\"Details\"]";
+    scene.widen_right(240)?;
     scene.select_row("ORDERS")?;
     scene.wait_text("h3.details-title", "ORDERS")?;
     for (tab, name) in [("Columns", "explorer-details"), ("Definition", "explorer-definition"), ("Dependencies", "explorer-dependencies")] {
@@ -149,7 +162,8 @@ pub fn details_scene(scene: &Scene<'_>) -> Result<()> {
         wait_read(scene, details)?;
         scene.save_part(name, details)?;
     }
-    scene.click_text(&format!("{details} [role=\"tab\"]"), "Columns")
+    scene.click_text(&format!("{details} [role=\"tab\"]"), "Columns")?;
+    scene.reset_layout()
 }
 
 /// Waits until `selector` reads no more.
@@ -181,5 +195,6 @@ pub fn script_as_scene(scene: &Scene<'_>) -> Result<()> {
     scene.click_text("[role=\"menu\"][aria-label=\"SELECT\"] [role=\"menuitem\"]", "To Worksheet")?;
     scene.wait_text(".worksheet-body .cm-content", "SELECT")?;
     film.frame(300)?;
-    film.write("script-as", None)
+    film.write("script-as", None)?;
+    scene.explorer_section("Connections", true)
 }

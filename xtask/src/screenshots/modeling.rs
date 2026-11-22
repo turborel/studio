@@ -41,7 +41,9 @@ pub fn builder_scene(scene: &Scene<'_>) -> Result<()> {
     scene.session.wait_for(DIALOG)?;
     for table in ["ORDERS", "CUSTOMERS"] {
         scene.choose("Table", table)?;
+        std::thread::sleep(SETTLE);
         scene.button("Add Table")?;
+        scene.wait_text("fieldset.builder-table legend", &format!("DEMO.{table} "))?;
     }
     scene.session.wait_for("ul[aria-label=\"Joins\"]")?;
     scene.click_text("fieldset.builder-table label", "NAME")?;

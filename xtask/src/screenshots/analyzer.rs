@@ -29,13 +29,17 @@ pub fn report_scene(scene: &Scene<'_>) -> Result<()> {
     scene.click_text("details.explorer-section > summary", "Reports")?;
     scene.click_text("ul[aria-label=\"Built-in reports\"] button", "Files")?;
     scene.session.wait_for("svg.chart[role=\"img\"]")?;
-    scene.save_part("report-chart", ".result")
+    scene.editor_share(20)?;
+    scene.save_part("report-chart", ".result")?;
+    scene.explorer_section("Reports", false)
 }
 
 /// The plan's summary and warnings, as `sql` is explained and analyzed,
 /// once a warning of `rule` is drawn.
 fn warned(scene: &Scene<'_>, sql: &str, rule: &str) -> Result<crate::images::Pixels> {
-    scene.run(sql, "Explain Analyze")?;
+    scene.new_worksheet()?;
+    scene.write(sql)?;
+    scene.tool("Explain Analyze")?;
     scene.wait_text("ul[aria-label=\"Warnings\"]", rule)?;
     scene.part("section[aria-label=\"Summary of the plan\"], ul[aria-label=\"Warnings\"]")
 }
@@ -60,6 +64,10 @@ pub fn warnings_scene(scene: &Scene<'_>) -> Result<()> {
 /// answered.
 pub fn plan_compare_scene(scene: &Scene<'_>) -> Result<()> {
     let query = "SELECT ID, PLACED FROM ORDERS WHERE TOTAL = 46.95";
+    // An index is made outside a transaction: the session's is ended first.
+    scene.new_worksheet()?;
+    scene.write("ROLLBACK")?;
+    scene.tool("Run Statement")?;
     let mut film = scene.film(None);
     scene.run(query, "Explain Analyze")?;
     scene.session.wait_for("[aria-label=\"Summary of the plan\"]")?;

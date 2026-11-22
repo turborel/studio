@@ -1535,7 +1535,9 @@ The review checklist:
   assistant asks core's mock model, never a real one; a Live Sessions'
   viewer is this program, through Studio's own guest; the files a scene
   opens are of `xtask/screenshots/`, chosen in the platform's dialog by
-  keys `xdotool` types.
+  keys `xdotool` types; the window an invitation's link begins, which the
+  driver cannot begin with the link alone, is pictured by ImageMagick's
+  `import`, as is the display of a scene that fails.
 - **The images:** each goes to `doc/images/`, its theme in its name: a
   PNG of the window or of the part a scene shows, compressed losslessly,
   parts stacked where a picture compares them; a GIF of a few seconds of

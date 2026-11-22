@@ -125,9 +125,13 @@ fn app_data(home: &Path, theme: &str, demo: &Path, (socket, model): (Option<&Pat
 /// A scene, by its name.
 type Act = fn(&Scene<'_>) -> Result<()>;
 
-/// The scenes of the window, its connections, worksheets and results, in
-/// the order they are taken: connecting first, as the window opens.
-const FIRST: [(&str, Act); 27] = [
+/// A group of scenes, taken in one window, begun afresh for each group
+/// so none inherits another group's state.
+type Group = &'static [(&'static str, Act)];
+
+/// The window, connections, the explorer and worksheets: connecting
+/// first, as the window opens.
+const CONNECTIONS: Group = &[
     ("connecting", connections::connect_scene),
     ("about", connections::about_scene),
     ("window", worksheets::window_scene),
@@ -145,6 +149,11 @@ const FIRST: [(&str, Act); 27] = [
     ("snippet and format", worksheets::snippet_format_scene),
     ("analyze a change", worksheets::analyze_change_scene),
     ("keys", worksheets::keys_scene),
+    ("history", worksheets::history_scene),
+];
+
+/// Results.
+const RESULTS: Group = &[
     ("grid", results::grid_scene),
     ("record view", results::record_scene),
     ("selection's sums", results::aggregates_scene),
@@ -153,12 +162,11 @@ const FIRST: [(&str, Act); 27] = [
     ("spatial", results::spatial_scene),
     ("graph", results::graph_scene),
     ("result compare", results::compare_scene),
-    ("history", worksheets::history_scene),
-    ("plan warnings", analyzer::warnings_scene),
 ];
 
-/// The scenes of the analyzer, modeling, the assistant and users.
-const MIDDLE: [(&str, Act); 13] = [
+/// The analyzer and modeling.
+const ANALYSIS: Group = &[
+    ("plan warnings", analyzer::warnings_scene),
     ("analyzer", analyzer::analyzer_scene),
     ("report", analyzer::report_scene),
     ("plan compare", analyzer::plan_compare_scene),
@@ -166,21 +174,34 @@ const MIDDLE: [(&str, Act); 13] = [
     ("query builder", modeling::builder_scene),
     ("schema compare", modeling::schema_compare_scene),
     ("import DDL", modeling::import_ddl_scene),
+];
+
+/// The assistant, a conversation through its scenes.
+const ASSISTANT: Group = &[
     ("assistant settings", assistant::settings_scene),
     ("assistant question", assistant::question_scene),
     ("assistant approval", assistant::approval_scene),
     ("assistant blocked", assistant::blocked_scene),
     ("assistant log", assistant::log_scene),
-    ("users", admin::users_scene),
 ];
 
-/// The scenes of Live Sessions, and those that change the demo database,
-/// last.
-const LAST: [(&str, Act); 10] = [
+/// Administration: users, and the monitor where a demo server may run.
+#[cfg(unix)]
+const ADMINISTRATION: Group = &[("users", admin::users_scene), ("monitor", admin::monitor_scene)];
+/// Administration: users.
+#[cfg(not(unix))]
+const ADMINISTRATION: Group = &[("users", admin::users_scene)];
+
+/// Live Sessions, a session through its scenes.
+const LIVE: Group = &[
     ("Live Sessions", live::present_scene),
     ("live suggestion", live::suggestion_scene),
     ("live settings", live::settings_scene),
     ("live records", live::records_scene),
+];
+
+/// Editing data, last, as it changes the demo database.
+const EDITING: Group = &[
     ("table dialogs", editing::table_dialogs_scene),
     ("compare rows", editing::compare_rows_scene),
     ("generate script", editing::generate_scene),
@@ -189,25 +210,21 @@ const LAST: [(&str, Act); 10] = [
     ("run SQL file", editing::sql_file_scene),
 ];
 
-/// Every scene, in the order they are taken; the monitor's where a
-/// demo server may run.
-fn scenes() -> Vec<(&'static str, Act)> {
-    let mut all: Vec<(&'static str, Act)> = FIRST.into_iter().chain(MIDDLE).collect();
-    #[cfg(unix)]
-    all.push(("monitor", admin::monitor_scene));
-    all.extend(LAST);
-    all
-}
+/// Every group of scenes, in the order they are taken.
+const GROUPS: [Group; 7] = [CONNECTIONS, RESULTS, ANALYSIS, ASSISTANT, ADMINISTRATION, LIVE, EDITING];
 
 /// Takes `act`, named `name`: its failure told at once, the window as the
 /// scene left it pictured in `homes`, and whatever it left open closed.
 fn take(scene: &Scene<'_>, (name, act): (&str, Act), homes: &Path) -> Option<String> {
     say(&format!("==> screenshots: {name}, {}", scene.theme));
     let Err(e) = act(scene) else { return None };
-    // The window as the scene left it, then whatever it left open closed.
+    // The window as the scene left it, and the display, as a platform's
+    // dialog shows on it; then whatever it left open closed.
+    let named = format!("failed-{}-{}", name.replace([' ', '\''], "-"), scene.theme);
     if let Ok(shown) = scene.shot() {
-        let _ = write_png(&shown, &homes.join(format!("failed-{}-{}.png", name.replace([' ', '\''], "-"), scene.theme))); // A failure's picture helps alone.
+        let _ = write_png(&shown, &homes.join(format!("{named}.png"))); // A failure's picture helps alone.
     }
+    scene::capture_display(&homes.join(format!("{named}-display.png")));
     let _ = scene.escape();
     let failed = format!("{name}, {}: {e}", scene.theme);
     say(&format!("screenshots: failed: {failed}")); // Told at once, as a later panic would lose it.
@@ -265,23 +282,30 @@ fn theme_scenes(run: &Run<'_>, (theme, ports): (&str, (u16, u16))) -> Result<Vec
     let driver = Driver::start(&home, ports)?;
     let link = Mutex::new(None);
     let mut failed = Vec::new();
-    {
+    for group in GROUPS {
         let session = driver.session(run.application, &[])?;
         session.size(WINDOW)?;
         let scene = run.scene(&session, (theme, &config), &link);
-        for (name, act) in scenes() {
-            failed.extend(take(&scene, (name, act), run.homes));
-            if name == "connecting" {
-                connections::connected(&scene)?;
+        for (at, &(name, act)) in group.iter().enumerate() {
+            // A scene begins of the demo shop's connection alone, its
+            // catalog read, nothing left open by the scene before.
+            if (at, name) != (0, "connecting") {
+                let ready = connections::connected(&scene).and_then(|()| scene.known_state());
+                if let Err(e) = ready {
+                    failed.push(format!("{name}, {theme}: its window was not ready: {e}"));
+                    continue;
+                }
             }
+            failed.extend(take(&scene, (name, act), run.homes));
         }
     }
+    drop(driver); // The window ends, so the link's is the one shown.
     let Some(link) = link.lock().ok().and_then(|l| l.clone()) else { return Ok(failed) };
-    let session = driver.session(run.application, &[link.as_str()])?;
-    session.size(WINDOW)?;
-    let none = Mutex::new(None);
-    let scene = run.scene(&session, (theme, &config), &none);
-    failed.extend(take(&scene, ("join from a link", live::link_scene), run.homes));
+    say(&format!("==> screenshots: join from a link, {theme}"));
+    if let Err(e) = live::link_window(run.application, &home, &link, &run.out.join(format!("live-join-{theme}.png"))) {
+        say(&format!("screenshots: failed: join from a link, {theme}: {e}"));
+        failed.push(format!("join from a link, {theme}: {e}"));
+    }
     Ok(failed)
 }
 
