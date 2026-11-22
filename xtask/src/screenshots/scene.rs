@@ -500,6 +500,16 @@ impl<'s> Scene<'s> {
         self.click_target()
     }
 
+    /// Sets the shown worksheet's connection's Autocommit to `on`, as its
+    /// check box does: of it on, no transaction is left open by a
+    /// statement, so an index is made, a file run or rows imported.
+    pub fn autocommit(&self, on: bool) -> Result<()> {
+        let script = format!(
+            "const l = [...document.querySelectorAll('label.check')].find((l) => l.offsetParent !== null && l.textContent.trim() === 'Autocommit'); const c = l?.querySelector('input'); if (!c) return false; if (c.checked !== {on}) {{ c.click(); return false; }} return true;"
+        );
+        self.until(&script, "no worksheet's Autocommit is shown")
+    }
+
     /// Clicks the first shown element `selector` finds.
     pub fn click_shown(&self, selector: &str) -> Result<()> {
         self.click_text(selector, "")

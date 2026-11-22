@@ -51,6 +51,8 @@ pub fn edit_rows_scene(scene: &Scene<'_>) -> Result<()> {
 /// made and the rows imported. A picture of the dialog, and an animation.
 pub fn import_scene(scene: &Scene<'_>) -> Result<()> {
     let suppliers = demo_file("suppliers.csv")?;
+    // An import begins of no transaction open: each statement its own.
+    scene.autocommit(true)?;
     scene.select_row("DEMO")?;
     scene.click_text("[aria-label=\"Schema actions\"] button", "Import into New Table…")?;
     scene.session.wait_for(DIALOG)?;
@@ -143,8 +145,8 @@ pub fn generate_scene(scene: &Scene<'_>) -> Result<()> {
 /// animation of the dialog.
 pub fn sql_file_scene(scene: &Scene<'_>) -> Result<()> {
     let month_end = demo_file("month-end.sql")?;
-    // A file runs outside a transaction: the session's is ended first.
-    let _ = scene.command("Rollback"); // Of a session in none, there is none to end.
+    // A file runs outside a transaction: each statement its own.
+    scene.autocommit(true)?;
     scene.command("Run SQL File…")?;
     scene.session.wait_for(DIALOG)?;
     scene.click_text("[role=\"dialog\"] button", "Choose File…")?;

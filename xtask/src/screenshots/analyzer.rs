@@ -65,7 +65,7 @@ pub fn warnings_scene(scene: &Scene<'_>) -> Result<()> {
         scene,
         (
             Some("SET MEMORY.WORK_BYTES = 65536"),
-            "SELECT A.ID AS A_ID, B.ID AS B_ID, A.TOTAL + B.TOTAL AS PAIR FROM ORDERS A CROSS JOIN ORDERS B ORDER BY PAIR DESC",
+            "SELECT A.ID AS A_ID, B.ID AS B_ID, A.TOTAL + B.TOTAL AS PAIR FROM ORDERS A CROSS JOIN ORDERS B WHERE A.ID <= 120 ORDER BY PAIR DESC",
         ),
         "PLAN-SPILL",
     );
@@ -79,16 +79,13 @@ pub fn warnings_scene(scene: &Scene<'_>) -> Result<()> {
 /// answered.
 pub fn plan_compare_scene(scene: &Scene<'_>) -> Result<()> {
     let query = "SELECT ID, PLACED FROM ORDERS WHERE TOTAL = 46.95";
-    // An index is made outside a transaction: the session's is ended first.
+    // An index is made outside a transaction: each statement its own.
     scene.new_worksheet()?;
-    scene.write("ROLLBACK")?;
-    scene.tool("Run Statement")?;
+    scene.autocommit(true)?;
     let mut film = scene.film(None);
     scene.run(query, "Explain Analyze")?;
     scene.session.wait_for("[aria-label=\"Summary of the plan\"]")?;
     film.frame(200)?;
-    // The transaction the plan began ended, as an index is made outside one.
-    scene.run("ROLLBACK", "Run Statement")?;
     scene.run("CREATE INDEX ORDERS_BY_TOTAL ON ORDERS (TOTAL)", "Run Statement")?;
     film.frame(150)?;
     scene.run(query, "Explain Analyze")?;
@@ -101,5 +98,6 @@ pub fn plan_compare_scene(scene: &Scene<'_>) -> Result<()> {
     film.frame(400)?;
     film.write("plan-compare", None)?;
     scene.run("DROP INDEX ORDERS_BY_TOTAL", "Run Statement")?;
-    scene.click_shown("[role=\"dialog\"] button.danger")
+    scene.click_shown("[role=\"dialog\"] button.danger")?;
+    scene.autocommit(false)
 }
