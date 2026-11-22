@@ -114,11 +114,11 @@ pub fn approval_scene(scene: &Scene<'_>) -> Result<()> {
     scene.wait_text("ul[aria-label=\"Conversation\"]", "eight cities")
 }
 
-/// A DROP the model calls for, blocked by the hard floor's rule.
+/// A DROP the model calls for, blocked by its rule.
 pub fn blocked_scene(scene: &Scene<'_>) -> Result<()> {
     ask(scene, "Drop the order lines.")?;
     send(scene)?;
-    scene.wait_text("li.assistant-tool", "HARD-FLOOR")?;
+    scene.wait_text("li.assistant-tool", "blocked:")?;
     send(scene)?;
     scene.wait_text("ul[aria-label=\"Conversation\"]", "may not drop")?;
     scene.save_part("assistant-blocked", PANEL)

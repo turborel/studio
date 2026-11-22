@@ -287,6 +287,12 @@ fn theme_scenes(run: &Run<'_>, (theme, ports): (&str, (u16, u16))) -> Result<Vec
         let session = driver.session(run.application, &[])?;
         session.size(WINDOW)?;
         let scene = run.scene(&session, (theme, &config), &link);
+        // The dock as at first, whatever the group before left it as.
+        if group.first().is_some_and(|(name, _)| *name != "connecting") {
+            connections::connected(&scene)
+                .and_then(|()| scene.reset_layout())
+                .unwrap_or_else(|e| failed.push(format!("a group's start, {theme}: {e}")));
+        }
         for (at, &(name, act)) in group.iter().enumerate() {
             // A scene begins of the demo shop's connection alone, its
             // catalog read, nothing left open by the scene before.
@@ -298,6 +304,10 @@ fn theme_scenes(run: &Run<'_>, (theme, ports): (&str, (u16, u16))) -> Result<Vec
                 }
             }
             failed.extend(take(&scene, (name, act), run.homes));
+        }
+        // The window ends of no database open, so the next opens none to recover.
+        if let Err(e) = scene.disconnect_all() {
+            failed.push(format!("the end of a group, {theme}: {e}"));
         }
     }
     drop(driver); // The window ends, so the link's is the one shown.

@@ -203,7 +203,7 @@ impl<'s> Scene<'s> {
     /// who knows its name does.
     pub fn command(&self, title: &str) -> Result<()> {
         self.escape()?;
-        self.session.click("[role=\"toolbar\"][aria-label=\"Toolbar\"] button[aria-label=\"Command Palette\"]")?;
+        self.press_button("[role=\"toolbar\"][aria-label=\"Toolbar\"] button[aria-label=\"Command Palette\"]")?;
         let input = "[role=\"combobox\"][aria-label=\"Command\"]";
         self.session.wait_for(input)?;
         // Typed without its ellipsis, which the driver may not type.
@@ -324,7 +324,7 @@ impl<'s> Scene<'s> {
     /// worksheet, opened by the first.
     pub fn worksheet(&self) -> Result<()> {
         if !self.session.found(".worksheet-body .cm-content")? {
-            self.session.click("[role=\"toolbar\"][aria-label=\"Toolbar\"] button[aria-label=\"New Worksheet\"]")?;
+            self.press_button("[role=\"toolbar\"][aria-label=\"Toolbar\"] button[aria-label=\"New Worksheet\"]")?;
             self.session.wait_for(".worksheet-body .cm-content")?;
         }
         self.focus_editor()?;
@@ -338,14 +338,13 @@ impl<'s> Scene<'s> {
         self.escape()?;
         // The worksheet's toolbar is drawn again as the scene before leaves it.
         let button = format!("[role=\"toolbar\"][aria-label=\"Worksheet\"] button[aria-label=\"{name}\"]");
-        self.session.wait_for(&button)?;
-        self.session.click(&button)
+        self.click_shown(&button)
     }
 
     /// A new worksheet, its editor focused, apart from the one the other scenes share.
     pub fn new_worksheet(&self) -> Result<()> {
         let before = self.session.script("return document.querySelectorAll('.worksheet-body .cm-content').length")?;
-        self.session.click("[role=\"toolbar\"][aria-label=\"Toolbar\"] button[aria-label=\"New Worksheet\"]")?;
+        self.press_button("[role=\"toolbar\"][aria-label=\"Toolbar\"] button[aria-label=\"New Worksheet\"]")?;
         std::thread::sleep(SETTLE);
         let after = self.session.script("return document.querySelectorAll('.worksheet-body .cm-content').length")?;
         if after == before {
@@ -424,7 +423,7 @@ impl<'s> Scene<'s> {
         let others = "const others = [...document.querySelectorAll('[role=tree][aria-label=\"Open connections\"] button[aria-label^=\"Disconnect \"]')].filter((b) => b.getAttribute('aria-label') !== 'Disconnect Demo shop'); for (const b of others) { b.click(); } return others.length;";
         self.session.script(others)?;
         self.until(
-            "return document.querySelectorAll('[role=tree][aria-label=\"Open connections\"] button[aria-label^=\"Disconnect \"]').length === 1;",
+            "const back = [...document.querySelectorAll('[role=dialog] button')].find((b) => b.textContent.trim() === 'Roll Back'); if (back) { back.click(); return false; } return document.querySelectorAll('[role=tree][aria-label=\"Open connections\"] button[aria-label^=\"Disconnect \"]').length === 1;",
             "a connection other than the demo shop's stayed open",
         )?;
         self.explorer_section("Connections", true)?;
@@ -433,13 +432,24 @@ impl<'s> Scene<'s> {
         self.wait_row("DEMO")
     }
 
+    /// Ends every open connection, as its Disconnect does, so each embedded
+    /// database is closed, with its checkpoint, before the window ends.
+    pub fn disconnect_all(&self) -> Result<()> {
+        for _ in 0..3 {
+            self.escape()?;
+        }
+        // A connection of a transaction open asks how it ends: rolled back.
+        let script = "const back = [...document.querySelectorAll('[role=dialog] button')].find((b) => b.textContent.trim() === 'Roll Back'); if (back) { back.click(); return false; } const all = [...document.querySelectorAll('[role=tree][aria-label=\"Open connections\"] button[aria-label^=\"Disconnect \"]')]; if (all.length > 0) { all[0].click(); } return all.length === 0;";
+        self.until(script, "a connection stayed open")
+    }
+
     /// Shows the Details panel, its tab chosen in the dock.
     pub fn details_panel(&self) -> Result<()> {
-        let script = "const t = [...document.querySelectorAll('.dv-tab')].find((t) => t.textContent.trim() === 'Details'); if (!t) return false; t.click(); return true;";
-        if !self.session.script(script)?.as_bool().unwrap_or(false) {
-            self.reset_layout()?;
+        // A dock's tab is chosen as the pointer presses it, so the driver clicks it.
+        if self.session.script("return window.studioMark('.dv-tab', '=Details', 'studio-target');")?.as_bool().unwrap_or(false) {
+            return self.click_target();
         }
-        Ok(())
+        self.reset_layout()
     }
 
     /// Selects the catalog's row `label`, as a click does, the Details
@@ -507,6 +517,17 @@ impl<'s> Scene<'s> {
     /// Clicks the shown element `selector` finds whose text is `text`, all of it.
     pub fn click_exact(&self, selector: &str, text: &str) -> Result<()> {
         self.click_text(selector, &format!("={text}"))
+    }
+
+    /// Clicks the element `selector` finds, as `click_target` does.
+    pub fn press_button(&self, selector: &str) -> Result<()> {
+        self.session.wait_for(selector)?;
+        self.helpers()?;
+        self.until(
+            &format!("document.getElementById('studio-target')?.removeAttribute('id'); const e = document.querySelector({}); if (e) {{ e.id = 'studio-target'; }} return e !== null;", quoted(selector)),
+            &format!("no {selector} to click"),
+        )?;
+        self.click_target()
     }
 
     /// Clicks the first shown element `selector` finds.

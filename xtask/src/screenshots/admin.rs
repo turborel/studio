@@ -65,7 +65,7 @@ pub fn monitor_scene(scene: &Scene<'_>) -> Result<()> {
 #[cfg(unix)]
 fn monitor_shots(scene: &Scene<'_>) -> Result<()> {
     let server = crate::screenshots::connections::SERVER_NAME;
-    scene.session.click(&format!("button[aria-label=\"Connect to {server}\"]"))?;
+    scene.press_button(&format!("button[aria-label=\"Connect to {server}\"]"))?;
     scene.wait_text("footer.status-bar", server)?;
     scene.command("Monitor")?;
     scene.widen_right(420)?;
@@ -86,6 +86,6 @@ fn monitor_shots(scene: &Scene<'_>) -> Result<()> {
     scene.click_text("[aria-label=\"Open connections\"] button.tree-name", crate::screenshots::connections::DEMO_NAME)?;
     monitor_tab(scene, "Plug-ins", "table[aria-label=\"Plug-ins\"]")?;
     scene.save_part("monitor-plugins", MONITOR)?;
-    scene.session.click(&format!("button[aria-label=\"Disconnect {server}\"]"))?;
+    scene.press_button(&format!("button[aria-label=\"Disconnect {server}\"]"))?;
     scene.reset_layout()
 }

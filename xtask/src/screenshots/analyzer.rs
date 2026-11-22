@@ -88,6 +88,8 @@ pub fn plan_compare_scene(scene: &Scene<'_>) -> Result<()> {
     scene.run(query, "Explain Analyze")?;
     scene.session.wait_for("[aria-label=\"Summary of the plan\"]")?;
     film.frame(200)?;
+    // The transaction the plan began ended, as an index is made outside one.
+    scene.run("ROLLBACK", "Run Statement")?;
     scene.run("CREATE INDEX ORDERS_BY_TOTAL ON ORDERS (TOTAL)", "Run Statement")?;
     film.frame(150)?;
     scene.run(query, "Explain Analyze")?;

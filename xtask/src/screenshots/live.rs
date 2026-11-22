@@ -197,10 +197,6 @@ fn picture_window(path: &std::path::Path) -> Result<()> {
     run(&["xdotool", "windowsize", &id, "1280", "800"])?;
     // The window loads, takes the link and opens the dialog.
     std::thread::sleep(std::time::Duration::from_secs(8));
-    let geometry = run(&["xdotool", "getwindowgeometry", "--shell", &id])?;
-    let at = |name: &str| -> u32 {
-        geometry.lines().find_map(|l| l.strip_prefix(&format!("{name}="))).and_then(|v| v.parse().ok()).unwrap_or(0)
-    };
     // The display pictured whole, as a window of no manager is pictured
     // reliably so, and the window's part of it kept.
     let display = path.with_extension("display.png");
@@ -208,5 +204,6 @@ fn picture_window(path: &std::path::Path) -> Result<()> {
     let shown = std::fs::read(&display).map_err(|e| Error(format!("{}: {e}", display.display())));
     let _ = std::fs::remove_file(&display); // Of this program's own making.
     let shown = crate::images::decode(&shown?)?;
-    crate::images::write_png(&crate::images::crop(&shown, (at("X"), at("Y"), at("WIDTH"), at("HEIGHT"))), path)
+    // The window, of no manager to place it, at the display's top left.
+    crate::images::write_png(&crate::images::crop(&shown, (0, 0, 1280, 800)), path)
 }

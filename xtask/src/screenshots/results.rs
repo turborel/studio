@@ -117,7 +117,8 @@ pub fn spatial_scene(scene: &Scene<'_>) -> Result<()> {
 /// a product, to the other orders of it.
 pub fn graph_scene(scene: &Scene<'_>) -> Result<()> {
     scene.result(
-        "SELECT * FROM GRAPH_TABLE (SHOP MATCH P = (A:ORDERS WHERE A.ID = 1)-[X]->(B:PRODUCTS)<-[Y]-(C:ORDERS WHERE C.ID <= 12) COLUMNS (PATH_TO_JSON(P) AS PATH))",
+        // Labels by IS, as a colon begins a worksheet's script variable.
+        "SELECT * FROM GRAPH_TABLE (SHOP MATCH P = (A IS ORDERS WHERE A.ID = 1)-[X]->(B IS PRODUCTS)<-[Y]-(C IS ORDERS WHERE C.ID <= 12) COLUMNS (PATH_TO_JSON(P) AS PATH))",
         "Run Statement",
     )?;
     scene.click_shown(&format!("{TOOLS} button[aria-label=\"Graph View\"]"))?;
