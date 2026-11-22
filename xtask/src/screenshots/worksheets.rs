@@ -133,8 +133,9 @@ pub fn keys_scene(scene: &Scene<'_>) -> Result<()> {
     scene.session.wait_for(DIALOG)?;
     scene.click_text("[role=\"dialog\"] details.field-group > summary", "Keys")?;
     scene.choose("Scheme", "functionKeys")?;
+    // The worksheet's commands in view, the scheme's own keys among them.
     scene.session.script(
-        "const s = [...document.querySelectorAll('[role=dialog] details.field-group > summary')].find((s) => s.textContent.includes('Keys')); s?.scrollIntoView({block: 'start'});",
+        "const l = [...document.querySelectorAll('[role=dialog] label')].find((l) => l.textContent.trim().startsWith('Run Script')); l?.scrollIntoView({block: 'center'});",
     )?;
     scene.save_part("settings-keys", DIALOG)?;
     scene.choose("Scheme", "default")?;
