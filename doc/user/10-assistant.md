@@ -30,6 +30,10 @@ Settings…** in the panel, opens its settings:
 | **It calls tools** | whether the user's own model calls tools; one that calls none answers questions alone, and the panel says so |
 | **Key** | the model's key, saved by **Save Key** and forgotten by **Forget Key** |
 
+![The Assistant Settings: the assistant on, of the user's own model at localhost, its wire format and tools, and the connection's policy](../images/assistant-settings-light.png)
+
+[The same, in the dark theme](../images/assistant-settings-dark.png).
+
 A key is kept in the operating system's keychain alone. Once saved it is
 never shown again, not even to the window: the settings say only
 whether one is saved. Claude needs a key; the user's own model is asked
@@ -50,6 +54,10 @@ connection, which must be a saved one. Write a question and click
 | **Send the worksheet's SQL** | the active worksheet's text | ticked |
 | **Send its plan** | the latest plan the worksheet showed, as EXPLAIN gave it | not ticked |
 | **Include its result's first rows** | the first 20 rows of the result it shows, a line each, a null as `NULL` | not ticked |
+
+![A question asked of the assistant: what will be sent shown and sent, the table ORDERS described by a tool, and the answer with its tokens](../images/assistant-question-light.gif)
+
+[The same, in the dark theme](../images/assistant-question-dark.gif).
 
 Every request also holds the schema's context: the session's schema's
 tables and views, each with its columns and their types, its keys, its
@@ -83,6 +91,10 @@ which holds no key. **Send** sends it; **Don't Send** stops the turn,
 and the request is logged as not sent. A question of the assistant
 waits 30 minutes for its answer, then is taken as no.
 
+![What will be sent, shown before the request: the request's body, which holds no key, with Send and Don't Send](../images/assistant-preview-light.png)
+
+[The same, in the dark theme](../images/assistant-preview-dark.png).
+
 ### Asking Claude
 
 Claude is asked through Anthropic's Messages API, each request streamed.
@@ -109,6 +121,10 @@ before it runs:
 | `analyzer_findings` | is told a schema's findings ([The Analyzer](09-analyzer.md)) | Explain only |
 | `run_query` | runs a query, once the user approves it, and is told its rows | Read |
 | `propose_sql` | drafts SQL into a worksheet for the user, never running it | Explain only, of a query; Propose changes, of any other statement |
+
+![The assistant asking to run a query, READ ONLY: its SQL counting the customers of each city, its purpose and its class, with Run and Don't Run](../images/assistant-approval-light.png)
+
+[The same, in the dark theme](../images/assistant-approval-dark.png).
 
 A table or schema the policy hides is left out of every list, and no
 tool tells of it. `run_query` shows the query, its class, the objects
@@ -192,6 +208,10 @@ rule named:
 | `NOT-ALLOWED` | a statement, explained or run, that names no allowed schema or table, where the policy allows some |
 | `LIMIT` | a tool call past the limit of a turn's calls |
 
+![A DROP TABLE the model called for, blocked, its rule named in red, and the answer that follows](../images/assistant-blocked-light.png)
+
+[The same, in the dark theme](../images/assistant-blocked-dark.png).
+
 A name written alone is judged as of the session's schema too, and a
 rule of a table catches the table written without its schema.
 
@@ -247,3 +267,7 @@ A request not sent is logged too. **Show the Log** in the settings
 shows the latest 1000, the latest first; **Clear the Log** forgets
 them. The log never holds a key, nor a row's value
 ([Files](../appendix/d-files.md#assistant-auditjsonl)).
+
+![The assistant's log: each request, its model, connection, what it sent, its tools, how it stopped and its tokens](../images/assistant-log-light.png)
+
+[The same, in the dark theme](../images/assistant-log-dark.png).

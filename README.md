@@ -64,6 +64,21 @@ person who works with the database one window for it:
     </picture>
 </p>
 
+<p align="center">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="doc/images/completion-dark.gif">
+      <img src="doc/images/completion-light.gif" alt="Completion: a table's name begun, the list offered and one taken" width="264">
+    </picture>
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="doc/images/plan-dark.gif">
+      <img src="doc/images/plan-light.gif" alt="The plan viewer: a query explained and analyzed, its plan drawn" width="264">
+    </picture>
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="doc/images/import-dark.gif">
+      <img src="doc/images/import-light.gif" alt="The import wizard: a CSV file's format found, its types inferred and its table made" width="264">
+    </picture>
+</p>
+
 It runs on Linux, macOS and Windows, built with Tauri: a Rust backend
 over turborel-client and the `turborel` crate, and a front end in
 TypeScript and React. Passwords

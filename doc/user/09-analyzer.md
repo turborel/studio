@@ -27,6 +27,10 @@ settings, and shows six tabs:
 | **Usage and Sizes** | of the schema, the indexes no search used, and each table's and index's size ([Usage and sizes](#usage-and-sizes)) |
 | **Waiting on the Server** | what the analyzer cannot show yet, and why: the planner's statistics of a column |
 
+![The analyzer's findings of DEMO: a foreign key of ORDER_LINES whose columns no index leads, and the CREATE INDEX that fixes it](../images/analyzer-findings-light.png)
+
+[The same, in the dark theme](../images/analyzer-findings-dark.png).
+
 Each finding is chosen at first; **Open Fixes in Worksheet** opens the
 fixes of those chosen in a worksheet of the connection, a blank line
 between each.
@@ -44,6 +48,10 @@ with `?` asks for its values first. Another user's text is shown only
 to the database's owner and a holder of the role MONITOR
 ([Administration](12-administration.md#who-sees-the-sessions-and-statements)).
 
+![The analyzer's Top Statements: the statements run, the costliest by total time first, with their calls, times, rows and bytes spilled](../images/analyzer-top-statements-light.png)
+
+[The same, in the dark theme](../images/analyzer-top-statements-dark.png).
+
 ## Usage and sizes
 
 **Usage and Sizes** reads TABLE_STATISTICS and INDEX_STATISTICS of the
@@ -56,6 +64,10 @@ schema:
 - **Tables:** each base table's engine, rows and bytes, whether some
   are estimated, and when it last changed.
 - **Indexes:** each index's method, searches, entries, height and bytes.
+
+![The analyzer's Usage and Sizes: the indexes not searched, and each table's and index's rows and bytes](../images/analyzer-usage-light.png)
+
+[The same, in the dark theme](../images/analyzer-usage-dark.png).
 
 A row store table's bytes are unknown until its statistics are first
 gathered, which reading the view asks for.
@@ -133,6 +145,10 @@ begins with characters, where no index of the table leads the column.
 **Open Fix in Worksheet** opens its CREATE INDEX in a worksheet; **What
 If…** tries it first.
 
+![Two plans' warnings: a sort that spilled past a small work area, and a spatial index whose entries are each judged again](../images/plan-warnings-light.png)
+
+[The same, in the dark theme](../images/plan-warnings-dark.png).
+
 ## What if
 
 A what-if makes the index, explains the statement again, and drops the
@@ -144,6 +160,10 @@ says so. Each statement runs through the connection's guards. An index
 statement runs outside a transaction, so the session must have none
 open; not under autocommit, the transaction EXPLAIN begins is rolled
 back before DROP INDEX. If the index cannot be made, nothing more runs.
+
+![A query's plan read whole, an index made of its column, the query explained again, and the two plans compared side by side](../images/plan-compare-light.gif)
+
+[The same, in the dark theme](../images/plan-compare-dark.gif).
 
 ```sql
 CREATE INDEX PARTS_NAME_INDEX ON ANN.PARTS (NAME);
@@ -174,6 +194,10 @@ connection, and runs it there, as any query runs: through the
 connection's guards, its parameters' values asked
 ([Worksheets](05-worksheets.md#parameters-and-script-variables)). Its
 rows are shown as a table, or in the chart view as its chart says.
+
+![The built-in report Files drawn as a chart: the reads, writes and syncs of each kind of the database's files, as bars](../images/report-chart-light.png)
+
+[The same, in the dark theme](../images/report-chart-dark.png).
 
 | Built-in report | What it shows |
 |---|---|

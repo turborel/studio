@@ -102,3 +102,7 @@ Studio says so. The latest alpha of Turborel is built for Linux,
 macOS and Windows as the pre-release
 [nightly](https://github.com/turborel/turborel/releases/tag/nightly),
 and as the image `ghcr.io/turborel/turborel:nightly`.
+
+![The About Turborel Studio dialog: Studio's version, and the Turborel commit of its client and engine](../images/about-light.png)
+
+[The same, in the dark theme](../images/about-dark.png).

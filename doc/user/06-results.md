@@ -22,6 +22,10 @@ The grid draws only the rows and columns in view, so a result of any
 size scrolls as a small one does. As it scrolls within 100 rows of the
 last row read, the next page is read.
 
+![A result's grid scrolled across, its ID and NAME columns frozen, and LEDGER_KEY of type DECIMAL(38,0), its values of 38 digits](../images/result-grid-light.png)
+
+[The same, in the dark theme](../images/result-grid-dark.png).
+
 - Each column's header gives its name, or its place in parentheses if
   it has none, and below the name its declared type, as SQL writes it.
 - Numbers are set to the right; a null is written NULL, in the muted
@@ -87,6 +91,10 @@ The toolbar's first group chooses how a result is shown:
 | **Graph View** | the rows as nodes and edges ([Graphs](#graphs)) |
 | **Plane View** | a spatial column's values on a plane, offered where the result has one ([Spatial values](#spatial-values)) |
 
+![The record view of a result: one row, a column a line, with Previous Row and Next Row](../images/record-view-light.png)
+
+[The same, in the dark theme](../images/record-view-dark.png).
+
 A cell's menu, or a header's, by the secondary button, or Shift+F10 on
 the cell selected ([The Window](02-window.md#context-menus)), also opens
 its row in the record view (**Show in Record View**), and keeps columns
@@ -107,6 +115,10 @@ their sum, average, least and greatest:
 ```
 Count 2 of 2 · Sum 3 · Average 1.5 · Min 1 · Max 2
 ```
+
+![Six cells of the orders' totals selected in the grid, and the status bar giving their count, sum, average, least and greatest](../images/selection-sums-light.png)
+
+[The same, in the dark theme](../images/selection-sums-dark.png).
 
 Exact numbers, of INTEGER, DECIMAL and the other exact types, are summed
 exactly, every digit kept, up to the 38 digits a DECIMAL may hold and
@@ -140,6 +152,18 @@ the value's text is:
 | **Vector** | a vector's dimension count, its norm, its least and greatest elements, a bar of each element, and a table of them |
 | **Path** | a path, as PATH_TO_JSON writes one, as nodes and edges ([Graphs](#graphs)) |
 
+![The value viewer of a JSON document of an order, drawn as a tree of its members](../images/viewer-json-light.png)
+
+[The same, in the dark theme](../images/viewer-json-dark.png).
+
+![The value viewer of an XML document of an order, drawn as its elements and attributes](../images/viewer-xml-light.png)
+
+[The same, in the dark theme](../images/viewer-xml-dark.png).
+
+![The value viewer of a binary string, its octets in hexadecimal, sixteen a line, each line's offset first](../images/viewer-binary-light.png)
+
+[The same, in the dark theme](../images/viewer-binary-dark.png).
+
 A large object longer than its row holds is sent by its locator, and its
 cell says what it is, as `<CHARACTER LARGE OBJECT of 90000 characters>`.
 The viewer reads it whole, at most its first 16 MiB, and says so if it
@@ -159,6 +183,10 @@ View** draws every row read of the column chosen, the selected row's in
 the colour of running. Nothing is drawn under the values: the tiles of a
 map are remote content, which Studio never loads.
 
+![The plane view of four shapes of a shop: its floor with a hole, its counter, its door and a shelf](../images/spatial-light.png)
+
+[The same, in the dark theme](../images/spatial-dark.png).
+
 ## Graphs
 
 The **Graph View** draws a result's rows as nodes and edges, laid out
@@ -174,6 +202,10 @@ from left to right, in one of two ways:
   the column **From** to its value of the column **To**, each value a
   node, labelled by its value of the column **Label** if one is chosen.
   A row of a null at either end draws no edge.
+
+![The graph view of the paths from order 1, through each product of its lines, to the other orders of that product, of the property graph STAGING.SHOP](../images/graph-light.png)
+
+[The same, in the dark theme](../images/graph-dark.png).
 
 A result is read as paths if the first row that holds a value holds a
 path; else, of two columns or more, from its first column to its
@@ -194,6 +226,10 @@ header; the toolbar's menu **⋯** chooses **Copy without Headers**, or
 | **JSON** | an array of objects, one a row, each keyed by its columns' names; numbers, truth values and JSON values as JSON's own, the rest as strings |
 | **Markdown** | a table, each bar in a value escaped; without headers, the columns' places head it |
 | **INSERT Statements** | an INSERT of each row, each value a literal of its column's type |
+
+![Cells of the customers selected, and their menu's Copy As open on CSV, Tab-Separated, JSON, Markdown and INSERT Statements](../images/copy-as-light.png)
+
+[The same, in the dark theme](../images/copy-as-dark.png).
 
 Of the columns ID, NAME and PRICE, a row of `1`, `Ada, Countess` and
 `10.50` is copied as CSV, with headers, as:
@@ -236,6 +272,10 @@ variables with no value, is not run so.
 open and its rows readable, and the new results come in tabs beside it.
 A pinned tab has a pin and a close button; **Unpin Result** lets it go
 with the next run.
+
+![Two results of the products compared: the rows in both, those only in this one and those only in the other](../images/result-compare-light.png)
+
+[The same, in the dark theme](../images/result-compare-dark.png).
 
 **Compare with…** compares the result with another of the worksheet's,
 row by row, of the rows read of each: each row of one is matched with an

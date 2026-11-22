@@ -15,6 +15,10 @@ others keeping those below, on every platform:
 - **Run Statement**: F9;
 - **Explain**: F6.
 
+![Settings, Keys: the scheme Function keys chosen, each command beside its key, Run Statement on F9, Run Script on F5 and Explain on F6 among them](../images/settings-keys-light.png)
+
+[The same, in the dark theme](../images/settings-keys-dark.png).
+
 | Command | Menu | macOS | Linux, Windows |
 |---|---|---|---|
 | New Connection… | File | Cmd+Shift+N | Ctrl+Shift+N |

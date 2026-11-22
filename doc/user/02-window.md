@@ -6,9 +6,9 @@ Turborel Studio works in one window. Across its top are the menu bar and
 the toolbar; in its middle, the dock of panels; along its foot, the
 status bar.
 
-![The Studio window in the light theme: the explorer of the demo shop's connections and catalog on the left, a worksheet of a query and its rows in the middle, the details on the right, and the status bar below](../images/window-light.png)
+![The Studio window: the explorer of the demo shop's connections and catalog on the left, a worksheet of a query and its rows in the middle, the details on the right, and the status bar below](../images/window-light.png)
 
-![The same window in the dark theme](../images/window-dark.png)
+[The same, in the dark theme](../images/window-dark.png).
 
 ## The menu bar
 
@@ -87,9 +87,9 @@ the colour of danger, and its statement runs in a worksheet of its own,
 through the connection's guards, as one typed would
 ([Connections](03-connections.md#environments-and-guards)).
 
-![A table's context menu in the explorer, of the demo shop's ORDERS, in the light theme](../images/context-menu-light.png)
+![A table's context menu in the explorer, of the demo shop's ORDERS](../images/context-menu-light.png)
 
-![The same, in the dark theme](../images/context-menu-dark.png)
+[The same, in the dark theme](../images/context-menu-dark.png).
 
 | Of | Its menu |
 |---|---|

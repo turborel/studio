@@ -44,6 +44,10 @@ are in groups:
 | | Load balance | `disable`, or `random` to try the hosts in an order drawn for each connection |
 | | Connect timeout | whole seconds each step of connecting waits; 0 for no limit |
 
+![The New Connection dialog: its name, folder, environment and colour, and a server's URI, hosts, port, user and password](../images/connection-dialog-light.png)
+
+[The same, in the dark theme](../images/connection-dialog-dark.png).
+
 Each setting is turborel-client's own, of the same name, as Turborel's
 [Settings, Pipelines and Pools](https://github.com/turborel/turborel/blob/main/doc/client/02-library-connections.md)
 describes it. A field left empty is no setting.
@@ -95,6 +99,10 @@ the server's name. Where no authorities are named, the platform's are
 trusted. A connection to a host that is a path, a Unix socket, or a
 named pipe on Windows, uses no TLS, as only its machine reaches it.
 
+![The New Connection dialog with its TLS part open: the TLS mode verify-full, the authorities, client certificate and key, and the server name db.example](../images/connection-tls-light.png)
+
+[The same, in the dark theme](../images/connection-tls-dark.png).
+
 A mode of `prefer` or `disable` may connect over plain TCP. A password
 is never sent so: such a connection is refused before anything is sent
 (SQLSTATE 28000). The status bar shows a connection over plain TCP as
@@ -128,6 +136,10 @@ At the top of the explorer is its toolbar, a row of icons, each named
 by its tooltip: **New Connection**, **Open Database**, **New Database**
 and **New In-Memory Database**; then **Refresh**, **Filter** and
 **Collapse All** of the catalog ([The Object Explorer](04-explorer.md)).
+
+![Connecting: the demo shop's saved connection double-clicked, its catalog filling, then its schema, its tables and a table's columns opened](../images/connecting-light.gif)
+
+[The same, in the dark theme](../images/connecting-dark.gif).
 
 Below it the explorer lists the connections in sections, each folded or
 opened by its heading:
@@ -222,6 +234,10 @@ same guards. Each embedded database's session is on a thread of its own,
 named `studio-embedded-` and the connection's number, as a server's is
 named `studio-connection-` and its number.
 
+![The status bar of three connections, one above another: a server's by a local socket, the embedded demo shop's, and a database in memory, not saved](../images/status-bar-light.png)
+
+[The same, in the dark theme](../images/status-bar-dark.png).
+
 The status bar says **Embedded** of a database in a folder, and
 **In-memory, not saved** of one in memory, where a server's connection
 says how it reaches its server.
@@ -235,6 +251,10 @@ folder, with the platform's dialog, and Studio looks at it before
 anything is opened: a folder that holds no database is refused, with
 **New Database…** offered instead, and nothing is made in it, so a
 mistyped path never becomes a new, empty database.
+
+![The Open Database dialog: its database folder to choose, its name, folder in the explorer, environment and colour](../images/open-database-light.png)
+
+[The same, in the dark theme](../images/open-database-dark.png).
 
 | Field | What it says |
 |---|---|
@@ -259,6 +279,10 @@ this computer's user's name in upper case; the owner is made with no
 password, and its schema, of its name, is made too. **Create and Save**
 makes the database and saves it, to be opened, not made, thereafter.
 
+![The New Database dialog: its folder to choose, its name, and its owner, DEMO](../images/new-database-light.png)
+
+[The same, in the dark theme](../images/new-database-dark.png).
+
 ### A database in memory
 
 **File > New In-Memory Database** makes a database kept in memory, a
@@ -266,6 +290,10 @@ scratch database to try things in. It is marked **not saved** in the
 explorer and the status bar. Nothing of it is written anywhere, and it
 is gone as its connection ends. Its owner is this computer's user's name
 in upper case.
+
+![The explorer's open connections: the demo shop, and a database in memory marked not saved](../images/in-memory-light.png)
+
+[The same, in the dark theme](../images/in-memory-dark.png).
 
 ### A database another program holds
 

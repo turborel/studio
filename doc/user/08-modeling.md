@@ -54,6 +54,10 @@ default, key, foreign key and index is the one Turborel defines. The
 model holds the tables of each schema the script made, read as **Read
 Tables of a Schema…** reads them.
 
+![A model imported of the DDL script shop.sql: its tables drawn, and the view and the INSERT left out of the model, each by its line](../images/import-ddl-light.png)
+
+[The same, in the dark theme](../images/import-ddl-dark.png).
+
 What a model does not hold is left out of it, and listed under the
 diagram by its line, with why, until **Dismiss**:
 
@@ -85,11 +89,11 @@ and its end, SOURCE or DESTINATION, where both tables are in the model.
 The property graphs are also listed beside the diagram, each with its
 element tables.
 
-![The model of the demo shop's schema in the light theme: its four tables, their columns and keys, joined by their foreign keys](../images/er-diagram-light.png)
+![The model of the demo shop's schema: its five tables, their columns and keys, joined by their foreign keys](../images/er-diagram-light.png)
 
-![The same, in the dark theme](../images/er-diagram-dark.png)
+[The same, in the dark theme](../images/er-diagram-dark.png).
 
-![The same diagram as Export as SVG writes it: the four tables of the demo shop, their columns, types and keys, and the foreign keys between them](../images/er-diagram.svg)
+![The same diagram as Export as SVG writes it: the five tables of the demo shop, their columns, types and keys, and the foreign keys between them](../images/er-diagram.svg)
 
 Tables are laid out from left to right along their foreign keys; a table
 already placed keeps its place, and a table dragged keeps the place it is
@@ -135,6 +139,10 @@ the comparison:
 | a constraint added or dropped | `ALTER TABLE … ADD` or `DROP CONSTRAINT … RESTRICT` |
 | an index added or dropped | `CREATE INDEX`, or `DROP INDEX` |
 
+![The schema DEMO compared with STAGING: the differences, each of its table, above the script that makes STAGING match](../images/schema-compare-light.png)
+
+[The same, in the dark theme](../images/schema-compare-dark.png).
+
 Constraints and indexes are matched by what they are, their columns,
 condition, references and rules, or columns and method, not by their
 names. Types are matched by their standard names, so `VARCHAR(40)` is
@@ -178,6 +186,10 @@ connection, and the builder of its query, of the tables of the session's
 schema. As the query is built, its SQL is written into the worksheet,
 and shown in the builder; it stays the worksheet's, to be edited and run,
 once the builder is closed by **Done**.
+
+![The query builder: ORDERS and CUSTOMERS joined by their foreign key, NAME and the sum of TOTAL chosen, and the query it writes](../images/query-builder-light.png)
+
+[The same, in the dark theme](../images/query-builder-dark.png).
 
 - **Add Table** picks a table, named by its first letter and a number, as
   `S1`. A table joins one picked before it as a foreign key of either
