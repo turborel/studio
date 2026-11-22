@@ -77,8 +77,25 @@ impl Driver {
         format!("127.0.0.1:{}", self.port)
     }
 
-    /// A request to the driver: its answer's status and JSON.
+    /// A request to the driver: its answer's status and JSON; asked again,
+    /// twice at most, while the answer is a failure of no JSON, as the
+    /// driver gives as its connection to the window breaks off.
     fn request(&self, method: &str, path: &str, body: Option<&serde_json::Value>) -> Result<(u16, serde_json::Value)> {
+        let mut answer = self.request_once(method, path, body)?;
+        for _ in 0..2 {
+            let (code, value) = &answer;
+            if *code == 200 || !matches!(value, serde_json::Value::Null | serde_json::Value::String(_)) {
+                break;
+            }
+            std::thread::sleep(Duration::from_millis(500));
+            answer = self.request_once(method, path, body)?;
+        }
+        Ok(answer)
+    }
+
+    /// A request to the driver, once: its answer's status and JSON, or, of
+    /// an answer of no JSON, its status and start as text.
+    fn request_once(&self, method: &str, path: &str, body: Option<&serde_json::Value>) -> Result<(u16, serde_json::Value)> {
         let driver = self.address();
         let mut stream = TcpStream::connect(&driver).map_err(|e| Error(format!("tauri-driver: {e}")))?;
         let body = body.map(serde_json::Value::to_string).unwrap_or_default();
@@ -97,9 +114,11 @@ impl Driver {
         let mut rest = String::new();
         reader.read_to_string(&mut rest).map_err(|e| Error(format!("tauri-driver: {e}")))?;
         let json = rest.split_once("\r\n\r\n").map(|(_, b)| b).unwrap_or_default();
-        let json = json.find('{').map_or("null", |at| json.get(at..).unwrap_or("null"));
-        let value = serde_json::Deserializer::from_str(json).into_iter::<serde_json::Value>().next().and_then(std::result::Result::ok);
-        Ok((code, value.unwrap_or(serde_json::Value::Null)))
+        let found = json.find('{').map_or("null", |at| json.get(at..).unwrap_or("null"));
+        let value = serde_json::Deserializer::from_str(found).into_iter::<serde_json::Value>().next().and_then(std::result::Result::ok);
+        let told = || serde_json::Value::String(format!("HTTP {code}: {}", rest.chars().take(300).collect::<String>()));
+        let value = if code == 200 { value.unwrap_or_default() } else { value.filter(|v| !v.is_null()).unwrap_or_else(told) };
+        Ok((code, value))
     }
 
     /// A session of the application at `application`, begun with `args`.

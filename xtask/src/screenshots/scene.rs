@@ -208,9 +208,9 @@ impl<'s> Scene<'s> {
         self.session.wait_for(input)?;
         // Typed without its ellipsis, which the driver may not type.
         self.session.type_into(input, title.trim_end_matches('…'))?;
-        // An option is written "Category: Title"; the one of this title alone.
+        // An option is written "Category: Title", its key after: the one of this title.
         let script = format!(
-            "document.getElementById('studio-target')?.removeAttribute('id'); const e = [...document.querySelectorAll('#palette-list [role=option]')].find((e) => e.textContent.trim().endsWith(': ' + {0})); if (e) {{ e.id = 'studio-target'; }} return e !== undefined;",
+            "document.getElementById('studio-target')?.removeAttribute('id'); const e = [...document.querySelectorAll('#palette-list [role=option]')].find((e) => e.textContent.includes(': ' + {0})); if (e) {{ e.id = 'studio-target'; }} return e !== undefined;",
             quoted(title)
         );
         let start = Instant::now();
@@ -417,6 +417,10 @@ impl<'s> Scene<'s> {
             self.escape()?;
         }
         self.helpers()?;
+        // A notice at the window's top, as of a database recovered, dismissed.
+        self.session.script(
+            "for (const b of document.querySelectorAll('button')) { if (b.textContent.trim() === 'Dismiss' && b.getBoundingClientRect().top < 80) { b.click(); } } return true;",
+        )?;
         let others = "const others = [...document.querySelectorAll('[role=tree][aria-label=\"Open connections\"] button[aria-label^=\"Disconnect \"]')].filter((b) => b.getAttribute('aria-label') !== 'Disconnect Demo shop'); for (const b of others) { b.click(); } return others.length;";
         self.session.script(others)?;
         self.until(
@@ -493,7 +497,7 @@ impl<'s> Scene<'s> {
             .unwrap_or(false)
         {
             if start.elapsed() > DRAWN_WITHIN {
-                return fail(format!("no rows of {sql}"));
+                return fail(format!("no rows of {sql}; {}", self.messages()));
             }
             std::thread::sleep(SETTLE);
         }
@@ -508,6 +512,15 @@ impl<'s> Scene<'s> {
     /// Clicks the first shown element `selector` finds.
     pub fn click_shown(&self, selector: &str) -> Result<()> {
         self.click_text(selector, "")
+    }
+
+    /// What the shown worksheet's Messages pane says, for a failure.
+    pub fn messages(&self) -> String {
+        let _ = self.click_text("[role=\"tablist\"][aria-label=\"Panes\"] [role=\"tab\"]", "Messages");
+        let told = self.session.script(
+            "const w = [...document.querySelectorAll('[role=region][aria-label=Worksheet]')].find((e) => e.offsetParent !== null); return w ? w.innerText.slice(-500) : '';",
+        );
+        format!("its messages: {}", told.map(|v| v.to_string()).unwrap_or_default())
     }
 
     /// Types `text` into the worksheet's editor.

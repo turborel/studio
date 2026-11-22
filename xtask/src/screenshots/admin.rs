@@ -23,6 +23,7 @@ pub fn users_scene(scene: &Scene<'_>) -> Result<()> {
     scene.save_part("users-roles", ".catalog, [role=\"menu\"]")?;
     scene.escape()?;
     scene.explorer_section("Connections", true)?;
+    scene.open_rows(&["DEMO", "Tables", "ORDERS"])?;
     scene.row_menu("ORDERS", &["Privileges…"])?;
     scene.session.wait_for(DIALOG)?;
     scene.tick("SELECT")?;

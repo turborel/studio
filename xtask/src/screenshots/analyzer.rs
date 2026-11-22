@@ -34,28 +34,44 @@ pub fn report_scene(scene: &Scene<'_>) -> Result<()> {
     scene.explorer_section("Reports", false)
 }
 
-/// The plan's summary and warnings, as `sql` is explained and analyzed,
-/// once a warning of `rule` is drawn.
-fn warned(scene: &Scene<'_>, sql: &str, rule: &str) -> Result<crate::images::Pixels> {
+/// The plan's summary and warnings, as `sql` is explained and analyzed
+/// in a worksheet of its own, `setup` run in it first if any, once a
+/// warning of `rule` is drawn.
+fn warned(scene: &Scene<'_>, (setup, sql): (Option<&str>, &str), rule: &str) -> Result<crate::images::Pixels> {
     scene.new_worksheet()?;
+    if let Some(setup) = setup {
+        scene.write(setup)?;
+        scene.tool("Run Statement")?;
+        std::thread::sleep(crate::screenshots::scene::SETTLE);
+        scene.worksheet()?;
+    }
     scene.write(sql)?;
     scene.tool("Explain Analyze")?;
-    scene.wait_text("ul[aria-label=\"Warnings\"]", rule)?;
+    if let Err(e) = scene.wait_text("ul[aria-label=\"Warnings\"]", rule) {
+        return crate::error::fail(format!("{e}; {}", scene.messages()));
+    }
     scene.part("section[aria-label=\"Summary of the plan\"], ul[aria-label=\"Warnings\"]")
 }
 
 /// The plan's warnings: a sort that spilled past a small work area, and
 /// a spatial index whose entries are each judged again.
 pub fn warnings_scene(scene: &Scene<'_>) -> Result<()> {
-    scene.run("SET MEMORY.WORK_BYTES = 65536", "Run Statement")?;
     let spill = warned(
         scene,
-        "SELECT A.ID AS A_ID, B.ID AS B_ID, A.TOTAL + B.TOTAL AS PAIR FROM ORDERS A CROSS JOIN ORDERS B ORDER BY PAIR DESC",
+        (
+            Some("SET MEMORY.WORK_BYTES = 65536"),
+            "SELECT A.ID AS A_ID, B.ID AS B_ID, A.TOTAL + B.TOTAL AS PAIR FROM ORDERS A CROSS JOIN ORDERS B ORDER BY PAIR DESC",
+        ),
         "PLAN-SPILL",
     );
-    scene.run("SET MEMORY.WORK_BYTES = 268435456", "Run Statement")?;
-    let recheck =
-        warned(scene, "SELECT ID FROM STORE_AREAS WHERE ST_INTERSECTS(AREA, ST_MAKEENVELOPE(100, 100, 160, 160)) = 1", "PLAN-RECHECK")?;
+    let recheck = warned(
+        scene,
+        (
+            Some("SET MEMORY.WORK_BYTES = 268435456"),
+            "SELECT ID FROM STORE_AREAS WHERE ST_INTERSECTS(AREA, ST_MAKEENVELOPE(100, 100, 160, 160)) = 1",
+        ),
+        "PLAN-RECHECK",
+    )?;
     scene.save_stacked("plan-warnings", &[spill?, recheck])
 }
 
