@@ -23,6 +23,8 @@ const VIEWER: &str = "Ann";
 /// Live Sessions: a session presented, its panel shown; and its
 /// invitation, its link kept for the scene of a link.
 pub fn present_scene(scene: &Scene<'_>) -> Result<()> {
+    // A worksheet of a query and its rows, to be shared.
+    scene.result(crate::screenshots::worksheets::QUERY, "Run Statement")?;
     scene.session.click("[role=\"toolbar\"][aria-label=\"Toolbar\"] button[aria-label=\"Present\"]")?;
     scene.session.wait_for(&format!("{PANEL} [aria-label=\"Participants\"]"))?;
     scene.save("live-session")?;

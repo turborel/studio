@@ -55,6 +55,14 @@ pub fn decode(png: &[u8]) -> Result<Pixels> {
     let mut rgba = vec![0; reader.output_buffer_size().unwrap_or(0)];
     let info = reader.next_frame(&mut rgba).map_err(|e| Error(format!("the screenshot cannot be read: {e}")))?;
     rgba.truncate(info.buffer_size());
+    // A grey image, as ImageMagick writes a display of few colours, made RGBA.
+    if info.color_type == png::ColorType::GrayscaleAlpha {
+        let rgba = rgba.chunks(2).flat_map(|p| {
+            let (grey, alpha) = (p.first().copied().unwrap_or(0), p.get(1).copied().unwrap_or(255));
+            [grey, grey, grey, alpha]
+        });
+        return Ok(Pixels { width: info.width, height: info.height, rgba: rgba.collect() });
+    }
     if info.color_type != png::ColorType::Rgba {
         return fail(format!("the screenshot is {:?}, not RGBA", info.color_type));
     }

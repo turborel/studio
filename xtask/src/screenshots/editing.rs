@@ -66,7 +66,16 @@ pub fn import_scene(scene: &Scene<'_>) -> Result<()> {
     scene.save_part("import-create-table", DIALOG)?;
     let area = scene.area(DIALOG)?;
     scene.click_text("[role=\"dialog\"] .dialog-buttons button", "Create Table and Import")?;
-    scene.click_exact("[role=\"dialog\"] button", "Create Table")?;
+    // The guards' question, where the connection's guards ask one.
+    std::thread::sleep(SETTLE);
+    if scene
+        .session
+        .script("return window.studioMark('[role=dialog] button', '=Create Table', 'studio-target');")?
+        .as_bool()
+        .unwrap_or(false)
+    {
+        scene.session.click("#studio-target")?;
+    }
     scene.wait_text("[role=\"dialog\"] [role=\"status\"]", "Imported")?;
     film.frame(300)?;
     film.write("import", Some(area))?;

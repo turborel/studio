@@ -56,6 +56,11 @@ fn warned(scene: &Scene<'_>, (setup, sql): (Option<&str>, &str), rule: &str) -> 
 /// The plan's warnings: a sort that spilled past a small work area, and
 /// a spatial index whose entries are each judged again.
 pub fn warnings_scene(scene: &Scene<'_>) -> Result<()> {
+    let recheck = warned(
+        scene,
+        (None, "SELECT ID FROM STORE_AREAS WHERE ST_INTERSECTS(AREA, ST_MAKEENVELOPE(100, 100, 160, 160)) = 1"),
+        "PLAN-RECHECK",
+    )?;
     let spill = warned(
         scene,
         (
@@ -64,14 +69,8 @@ pub fn warnings_scene(scene: &Scene<'_>) -> Result<()> {
         ),
         "PLAN-SPILL",
     );
-    let recheck = warned(
-        scene,
-        (
-            Some("SET MEMORY.WORK_BYTES = 268435456"),
-            "SELECT ID FROM STORE_AREAS WHERE ST_INTERSECTS(AREA, ST_MAKEENVELOPE(100, 100, 160, 160)) = 1",
-        ),
-        "PLAN-RECHECK",
-    )?;
+    // The work area as it was, for the scenes after.
+    scene.run("SET MEMORY.WORK_BYTES = 268435456", "Run Statement")?;
     scene.save_stacked("plan-warnings", &[spill?, recheck])
 }
 
@@ -93,7 +92,9 @@ pub fn plan_compare_scene(scene: &Scene<'_>) -> Result<()> {
     scene.run("CREATE INDEX ORDERS_BY_TOTAL ON ORDERS (TOTAL)", "Run Statement")?;
     film.frame(150)?;
     scene.run(query, "Explain Analyze")?;
-    scene.wait_text(".plan-viewer", "ORDERS_BY_TOTAL")?;
+    if let Err(e) = scene.wait_text(".plan-viewer", "IndexScan") {
+        return crate::error::fail(format!("{e}; {}", scene.messages()));
+    }
     film.frame(150)?;
     scene.click_text("[role=\"toolbar\"][aria-label=\"Plan\"] label", "Compare with the plan before")?;
     scene.session.wait_for(".plan-pair")?;
