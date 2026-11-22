@@ -188,7 +188,7 @@ rows are shown as a table, or in the chart view as its chart says.
 | **Index Sizes** | each index's method, entries, height and bytes, the largest first |
 | **Indexes Unused since the Database Opened** | each index no search used since the database opened or it was made, its entries and bytes |
 
-A result's **Save as Report…** keeps its query as a report of the
+A result's **Save as Report…**, of its toolbar's menu **⋯**, keeps its query as a report of the
 user's, under a name: shown in the chart view as it is drawn, if the
 chart view is shown, else as a table. **Forget** lets one go. The
 user's reports are kept in `reports.json`

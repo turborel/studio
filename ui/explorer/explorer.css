@@ -4,6 +4,7 @@
 
 .panel.explorer {
   padding-top: 0;
+  overflow-x: hidden;
 }
 
 .explorer-toolbar {
@@ -83,4 +84,54 @@
 
 .state-lost {
   background: var(--danger);
+}
+
+/* The catalog's rows: an indent, a triangle, an icon, a name and a note. */
+.tree-row {
+  display: flex;
+  gap: var(--space-1);
+  align-items: center;
+  min-width: 0;
+  padding: 1px 4px;
+  cursor: default;
+  white-space: nowrap;
+}
+
+/* A row's indent, triangle and icon keep their width; its name and note give way, cut short. */
+.tree-row > .tree-twisty,
+.tree-row > .icon {
+  flex: none;
+}
+
+.tree-label,
+.tree-note {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tree-label {
+  flex: 0 1 auto;
+}
+
+.tree-note {
+  flex: 1 1 0;
+}
+
+.tree-twisty {
+  display: inline-block;
+  width: 14px;
+  border: none;
+  background: none;
+  padding: 0;
+}
+
+.tree-note {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.tree-row.tree-active .tree-note {
+  color: var(--on-selection);
 }

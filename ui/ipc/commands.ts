@@ -11,6 +11,8 @@ export interface AppInfo {
   readonly version: string;
   /** The Turborel commit its client library is built from. */
   readonly turborelCommit: string;
+  /** The user's home folder, which paths are shown beneath as `~`, if one is known. */
+  readonly home: string | null;
 }
 
 /** Studio's version and the Turborel commit it is built from. */

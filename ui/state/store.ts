@@ -142,6 +142,8 @@ export interface StudioState {
   readonly live: LiveState;
   /** Whether the explorer shows its search of the catalog. */
   readonly explorerSearch: boolean;
+  /** The user's home folder, which paths are shown beneath as `~`, once known. */
+  readonly home: string | null;
 }
 
 /** The state before anything is loaded. */
@@ -170,6 +172,7 @@ export const INITIAL: StudioState = {
   chat: newChat(),
   live: NO_LIVE,
   explorerSearch: false,
+  home: null,
 };
 
 /** The store of a window: its state, and who reads it. */

@@ -35,3 +35,11 @@ fn the_pinned_commit_is_the_manifests() {
     assert!(pins.iter().all(|line| line.contains(&format!("rev = \"{TURBOREL_COMMIT}\""))));
     assert_eq!(app_info().turborel_commit, TURBOREL_COMMIT);
 }
+
+/// [RULE] R-UI-1: the home folder the window shortens paths by is the
+/// environment's own.
+#[test]
+fn the_home_folder_is_the_environments() {
+    let home = std::env::var("HOME").or_else(|_| std::env::var("USERPROFILE")).ok();
+    assert_eq!(app_info().home, home.filter(|h| !h.is_empty()));
+}

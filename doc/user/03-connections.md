@@ -142,7 +142,8 @@ opened by its heading:
 - **Saved**: every saved connection, in its folders, folders and names
   in order, each with its host, or an embedded database's folder, after
   its name, cut short to fit and whole in its tooltip, and a dot while
-  it is open.
+  it is open. A folder beneath the user's home folder is written from
+  `~`, as `~/Databases/demo-shop`, here and in the dialogs.
 - **Recent**: the ten saved connections used last, the latest first.
 
 A row is one line, its name and what it is; its actions are of its

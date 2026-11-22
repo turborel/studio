@@ -3,6 +3,7 @@
  * through `ui/ipc/` (R-TS-3) and changes the store with what it gives. A
  * failure is kept as the state's error, which the window shows.
  */
+import { type AppInfo, appInfo } from "../ipc/commands";
 import { listReports, type ReportList } from "../ipc/analyzer";
 import { assistantAsked, assistantTold } from "../assistant/chat";
 import { guestTold, hostTold } from "../live/live";
@@ -90,16 +91,17 @@ async function settled<T extends readonly unknown[]>(
 
 /** Loads Studio's own files: the settings, the favourite queries, the project folders, the reports, and the reserved words; then tells the files set aside. */
 async function loadFiles(store: Store): Promise<void> {
-  await settled<[Settings, string[], FavouriteQuery[], string[], ReportList]>(
+  await settled<[Settings, string[], FavouriteQuery[], string[], ReportList, AppInfo]>(
     store,
-    [loadSettings(), sqlWords(), listQueries(), projectFolders(), listReports()],
-    (now, [settings, reservedWords, queries, projects, reports]) => ({
+    [loadSettings(), sqlWords(), listQueries(), projectFolders(), listReports(), appInfo()],
+    (now, [settings, reservedWords, queries, projects, reports, info]) => ({
       ...now,
       settings: settings ?? now.settings,
       reservedWords: reservedWords ?? now.reservedWords,
       queries: queries ?? now.queries,
       projects: projects ?? now.projects,
       reports: reports ?? now.reports,
+      home: info?.home ?? now.home,
     }),
   );
   await tellSetAside(store);

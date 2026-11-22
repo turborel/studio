@@ -351,32 +351,6 @@ kbd {
   text-align: left;
 }
 
-.tree-row {
-  display: flex;
-  gap: 4px;
-  align-items: center;
-  padding: 1px 4px;
-  cursor: default;
-  white-space: nowrap;
-}
-
-.tree-twisty {
-  display: inline-block;
-  width: 14px;
-  border: none;
-  background: none;
-  padding: 0;
-}
-
-.tree-note {
-  color: var(--text-muted);
-  font-size: 11px;
-}
-
-.tree-row.tree-active .tree-note {
-  color: var(--on-selection);
-}
-
 .details-title {
   display: flex;
   gap: 8px;
@@ -387,9 +361,24 @@ kbd {
 
 .tabs {
   display: flex;
-  gap: 2px;
+  flex-wrap: wrap;
+  gap: var(--space-1);
   border-bottom: 1px solid var(--border);
   margin-bottom: 6px;
+}
+
+.tabs [role="tab"] {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  white-space: nowrap;
+}
+
+/* A button of an icon and a label, the two a step apart. */
+button:has(> .icon) {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
 }
 
 .tabs [aria-selected="true"] {

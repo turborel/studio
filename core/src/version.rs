@@ -20,11 +20,16 @@ pub struct AppInfo {
     pub version: String,
     /// The Turborel commit its client library is built from.
     pub turborel_commit: String,
+    /// The user's home folder, which the window writes as `~` at a path's
+    /// start, as `HOME`, or `USERPROFILE` on Windows, names it; none if
+    /// neither does.
+    pub home: Option<String>,
 }
 
 /// This build's `AppInfo`.
 pub fn app_info() -> AppInfo {
-    AppInfo { version: VERSION.to_owned(), turborel_commit: TURBOREL_COMMIT.to_owned() }
+    let home = ["HOME", "USERPROFILE"].iter().find_map(|name| std::env::var(name).ok().filter(|v| !v.is_empty()));
+    AppInfo { version: VERSION.to_owned(), turborel_commit: TURBOREL_COMMIT.to_owned(), home }
 }
 
 #[cfg(test)]

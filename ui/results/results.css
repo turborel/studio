@@ -11,7 +11,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px 12px;
+  gap: var(--space-1) var(--space-2);
   padding-bottom: 4px;
   border-bottom: 1px solid var(--border);
 }
@@ -187,10 +187,6 @@ path.plane-selected.plane-area {
   color: var(--icon-commit);
 }
 
-.compare-choice select {
-  max-width: 180px;
-}
-
 .result-tab {
   display: inline-flex;
   align-items: center;
@@ -264,4 +260,13 @@ path.plane-selected.plane-area {
   height: 10px;
   border-radius: 2px;
   margin-right: 4px;
+}
+
+/* The copy's format and the comparison, narrow, so the toolbar is a row. */
+.copy-format {
+  width: 9em;
+}
+
+.compare-choice select {
+  width: 9em;
 }

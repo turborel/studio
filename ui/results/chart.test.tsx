@@ -119,7 +119,8 @@ describe("the chart view", () => {
     fireEvent.click(screen.getByRole("checkbox", { name: "(4)" }));
     fireEvent.change(screen.getByRole("combobox", { name: "Rows named by" }), { target: { value: "READS" } });
     expect(screen.getAllByText("21").length).toBeGreaterThan(0);
-    fireEvent.click(screen.getByRole("button", { name: "Save as Report…" }));
+    fireEvent.click(screen.getByRole("button", { name: "More of the result" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Save as Report…" }));
     expect(store.current().dialog).toEqual({
       kind: "report",
       sql: "SELECT * FROM FILES",
@@ -130,7 +131,8 @@ describe("the chart view", () => {
   it("is offered of a result of numbers, says what it cannot draw, and draws the first rows alone [DESIGN] D52", async () => {
     const many = Array.from({ length: MAX_CHART_ROWS + 1 }, (_, i) => [`K${String(i)}`, String(i), "0", "0"]);
     const store = await charted(many, null);
-    fireEvent.click(screen.getByRole("button", { name: "Save as Report…" }));
+    fireEvent.click(screen.getByRole("button", { name: "More of the result" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Save as Report…" }));
     expect(store.current().dialog).toMatchObject({ kind: "report", chart: null });
     fireEvent.click(screen.getByRole("button", { name: "Chart View" }));
     expect(screen.getByText(/The first 200 rows are drawn/u)).toBeTruthy();

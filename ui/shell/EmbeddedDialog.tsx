@@ -8,6 +8,7 @@
  * named; neither key is ever kept in Studio's files. The database opens,
  * is saved among the connections, or both.
  */
+import { useShortPath } from "./paths";
 import { useEffect, useState } from "react";
 import { chooseDatabaseDirectory, chooseKeysDirectory, defaultOwner, type FoundServer } from "../ipc/embedded";
 import type { Environment } from "../ipc/connections";
@@ -67,11 +68,12 @@ function Check(props: { label: string; checked: boolean; onChange: (checked: boo
 
 /** A folder shown, and the button that chooses it. */
 function FolderField(props: { label: string; value: string; choose: () => void; clear?: () => void }) {
+  const short = useShortPath();
   return (
     <div className="field">
       <span>{props.label.charAt(0).toUpperCase() + props.label.slice(1)}</span>
       <span className="folder-chosen">
-        <output>{props.value === "" ? "None chosen" : props.value}</output>
+        <output title={props.value}>{props.value === "" ? "None chosen" : short(props.value)}</output>
         <button type="button" aria-label={`Choose the ${props.label}`} onClick={props.choose}>
           Choose…
         </button>

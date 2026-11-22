@@ -9,8 +9,9 @@ result shown. A result shows the rows read so far: Studio reads a query
 a page of 500 rows at a time, and leaves the rest on the server until
 they are asked for.
 
-Above a result is its toolbar, and under the toolbar, for a query, its
-filter. Below it the bar says how many rows are read, whether more are
+Above a result is its toolbar, a row of its views, its copy, Export as
+CSV…, Pin, Compare with and its edits, and its menu **⋯**, **More of the
+result**, of the rest; under the toolbar, for a query, is its filter. Below it the bar says how many rows are read, whether more are
 to be read, how long the statement took, as the window measured it, and
 whether the result is sorted or filtered or has columns frozen. **Read
 more** reads the next page.
@@ -183,7 +184,8 @@ are drawn. A node is dragged to move it.
 
 The toolbar's **Copy** copies the cells selected, or every row read if
 none is, in the format **Copy as** chooses, the columns' names as its
-header if **Headers** is ticked:
+header; the toolbar's menu **⋯** chooses **Copy without Headers**, or
+**Copy with Headers** again:
 
 | Format | What it writes |
 |---|---|
@@ -213,7 +215,8 @@ its cell holds only what it is.
 
 ## Exporting
 
-**Export as CSV…** and **Export as Native Rows…** run the result's
+**Export as CSV…**, of the toolbar, and **Export as Native Rows…**, of
+its menu **⋯**, run the result's
 query again, sorted and filtered as it is, and write its rows to the
 file the platform's dialog chooses, as they come, none of them held in
 the window. A CSV file has a header of the columns' names, then a record

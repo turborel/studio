@@ -5,6 +5,7 @@
  * the session's choices, the suggestions made, and the end; for a viewer,
  * the safety code while it waits, its hand, and the workspace shown.
  */
+import { useShortPath } from "../shell/paths";
 import { useState } from "react";
 import type { HostedView, Participant, SessionChoices } from "../ipc/live";
 import { liveChoose } from "../ipc/live";
@@ -270,6 +271,7 @@ function Suggestions() {
 
 /** The presenter's side of the session hosted. */
 function Hosting({ hosted }: { readonly hosted: HostedView }) {
+  const short = useShortPath();
   const store = useStore();
   return (
     <>
@@ -292,7 +294,7 @@ function Hosting({ hosted }: { readonly hosted: HostedView }) {
       <Choices key={JSON.stringify(hosted.choices)} choices={hosted.choices} />
       {hosted.record !== null && (
         <p className="hint" role="status">
-          Recording, on this machine alone, to {hosted.record}.
+          Recording, on this machine alone, to {short(hosted.record)}.
         </p>
       )}
       <Suggestions />

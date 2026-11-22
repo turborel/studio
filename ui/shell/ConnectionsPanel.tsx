@@ -19,11 +19,12 @@ import { prompted } from "./PromptDialog";
 import { type Folder, tree } from "./connectionsTree";
 import { tint } from "./environment";
 import { Icon } from "../icons/Icon";
+import { useShortPath } from "./paths";
 import "./embedded.css";
 
-/** A colour's swatch. */
+/** A colour's swatch, of a connection given a colour or of an environment that has one; none of none. */
 function Swatch({ colour }: { readonly colour: string | null }) {
-  return <span className="swatch" aria-hidden="true" style={{ background: colour ?? "transparent" }} />;
+  return colour === null ? null : <span className="swatch" aria-hidden="true" style={{ background: colour }} />;
 }
 
 /** Shows the dialog that edits saved connection `c`: of an embedded database, or of a server. */
@@ -148,7 +149,9 @@ function SavedItem({ view }: { readonly view: SavedView }) {
   const open = useStudio((s) => s.open.find((o) => o.savedId === c.id));
   const connect = () => void connectSaved(store, c, null);
   const menu = useMenu(() => savedMenu(store, c));
-  const detail = c.embedded?.directory ?? c.spec.host ?? c.spec.uri ?? c.spec.service ?? undefined;
+  const short = useShortPath();
+  const place = c.embedded?.directory ?? c.spec.host ?? c.spec.uri ?? c.spec.service ?? undefined;
+  const detail = place === undefined ? undefined : short(place);
   const state = open === undefined ? null : open.session.lost ? "lost" : "open";
   return (
     <li
@@ -157,7 +160,7 @@ function SavedItem({ view }: { readonly view: SavedView }) {
       aria-label={c.name}
       className="tree-item"
       tabIndex={0}
-      title={detail === undefined ? c.name : `${c.name}: ${detail}`}
+      title={place === undefined ? c.name : `${c.name}: ${place}`}
       onContextMenu={menu.onContextMenu}
       onKeyDown={enterTo(connect, menu.onKeyDown)}
       onDoubleClick={connect}

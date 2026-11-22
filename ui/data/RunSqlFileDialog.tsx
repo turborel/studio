@@ -5,6 +5,7 @@
  * the options say, its progress shown, cancelled if asked, and what it
  * did told at the end, its log saved if wanted.
  */
+import { useShortPath } from "../shell/paths";
 import { type ReactNode, useEffect, useState } from "react";
 import type { Confirm, StatementClass } from "../ipc/connections";
 import {
@@ -313,6 +314,7 @@ function useFileRun(connection: number) {
 
 /** The dialog's form: the file, its summary, the options, the run's progress or report. */
 function FileRunForm(props: { readonly close: () => void } & ReturnType<typeof useFileRun>) {
+  const short = useShortPath();
   const { state, change, choose, run, cancel, save } = props;
   const onOptions = (options: FileOptions) => {
     change({ options });
@@ -323,7 +325,9 @@ function FileRunForm(props: { readonly close: () => void } & ReturnType<typeof u
         <button type="button" data-first="" disabled={state.running} onClick={() => void choose()}>
           Choose File…
         </button>{" "}
-        <span className="hint">{state.path ?? "No file chosen."}</span>
+        <span className="hint" title={state.path ?? undefined}>
+          {state.path === null ? "No file chosen." : short(state.path)}
+        </span>
       </p>
       {state.scan !== null && <ScanSummary scan={state.scan} guarded={state.guarded} />}
       {state.scan !== null && state.report === null && !state.running && (

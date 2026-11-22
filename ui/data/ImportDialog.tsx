@@ -9,6 +9,7 @@
  * by copy where the server grants it, its progress shown, cancelled if
  * asked, rows refused stopped at, skipped, or skipped to a limit.
  */
+import { useShortPath } from "../shell/paths";
 import { useEffect, useState } from "react";
 import { type Column, type TableDetail, catalogTable } from "../ipc/catalog";
 import { type Confirm, runStatement } from "../ipc/connections";
@@ -359,6 +360,7 @@ function ImportButtons(props: {
 
 /** The file chosen, and how it is read, read again as that changes. */
 function FileChoice(props: ReturnType<typeof useImport>) {
+  const short = useShortPath();
   const { state, change, read } = props;
   const choose = async () => {
     const path = await chooseImportFile();
@@ -376,7 +378,9 @@ function FileChoice(props: ReturnType<typeof useImport>) {
         <button type="button" data-first="" disabled={state.running} onClick={() => void choose()}>
           Choose File…
         </button>{" "}
-        <span className="hint">{state.path ?? "No file chosen."}</span>
+        <span className="hint" title={state.path ?? undefined}>
+          {state.path === null ? "No file chosen." : short(state.path)}
+        </span>
       </p>
       <ReadingChoices
         formats={state.formats}

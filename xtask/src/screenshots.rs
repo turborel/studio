@@ -271,7 +271,8 @@ impl Run<'_> {
 /// opened after another left it: the names of those that failed, and why.
 fn theme_scenes(run: &Run<'_>, (theme, ports): (&str, (u16, u16))) -> Result<Vec<String>> {
     let home = run.homes.join(theme);
-    let demo = run.homes.join(format!("demo-database-{theme}"));
+    // The demo shop where a person keeps a database, shown as ~/Databases/demo-shop.
+    let demo = home.join("Databases").join("demo-shop");
     std::fs::create_dir_all(&demo).map_err(|e| Error(format!("{}: {e}", demo.display())))?;
     say(&format!("==> screenshots: the demo database, {theme}"));
     demo_database(&demo)?;
@@ -316,10 +317,13 @@ fn theme_scenes(run: &Run<'_>, (theme, ports): (&str, (u16, u16))) -> Result<Vec
 /// The demo server, of the demo's statements, if `TURBOREL_TEST_SERVER`
 /// names one; told and left out if it cannot start.
 #[cfg(unix)]
-fn demo_server(homes: &Path) -> Option<server::DemoServer> {
+fn demo_server() -> Option<server::DemoServer> {
     let spec = std::env::var(server::SERVER_VARIABLE).ok().filter(|s| !s.is_empty())?;
     say("==> screenshots: the demo server");
-    let started = server::DemoServer::start(&spec, &homes.join("server"), (DEMO_USER, &OTHER_USERS)).and_then(|server| {
+    // Of a folder whose path reads as of nobody's, as the explorer shows its socket's.
+    let dir = std::env::temp_dir().join("demo-shop-server");
+    let _ = std::fs::remove_dir_all(&dir); // One of a run before is replaced.
+    let started = server::DemoServer::start(&spec, &dir, (DEMO_USER, &OTHER_USERS)).and_then(|server| {
         server.seed(DEMO_USER, &statements()?)?;
         Ok(server)
     });
@@ -336,7 +340,7 @@ pub fn screenshots(application: Option<&str>) -> Result<()> {
     let out = root().join("doc").join("images");
     std::fs::create_dir_all(&out).map_err(|e| Error(format!("{}: {e}", out.display())))?;
     #[cfg(unix)]
-    let server = demo_server(&homes);
+    let server = demo_server();
     let mut failed = Vec::new();
     for theme in THEMES {
         // Each theme's model, its answers given afresh.

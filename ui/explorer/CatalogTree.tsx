@@ -150,6 +150,22 @@ function useRowHandlers(store: Store, connection: number, row: TreeRow, open: ()
   };
 }
 
+/** A row's name and note, each cut short to fit, whole in its tooltip. */
+function RowText({ row }: { row: TreeRow }) {
+  return (
+    <>
+      <span className="tree-label" title={row.note === undefined ? row.label : `${row.label} ${row.note}`}>
+        {row.label}
+      </span>
+      {row.note !== undefined && (
+        <span className="tree-note" title={row.note}>
+          {row.note}
+        </span>
+      )}
+    </>
+  );
+}
+
 /** A row of the tree. */
 function Row({ row, connection, selected }: { row: TreeRow; connection: number; selected: boolean }) {
   const store = useStore();
@@ -194,8 +210,7 @@ function Row({ row, connection, selected }: { row: TreeRow; connection: number; 
     >
       <Twisty row={row} open={open} />
       <RowIcon row={row} />
-      <span>{row.label}</span>
-      {row.note !== undefined && <span className="tree-note">{row.note}</span>}
+      <RowText row={row} />
     </div>
   );
 }

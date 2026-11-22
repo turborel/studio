@@ -381,7 +381,8 @@ describe("a result's copies, exports, pins and comparisons", () => {
     fireEvent.change(screen.getByRole("combobox", { name: "Copy as" }), { target: { value: "csv" } });
     await click("Copy");
     expect(written.at(-1)).toBe("NAME\r\nAda\r\n");
-    fireEvent.click(screen.getByRole("checkbox", { name: "Headers" }));
+    await click("More of the result");
+    await choose("Copy without Headers");
     fireEvent.change(screen.getByRole("combobox", { name: "Copy as" }), { target: { value: "insert" } });
     fireEvent.click(cell(0, 1));
     await click("Copy");
@@ -406,7 +407,8 @@ describe("a result's copies, exports, pins and comparisons", () => {
     });
     expect(worksheetOf(store.current(), id)?.messages.at(-1)?.text).toBe("Exported 3 rows to /tmp/items.csv.");
     answer = null;
-    await click("Export as Native Rows…");
+    await click("More of the result");
+    await choose("Export as Native Rows…");
     expect(worksheetOf(store.current(), id)?.messages.at(-1)?.text).toBe("Exported 3 rows to /tmp/items.csv.");
     answer = refused({
       sqlcode: -910,

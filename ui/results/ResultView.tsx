@@ -7,10 +7,9 @@
  */
 import { CompactSelection, type GridSelection, type Item } from "@glideapps/glide-data-grid";
 import { useEffect, useState } from "react";
-import type { ExportKind } from "../ipc/results";
 import { Icon, type IconName, LARGE } from "../icons/Icon";
 import { fetchMore } from "../state/running";
-import { useStore, useStudio } from "../state/store";
+import { type Store, useStore, useStudio } from "../state/store";
 import { type RunResult, worksheetOf } from "../state/worksheets";
 import { chosenCells, copyCells, exportResult, pinResult, queryOf, requery, requeryable, showSummary } from "./actions";
 import { summary, summaryText } from "./aggregate";
@@ -27,7 +26,7 @@ import type { Chart } from "../ipc/analyzer";
 import { show } from "../state/actions";
 import { allOf, chosenOf } from "./selection";
 import { cellMenu, headerMenu } from "./menus";
-import { openMenu } from "../shell/ContextMenu";
+import { type MenuItem, openMenu } from "../shell/ContextMenu";
 import { ValueViewer, type Viewed } from "./viewers/ValueViewer";
 
 /** How a result is shown. */
@@ -116,13 +115,13 @@ function FilterBar({ id, run }: { readonly id: string; readonly run: RunResult }
 }
 
 /** The toolbar's copying: a format, with headers or not. */
-function CopyTools(props: { readonly onCopy: (format: CopyFormat, headers: boolean) => void }) {
+function CopyTools(props: { readonly onCopy: (format: CopyFormat) => void }) {
   const [format, setFormat] = useState<CopyFormat>("tsv");
-  const [headers, setHeaders] = useState(true);
   return (
     <span className="tool-group" role="group" aria-label="Copy">
       <select
         aria-label="Copy as"
+        className="copy-format"
         value={format}
         onChange={(e) => {
           setFormat(e.target.value as CopyFormat);
@@ -134,21 +133,11 @@ function CopyTools(props: { readonly onCopy: (format: CopyFormat, headers: boole
           </option>
         ))}
       </select>
-      <label>
-        <input
-          type="checkbox"
-          checked={headers}
-          onChange={(e) => {
-            setHeaders(e.target.checked);
-          }}
-        />{" "}
-        Headers
-      </label>
       <Tool
         icon="copy"
         name="Copy"
         onClick={() => {
-          props.onCopy(format, headers);
+          props.onCopy(format);
         }}
       />
     </span>
@@ -258,16 +247,9 @@ function ModeTools({ run, view, change }: Parts) {
 function KeepTools({ id, run, view, change, names }: Parts & { readonly names: ReadonlyMap<number, string> }) {
   const store = useStore();
   const runs = useStudio((s) => worksheetOf(s, id)?.runs ?? NO_RUNS);
-  const report = () => {
-    show(store, {
-      kind: "report",
-      sql: run.sql,
-      chart: view.mode === "chart" ? (view.chart ?? defaultChart(run.columns)) : null,
-    });
-  };
+
   return (
     <span className="tool-group" role="group" aria-label="Keep">
-      <Tool icon="chart" name="Save as Report…" onClick={report} />
       <Tool
         icon={run.pinned ? "unpin" : "pin"}
         name={run.pinned ? "Unpin Result" : "Pin Result"}
@@ -297,25 +279,65 @@ function KeepTools({ id, run, view, change, names }: Parts & { readonly names: R
   );
 }
 
-/** A result's toolbar. */
+/** The toolbar's less-used items, of its menu "More": the other export, a report, and whether copies hold the headers. */
+function moreItems(store: Store, parts: Parts, headers: [boolean, (on: boolean) => void]): MenuItem[] {
+  const { id, run, view } = parts;
+  const [withHeaders, setHeaders] = headers;
+  return [
+    { label: "Export as Native Rows…", icon: "save", run: () => exportResult(store, id, run.id, "native") },
+    {
+      label: "Save as Report…",
+      icon: "chart",
+      run: () => {
+        show(store, {
+          kind: "report",
+          sql: run.sql,
+          chart: view.mode === "chart" ? (view.chart ?? defaultChart(run.columns)) : null,
+        });
+      },
+    },
+    "separator",
+    {
+      label: withHeaders ? "Copy without Headers" : "Copy with Headers",
+      icon: "copy",
+      run: () => {
+        setHeaders(!withHeaders);
+      },
+    },
+  ];
+}
+
+/** A result's toolbar, on one row: the views, copying, export, pinning, comparing and editing; the rest of its menu "More". */
 function ResultToolbar(parts: Parts & { readonly names: ReadonlyMap<number, string> }) {
   const store = useStore();
   const { id, run, view } = parts;
-  const copy = (format: CopyFormat, headers: boolean) => {
+  const [headers, setHeaders] = useState(true);
+  const copy = (format: CopyFormat) => {
     const chosen = chosenOf(view.selection, run.rows.length, run.columns.length);
     void copyCells(store, id, run.id, { format, headers }, chosen ?? allOf(run.rows.length, run.columns.length));
   };
-  const exportAs = (kind: ExportKind) => () => void exportResult(store, id, run.id, kind);
   return (
     <div className="result-toolbar" role="toolbar" aria-label="Result">
       <ModeTools {...parts} />
       <CopyTools onCopy={copy} />
       <span className="tool-group" role="group" aria-label="Export">
-        <Tool icon="export" name="Export as CSV…" onClick={exportAs("csv")} />
-        <Tool icon="save" name="Export as Native Rows…" onClick={exportAs("native")} />
+        <Tool icon="export" name="Export as CSV…" onClick={() => void exportResult(store, id, run.id, "csv")} />
       </span>
       <KeepTools {...parts} />
       <EditTools id={id} run={run} selection={view.selection} />
+      <button
+        type="button"
+        className="tool"
+        title="More"
+        aria-label="More of the result"
+        aria-haspopup="menu"
+        onClick={(e) => {
+          const r = e.currentTarget.getBoundingClientRect();
+          openMenu(store, { x: r.left, y: r.bottom }, moreItems(store, parts, [headers, setHeaders]));
+        }}
+      >
+        ⋯
+      </button>
     </div>
   );
 }
