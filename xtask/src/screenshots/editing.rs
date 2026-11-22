@@ -6,7 +6,8 @@
 
 use crate::error::Result;
 use crate::screenshots::connections::DIALOG;
-use crate::screenshots::scene::{ENTER, SETTLE, Scene, demo_file, name_in_dialog, quoted};
+use crate::screenshots::desktop::{demo_file, name_in_dialog};
+use crate::screenshots::scene::{ENTER, SETTLE, Scene, quoted};
 use crate::webdriver::CONTROL;
 
 /// The shown result's grid's cell that shows `text`, edited to `to`.

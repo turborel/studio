@@ -15,6 +15,7 @@ mod admin;
 mod analyzer;
 mod assistant;
 mod connections;
+mod desktop;
 mod editing;
 mod live;
 mod modeling;
@@ -224,7 +225,7 @@ fn take(scene: &Scene<'_>, (name, act): (&str, Act), homes: &Path) -> Option<Str
     if let Ok(shown) = scene.shot() {
         let _ = write_png(&shown, &homes.join(format!("{named}.png"))); // A failure's picture helps alone.
     }
-    scene::capture_display(&homes.join(format!("{named}-display.png")));
+    desktop::capture_display(&homes.join(format!("{named}-display.png")));
     let _ = scene.escape();
     let failed = format!("{name}, {}: {e}", scene.theme);
     say(&format!("screenshots: failed: {failed}")); // Told at once, as a later panic would lose it.

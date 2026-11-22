@@ -5,7 +5,8 @@
 
 use crate::error::{Result, fail};
 use crate::screenshots::connections::DIALOG;
-use crate::screenshots::scene::{SETTLE, Scene, demo_file, name_in_dialog};
+use crate::screenshots::desktop::{demo_file, name_in_dialog};
+use crate::screenshots::scene::{SETTLE, Scene};
 
 /// The ER diagram: the schema's model, and, of the light theme, its SVG,
 /// as Studio's own Export as SVG writes it.
