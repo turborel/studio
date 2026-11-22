@@ -140,6 +140,8 @@ export interface StudioState {
   readonly chat: Chat;
   /** Live Sessions. */
   readonly live: LiveState;
+  /** Whether the explorer shows its search of the catalog. */
+  readonly explorerSearch: boolean;
 }
 
 /** The state before anything is loaded. */
@@ -167,6 +169,7 @@ export const INITIAL: StudioState = {
   activeModel: null,
   chat: newChat(),
   live: NO_LIVE,
+  explorerSearch: false,
 };
 
 /** The store of a window: its state, and who reads it. */

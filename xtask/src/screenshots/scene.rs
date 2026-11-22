@@ -11,6 +11,11 @@ use crate::error::{Result, fail};
 use crate::images::{Pixels, corner, crop, decode, stack, write_gif, write_png};
 use crate::webdriver::{BACKSPACE, CONTROL, DRAWN_WITHIN, ESCAPE, Session};
 
+/// The rows of the open connections, each named by its connection.
+pub const OPEN_ROWS: &str = "[role=tree][aria-label=\"Open connections\"] [role=treeitem][aria-label]";
+/// The rows of the saved connections.
+pub const SAVED_ROWS: &str = "[role=tree][aria-label=\"Saved connections\"] [role=treeitem]";
+
 /// How long a scene's drawing is let settle before it is taken.
 pub const SETTLE: Duration = Duration::from_millis(700);
 /// The pixels around a part of the window an image of it keeps.
@@ -152,7 +157,7 @@ impl<'s> Scene<'s> {
     /// Opens or closes the explorer's section `name`, as its heading's click does.
     pub fn explorer_section(&self, name: &str, open: bool) -> Result<()> {
         let script = format!(
-            "const d = [...document.querySelectorAll('details.explorer-connections, details.explorer-section')].find((d) => d.querySelector('summary')?.textContent.includes({})); if (!d) return false; d.open = {open}; return true;",
+            "const d = [...document.querySelectorAll('details.explorer-section')].find((d) => d.querySelector('summary')?.textContent.includes({})); if (!d) return false; d.open = {open}; return true;",
             quoted(name)
         );
         self.until(&script, &format!("the explorer has no section {name}"))
@@ -406,41 +411,6 @@ impl<'s> Scene<'s> {
             self.wait_row(below)?;
         }
         Ok(())
-    }
-
-    /// The state every scene begins of: no menu or dialog open; no
-    /// connection open but the demo shop's, it the active one; the
-    /// explorer's connections shown; and the catalog's schema drawn.
-    pub fn known_state(&self) -> Result<()> {
-        for _ in 0..3 {
-            self.escape()?;
-        }
-        self.helpers()?;
-        // A notice at the window's top, as of a database recovered, dismissed.
-        self.session.script(
-            "for (const b of document.querySelectorAll('button')) { if (b.textContent.trim() === 'Dismiss' && b.getBoundingClientRect().top < 80) { b.click(); } } return true;",
-        )?;
-        let others = "const others = [...document.querySelectorAll('[role=tree][aria-label=\"Open connections\"] button[aria-label^=\"Disconnect \"]')].filter((b) => b.getAttribute('aria-label') !== 'Disconnect Demo shop'); for (const b of others) { b.click(); } return others.length;";
-        self.session.script(others)?;
-        self.until(
-            "const back = [...document.querySelectorAll('[role=dialog] button')].find((b) => b.textContent.trim() === 'Roll Back'); if (back) { back.click(); return false; } return document.querySelectorAll('[role=tree][aria-label=\"Open connections\"] button[aria-label^=\"Disconnect \"]').length === 1;",
-            "a connection other than the demo shop's stayed open",
-        )?;
-        self.explorer_section("Connections", true)?;
-        self.click_text("[aria-label=\"Open connections\"] button.tree-name", "Demo shop")?;
-        self.wait_text("footer.status-bar", "Demo shop")?;
-        self.wait_row("DEMO")
-    }
-
-    /// Ends every open connection, as its Disconnect does, so each embedded
-    /// database is closed, with its checkpoint, before the window ends.
-    pub fn disconnect_all(&self) -> Result<()> {
-        for _ in 0..3 {
-            self.escape()?;
-        }
-        // A connection of a transaction open asks how it ends: rolled back.
-        let script = "const back = [...document.querySelectorAll('[role=dialog] button')].find((b) => b.textContent.trim() === 'Roll Back'); if (back) { back.click(); return false; } const all = [...document.querySelectorAll('[role=tree][aria-label=\"Open connections\"] button[aria-label^=\"Disconnect \"]')]; if (all.length > 0) { all[0].click(); } return all.length === 0;";
-        self.until(script, "a connection stayed open")
     }
 
     /// Shows the Details panel, its tab chosen in the dock.

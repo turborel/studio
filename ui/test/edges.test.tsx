@@ -5,6 +5,7 @@ import { STUDIO_EVENT } from "../ipc/events";
 import { CommandPalette } from "../shell/CommandPalette";
 import { ConnectionDialog } from "../shell/ConnectionDialog";
 import { ConnectionsPanel } from "../shell/ConnectionsPanel";
+import { ContextMenu } from "../shell/ContextMenu";
 import { command, runCommand } from "../commands/commands";
 import { keyOf } from "../commands/keys";
 import { Modal } from "../shell/Modal";
@@ -107,11 +108,15 @@ describe("more of the window's paths", () => {
     render(
       <StoreContext.Provider value={store}>
         <ConnectionsPanel />
+        <ContextMenu />
       </StoreContext.Provider>,
     );
-    fireEvent.click(screen.getByRole("button", { name: "A" }));
+    fireEvent.click(screen.getByRole("treeitem", { name: "A" }));
     expect(store.current().active).toBe(1);
-    fireEvent.click(screen.getByRole("button", { name: "Disconnect A" }));
+    fireEvent.keyDown(screen.getByRole("treeitem", { name: "B" }), { key: "Enter" });
+    expect(store.current().active).toBe(2);
+    fireEvent.contextMenu(screen.getByRole("treeitem", { name: "A" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Disconnect" }));
     await act(async () => {
       await new Promise((settled) => setTimeout(settled, 0));
     });

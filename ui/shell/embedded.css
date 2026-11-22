@@ -16,12 +16,6 @@
   color: var(--on-alert);
 }
 
-.connections-new {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
 .folder-chosen {
   display: flex;
   gap: 6px;

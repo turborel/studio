@@ -91,6 +91,20 @@ export async function toggle(store: Store, id: number, node: string): Promise<vo
   }
 }
 
+/** Closes every node of connection `id`'s tree. */
+export function collapseAll(store: Store, id: number): void {
+  changeCatalog(store, id, (c) => ({ ...c, expanded: [] }));
+}
+
+/** Shows the explorer's search of the catalog, or hides it, its filter then cleared. */
+export function showSearch(store: Store, shown: boolean): void {
+  store.update((now) => ({ ...now, explorerSearch: shown }));
+  const active = store.current().active;
+  if (!shown && active !== null) {
+    void filterTree(store, active, "");
+  }
+}
+
 /** Filters connection `id`'s tree by `filter`, reading each schema's objects not yet read. */
 export async function filterTree(store: Store, id: number, filter: string): Promise<void> {
   changeCatalog(store, id, (c) => ({ ...c, filter }));

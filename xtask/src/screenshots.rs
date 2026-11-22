@@ -17,6 +17,7 @@ mod assistant;
 mod connections;
 mod desktop;
 mod editing;
+mod explorer;
 mod live;
 mod modeling;
 mod results;

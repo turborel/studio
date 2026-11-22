@@ -7,16 +7,15 @@ import { OpenButtons } from "./OpenButtons";
 import { openWorksheet } from "../state/worksheets";
 import { Icon } from "../icons/Icon";
 import { ConnectionsPanel } from "./ConnectionsPanel";
+import { ExplorerToolbar } from "../explorer/ExplorerToolbar";
 
-/** The Object Explorer: the connections, open and saved, the favourite queries and projects, then the active connection's catalog. */
+/** The Object Explorer: its toolbar; the connections, open and saved, the favourite queries and projects; then the active connection's catalog. */
 export function ExplorerPanel() {
   const active = useStudio((s) => s.active);
   return (
-    <div className="panel" role="region" aria-label="Object Explorer">
-      <details className="explorer-connections" open>
-        <summary>Connections</summary>
-        <ConnectionsPanel />
-      </details>
+    <div className="panel explorer" role="region" aria-label="Object Explorer">
+      <ExplorerToolbar />
+      <ConnectionsPanel />
       <Library />
       {active !== null && <CatalogTree key={active} connection={active} />}
     </div>
@@ -33,6 +32,7 @@ export function WelcomePanel() {
         <OpenButtons />
         <button
           type="button"
+          className="welcome-card"
           onClick={() => {
             openWorksheet(store);
           }}

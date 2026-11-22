@@ -1,15 +1,16 @@
 /**
- * The connections in the explorer (RULES.md D28, D59, R-UI-1, R-UI-3):
- * those open, each with its colour, made active by a click, an in-memory
- * database's marked as not saved; then the saved ones, servers' and
- * embedded databases' with their folders shown, the pinned first, then by
- * folder, then the recent; each connected, edited, pinned or deleted from
- * its own buttons.
+ * The connections in the explorer (RULES.md D28, D59, R-UI-1, R-UI-3), as
+ * a tree of sections, each folded or not: those open, each with its
+ * colour and its state, made active by a click or Enter, an in-memory
+ * database's marked as not saved; then the saved ones, the pinned first,
+ * then by folder, then the recent, each with its host or folder muted and
+ * whether it is open, connected by a double click or Enter. Each row's
+ * actions are of its context menu, by the pointer's second button or
+ * Shift+F10: connect, disconnect, edit, pin, duplicate and delete.
  */
-import { useState } from "react";
+import type { KeyboardEvent } from "react";
 import type { SavedConnection, SavedView } from "../ipc/saved";
 import { activate, connectSaved, disconnect, forget, reconnectOpen, save, show } from "../state/actions";
-import { OpenButtons } from "./OpenButtons";
 import { loadSchemas } from "../state/catalog";
 import { type OpenConnection, type Store, useStore, useStudio } from "../state/store";
 import { copyText, newWorksheetOn, uriOf } from "../explorer/menus";
@@ -23,29 +24,6 @@ import "./embedded.css";
 /** A colour's swatch. */
 function Swatch({ colour }: { readonly colour: string | null }) {
   return <span className="swatch" aria-hidden="true" style={{ background: colour ?? "transparent" }} />;
-}
-
-/** A saved connection's delete button, which asks again before it deletes it. */
-function DeleteButton({ connection: c }: { readonly connection: SavedConnection }) {
-  const store = useStore();
-  const [deleting, setDeleting] = useState(false);
-  return deleting ? (
-    <button type="button" aria-label={`Confirm deleting ${c.name}`} onClick={() => void forget(store, c.id)}>
-      Delete {c.name}?
-    </button>
-  ) : (
-    <button
-      type="button"
-      className="tool"
-      aria-label={`Delete ${c.name}`}
-      title="Delete"
-      onClick={() => {
-        setDeleting(true);
-      }}
-    >
-      <Icon name="remove" />
-    </button>
-  );
 }
 
 /** Shows the dialog that edits saved connection `c`: of an embedded database, or of a server. */
@@ -80,6 +58,12 @@ export function savedMenu(store: Store, c: SavedConnection): MenuItem[] {
       label: c.pinned ? "Unpin" : "Pin",
       icon: "pin",
       run: () => save(store, { ...c, pinned: !c.pinned }, { kind: "keep" }),
+    },
+    {
+      label: "Duplicate",
+      icon: "copy",
+      // A copy of its settings, new and of a name of its own; its password stays the original's alone.
+      run: () => save(store, { ...c, id: "", name: `${c.name} (copy)`, pinned: false }, { kind: "keep" }),
     },
     "separator",
     {
@@ -131,46 +115,58 @@ export function openMenuOf(store: Store, connection: OpenConnection): MenuItem[]
   ];
 }
 
-/** A saved connection's item, with its actions. */
+/** The state of an open connection, or of a saved one open, as a dot: open, lost, or none of one not open. */
+function StateDot({ state }: { readonly state: "open" | "lost" | null }) {
+  if (state === null) {
+    return null;
+  }
+  return (
+    <span
+      className={`state-dot state-${state}`}
+      role="img"
+      aria-label={state === "open" ? "open" : "lost"}
+      title={state}
+    />
+  );
+}
+
+/** Runs `act` as Enter is pressed on a row, its menu's keys first. */
+function enterTo(act: () => void, keys: (e: KeyboardEvent<HTMLElement>) => void) {
+  return (e: KeyboardEvent<HTMLElement>) => {
+    keys(e);
+    if (!e.defaultPrevented && e.key === "Enter") {
+      e.preventDefault();
+      act();
+    }
+  };
+}
+
+/** A saved connection's row: connected by a double click or Enter, its actions of its menu. */
 function SavedItem({ view }: { readonly view: SavedView }) {
   const store = useStore();
   const c: SavedConnection = view.connection;
+  const open = useStudio((s) => s.open.find((o) => o.savedId === c.id));
   const connect = () => void connectSaved(store, c, null);
   const menu = useMenu(() => savedMenu(store, c));
-  const directory = c.embedded?.directory;
+  const detail = c.embedded?.directory ?? c.spec.host ?? c.spec.uri ?? c.spec.service ?? undefined;
+  const state = open === undefined ? null : open.session.lost ? "lost" : "open";
   return (
-    <li role="treeitem" aria-selected="false" className="tree-item" tabIndex={0} {...menu}>
+    <li
+      role="treeitem"
+      aria-selected="false"
+      aria-label={c.name}
+      className="tree-item"
+      tabIndex={0}
+      title={detail === undefined ? c.name : `${c.name}: ${detail}`}
+      onContextMenu={menu.onContextMenu}
+      onKeyDown={enterTo(connect, menu.onKeyDown)}
+      onDoubleClick={connect}
+    >
       <Swatch colour={tint(c.environment, c.colour)} />
-      <Icon name={directory === undefined ? "connection" : "embedded"} />
-      <span className="tree-name" onDoubleClick={connect} title={directory}>
-        {c.name}
-        {directory !== undefined && <span className="tree-detail"> {directory}</span>}
-      </span>
-      <button type="button" className="tool" aria-label={`Connect to ${c.name}`} title="Connect" onClick={connect}>
-        <Icon name="connect" />
-      </button>
-      <button
-        type="button"
-        className="tool"
-        aria-label={`Edit ${c.name}`}
-        title="Edit"
-        onClick={() => {
-          editSaved(store, c);
-        }}
-      >
-        <Icon name="edit" />
-      </button>
-      <button
-        type="button"
-        className="tool"
-        aria-label={`${c.pinned ? "Unpin" : "Pin"} ${c.name}`}
-        aria-pressed={c.pinned}
-        title={c.pinned ? "Unpin" : "Pin"}
-        onClick={() => void save(store, { ...c, pinned: !c.pinned }, { kind: "keep" })}
-      >
-        <Icon name="pin" emphasis={c.pinned} />
-      </button>
-      <DeleteButton connection={c} />
+      <Icon name={c.embedded == null ? "connection" : "embedded"} />
+      <span className="tree-name">{c.name}</span>
+      {detail !== undefined && <span className="tree-detail">{detail}</span>}
+      <StateDot state={state} />
     </li>
   );
 }
@@ -206,45 +202,48 @@ const ICON_OF = {
   inMemory: "inMemory",
 } as const;
 
-/** An open connection's item. */
+/** An open connection's row: made active by a click or Enter, its actions of its menu. */
 function OpenItem({ connection, active }: { readonly connection: OpenConnection; readonly active: boolean }) {
   const store = useStore();
   const menu = useMenu(() => openMenuOf(store, connection));
+  const choose = () => {
+    activate(store, connection.id);
+  };
+  const memory = connection.session.transport === "inMemory";
   return (
     <li
       role="treeitem"
       aria-selected={active}
+      aria-label={connection.name}
       className={active ? "tree-item tree-active" : "tree-item"}
       tabIndex={0}
-      {...menu}
+      onClick={choose}
+      onContextMenu={menu.onContextMenu}
+      onKeyDown={enterTo(choose, menu.onKeyDown)}
     >
       <Swatch colour={tint(connection.guards.environment, connection.colour)} />
       <Icon name={ICON_OF[connection.session.transport]} />
-      <button
-        type="button"
-        className="tree-name"
-        onClick={() => {
-          activate(store, connection.id);
-        }}
-      >
-        {connection.name}
-        {connection.session.lost ? " (lost)" : ""}
-      </button>
-      {connection.session.transport === "inMemory" && <span className="badge-unsaved">not saved</span>}
-      <button
-        type="button"
-        className="tool"
-        aria-label={`Disconnect ${connection.name}`}
-        title="Disconnect"
-        onClick={() => void disconnect(store, connection.id)}
-      >
-        <Icon name="disconnect" />
-      </button>
+      <span className="tree-name">{connection.name}</span>
+      {memory ? (
+        <span className="badge-unsaved">not saved</span>
+      ) : (
+        <StateDot state={connection.session.lost ? "lost" : "open"} />
+      )}
     </li>
   );
 }
 
-/** The connections' panel of the explorer. */
+/** A section of the connections, folded or not, of heading `title`. */
+function Section({ title, children }: { readonly title: string; readonly children: React.ReactNode }) {
+  return (
+    <details className="explorer-section" open>
+      <summary>{title}</summary>
+      {children}
+    </details>
+  );
+}
+
+/** The connections' panel of the explorer: open, pinned, saved and recent. */
 export function ConnectionsPanel() {
   const saved = useStudio((s) => s.saved);
   const open = useStudio((s) => s.open);
@@ -252,32 +251,37 @@ export function ConnectionsPanel() {
   const { pinned, root, recent } = tree(saved);
   return (
     <div className="connections-panel">
-      <div className="connections-new">
-        <OpenButtons className="tool" />
-      </div>
-      <h3>Open</h3>
-      <ul role="tree" aria-label="Open connections">
-        {open.length === 0 && <li className="hint">No connection is open.</li>}
-        {open.map((c) => (
-          <OpenItem key={c.id} connection={c} active={c.id === active} />
-        ))}
-      </ul>
-      {pinned.length > 0 && <h3>Pinned</h3>}
-      <ul role="tree" aria-label="Pinned connections">
-        {pinned.map((view) => (
-          <SavedItem key={view.connection.id} view={view} />
-        ))}
-      </ul>
-      <h3>Saved</h3>
-      <ul role="tree" aria-label="Saved connections">
-        <FolderItems folder={root} />
-      </ul>
-      {recent.length > 0 && <h3>Recent</h3>}
-      <ul role="tree" aria-label="Recent connections">
-        {recent.map((view) => (
-          <SavedItem key={view.connection.id} view={view} />
-        ))}
-      </ul>
+      <Section title="Open">
+        <ul role="tree" aria-label="Open connections">
+          {open.length === 0 && <li className="hint">No connection is open.</li>}
+          {open.map((c) => (
+            <OpenItem key={c.id} connection={c} active={c.id === active} />
+          ))}
+        </ul>
+      </Section>
+      {pinned.length > 0 && (
+        <Section title="Pinned">
+          <ul role="tree" aria-label="Pinned connections">
+            {pinned.map((view) => (
+              <SavedItem key={view.connection.id} view={view} />
+            ))}
+          </ul>
+        </Section>
+      )}
+      <Section title="Saved">
+        <ul role="tree" aria-label="Saved connections">
+          <FolderItems folder={root} />
+        </ul>
+      </Section>
+      {recent.length > 0 && (
+        <Section title="Recent">
+          <ul role="tree" aria-label="Recent connections">
+            {recent.map((view) => (
+              <SavedItem key={view.connection.id} view={view} />
+            ))}
+          </ul>
+        </Section>
+      )}
     </div>
   );
 }

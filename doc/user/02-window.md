@@ -60,8 +60,9 @@ The dock holds the panels. When Studio is first opened:
 - the **Explorer** is on the left, with the connections, open and saved
   ([Connections](03-connections.md)), and the catalog of the active
   connection ([The Object Explorer](04-explorer.md));
-- the centre is the **Start** panel, whose **New Connection…** and
-  **New Worksheet** begin, and each worksheet opens there as a tab of
+- the centre is the **Start** panel, whose cards, **New Connection…**,
+  **Open Database…**, **New Database…**, **New In-Memory Database** and
+  **New Worksheet**, begin, and each worksheet opens there as a tab of
   its own, marked by the colour of the connection it runs on; the **+**
   after a group's tabs opens a new worksheet there;
 - **Details** is on the right, showing what is selected in the explorer,
@@ -93,7 +94,7 @@ through the connection's guards, as one typed would
 | Of | Its menu |
 |---|---|
 | an open connection in the explorer | New Worksheet, on it; Refresh Catalog; Analyze Schema…; Edit Connection…; Copy URI, with no password; Reconnect; Disconnect |
-| a saved connection | Connect; Edit Connection…; Copy URI; Pin or Unpin; Delete…, which asks for its name typed |
+| a saved connection | Connect; Edit Connection…; Copy URI; Pin or Unpin; Duplicate; Delete…, which asks for its name typed |
 | a schema | New Worksheet, its schema set; Create Table…; Import into New Table…; Generate Script…; Open Model; Compare Schema…; Analyze Schema…; Copy Name; Properties; Refresh |
 | a table | New Worksheet; Open Data, its first 200 rows; Open Data Filtered…; Alter Table…; Indexes…; Analyze Table…; Import…; Export…; Compare Rows…; Script As CREATE, ALTER, DROP, SELECT, INSERT, UPDATE or DELETE, to a worksheet or the clipboard; Copy Name; Copy Qualified Name; Rename…; Drop Table; Dependencies; Properties; Refresh |
 | a view | New Worksheet; Open Data; Script As CREATE, SELECT or DROP; Copy Name; Copy Qualified Name; Drop View; Dependencies; Properties; Refresh |

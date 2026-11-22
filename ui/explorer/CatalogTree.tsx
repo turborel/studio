@@ -3,11 +3,21 @@
  * R-UI-3): schemas, their tables, views, routines, sequences and domains,
  * a table's columns, keys, indexes and triggers, the users and roles; read
  * as it opens. The arrow keys move through it, Right opens a node, Left
- * closes it, and Enter selects; typing filters it; a search finds names
- * and definitions on the server.
+ * closes it, and Enter selects; its search, shown by the explorer's
+ * Filter or Ctrl+F, filters it by name as typed, or finds definitions on
+ * the server.
  */
 import { type KeyboardEvent, useEffect, useState } from "react";
-import { filterTree, loadSchemas, scriptChosen, searchCatalog, select, toggle, toggleChosen } from "../state/catalog";
+import {
+  filterTree,
+  loadSchemas,
+  scriptChosen,
+  searchCatalog,
+  select,
+  showSearch,
+  toggle,
+  toggleChosen,
+} from "../state/catalog";
 import { openWorksheet } from "../state/worksheets";
 import { TABLE_DRAG } from "../worksheet/editor/extensions";
 import type { ObjectRef } from "../ipc/catalog";
@@ -217,45 +227,102 @@ export function selectable(object: ObjectRef): Selected | null {
   }
 }
 
-/** The search of names and definitions, and what it found. */
+/** What the explorer's search looks in: the tree's names as they are typed, or the definitions as asked. */
+type Scope = "names" | "definitions";
+
+/** What the definitions' search found, each a link to it. */
+function Found({ connection }: { connection: number }) {
+  const store = useStore();
+  const found = useStudio((s) => s.catalogs[connection]?.found ?? null);
+  if (found === null) {
+    return null;
+  }
+  return (
+    <ul className="found" aria-label="Found">
+      {found.length === 0 && <li className="hint">Nothing found.</li>}
+      {found.map((f) => {
+        const target = selectable(f.object);
+        const label = `${f.object.kind} ${f.object.schema}.${f.object.name}${f.inDefinition ? " (in its definition)" : ""}`;
+        return (
+          <li key={`${f.object.kind}.${f.object.schema}.${f.object.name}.${String(f.inDefinition)}`}>
+            {target === null ? (
+              label
+            ) : (
+              <button type="button" className="link" onClick={() => void select(store, connection, target)}>
+                {label}
+              </button>
+            )}
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+/** The search's scope: pressed, the definitions too; else the names alone. */
+function ScopeToggle({ scope, onScope }: { readonly scope: Scope; readonly onScope: (scope: Scope) => void }) {
+  return (
+    <button
+      type="button"
+      className="tool"
+      aria-label="Search definitions too"
+      title={scope === "names" ? "Names: filtered as typed" : "Definitions: searched by Enter"}
+      aria-pressed={scope === "definitions"}
+      onClick={() => {
+        onScope(scope === "names" ? "definitions" : "names");
+      }}
+    >
+      <Icon name="definition" />
+    </button>
+  );
+}
+
+/** The explorer's search, shown by its toolbar's Filter or Ctrl+F: one field, of a scope of names, filtered as typed, or of definitions, searched by Enter; Escape hides it. */
 function Search({ connection }: { connection: number }) {
   const store = useStore();
   const [text, setText] = useState("");
-  const found = useStudio((s) => s.catalogs[connection]?.found ?? null);
+  const [scope, setScope] = useState<Scope>("names");
+  const run = (value: string, of: Scope) => {
+    if (of === "names") {
+      void filterTree(store, connection, value);
+    } else if (value.trim() !== "") {
+      void searchCatalog(store, connection, value);
+    }
+  };
   return (
-    <div className="catalog-search">
+    <div className="catalog-search" role="search">
       <input
-        aria-label="Filter the tree"
-        placeholder="Filter"
+        type="search"
+        aria-label="Search the catalog"
+        placeholder={scope === "names" ? "Filter by name" : "Search definitions, Enter"}
         value={text}
+        autoFocus
         onChange={(e) => {
           setText(e.target.value);
-          void filterTree(store, connection, e.target.value);
+          if (scope === "names") {
+            run(e.target.value, scope);
+          }
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            run(text, scope);
+          } else if (e.key === "Escape") {
+            e.stopPropagation();
+            showSearch(store, false);
+          }
         }}
       />
-      <button type="button" disabled={text.trim() === ""} onClick={() => void searchCatalog(store, connection, text)}>
-        Search definitions
-      </button>
-      {found !== null && (
-        <ul className="found" aria-label="Found">
-          {found.length === 0 && <li className="hint">Nothing found.</li>}
-          {found.map((f) => {
-            const target = selectable(f.object);
-            const label = `${f.object.kind} ${f.object.schema}.${f.object.name}${f.inDefinition ? " (in its definition)" : ""}`;
-            return (
-              <li key={`${f.object.kind}.${f.object.schema}.${f.object.name}.${String(f.inDefinition)}`}>
-                {target === null ? (
-                  label
-                ) : (
-                  <button type="button" className="link" onClick={() => void select(store, connection, target)}>
-                    {label}
-                  </button>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      )}
+      <ScopeToggle
+        scope={scope}
+        onScope={(next) => {
+          setScope(next);
+          if (next === "definitions") {
+            void filterTree(store, connection, "");
+          }
+          run(text, next);
+        }}
+      />
+      <Found connection={connection} />
     </div>
   );
 }
@@ -270,14 +337,12 @@ export function CatalogTree({ connection }: { readonly connection: number }) {
       void loadSchemas(store, connection);
     }
   }, [store, connection, catalog.schemas]);
+  const searching = useStudio((s) => s.explorerSearch);
   const rows = treeRows(catalog);
   return (
     <div className="catalog">
-      <div className="catalog-bar">
-        <button type="button" onClick={() => void loadSchemas(store, connection)}>
-          Refresh
-        </button>
-        {catalog.chosen.length > 0 && (
+      {catalog.chosen.length > 0 && (
+        <div className="catalog-bar">
           <button
             type="button"
             onClick={() =>
@@ -286,9 +351,9 @@ export function CatalogTree({ connection }: { readonly connection: number }) {
           >
             Script {String(catalog.chosen.length)} Chosen
           </button>
-        )}
-      </div>
-      <Search connection={connection} />
+        </div>
+      )}
+      {searching && <Search connection={connection} />}
       <Favourites connection={connection} />
       <div role="tree" aria-label="Catalog">
         {rows.map((row) => (

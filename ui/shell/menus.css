@@ -58,13 +58,6 @@
   background: var(--border);
 }
 
-.welcome-actions {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-  margin: 12px 0;
-}
-
 .dock-new {
   margin-left: 2px;
 }

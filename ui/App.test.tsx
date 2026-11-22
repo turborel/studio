@@ -1,5 +1,5 @@
 import { emit } from "@tauri-apps/api/event";
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, within as inside } from "@testing-library/react";
 import { App, MENU_EVENT } from "./App";
 import { connectSpec } from "./state/actions";
 import { type Dialog, Store } from "./state/store";
@@ -140,8 +140,28 @@ describe("the window's parts", () => {
     fireEvent.keyDown(window, { key: "q", ctrlKey: true });
     fireEvent.keyDown(window, { key: "Shift", shiftKey: true });
     expect(store.current().dialog).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "New Connection" }));
+    const toolbar = screen.getByRole("toolbar", { name: "Toolbar" });
+    fireEvent.click(inside(toolbar).getByRole("button", { name: "New Connection" }));
     expect(store.current().dialog).toEqual({ kind: "connection", editing: null });
+  });
+
+  it("shows the explorer's search by Find pressed within the explorer, and leaves Find to the worksheet elsewhere [DESIGN] D33", async () => {
+    mockBackend();
+    const store = await renderWindow();
+    await act(async () => {
+      await connectSpec(store, "X", { user: "ann" }, { environment: "development", readOnly: false }, null);
+    });
+    const explorer = document.createElement("div");
+    explorer.setAttribute("role", "region");
+    explorer.setAttribute("aria-label", "Object Explorer");
+    const row = document.createElement("button");
+    explorer.append(row);
+    document.body.append(explorer);
+    fireEvent.keyDown(document.body, { key: "f", ctrlKey: true });
+    expect(store.current().explorerSearch).toBe(false);
+    fireEvent.keyDown(row, { key: "f", ctrlKey: true });
+    expect(store.current().explorerSearch).toBe(true);
+    explorer.remove();
   });
 
   it("checks connections as the window is shown again [DESIGN] D24", async () => {

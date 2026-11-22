@@ -191,11 +191,6 @@ button.danger {
   outline: 1px dashed var(--accent-text);
 }
 
-.explorer-section summary {
-  font-weight: 600;
-  margin: 4px 0;
-}
-
 .library {
   list-style: none;
   margin: 2px 0;

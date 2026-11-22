@@ -9,6 +9,8 @@ import { Store, StoreContext, useStudio } from "../state/store";
 import { type Asked, SESSION, mockBackend } from "../test/backend";
 import { refused } from "../test/catalog";
 import { ConnectionsPanel, editSaved, savedMenu } from "./ConnectionsPanel";
+import { ExplorerToolbar } from "../explorer/ExplorerToolbar";
+import { ContextMenu } from "./ContextMenu";
 import { EmbeddedDialog } from "./EmbeddedDialog";
 import {
   baseName,
@@ -231,17 +233,20 @@ describe("embedded databases among the connections", () => {
     within(
       store,
       <>
+        <ExplorerToolbar />
         <ConnectionsPanel />
         <StatusBar />
         <NoticeBanner />
+        <ContextMenu />
       </>,
     );
     expect(screen.getByText("/data/orders", { exact: false })).toBeDefined();
-    fireEvent.click(screen.getByRole("button", { name: "Edit Orders" }));
+    fireEvent.contextMenu(screen.getByRole("treeitem", { name: ORDERS.name }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Edit Connection…" }));
     expect(store.current().dialog).toEqual({ kind: "embedded", mode: "open", editing: ORDERS });
-    fireEvent.click(screen.getByRole("button", { name: "Open Database…" }));
+    fireEvent.click(screen.getByRole("button", { name: "Open Database" }));
     expect(store.current().dialog).toMatchObject({ kind: "embedded", mode: "open", editing: null });
-    fireEvent.click(screen.getByRole("button", { name: "New Database…" }));
+    fireEvent.click(screen.getByRole("button", { name: "New Database" }));
     expect(store.current().dialog).toMatchObject({ kind: "embedded", mode: "new" });
     fireEvent.click(screen.getByRole("button", { name: "New In-Memory Database" }));
     await settle();

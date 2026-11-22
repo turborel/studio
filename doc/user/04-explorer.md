@@ -37,16 +37,17 @@ in the tree.
 
 A schema lists at most 20,000 tables and views, routines, sequences,
 domains and types; one holding more says so, as **Only the first 20,000
-of each kind are listed**; **Search definitions** finds the tables, views
-and routines beyond them by name.
+of each kind are listed**; a search of the definitions finds the tables,
+views and routines beyond them by name.
 
 **Users and Roles** opens on the users the session may see, every user
 to the database's owner and else the session's own, then the roles
 granted to the user, to PUBLIC, and to the roles it holds.
 
-A node is opened by its triangle, or by double-clicking it. **Refresh**
-reads the schemas again, closing everything opened, so the tree shows
-what was made or dropped since.
+A node is opened by its triangle, or by double-clicking it. The
+explorer's toolbar's **Refresh** reads the schemas again, closing
+everything opened, so the tree shows what was made or dropped since;
+**Collapse All** closes every node.
 
 The keys work the tree as its arrows show:
 
@@ -61,13 +62,19 @@ A row is selected by clicking it too.
 
 ## Filtering and searching
 
-**Filter**, above the tree, keeps the objects whose names hold what is
-typed, in any case, with their schemas and folders opened; Users and
-Roles are hidden while it holds anything. A schema not yet opened is
-read as the filter is typed, and shows its objects once they are read.
+The explorer's toolbar's **Filter**, or Cmd+F on macOS and Ctrl+F
+elsewhere within the explorer, shows the catalog's search above the
+tree: one field, of a scope of names at first. **Filter** again, or
+Escape in the field, hides it and clears it.
 
-**Search definitions** asks the server, in any case, for every table,
-view and routine whose name holds the text, and each table with a
+Of names, the field keeps the objects whose names hold what is typed,
+in any case, with their schemas and folders opened; Users and Roles are
+hidden while it holds anything. A schema not yet opened is read as it
+is typed, and shows its objects once they are read.
+
+The scope's button beside the field, **Search definitions too**, makes
+Enter ask the server instead, in any case, for every table, view and
+routine whose name holds the text, and each table with a
 column whose name does; and for every view whose query, routine whose
 body, trigger whose action, and check whose condition holds it. Each
 object found is listed by its kind, schema and name, a column by its

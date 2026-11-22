@@ -6,6 +6,7 @@ import { OBJECTS, SECURITY, STAFF, catalogBackend, must, opened, settle, within 
 import { EMPTY_CATALOG, tableKey } from "./catalogState";
 import { CatalogTree, selectable } from "./CatalogTree";
 import { ConnectionsPanel } from "../shell/ConnectionsPanel";
+import { ExplorerToolbar } from "./ExplorerToolbar";
 import { nodeId, TRUNCATED, treeRows } from "./tree";
 
 describe("the catalog's tree", () => {
@@ -33,9 +34,32 @@ describe("the catalog's tree", () => {
     expect(inside(tree).getByText("STAMPED")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Close ANN" }));
     expect(inside(tree).queryByText("Tables")).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
+  });
+
+  it("reads the catalog again, and closes its tree, by the explorer's toolbar [DESIGN] D33", async () => {
+    const asked = catalogBackend();
+    const store = await opened();
+    within(
+      store,
+      <>
+        <ExplorerToolbar />
+        <CatalogTree connection={1} />
+      </>,
+    );
+    await settle();
+    const toolbar = screen.getByRole("toolbar", { name: "Explorer" });
+    for (const name of ["New Connection", "Open Database", "New Database", "New In-Memory Database"]) {
+      expect(inside(toolbar).getByRole("button", { name }).getAttribute("title")).toContain(name);
+    }
+    fireEvent.click(screen.getByRole("button", { name: "Open ANN" }));
+    await settle();
+    fireEvent.click(inside(toolbar).getByRole("button", { name: "Collapse All" }));
+    expect(screen.queryByText("Tables")).toBeNull();
+    fireEvent.click(inside(toolbar).getByRole("button", { name: "Refresh" }));
     await settle();
     expect(asked.filter((a) => a.command === "catalog_schemas")).toHaveLength(2);
+    fireEvent.click(inside(toolbar).getByRole("button", { name: "New Connection" }));
+    expect(store.current().dialog).toEqual({ kind: "connection", editing: null });
   });
 
   it("opens a row's menu by the secondary button or Shift+F10, and the connections' too [DESIGN] D53", async () => {
@@ -104,17 +128,27 @@ describe("the catalog's tree", () => {
     ];
     const asked = catalogBackend({ catalog_search: () => found });
     const store = await opened();
-    within(store, <CatalogTree connection={1} />);
+    within(
+      store,
+      <>
+        <ExplorerToolbar />
+        <CatalogTree connection={1} />
+      </>,
+    );
     await settle();
-    fireEvent.change(screen.getByLabelText("Filter the tree"), { target: { value: "pay" } });
+    expect(screen.queryByLabelText("Search the catalog")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Filter" }));
+    expect(screen.getByRole("button", { name: "Filter" }).getAttribute("aria-pressed")).toBe("true");
+    fireEvent.change(screen.getByLabelText("Search the catalog"), { target: { value: "pay" } });
     await settle();
     const tree = screen.getByRole("tree", { name: "Catalog" });
     expect(inside(tree).getByText("PAYROLL")).toBeTruthy();
     expect(inside(tree).queryByText("STAFF")).toBeNull();
     expect(inside(tree).queryByText("Tables")).toBeNull();
     expect(inside(tree).queryByText("Users and Roles")).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "Search definitions" }));
+    fireEvent.click(screen.getByRole("button", { name: "Search definitions too" }));
     await settle();
+    expect(inside(tree).getByText("Users and Roles")).toBeTruthy();
     expect(asked.find((a) => a.command === "catalog_search")?.args).toEqual({ connection: 1, text: "pay" });
     const list = screen.getByRole("list", { name: "Found" });
     expect(inside(list).getByText("VIEW ANN.PAYROLL (in its definition)")).toBeTruthy();
@@ -122,6 +156,13 @@ describe("the catalog's tree", () => {
     fireEvent.click(inside(list).getByText("TABLE ANN.STAFF"));
     await settle();
     expect(store.current().selected?.object).toEqual({ kind: "table", schema: "ANN", name: "STAFF" });
+    fireEvent.keyDown(screen.getByLabelText("Search the catalog"), { key: "Enter" });
+    await settle();
+    expect(asked.filter((a) => a.command === "catalog_search")).toHaveLength(2);
+    fireEvent.click(screen.getByRole("button", { name: "Search definitions too" }));
+    fireEvent.keyDown(screen.getByLabelText("Search the catalog"), { key: "Escape" });
+    expect(store.current().explorerSearch).toBe(false);
+    expect(screen.queryByLabelText("Search the catalog")).toBeNull();
   });
 
   it("says when a search finds nothing, and clears an empty one [DESIGN] D33", async () => {
@@ -129,6 +170,7 @@ describe("the catalog's tree", () => {
     const store = await opened();
     await loadSchemas(store, 1);
     await searchCatalog(store, 1, "nothing");
+    store.update((now) => ({ ...now, explorerSearch: true }));
     within(store, <CatalogTree connection={1} />);
     expect(screen.getByText("Nothing found.")).toBeTruthy();
     await searchCatalog(store, 1, "  ");

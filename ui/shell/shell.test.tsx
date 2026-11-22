@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, within as inside } from "@testing-library/react";
 import type { ReactNode } from "react";
 import type { CommandContext } from "../commands/commands";
 import { connectSpec, show } from "../state/actions";
@@ -7,6 +7,7 @@ import { SESSION, mockBackend } from "../test/backend";
 import { CommandPalette, matches } from "./CommandPalette";
 import { ConnectionDialog } from "./ConnectionDialog";
 import { ConnectionsPanel } from "./ConnectionsPanel";
+import { ContextMenu } from "./ContextMenu";
 import { ErrorBanner } from "./ErrorBanner";
 import { AboutDialog, ShortcutsDialog } from "./HelpDialogs";
 import { rebound, SettingsDialog } from "./SettingsDialog";
@@ -193,10 +194,18 @@ describe("the explorer's connections", () => {
     store.update((now) => ({ ...now, saved: { connections: [view as never], recent: ["ab"] } }));
     within(store, <ConnectionsPanel />);
     expect(screen.getByText("Team")).toBeTruthy();
-    fireEvent.click(screen.getAllByRole("button", { name: "Connect to Orders" })[0] ?? document.body);
+    const saved = screen.getAllByRole("treeitem", { name: "Orders" })[0] ?? document.body;
+    expect(saved.querySelectorAll("button")).toHaveLength(0);
+    fireEvent.doubleClick(saved);
     await settle();
     expect(asked.find((a) => a.command === "open_saved_connection")?.args).toEqual({ id: "ab", password: null });
-    expect(screen.getByRole("button", { name: "Disconnect Orders" })).toBeTruthy();
+    const open = inside(screen.getByRole("tree", { name: "Open connections" })).getByRole("treeitem", {
+      name: "Orders",
+    });
+    expect(inside(open).getByRole("img", { name: "open" })).toBeTruthy();
+    fireEvent.keyDown(screen.getAllByRole("treeitem", { name: "Orders" })[1] ?? document.body, { key: "Enter" });
+    await settle();
+    expect(asked.filter((a) => a.command === "open_saved_connection")).toHaveLength(2);
   });
 
   it("asks before deleting a saved connection [RULE] R-SEC-8", async () => {
@@ -216,10 +225,22 @@ describe("the explorer's connections", () => {
     const asked = mockBackend();
     const store = new Store();
     store.update((now) => ({ ...now, saved: { connections: [view as never], recent: [] } }));
-    within(store, <ConnectionsPanel />);
-    fireEvent.click(screen.getByRole("button", { name: "Delete Orders" }));
+    within(
+      store,
+      <>
+        <ConnectionsPanel />
+        <ContextMenu />
+      </>,
+    );
+    fireEvent.contextMenu(screen.getByRole("treeitem", { name: "Orders" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Delete…" }));
+    await settle();
     expect(asked.map((a) => a.command)).not.toContain("delete_saved_connection");
-    fireEvent.click(screen.getByRole("button", { name: "Confirm deleting Orders" }));
+    const asking = store.current().dialog;
+    if (asking?.kind !== "prompt") {
+      throw new Error("Delete asked nothing");
+    }
+    asking.answer("Orders");
     await settle();
     expect(asked.map((a) => a.command)).toContain("delete_saved_connection");
   });
@@ -380,17 +401,37 @@ describe("the dialogs' keys and fields", () => {
       },
       passwordSaved: false,
     };
-    const asked = mockBackend({ save_connection: (args) => args["connection"] });
+    const asked = mockBackend({
+      save_connection: (args) => args["connection"],
+      list_saved_connections: () => ({ connections: [view], recent: [] }),
+    });
     const store = new Store();
     store.update((now) => ({ ...now, saved: { connections: [view as never], recent: [] } }));
     await connectSpec(store, "Live", { user: "ann" }, { environment: "development", readOnly: false }, null);
     store.update((now) => ({ ...now, open: now.open.map((c) => ({ ...c, session: { ...c.session, lost: true } })) }));
-    within(store, <ConnectionsPanel />);
-    expect(screen.getByText("Live (lost)")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Pin Orders" }));
-    fireEvent.click(screen.getByRole("button", { name: "Edit Orders" }));
+    within(
+      store,
+      <>
+        <ConnectionsPanel />
+        <ContextMenu />
+      </>,
+    );
+    const live = screen.getByRole("treeitem", { name: "Live" });
+    expect(inside(live).getByRole("img", { name: "lost" })).toBeTruthy();
+    const orders = screen.getByRole("treeitem", { name: "Orders" });
+    fireEvent.contextMenu(orders);
+    fireEvent.click(screen.getByRole("menuitem", { name: "Pin" }));
     await settle();
     expect(asked.find((a) => a.command === "save_connection")?.args["connection"]).toMatchObject({ pinned: true });
+    fireEvent.contextMenu(screen.getByRole("treeitem", { name: "Orders" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Duplicate" }));
+    await settle();
+    expect(asked.filter((a) => a.command === "save_connection").at(-1)?.args["connection"]).toMatchObject({
+      id: "",
+      name: "Orders (copy)",
+    });
+    fireEvent.keyDown(screen.getByRole("treeitem", { name: "Orders" }), { key: "F10", shiftKey: true });
+    fireEvent.click(screen.getByRole("menuitem", { name: "Edit Connection…" }));
     expect(store.current().dialog).toMatchObject({ kind: "connection" });
   });
 });

@@ -15,7 +15,7 @@ operating system's keychain.
 ## Opening a connection
 
 **File > New Connection…**, the toolbar's **New Connection**, or the
-explorer's **New Connection…** opens the connection dialog. Its fields
+explorer's toolbar's **New Connection** opens the connection dialog. Its fields
 are in groups:
 
 | Group | Field | What it says |
@@ -124,22 +124,35 @@ dialog says why.
 
 ## The explorer's connections
 
-The explorer lists:
+At the top of the explorer is its toolbar, a row of icons, each named
+by its tooltip: **New Connection**, **Open Database**, **New Database**
+and **New In-Memory Database**; then **Refresh**, **Filter** and
+**Collapse All** of the catalog ([The Object Explorer](04-explorer.md)).
 
-- **Open**: each connection open, with its colour, an embedded
-  database's with a database's icon, and one in memory marked **not
-  saved**. Clicking one makes it the active connection, which the status
-  bar, the toolbar and the Connection menu act on; **Disconnect** ends
-  it.
+Below it the explorer lists the connections in sections, each folded or
+opened by its heading:
+
+- **Open**: each connection open, with its colour, its icon, an
+  embedded database's a database's, and a dot of its state, filled while
+  it is open and in the colour of a failure once it is lost; one in
+  memory is marked **not saved**. Clicking one, or Enter, makes it the
+  active connection, which the status bar, the toolbar and the
+  Connection menu act on.
 - **Pinned**: the saved connections pinned.
 - **Saved**: every saved connection, in its folders, folders and names
-  in order, an embedded database's with its folder's path.
+  in order, each with its host, or an embedded database's folder, after
+  its name, cut short to fit and whole in its tooltip, and a dot while
+  it is open.
 - **Recent**: the ten saved connections used last, the latest first.
 
-A saved connection's buttons, each an icon whose tooltip names it, are
-**Connect**, **Edit**, **Pin** or **Unpin**, and **Delete**, which asks
-again before it deletes it.
-Double-clicking its name connects too.
+A row is one line, its name and what it is; its actions are of its
+menu, opened by the pointer's second button or Shift+F10
+([The Window](02-window.md#context-menus)). Double-clicking a saved
+connection, or Enter on it, connects it; its menu connects, edits,
+copies its URI, pins or unpins, duplicates and deletes it, **Delete…**
+asking for its name typed first. **Duplicate** saves a copy of its
+settings under a name of its own, its password not copied. An open
+connection's menu disconnects it.
 
 ## Environments and guards
 
@@ -214,7 +227,8 @@ says how it reaches its server.
 
 ### Opening a database
 
-**File > Open Database…**, or the explorer's **Open Database…**, opens a
+**File > Open Database…**, or the explorer's toolbar's **Open
+Database**, opens a
 database another program, or Studio, made. **Choose…** chooses its
 folder, with the platform's dialog, and Studio looks at it before
 anything is opened: a folder that holds no database is refused, with

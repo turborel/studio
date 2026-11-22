@@ -4,6 +4,7 @@
  * tinted by the active connection's colour; the keys, the menus and the
  * backend's events each running what they name.
  */
+import { showSearch } from "./state/catalog";
 import { listen } from "@tauri-apps/api/event";
 import type { DockviewApi } from "dockview-react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -67,8 +68,6 @@ function useSystemDark(): boolean {
 /** Loads the state, and runs what the backend, the menus, the keys and waking tell. */
 function useWiring(context: CommandContext): void {
   const { store } = context;
-  const keyBindings = useStudio((s) => s.settings.keyBindings);
-  const keyScheme = useStudio((s) => s.settings.keyScheme);
   useEffect(() => {
     void loadAll(store);
     void takeLink(store);
@@ -97,11 +96,22 @@ function useWiring(context: CommandContext): void {
       keeping();
     };
   }, [store, context]);
+  useKeys(context);
+}
+
+/** Runs the command each key pressed is bound to, as the settings bind them. */
+function useKeys(context: CommandContext): void {
+  const { store } = context;
+  const keyBindings = useStudio((s) => s.settings.keyBindings);
+  const keyScheme = useStudio((s) => s.settings.keyScheme);
   useEffect(() => {
     const keys = bindings(defaultKeys(keyScheme), keyBindings);
     const pressed = (event: KeyboardEvent) => {
       const key = keyOf(event);
       const id = key === null ? undefined : keys.get(key);
+      if (explorerFind(store, event, id)) {
+        return;
+      }
       // A dialog takes the keys while it is open: Escape closes it.
       if (id !== undefined && store.current().dialog === null && command(id)?.enabled(context) === true) {
         event.preventDefault();
@@ -244,6 +254,20 @@ function Window({ store }: { readonly store: Store }) {
 }
 
 /** The window, of `store`. */
+/** Find, of `id`, pressed within the explorer, is the explorer's own search of the catalog: shown, and the key taken. */
+function explorerFind(store: Store, event: KeyboardEvent, id: string | undefined): boolean {
+  const target = event.target;
+  const inExplorer =
+    target instanceof Element && target.closest("[role='region'][aria-label='Object Explorer']") !== null;
+  if (id !== "worksheet.find" || !inExplorer || store.current().active === null) {
+    return false;
+  }
+  event.preventDefault();
+  event.stopPropagation();
+  showSearch(store, true);
+  return true;
+}
+
 export function App({ store }: { readonly store: Store }) {
   return (
     <StoreContext.Provider value={store}>

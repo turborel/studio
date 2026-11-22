@@ -1,0 +1,86 @@
+/* The Object Explorer (RULES.md D28, D33): its toolbar of icons at the top,
+   then sections of trees, each row a line of an icon, a name, a muted
+   detail and its state. */
+
+.panel.explorer {
+  padding-top: 0;
+}
+
+.explorer-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin: 0 calc(-1 * var(--space-2)) var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  background: var(--surface-raised);
+  border-bottom: 1px solid var(--border);
+}
+
+/* Each section of the explorer, folded by its heading, alike. */
+.explorer-section {
+  margin-top: var(--space-2);
+}
+
+.explorer-section > summary {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+  cursor: pointer;
+  margin-bottom: 2px;
+}
+
+.connections-panel ul {
+  list-style: none;
+  margin: 0;
+  padding-left: var(--space-1);
+}
+
+.tree-item {
+  display: flex;
+  gap: var(--space-1);
+  align-items: center;
+  min-height: 22px;
+  padding: 0 var(--space-1);
+  border-radius: 3px;
+  cursor: default;
+}
+
+.tree-item:hover {
+  background: var(--surface-raised);
+}
+
+.tree-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tree-item .tree-detail {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* A connection's state: open, or lost. */
+.state-dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  margin-left: auto;
+  border-radius: 50%;
+}
+
+.state-open {
+  background: var(--success);
+}
+
+.state-lost {
+  background: var(--danger);
+}

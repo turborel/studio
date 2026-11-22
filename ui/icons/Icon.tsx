@@ -16,6 +16,7 @@ import { ArrowsMergeIcon } from "@phosphor-icons/react/dist/csr/ArrowsMerge";
 import { TreeViewIcon } from "@phosphor-icons/react/dist/csr/TreeView";
 import { PulseIcon } from "@phosphor-icons/react/dist/csr/Pulse";
 import { UserPlusIcon } from "@phosphor-icons/react/dist/csr/UserPlus";
+import { MinusSquareIcon } from "@phosphor-icons/react/dist/csr/MinusSquare";
 import { BroadcastIcon } from "@phosphor-icons/react/dist/csr/Broadcast";
 import { SignInIcon } from "@phosphor-icons/react/dist/csr/SignIn";
 import { ShareNetworkIcon } from "@phosphor-icons/react/dist/csr/ShareNetwork";
@@ -228,6 +229,7 @@ const ICONS = {
   shared: [ShareNetworkIcon, "plain"],
   monitor: [PulseIcon, "plain"],
   newUser: [UserPlusIcon, "plain"],
+  collapseAll: [MinusSquareIcon, "plain"],
 } as const satisfies Record<string, readonly [PhosphorIcon, Tone]>;
 
 /** An icon's name. */
