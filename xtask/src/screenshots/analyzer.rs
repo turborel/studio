@@ -35,16 +35,17 @@ pub fn report_scene(scene: &Scene<'_>) -> Result<()> {
 }
 
 /// The plan's summary and warnings, as `sql` is explained and analyzed
-/// in a worksheet of its own, `setup` run in it first if any, once a
-/// warning of `rule` is drawn.
+/// in a worksheet of its own, `setup` run in another of the same
+/// session first if any, once a warning of `rule` is drawn: a statement
+/// a worksheet, as one written where another ran may be written beside it.
 fn warned(scene: &Scene<'_>, (setup, sql): (Option<&str>, &str), rule: &str) -> Result<crate::images::Pixels> {
-    scene.new_worksheet()?;
     if let Some(setup) = setup {
+        scene.new_worksheet()?;
         scene.write(setup)?;
         scene.tool("Run Statement")?;
         std::thread::sleep(crate::screenshots::scene::SETTLE);
-        scene.worksheet()?;
     }
+    scene.new_worksheet()?;
     scene.write(sql)?;
     scene.tool("Explain Analyze")?;
     if let Err(e) = scene.wait_text("ul[aria-label=\"Warnings\"]", rule) {
@@ -70,34 +71,34 @@ pub fn warnings_scene(scene: &Scene<'_>) -> Result<()> {
         "PLAN-SPILL",
     );
     // The work area as it was, for the scenes after.
-    scene.run("SET MEMORY.WORK_BYTES = 268435456", "Run Statement")?;
+    scene.new_worksheet()?;
+    scene.write("SET MEMORY.WORK_BYTES = 268435456")?;
+    scene.tool("Run Statement")?;
     scene.save_stacked("plan-warnings", &[spill?, recheck])
 }
 
-/// A query's plan before an index and after it, compared; an animation
-/// of the window. The index is dropped after, the guard's question
-/// answered.
+/// What if: a query read whole, its plan's SCAN-NO-INDEX finding asked
+/// what an index of its column would do, the index made, the query
+/// explained and the index dropped, the guards' question of the DROP
+/// answered, and the two plans compared; an animation of the window.
 pub fn plan_compare_scene(scene: &Scene<'_>) -> Result<()> {
-    let query = "SELECT ID, PLACED FROM ORDERS WHERE TOTAL = 46.95";
-    // An index is made outside a transaction: each statement its own.
     scene.new_worksheet()?;
+    // An index is made outside a transaction: each statement its own.
     scene.autocommit(true)?;
+    scene.write("SELECT ID, PLACED FROM ORDERS WHERE TOTAL = 46.95")?;
     let mut film = scene.film(None);
-    scene.run(query, "Explain Analyze")?;
-    scene.session.wait_for("[aria-label=\"Summary of the plan\"]")?;
-    film.frame(200)?;
-    scene.run("CREATE INDEX ORDERS_BY_TOTAL ON ORDERS (TOTAL)", "Run Statement")?;
-    film.frame(150)?;
-    scene.run(query, "Explain Analyze")?;
-    if let Err(e) = scene.wait_text(".plan-viewer", "IndexScan") {
+    scene.tool("Explain Analyze")?;
+    if let Err(e) = scene.wait_text("ul[aria-label=\"Warnings\"]", "SCAN-NO-INDEX") {
         return crate::error::fail(format!("{e}; {}", scene.messages()));
     }
+    film.frame(200)?;
+    scene.click_text("ul[aria-label=\"Warnings\"] button", "What If")?;
+    scene.session.wait_for(DIALOG)?;
     film.frame(150)?;
-    scene.click_text("[role=\"toolbar\"][aria-label=\"Plan\"] label", "Compare with the plan before")?;
+    scene.click_exact("[role=\"dialog\"] button", "Make, Explain and Drop")?;
+    scene.click_shown("[role=\"dialog\"] button.danger")?;
     scene.session.wait_for(".plan-pair")?;
     film.frame(400)?;
     film.write("plan-compare", None)?;
-    scene.run("DROP INDEX ORDERS_BY_TOTAL", "Run Statement")?;
-    scene.click_shown("[role=\"dialog\"] button.danger")?;
     scene.autocommit(false)
 }

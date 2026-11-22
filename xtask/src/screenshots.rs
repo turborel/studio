@@ -200,6 +200,7 @@ const LIVE: Group = &[
     ("live suggestion", live::suggestion_scene),
     ("live settings", live::settings_scene),
     ("live records", live::records_scene),
+    ("live join", live::join_scene),
 ];
 
 /// Editing data, last, as it changes the demo database.
@@ -267,9 +268,7 @@ impl Run<'_> {
 }
 
 /// Takes every scene of `theme`, of a demo database of its own, so none is
-/// opened after another left it; then the scene of a link, of a window
-/// begun by the presenter's invitation's link alone: the names of those
-/// that failed, and why.
+/// opened after another left it: the names of those that failed, and why.
 fn theme_scenes(run: &Run<'_>, (theme, ports): (&str, (u16, u16))) -> Result<Vec<String>> {
     let home = run.homes.join(theme);
     let demo = run.homes.join(format!("demo-database-{theme}"));
@@ -310,13 +309,6 @@ fn theme_scenes(run: &Run<'_>, (theme, ports): (&str, (u16, u16))) -> Result<Vec
         if let Err(e) = scene.disconnect_all() {
             failed.push(format!("the end of a group, {theme}: {e}"));
         }
-    }
-    drop(driver); // The window ends, so the link's is the one shown.
-    let Some(link) = link.lock().ok().and_then(|l| l.clone()) else { return Ok(failed) };
-    say(&format!("==> screenshots: join from a link, {theme}"));
-    if let Err(e) = live::link_window(run.application, &home, &link, &run.out.join(format!("live-join-{theme}.png"))) {
-        say(&format!("screenshots: failed: join from a link, {theme}: {e}"));
-        failed.push(format!("join from a link, {theme}: {e}"));
     }
     Ok(failed)
 }

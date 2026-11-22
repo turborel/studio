@@ -160,6 +160,11 @@ pub fn details_scene(scene: &Scene<'_>) -> Result<()> {
     for (tab, name) in [("Columns", "explorer-details"), ("Definition", "explorer-definition"), ("Dependencies", "explorer-dependencies")] {
         scene.click_text(&format!("{details} [role=\"tab\"]"), tab)?;
         wait_read(scene, details)?;
+        // The panel as it opens, not scrolled across to the tab clicked.
+        scene.session.script(&format!(
+            "for (const e of [document.querySelector({0}), ...document.querySelectorAll({0} + ' *')]) {{ if (e && e.scrollLeft > 0) {{ e.scrollLeft = 0; }} }} return true;",
+            quoted(details)
+        ))?;
         scene.save_part(name, details)?;
     }
     scene.click_text(&format!("{details} [role=\"tab\"]"), "Columns")?;
