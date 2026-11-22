@@ -1,5 +1,5 @@
 import { misestimated, operators, parsePlan } from "./plan";
-import { groupingOf, kindOf, markOf, rangeOf, semiOf } from "./kinds";
+import { groupingOf, kindOf, markOf, rangeOf, semiOf, transferOf } from "./kinds";
 import { ownTime } from "./summary";
 
 /** The lines of a plan as EXPLAIN gives them, one row each, the result's left margin taken off. */
@@ -357,5 +357,33 @@ describe("mark joins", () => {
     ]);
     const [semi] = parsePlan(["-- physical:", "HashSemiJoin A.K = B.K", ""]).stages[0]?.roots ?? [];
     expect(semi === undefined ? null : markOf(semi)).toBeNull();
+  });
+
+  it("reads a phase of predicate transfer as EXPLAIN ANALYZE writes it, its figures its own [DESIGN] D54", () => {
+    const plan = parsePlan([
+      "-- physical:",
+      "PredicateTransfer of 3 leaves, 2 steps  (est. rows=500)  (actual rows=5000, time=1.322 ms)",
+      "  Project PARTS.NAME, SUPPLIERS.CITY, OFFERS.PRICE  (est. rows=500)  (actual rows=5000, time=0.537 ms, batches=3, mean rows=1667)",
+      "    HashJoin PARTS.ID = OFFERS.PART  (join order by DPccp: (PARTS (OFFERS SUPPLIERS)))  (est. rows=500)  (actual rows=5000, time=0.533 ms, batches=3, mean rows=1667)",
+      "      SeqScan DEMO.PARTS  (rows=1000, cost=1000.0)  (actual rows=1, time=0.043 ms, batches=6, mean rows=0)",
+      "      HashJoin OFFERS.SUPPLIER = SUPPLIERS.ID  (est. rows=500)  (actual rows=5000, time=0.164 ms, batches=9, mean rows=556)",
+      "        SeqScan DEMO.OFFERS  (rows=5000, cost=5000.0)  (actual rows=5000, time=0.205 ms, batches=9, mean rows=556)",
+      "        Filter SUPPLIERS.CITY = 'Oslo'  (est. rows=0)  (actual rows=2, time=0.118 ms, batches=1, mean rows=2)",
+      "          SeqScan DEMO.SUPPLIERS  (rows=10, cost=10.0)  (actual rows=10, time=0.057 ms, batches=1, mean rows=10)",
+      "-- ran: 5000 rows in 1.496 ms",
+    ]);
+    const root = plan.stages[0]?.roots[0];
+    expect([root?.operator, root?.detail, root?.estimated, root?.actual, root?.millis]).toEqual([
+      "PredicateTransfer",
+      "of 3 leaves, 2 steps",
+      500,
+      5000,
+      1.322,
+    ]);
+    expect(root === undefined ? null : kindOf(root)).toBe("transfer");
+    expect(root === undefined ? null : transferOf(root)).toEqual({ leaves: 3, steps: 2 });
+    expect(root?.children[0]?.operator).toBe("Project");
+    expect(operators(plan.stages[0]?.roots ?? [])).toHaveLength(8);
+    expect(plan.ran).toBe(5000);
   });
 });

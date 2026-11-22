@@ -262,11 +262,8 @@ path.plane-selected.plane-area {
   margin-right: 4px;
 }
 
-/* The copy's format and the comparison, narrow, so the toolbar is a row. */
-.copy-format {
-  width: 9em;
-}
-
-.compare-choice select {
-  width: 9em;
+/* The toolbar's choices as wide as their longest option, never cut short. */
+.result-toolbar select {
+  flex: none;
+  width: auto;
 }
