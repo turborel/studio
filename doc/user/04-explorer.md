@@ -13,9 +13,8 @@ itself by, a part at a time as the tree opens.
 Each row of the tree, and each connection, has a context menu of what
 can be done with it ([The Window](02-window.md#context-menus)).
 
-![The catalog's tree: the schema DEMO, its tables and views, and the table ORDERS opened on its columns, keys and index, each of its own icon](../images/explorer-tree-light.png)
-
-![The catalog's tree: the schema DEMO, its tables and views, and the table ORDERS opened on its columns, keys and index, each of its own icon](../images/explorer-tree-dark.png)
+![The catalog's tree: the schema DEMO, its tables and views, and the table ORDERS opened on its columns, keys and index, each of its own icon](../images/explorer-tree-light.png#gh-light-mode-only)
+![The catalog's tree: the schema DEMO, its tables and views, and the table ORDERS opened on its columns, keys and index, each of its own icon](../images/explorer-tree-dark.png#gh-dark-mode-only)
 
 The tree's first level holds the schemas, then **Users and Roles**. A
 schema opens on its folders:
@@ -71,9 +70,8 @@ elsewhere within the explorer, shows the catalog's search above the
 tree: one field, of a scope of names at first. **Filter** again, or
 Escape in the field, hides it and clears it.
 
-![The catalog filtered by ORDER: the tables and view whose names hold it, their schema and folders opened](../images/explorer-filter-light.png)
-
-![The catalog filtered by ORDER: the tables and view whose names hold it, their schema and folders opened](../images/explorer-filter-dark.png)
+![The catalog filtered by ORDER: the tables and view whose names hold it, their schema and folders opened](../images/explorer-filter-light.png#gh-light-mode-only)
+![The catalog filtered by ORDER: the tables and view whose names hold it, their schema and folders opened](../images/explorer-filter-dark.png#gh-dark-mode-only)
 
 Of names, the field keeps the objects whose names hold what is typed,
 in any case, with their schemas and folders opened; Users and Roles are
@@ -103,13 +101,11 @@ saving has none.
 
 The details panel, on the right, shows the object selected.
 
-![The details panel of the table DEMO.ORDERS: its actions, its tabs, and its columns with their types](../images/explorer-details-light.png)
+![The details panel of the table DEMO.ORDERS: its actions, its tabs, and its columns with their types](../images/explorer-details-light.png#gh-light-mode-only)
+![The details panel of the table DEMO.ORDERS: its actions, its tabs, and its columns with their types](../images/explorer-details-dark.png#gh-dark-mode-only)
 
-![The details panel of the table DEMO.ORDERS: its actions, its tabs, and its columns with their types](../images/explorer-details-dark.png)
-
-![The details panel's Dependencies of DEMO.ORDERS: it uses nothing, and is used by the view CUSTOMER_TOTALS and the foreign key ORDER_LINES_FOREIGN1](../images/explorer-dependencies-light.png)
-
-![The details panel's Dependencies of DEMO.ORDERS: it uses nothing, and is used by the view CUSTOMER_TOTALS and the foreign key ORDER_LINES_FOREIGN1](../images/explorer-dependencies-dark.png)
+![The details panel's Dependencies of DEMO.ORDERS: it uses nothing, and is used by the view CUSTOMER_TOTALS and the foreign key ORDER_LINES_FOREIGN1](../images/explorer-dependencies-light.png#gh-light-mode-only)
+![The details panel's Dependencies of DEMO.ORDERS: it uses nothing, and is used by the view CUSTOMER_TOTALS and the foreign key ORDER_LINES_FOREIGN1](../images/explorer-dependencies-dark.png#gh-dark-mode-only)
 
 Of a table or view, its tabs are:
 
@@ -169,13 +165,11 @@ objects: its types, domains and sequences, then its tables, each after
 those its foreign keys reference and a partition after its table, then
 its views and its routines.
 
-![The details panel's Definition of DEMO.ORDERS: its CREATE TABLE, with Script as, Copy, Save and Open in Worksheet](../images/explorer-definition-light.png)
+![The details panel's Definition of DEMO.ORDERS: its CREATE TABLE, with Script as, Copy, Save and Open in Worksheet](../images/explorer-definition-light.png#gh-light-mode-only)
+![The details panel's Definition of DEMO.ORDERS: its CREATE TABLE, with Script as, Copy, Save and Open in Worksheet](../images/explorer-definition-dark.png#gh-dark-mode-only)
 
-![The details panel's Definition of DEMO.ORDERS: its CREATE TABLE, with Script as, Copy, Save and Open in Worksheet](../images/explorer-definition-dark.png)
-
-![The table ORDERS's context menu, Script As, then SELECT, then To Worksheet, and the SELECT of its columns in a new worksheet](../images/script-as-light.gif)
-
-![The table ORDERS's context menu, Script As, then SELECT, then To Worksheet, and the SELECT of its columns in a new worksheet](../images/script-as-dark.gif)
+![The table ORDERS's context menu, Script As, then SELECT, then To Worksheet, and the SELECT of its columns in a new worksheet](../images/script-as-light.gif#gh-light-mode-only)
+![The table ORDERS's context menu, Script As, then SELECT, then To Worksheet, and the SELECT of its columns in a new worksheet](../images/script-as-dark.gif#gh-dark-mode-only)
 
 A routine's body and a trigger's action are shown to the owner of their
 schema alone: to another user, the definition holds a comment saying so

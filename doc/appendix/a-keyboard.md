@@ -15,9 +15,8 @@ others keeping those below, on every platform:
 - **Run Statement**: F9;
 - **Explain**: F6.
 
-![Settings, Keys: the scheme Function keys chosen, each command beside its key, Run Statement on F9, Run Script on F5 and Explain on F6 among them](../images/settings-keys-light.png)
-
-![Settings, Keys: the scheme Function keys chosen, each command beside its key, Run Statement on F9, Run Script on F5 and Explain on F6 among them](../images/settings-keys-dark.png)
+![Settings, Keys: the scheme Function keys chosen, each command beside its key, Run Statement on F9, Run Script on F5 and Explain on F6 among them](../images/settings-keys-light.png#gh-light-mode-only)
+![Settings, Keys: the scheme Function keys chosen, each command beside its key, Run Statement on F9, Run Script on F5 and Explain on F6 among them](../images/settings-keys-dark.png#gh-dark-mode-only)
 
 | Command | Menu | macOS | Linux, Windows |
 |---|---|---|---|

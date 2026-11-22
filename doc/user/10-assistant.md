@@ -30,9 +30,8 @@ Settings…** in the panel, opens its settings:
 | **It calls tools** | whether the user's own model calls tools; one that calls none answers questions alone, and the panel says so |
 | **Key** | the model's key, saved by **Save Key** and forgotten by **Forget Key** |
 
-![The Assistant Settings: the assistant on, of the user's own model at localhost, its wire format and tools, and the connection's policy](../images/assistant-settings-light.png)
-
-![The Assistant Settings: the assistant on, of the user's own model at localhost, its wire format and tools, and the connection's policy](../images/assistant-settings-dark.png)
+![The Assistant Settings: the assistant on, of the user's own model at localhost, its wire format and tools, and the connection's policy](../images/assistant-settings-light.png#gh-light-mode-only)
+![The Assistant Settings: the assistant on, of the user's own model at localhost, its wire format and tools, and the connection's policy](../images/assistant-settings-dark.png#gh-dark-mode-only)
 
 A key is kept in the operating system's keychain alone. Once saved it is
 never shown again, not even to the window: the settings say only
@@ -55,9 +54,8 @@ connection, which must be a saved one. Write a question and click
 | **Send its plan** | the latest plan the worksheet showed, as EXPLAIN gave it | not ticked |
 | **Include its result's first rows** | the first 20 rows of the result it shows, a line each, a null as `NULL` | not ticked |
 
-![A question asked of the assistant: what will be sent shown and sent, the table ORDERS described by a tool, and the answer with its tokens](../images/assistant-question-light.gif)
-
-![A question asked of the assistant: what will be sent shown and sent, the table ORDERS described by a tool, and the answer with its tokens](../images/assistant-question-dark.gif)
+![A question asked of the assistant: what will be sent shown and sent, the table ORDERS described by a tool, and the answer with its tokens](../images/assistant-question-light.gif#gh-light-mode-only)
+![A question asked of the assistant: what will be sent shown and sent, the table ORDERS described by a tool, and the answer with its tokens](../images/assistant-question-dark.gif#gh-dark-mode-only)
 
 Every request also holds the schema's context: the session's schema's
 tables and views, each with its columns and their types, its keys, its
@@ -91,9 +89,8 @@ which holds no key. **Send** sends it; **Don't Send** stops the turn,
 and the request is logged as not sent. A question of the assistant
 waits 30 minutes for its answer, then is taken as no.
 
-![What will be sent, shown before the request: the request's body, which holds no key, with Send and Don't Send](../images/assistant-preview-light.png)
-
-![What will be sent, shown before the request: the request's body, which holds no key, with Send and Don't Send](../images/assistant-preview-dark.png)
+![What will be sent, shown before the request: the request's body, which holds no key, with Send and Don't Send](../images/assistant-preview-light.png#gh-light-mode-only)
+![What will be sent, shown before the request: the request's body, which holds no key, with Send and Don't Send](../images/assistant-preview-dark.png#gh-dark-mode-only)
 
 ### Asking Claude
 
@@ -122,9 +119,8 @@ before it runs:
 | `run_query` | runs a query, once the user approves it, and is told its rows | Read |
 | `propose_sql` | drafts SQL into a worksheet for the user, never running it | Explain only, of a query; Propose changes, of any other statement |
 
-![The assistant asking to run a query, READ ONLY: its SQL counting the customers of each city, its purpose and its class, with Run and Don't Run](../images/assistant-approval-light.png)
-
-![The assistant asking to run a query, READ ONLY: its SQL counting the customers of each city, its purpose and its class, with Run and Don't Run](../images/assistant-approval-dark.png)
+![The assistant asking to run a query, READ ONLY: its SQL counting the customers of each city, its purpose and its class, with Run and Don't Run](../images/assistant-approval-light.png#gh-light-mode-only)
+![The assistant asking to run a query, READ ONLY: its SQL counting the customers of each city, its purpose and its class, with Run and Don't Run](../images/assistant-approval-dark.png#gh-dark-mode-only)
 
 A table or schema the policy hides is left out of every list, and no
 tool tells of it. `run_query` shows the query, its class, the objects
@@ -208,9 +204,8 @@ rule named:
 | `NOT-ALLOWED` | a statement, explained or run, that names no allowed schema or table, where the policy allows some |
 | `LIMIT` | a tool call past the limit of a turn's calls |
 
-![A DROP TABLE the model called for, blocked, its rule named in red, and the answer that follows](../images/assistant-blocked-light.png)
-
-![A DROP TABLE the model called for, blocked, its rule named in red, and the answer that follows](../images/assistant-blocked-dark.png)
+![A DROP TABLE the model called for, blocked, its rule named in red, and the answer that follows](../images/assistant-blocked-light.png#gh-light-mode-only)
+![A DROP TABLE the model called for, blocked, its rule named in red, and the answer that follows](../images/assistant-blocked-dark.png#gh-dark-mode-only)
 
 A name written alone is judged as of the session's schema too, and a
 rule of a table catches the table written without its schema.
@@ -268,6 +263,5 @@ shows the latest 1000, the latest first; **Clear the Log** forgets
 them. The log never holds a key, nor a row's value
 ([Files](../appendix/d-files.md#assistant-auditjsonl)).
 
-![The assistant's log: each request, its model, connection, what it sent, its tools, how it stopped and its tokens](../images/assistant-log-light.png)
-
-![The assistant's log: each request, its model, connection, what it sent, its tools, how it stopped and its tokens](../images/assistant-log-dark.png)
+![The assistant's log: each request, its model, connection, what it sent, its tools, how it stopped and its tokens](../images/assistant-log-light.png#gh-light-mode-only)
+![The assistant's log: each request, its model, connection, what it sent, its tools, how it stopped and its tokens](../images/assistant-log-dark.png#gh-dark-mode-only)

@@ -44,9 +44,8 @@ are in groups:
 | | Load balance | `disable`, or `random` to try the hosts in an order drawn for each connection |
 | | Connect timeout | whole seconds each step of connecting waits; 0 for no limit |
 
-![The New Connection dialog: its name, folder, environment and colour, and a server's URI, hosts, port, user and password](../images/connection-dialog-light.png)
-
-![The New Connection dialog: its name, folder, environment and colour, and a server's URI, hosts, port, user and password](../images/connection-dialog-dark.png)
+![The New Connection dialog: its name, folder, environment and colour, and a server's URI, hosts, port, user and password](../images/connection-dialog-light.png#gh-light-mode-only)
+![The New Connection dialog: its name, folder, environment and colour, and a server's URI, hosts, port, user and password](../images/connection-dialog-dark.png#gh-dark-mode-only)
 
 Each setting is turborel-client's own, of the same name, as Turborel's
 [Settings, Pipelines and Pools](https://github.com/turborel/turborel/blob/main/doc/client/02-library-connections.md)
@@ -99,9 +98,8 @@ the server's name. Where no authorities are named, the platform's are
 trusted. A connection to a host that is a path, a Unix socket, or a
 named pipe on Windows, uses no TLS, as only its machine reaches it.
 
-![The New Connection dialog with its TLS part open: the TLS mode verify-full, the authorities, client certificate and key, and the server name db.example](../images/connection-tls-light.png)
-
-![The New Connection dialog with its TLS part open: the TLS mode verify-full, the authorities, client certificate and key, and the server name db.example](../images/connection-tls-dark.png)
+![The New Connection dialog with its TLS part open: the TLS mode verify-full, the authorities, client certificate and key, and the server name db.example](../images/connection-tls-light.png#gh-light-mode-only)
+![The New Connection dialog with its TLS part open: the TLS mode verify-full, the authorities, client certificate and key, and the server name db.example](../images/connection-tls-dark.png#gh-dark-mode-only)
 
 A mode of `prefer` or `disable` may connect over plain TCP. A password
 is never sent so: such a connection is refused before anything is sent
@@ -137,9 +135,8 @@ by its tooltip: **New Connection**, **Open Database**, **New Database**
 and **New In-Memory Database**; then **Refresh**, **Filter** and
 **Collapse All** of the catalog ([The Object Explorer](04-explorer.md)).
 
-![Connecting: the demo shop's saved connection double-clicked, its catalog filling, then its schema, its tables and a table's columns opened](../images/connecting-light.gif)
-
-![Connecting: the demo shop's saved connection double-clicked, its catalog filling, then its schema, its tables and a table's columns opened](../images/connecting-dark.gif)
+![Connecting: the demo shop's saved connection double-clicked, its catalog filling, then its schema, its tables and a table's columns opened](../images/connecting-light.gif#gh-light-mode-only)
+![Connecting: the demo shop's saved connection double-clicked, its catalog filling, then its schema, its tables and a table's columns opened](../images/connecting-dark.gif#gh-dark-mode-only)
 
 Below it the explorer lists the connections in sections, each folded or
 opened by its heading:
@@ -234,9 +231,8 @@ same guards. Each embedded database's session is on a thread of its own,
 named `studio-embedded-` and the connection's number, as a server's is
 named `studio-connection-` and its number.
 
-![The status bar of three connections, one above another: a server's by a local socket, the embedded demo shop's, and a database in memory, not saved](../images/status-bar-light.png)
-
-![The status bar of three connections, one above another: a server's by a local socket, the embedded demo shop's, and a database in memory, not saved](../images/status-bar-dark.png)
+![The status bar of three connections, one above another: a server's by a local socket, the embedded demo shop's, and a database in memory, not saved](../images/status-bar-light.png#gh-light-mode-only)
+![The status bar of three connections, one above another: a server's by a local socket, the embedded demo shop's, and a database in memory, not saved](../images/status-bar-dark.png#gh-dark-mode-only)
 
 The status bar says **Embedded** of a database in a folder, and
 **In-memory, not saved** of one in memory, where a server's connection
@@ -252,9 +248,8 @@ anything is opened: a folder that holds no database is refused, with
 **New Database…** offered instead, and nothing is made in it, so a
 mistyped path never becomes a new, empty database.
 
-![The Open Database dialog: its database folder to choose, its name, folder in the explorer, environment and colour](../images/open-database-light.png)
-
-![The Open Database dialog: its database folder to choose, its name, folder in the explorer, environment and colour](../images/open-database-dark.png)
+![The Open Database dialog: its database folder to choose, its name, folder in the explorer, environment and colour](../images/open-database-light.png#gh-light-mode-only)
+![The Open Database dialog: its database folder to choose, its name, folder in the explorer, environment and colour](../images/open-database-dark.png#gh-dark-mode-only)
 
 | Field | What it says |
 |---|---|
@@ -279,9 +274,8 @@ this computer's user's name in upper case; the owner is made with no
 password, and its schema, of its name, is made too. **Create and Save**
 makes the database and saves it, to be opened, not made, thereafter.
 
-![The New Database dialog: its folder to choose, its name, and its owner, DEMO](../images/new-database-light.png)
-
-![The New Database dialog: its folder to choose, its name, and its owner, DEMO](../images/new-database-dark.png)
+![The New Database dialog: its folder to choose, its name, and its owner, DEMO](../images/new-database-light.png#gh-light-mode-only)
+![The New Database dialog: its folder to choose, its name, and its owner, DEMO](../images/new-database-dark.png#gh-dark-mode-only)
 
 ### A database in memory
 
@@ -291,9 +285,8 @@ explorer and the status bar. Nothing of it is written anywhere, and it
 is gone as its connection ends. Its owner is this computer's user's name
 in upper case.
 
-![The explorer's open connections: the demo shop, and a database in memory marked not saved](../images/in-memory-light.png)
-
-![The explorer's open connections: the demo shop, and a database in memory marked not saved](../images/in-memory-dark.png)
+![The explorer's open connections: the demo shop, and a database in memory marked not saved](../images/in-memory-light.png#gh-light-mode-only)
+![The explorer's open connections: the demo shop, and a database in memory marked not saved](../images/in-memory-dark.png#gh-dark-mode-only)
 
 ### A database another program holds
 

@@ -152,20 +152,20 @@ sees it before it goes, and that no tool acts without the user
 
 `cargo xtask screenshots` makes the manual's pictures (RULES.md D60);
 none is made by hand. Each is a pair, `NAME-light.png` and
-`NAME-dark.png`, or `.gif`, shown on the page one after the other, each
-its own paragraph, of the same alt text, which says what the picture
-shows:
+`NAME-dark.png`, or `.gif`, shown on the page one line after the other,
+of the same alt text, which says what the picture shows, each of its
+theme's marker:
 
 ```markdown
-![The explorer's tree of the demo shop](../images/explorer-tree-light.png)
-
-![The explorer's tree of the demo shop](../images/explorer-tree-dark.png)
+![The explorer's tree of the demo shop](../images/explorer-tree-light.png#gh-light-mode-only)
+![The explorer's tree of the demo shop](../images/explorer-tree-dark.png#gh-dark-mode-only)
 ```
 
-The documentation site shows the one of the reader's theme. The
-manual's check refuses an image of no alt text, a light image without
-its dark one after it, a pair of different alt texts, an image linked
-rather than shown, and an image no page shows.
+GitHub and the documentation site show the one of the reader's theme.
+The manual's check refuses an image of no alt text, a light image
+without its dark one after it, a pair of different alt texts, an image
+of a theme without its marker, an image linked rather than shown, and
+an image no page shows.
 
 ## Adding an import format
 

@@ -164,9 +164,19 @@ fn resolved(base: &Path, target: &str) -> String {
     parts.join("/")
 }
 
+/// The marker of each theme's picture, as GitHub reads it, and the
+/// documentation site.
+const MARKERS: [(&str, &str); 2] = [("light", "#gh-light-mode-only"), ("dark", "#gh-dark-mode-only")];
+
+/// `target` without its fragment, the file it names.
+fn file_of(target: &str) -> &str {
+    target.split_once('#').map_or(target, |(file, _)| file)
+}
+
 /// The stem and theme of an image named `NAME-light.EXT` or `NAME-dark.EXT`.
 fn themed(target: &str) -> Option<(&str, &str)> {
-    let name = target.rsplit_once('.').map_or(target, |(stem, _)| stem);
+    let file = file_of(target);
+    let name = file.rsplit_once('.').map_or(file, |(stem, _)| stem);
     name.strip_suffix("-light").map(|stem| (stem, "light")).or_else(|| name.strip_suffix("-dark").map(|stem| (stem, "dark")))
 }
 
@@ -174,9 +184,10 @@ fn themed(target: &str) -> Option<(&str, &str)> {
 /// an alt text that is empty, or that begins "The same", which says of
 /// another picture rather than of what it shows; a picture of a theme
 /// shown without its pair, the light image then at once the dark, of the
-/// same alt text, as the documentation site shows the one of the reader's
-/// theme; and an image linked rather than shown. Each image it shows, as
-/// a path from the root, is added to `linked`.
+/// same alt text, each of its theme's marker, `#gh-light-mode-only` or
+/// `#gh-dark-mode-only`, by which GitHub and the documentation site show
+/// the one of the reader's theme; and an image linked rather than shown.
+/// Each image it shows, as a path from the root, is added to `linked`.
 fn image_problems(path: &str, text: &str, linked: &mut Vec<String>) -> Vec<String> {
     let base = Path::new(path).parent().map_or_else(PathBuf::new, Path::to_path_buf);
     let shown = images(text);
@@ -186,23 +197,8 @@ fn image_problems(path: &str, text: &str, linked: &mut Vec<String>) -> Vec<Strin
             problems
                 .push(format!("{path}: the image {target} says not what it shows: its alt text is empty, or of another picture (R-DOC-7)"));
         }
-        // The image at `near`, if it is this one's partner of `theme`, of the same alt text.
-        let paired = |near: Option<usize>, theme: &str| {
-            let partner = themed(target).map(|(stem, _)| (stem, theme));
-            near.and_then(|n| shown.get(n)).is_some_and(|(a, t)| a == alt && themed(t) == partner)
-        };
-        match themed(target).map(|(_, theme)| theme) {
-            Some("light") if !paired(at.checked_add(1), "dark") => {
-                problems.push(format!("{path}: the image {target} is not followed by its dark one of the same alt text, the pair the site shows by theme (R-DOC-7)"));
-            }
-            Some("dark") if !paired(at.checked_sub(1), "light") => {
-                problems.push(format!(
-                    "{path}: the image {target} does not follow its light one of the same alt text, as the site pairs them (R-DOC-7)"
-                ));
-            }
-            _ => {}
-        }
-        linked.push(resolved(&base, target));
+        problems.extend(pair_problems(path, &shown, at));
+        linked.push(resolved(&base, file_of(target)));
     }
     let mut links = links(text);
     for (_, target) in &shown {
@@ -210,8 +206,29 @@ fn image_problems(path: &str, text: &str, linked: &mut Vec<String>) -> Vec<Strin
             links.remove(at);
         }
     }
-    for link in links.iter().filter(|l| IMAGE_KINDS.iter().any(|k| ext_is(l, k))) {
+    for link in links.iter().filter(|l| IMAGE_KINDS.iter().any(|k| ext_is(file_of(l), k))) {
         problems.push(format!("{path}: the image {link} is linked, not shown: a picture is shown, its pair by theme (R-DOC-7)"));
+    }
+    problems
+}
+
+/// What is wrong with the pair of the image at `at` of `shown`, if it is
+/// of a theme: its marker, and its partner of the other theme, of the same
+/// alt text and its own marker, after it or before it.
+fn pair_problems(path: &str, shown: &[(String, String)], at: usize) -> Vec<String> {
+    let Some((alt, target)) = shown.get(at) else { return Vec::new() };
+    let Some((stem, theme)) = themed(target) else { return Vec::new() };
+    let marked = |t: &str, theme: &str| MARKERS.iter().any(|(th, marker)| *th == theme && t.ends_with(marker));
+    let mut problems = Vec::new();
+    if !marked(target, theme) {
+        problems.push(format!("{path}: the image {target} lacks its theme's marker, #gh-{theme}-mode-only (R-DOC-7)"));
+    }
+    let (near, other) = if theme == "light" { (at.checked_add(1), "dark") } else { (at.checked_sub(1), "light") };
+    let partner = near.and_then(|n| shown.get(n)).filter(|(a, t)| a == alt && themed(t) == Some((stem, other)) && marked(t, other));
+    if partner.is_none() {
+        problems.push(format!(
+            "{path}: the image {target} is not beside its {other} one of the same alt text and marker, the pair shown by theme (R-DOC-7)"
+        ));
     }
     problems
 }
@@ -232,6 +249,8 @@ fn link_problems(path: &str, text: &str) -> Vec<String> {
     let mut problems = Vec::new();
     for link in links(text) {
         let (file, fragment) = link.split_once('#').map_or((link.as_str(), None), |(f, h)| (f, Some(h)));
+        // An image's fragment is its theme's marker, not a heading.
+        let fragment = fragment.filter(|_| !IMAGE_KINDS.iter().any(|k| ext_is(file, k)));
         let target = if file.is_empty() { PathBuf::from(path) } else { base.join(file) };
         let full = root().join(&target);
         if !full.exists() {

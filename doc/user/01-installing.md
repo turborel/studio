@@ -103,6 +103,5 @@ macOS and Windows as the pre-release
 [nightly](https://github.com/turborel/turborel/releases/tag/nightly),
 and as the image `ghcr.io/turborel/turborel:nightly`.
 
-![The About Turborel Studio dialog: Studio's version, and the Turborel commit of its client and engine](../images/about-light.png)
-
-![The About Turborel Studio dialog: Studio's version, and the Turborel commit of its client and engine](../images/about-dark.png)
+![The About Turborel Studio dialog: Studio's version, and the Turborel commit of its client and engine](../images/about-light.png#gh-light-mode-only)
+![The About Turborel Studio dialog: Studio's version, and the Turborel commit of its client and engine](../images/about-dark.png#gh-dark-mode-only)

@@ -30,9 +30,10 @@ fn an_image_is_kept_in_its_folder_alone() {
 }
 
 /// [RULE] R-DOC-7 [DESIGN] D60: an image says what it shows, and is
-/// known as the file it shows; a picture of a theme is shown as its pair,
-/// the light image, then at once the dark one of the same alt text, as the
-/// documentation site shows the one of the reader's theme; an alt text of
+/// known as the file it shows, its fragment aside; a picture of a theme
+/// is shown as its pair, the light image, then at once the dark one of the
+/// same alt text, each of its theme's marker, as GitHub and the
+/// documentation site show the one of the reader's theme; an alt text of
 /// another picture, "The same", is refused; an image is shown, never
 /// linked alone; and an animation is bounded in size.
 #[test]
@@ -43,15 +44,20 @@ fn an_image_says_what_it_shows() {
     let problems = image_problems("doc/user/02-window.md", text, &mut linked);
     assert_eq!(problems.len(), 1);
     assert_eq!(linked, ["doc/images/w.png", "doc/images/x.gif"]);
-    let pair = "![The window](../images/w-light.png)\n\n![The window](../images/w-dark.png)\n";
-    assert_eq!(image_problems("doc/user/02-window.md", pair, &mut Vec::new()), Vec::<String>::new());
-    let linked_alone = "![The window](../images/w-light.png)\n\n[The window, dark](../images/w-dark.png).\n";
+    let pair = "![The window](../images/w-light.png#gh-light-mode-only)\n![The window](../images/w-dark.png#gh-dark-mode-only)\n";
+    let mut paired = Vec::new();
+    assert_eq!(image_problems("doc/user/02-window.md", pair, &mut paired), Vec::<String>::new());
+    assert_eq!(paired, ["doc/images/w-light.png", "doc/images/w-dark.png"]);
+    let unmarked = "![The window](../images/w-light.png)\n![The window](../images/w-dark.png)\n";
+    assert_eq!(image_problems("doc/user/02-window.md", unmarked, &mut Vec::new()).len(), 4);
+    let linked_alone = "![The window](../images/w-light.png#gh-light-mode-only)\n[The window](../images/w-dark.png#gh-dark-mode-only)\n";
     let problems = image_problems("doc/user/02-window.md", linked_alone, &mut Vec::new());
     assert_eq!(problems.len(), 2, "{problems:?}");
     assert!(problems.iter().any(|p| p.contains("linked, not shown")));
-    let same = "![The window](../images/w-light.png)\n\n![The same, in the dark theme](../images/w-dark.png)\n";
+    let same =
+        "![The window](../images/w-light.png#gh-light-mode-only)\n![The same, in the dark theme](../images/w-dark.png#gh-dark-mode-only)\n";
     assert_eq!(image_problems("doc/user/02-window.md", same, &mut Vec::new()).len(), 3);
-    let other = "![The window](../images/w-light.png)\n\n![The worksheet](../images/w-dark.png)\n";
+    let other = "![The window](../images/w-light.png#gh-light-mode-only)\n![The worksheet](../images/w-dark.png#gh-dark-mode-only)\n";
     assert_eq!(image_problems("doc/user/02-window.md", other, &mut Vec::new()).len(), 2);
     assert_eq!(animation_problems("doc/images/x.gif", 2 * 1024 * 1024), Vec::<String>::new());
     assert_eq!(animation_problems("doc/images/x.gif", 2 * 1024 * 1024 + 1).len(), 1);

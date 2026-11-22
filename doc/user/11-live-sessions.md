@@ -33,9 +33,8 @@ address, and, where the settings name one, through a relay you host
 ([Relays](#relays)); Turborel runs none. The panel names the session, the start of its
 certificate's fingerprint, and the addresses it is reached at.
 
-![Live Sessions: a session presented by Demo presenter, its invitation and participants in the Live Session panel](../images/live-session-light.png)
-
-![Live Sessions: a session presented by Demo presenter, its invitation and participants in the Live Session panel](../images/live-session-dark.png)
+![Live Sessions: a session presented by Demo presenter, its invitation and participants in the Live Session panel](../images/live-session-light.png#gh-light-mode-only)
+![Live Sessions: a session presented by Demo presenter, its invitation and participants in the Live Session panel](../images/live-session-dark.png#gh-dark-mode-only)
 
 ### Inviting
 
@@ -47,9 +46,8 @@ reach you; no password. An invitation admits one person, once, and
 expires after the minutes the settings give, 10 at first; make one for
 each viewer.
 
-![A new invitation of the session: its code, for one person until a time, with Copy Invitation and Copy Invite Link](../images/live-invite-light.png)
-
-![A new invitation of the session: its code, for one person until a time, with Copy Invitation and Copy Invite Link](../images/live-invite-dark.png)
+![A new invitation of the session: its code, for one person until a time, with Copy Invitation and Copy Invite Link](../images/live-invite-light.png#gh-light-mode-only)
+![A new invitation of the session: its code, for one person until a time, with Copy Invitation and Copy Invite Link](../images/live-invite-dark.png#gh-dark-mode-only)
 
 **Copy Invite Link** copies the same invitation as a link, which pastes
 into any chat or ticket and opens Studio when clicked:
@@ -74,9 +72,8 @@ between you. A viewer not answered within 10 minutes is refused. At
 most as many viewers as the settings allow, 10 at first, are admitted
 or waiting at once.
 
-![Ann asking to join, with the safety code to compare, and Refuse and Admit](../images/live-admit-light.png)
-
-![Ann asking to join, with the safety code to compare, and Refuse and Admit](../images/live-admit-dark.png)
+![Ann asking to join, with the safety code to compare, and Refuse and Admit](../images/live-admit-light.png#gh-light-mode-only)
+![Ann asking to join, with the safety code to compare, and Refuse and Admit](../images/live-admit-dark.png#gh-dark-mode-only)
 
 ### What is shared
 
@@ -130,9 +127,8 @@ of the worksheet they suggested into. It never runs by itself: it runs
 only when you run it, through the guards every statement runs through
 ([Worksheets](05-worksheets.md)). **Dismiss** lets it go.
 
-![A viewer's suggestion landing in the presenter's panel, its SQL shown, then opened in a worksheet of its own](../images/live-suggestion-light.gif)
-
-![A viewer's suggestion landing in the presenter's panel, its SQL shown, then opened in a worksheet of its own](../images/live-suggestion-dark.gif)
+![A viewer's suggestion landing in the presenter's panel, its SQL shown, then opened in a worksheet of its own](../images/live-suggestion-light.gif#gh-light-mode-only)
+![A viewer's suggestion landing in the presenter's panel, its SQL shown, then opened in a worksheet of its own](../images/live-suggestion-dark.gif#gh-dark-mode-only)
 
 **Make Presenter** hands your role to a viewer: their Studio shares the
 tabs they pick, filtered by their own settings, and you and the others
@@ -147,9 +143,8 @@ for everyone.
 **Join…**, on the toolbar or in the **Live** menu, asks for the
 invitation. Paste its code or its link and click **Join**.
 
-![The Join a Live Session dialog, an invitation's link pasted in as its Invitation, with Cancel and Join](../images/live-join-light.png)
-
-![The Join a Live Session dialog, an invitation's link pasted in as its Invitation, with Cancel and Join](../images/live-join-dark.png)
+![The Join a Live Session dialog, an invitation's link pasted in as its Invitation, with Cancel and Join](../images/live-join-light.png#gh-light-mode-only)
+![The Join a Live Session dialog, an invitation's link pasted in as its Invitation, with Cancel and Join](../images/live-join-dark.png#gh-dark-mode-only)
 
 Clicking an invitation's link opens Studio, starting it if it is not
 running, at the same dialog, filled in. Above the invitation it shows
@@ -192,13 +187,11 @@ and by whom; each suggestion, with who made it; and who came and went.
 Where the presenter only points, nothing is kept. Viewers never get a
 record; a summary reaches them only if the presenter sends it.
 
-![A session's record replayed: its timeline of moments, the suggestion among them, and the moment shown](../images/live-replay-light.png)
+![A session's record replayed: its timeline of moments, the suggestion among them, and the moment shown](../images/live-replay-light.png#gh-light-mode-only)
+![A session's record replayed: its timeline of moments, the suggestion among them, and the moment shown](../images/live-replay-dark.png#gh-dark-mode-only)
 
-![A session's record replayed: its timeline of moments, the suggestion among them, and the moment shown](../images/live-replay-dark.png)
-
-![A record's summary for a ticket: what goes in, the conclusions written, and its preview in Markdown](../images/live-summary-light.png)
-
-![A record's summary for a ticket: what goes in, the conclusions written, and its preview in Markdown](../images/live-summary-dark.png)
+![A record's summary for a ticket: what goes in, the conclusions written, and its preview in Markdown](../images/live-summary-light.png#gh-light-mode-only)
+![A record's summary for a ticket: what goes in, the conclusions written, and its preview in Markdown](../images/live-summary-dark.png#gh-dark-mode-only)
 
 A record is a file of the user's alone, in the configuration's
 `live-records` folder ([Files](../appendix/d-files.md#live-records)).
@@ -310,9 +303,8 @@ kept in `live-sessions.json`
 | **Addresses to name** | this machine's address found, if none | 8 |
 | **Through a relay**, **Relay's address**, **Relay's fingerprint** | off | |
 
-![The Live Sessions Settings: what each environment shares, the sharing's limits with the column TOTAL masked, and how viewers reach the presenter](../images/live-settings-light.png)
-
-![The Live Sessions Settings: what each environment shares, the sharing's limits with the column TOTAL masked, and how viewers reach the presenter](../images/live-settings-dark.png)
+![The Live Sessions Settings: what each environment shares, the sharing's limits with the column TOTAL masked, and how viewers reach the presenter](../images/live-settings-light.png#gh-light-mode-only)
+![The Live Sessions Settings: what each environment shares, the sharing's limits with the column TOTAL masked, and how viewers reach the presenter](../images/live-settings-dark.png#gh-dark-mode-only)
 
 A session is reached directly, through a relay, or both.
 

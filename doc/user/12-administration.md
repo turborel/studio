@@ -43,25 +43,20 @@ privilege on, with those tables' indexes.
 connection. **Refresh** reads its views again, and **Read again every**
 reads them each 1, 2, 5, 10 or 30 seconds, 5 at first, or never.
 
-![The monitor of the demo server's sessions: a session waiting on a lock of a row of DEMO.CUSTOMERS another holds, with End Connection, above the sessions](../images/monitor-sessions-light.png)
+![The monitor of the demo server's sessions: a session waiting on a lock of a row of DEMO.CUSTOMERS another holds, with End Connection, above the sessions](../images/monitor-sessions-light.png#gh-light-mode-only)
+![The monitor of the demo server's sessions: a session waiting on a lock of a row of DEMO.CUSTOMERS another holds, with End Connection, above the sessions](../images/monitor-sessions-dark.png#gh-dark-mode-only)
 
-![The monitor of the demo server's sessions: a session waiting on a lock of a row of DEMO.CUSTOMERS another holds, with End Connection, above the sessions](../images/monitor-sessions-dark.png)
+![The monitor's Statements: each statement run, by its text, the costliest by total time first](../images/monitor-statements-light.png#gh-light-mode-only)
+![The monitor's Statements: each statement run, by its text, the costliest by total time first](../images/monitor-statements-dark.png#gh-dark-mode-only)
 
-![The monitor's Statements: each statement run, by its text, the costliest by total time first](../images/monitor-statements-light.png)
+![The monitor's Tables and Indexes: each table's engine, rows and bytes, and each index's searches and size](../images/monitor-tables-light.png#gh-light-mode-only)
+![The monitor's Tables and Indexes: each table's engine, rows and bytes, and each index's searches and size](../images/monitor-tables-dark.png#gh-dark-mode-only)
 
-![The monitor's Statements: each statement run, by its text, the costliest by total time first](../images/monitor-statements-dark.png)
+![The monitor's Replication of the demo server, which is in no replica group](../images/monitor-replication-light.png#gh-light-mode-only)
+![The monitor's Replication of the demo server, which is in no replica group](../images/monitor-replication-dark.png#gh-dark-mode-only)
 
-![The monitor's Tables and Indexes: each table's engine, rows and bytes, and each index's searches and size](../images/monitor-tables-light.png)
-
-![The monitor's Tables and Indexes: each table's engine, rows and bytes, and each index's searches and size](../images/monitor-tables-dark.png)
-
-![The monitor's Replication of the demo server, which is in no replica group](../images/monitor-replication-light.png)
-
-![The monitor's Replication of the demo server, which is in no replica group](../images/monitor-replication-dark.png)
-
-![The monitor's Plug-ins of the demo shop: each plug-in Studio gave it and whether it is loaded](../images/monitor-plugins-light.png)
-
-![The monitor's Plug-ins of the demo shop: each plug-in Studio gave it and whether it is loaded](../images/monitor-plugins-dark.png)
+![The monitor's Plug-ins of the demo shop: each plug-in Studio gave it and whether it is loaded](../images/monitor-plugins-light.png#gh-light-mode-only)
+![The monitor's Plug-ins of the demo shop: each plug-in Studio gave it and whether it is loaded](../images/monitor-plugins-dark.png#gh-dark-mode-only)
 
 | Tab | What it shows | Of the view |
 |---|---|---|
@@ -118,9 +113,8 @@ values, and choose:
 | **Set for Database** | `SET DATABASE LOCKS.WAIT = 'ON'` | the database's value, the owner's to set |
 | **Database Default** | `SET DATABASE LOCKS.WAIT = DEFAULT` | the built-in default again |
 
-![The monitor's Settings filtered by LOCKS, a setting's Change open with its value and where it is set](../images/monitor-settings-light.png)
-
-![The monitor's Settings filtered by LOCKS, a setting's Change open with its value and where it is set](../images/monitor-settings-dark.png)
+![The monitor's Settings filtered by LOCKS, a setting's Change open with its value and where it is set](../images/monitor-settings-light.png#gh-light-mode-only)
+![The monitor's Settings filtered by LOCKS, a setting's Change open with its value and where it is set](../images/monitor-settings-dark.png#gh-dark-mode-only)
 
 A setting of an integer's kind is written as a whole number, any other
 as a quoted literal. A setting taken at the next start shows its value
@@ -146,13 +140,11 @@ menus act on them:
 | | **Drop Role** | `DROP ROLE AUDITORS RESTRICT` |
 | A table or view | **Privileges…** | `GRANT SELECT, INSERT ON TABLE ANN.STAFF TO BOB`, or `REVOKE … FROM BOB RESTRICT` |
 
-![Users and Roles in the explorer, the user ANN's menu open: Change Password, Let Create Roles, Grant a Role and Drop User](../images/users-roles-light.png)
+![Users and Roles in the explorer, the user ANN's menu open: Change Password, Let Create Roles, Grant a Role and Drop User](../images/users-roles-light.png#gh-light-mode-only)
+![Users and Roles in the explorer, the user ANN's menu open: Change Password, Let Create Roles, Grant a Role and Drop User](../images/users-roles-dark.png#gh-dark-mode-only)
 
-![Users and Roles in the explorer, the user ANN's menu open: Change Password, Let Create Roles, Grant a Role and Drop User](../images/users-roles-dark.png)
-
-![The privileges on DEMO.ORDERS: SELECT ticked, to the role AUDITORS, with Grant and Revoke](../images/privileges-light.png)
-
-![The privileges on DEMO.ORDERS: SELECT ticked, to the role AUDITORS, with Grant and Revoke](../images/privileges-dark.png)
+![The privileges on DEMO.ORDERS: SELECT ticked, to the role AUDITORS, with Grant and Revoke](../images/privileges-light.png#gh-light-mode-only)
+![The privileges on DEMO.ORDERS: SELECT ticked, to the role AUDITORS, with Grant and Revoke](../images/privileges-dark.png#gh-dark-mode-only)
 
 A new user's password is given twice, and must be the same. It is sent
 once to the server, and kept in no file, history or log. A name is

@@ -71,13 +71,11 @@ read by Turborel's own parser, with a name put where one is being typed
 so that a statement being written parses; one that does not parse even
 so is read by its words.
 
-![Completion: SELECT NAME FROM CU typed, the list of the tables beginning CU offered, the arrow keys moving through it, and Tab taking CUSTOMERS](../images/completion-light.gif)
+![Completion: SELECT NAME FROM CU typed, the list of the tables beginning CU offered, the arrow keys moving through it, and Tab taking CUSTOMERS](../images/completion-light.gif#gh-light-mode-only)
+![Completion: SELECT NAME FROM CU typed, the list of the tables beginning CU offered, the arrow keys moving through it, and Tab taking CUSTOMERS](../images/completion-dark.gif#gh-dark-mode-only)
 
-![Completion: SELECT NAME FROM CU typed, the list of the tables beginning CU offered, the arrow keys moving through it, and Tab taking CUSTOMERS](../images/completion-dark.gif)
-
-![The snippet sel offered among the completions, its template SELECT, FROM and WHERE shown beside the list](../images/snippet-light.png)
-
-![The snippet sel offered among the completions, its template SELECT, FROM and WHERE shown beside the list](../images/snippet-dark.png)
+![The snippet sel offered among the completions, its template SELECT, FROM and WHERE shown beside the list](../images/snippet-light.png#gh-light-mode-only)
+![The snippet sel offered among the completions, its template SELECT, FROM and WHERE shown beside the list](../images/snippet-dark.png#gh-dark-mode-only)
 
 | Where | What is offered |
 |---|---|
@@ -127,9 +125,8 @@ A table dragged from the explorer's tree into the editor writes a SELECT
 of its columns where it is dropped, or an INSERT of them, each value a
 `?`, if Shift is held as it is dropped.
 
-![The guard rails: DROP TABLE ORDER_LINES CASCADE asked about before it runs: the script changes definitions and destroys a table, with Run and Don't Run](../images/guard-drop-light.png)
-
-![The guard rails: DROP TABLE ORDER_LINES CASCADE asked about before it runs: the script changes definitions and destroys a table, with Run and Don't Run](../images/guard-drop-dark.png)
+![The guard rails: DROP TABLE ORDER_LINES CASCADE asked about before it runs: the script changes definitions and destroys a table, with Run and Don't Run](../images/guard-drop-light.png#gh-light-mode-only)
+![The guard rails: DROP TABLE ORDER_LINES CASCADE asked about before it runs: the script changes definitions and destroys a table, with Run and Don't Run](../images/guard-drop-dark.png#gh-dark-mode-only)
 
 ## Running statements
 
@@ -230,13 +227,11 @@ which says that it runs the statement; **Flow** or **Tree-Table**;
 **Show raw**; **Compare with the plan before**, where there is one; and a
 search of its operators.
 
-![The plan viewer: a join of the demo shop's customers and orders explained and analyzed, its summary, costliest operators and warnings above its flow](../images/plan-viewer-light.png)
+![The plan viewer: a join of the demo shop's customers and orders explained and analyzed, its summary, costliest operators and warnings above its flow](../images/plan-viewer-light.png#gh-light-mode-only)
+![The plan viewer: a join of the demo shop's customers and orders explained and analyzed, its summary, costliest operators and warnings above its flow](../images/plan-viewer-dark.png#gh-dark-mode-only)
 
-![The plan viewer: a join of the demo shop's customers and orders explained and analyzed, its summary, costliest operators and warnings above its flow](../images/plan-viewer-dark.png)
-
-![A join of the customers and their orders written, then explained and analyzed, its plan drawn](../images/plan-light.gif)
-
-![A join of the customers and their orders written, then explained and analyzed, its plan drawn](../images/plan-dark.gif)
+![A join of the customers and their orders written, then explained and analyzed, its plan drawn](../images/plan-light.gif#gh-light-mode-only)
+![A join of the customers and their orders written, then explained and analyzed, its plan drawn](../images/plan-dark.gif#gh-dark-mode-only)
 
 Its summary says the rows the query gave and its time, of Explain
 Analyze, or that the plan is of estimates alone; the join order and the
@@ -331,9 +326,8 @@ so before it runs, and asks:
 | **Analyze and Keep Changes** | runs EXPLAIN ANALYZE, its changes kept in the transaction, for Commit or Rollback, or committed by autocommit |
 | **Cancel** | runs nothing |
 
-![Explain Analyze of an UPDATE of the demo shop's orders: asked first, Analyze, Then Roll Back chosen, and the plan of the update shown](../images/analyze-change-light.gif)
-
-![Explain Analyze of an UPDATE of the demo shop's orders: asked first, Analyze, Then Roll Back chosen, and the plan of the update shown](../images/analyze-change-dark.gif)
+![Explain Analyze of an UPDATE of the demo shop's orders: asked first, Analyze, Then Roll Back chosen, and the plan of the update shown](../images/analyze-change-light.gif#gh-light-mode-only)
+![Explain Analyze of an UPDATE of the demo shop's orders: asked first, Analyze, Then Roll Back chosen, and the plan of the update shown](../images/analyze-change-dark.gif#gh-dark-mode-only)
 
 The first choice is Analyze, Then Roll Back, unless the setting **Explain
 Analyze of a data change keeps its changes** is on
@@ -355,9 +349,8 @@ words, upper, lower or as written; the indentation, from 1 to 8 spaces;
 and the width of lines, from 40 to 240 characters
 ([Appendix B](../appendix/b-settings.md)).
 
-![A query as it was written, in lower case on one line, above the same query as Format writes it, its key words in upper case and a clause a line](../images/format-light.png)
-
-![A query as it was written, in lower case on one line, above the same query as Format writes it, its key words in upper case and a clause a line](../images/format-dark.png)
+![A query as it was written, in lower case on one line, above the same query as Format writes it, its key words in upper case and a clause a line](../images/format-light.png#gh-light-mode-only)
+![A query as it was written, in lower case on one line, above the same query as Format writes it, its key words in upper case and a clause a line](../images/format-dark.png#gh-dark-mode-only)
 
 ```sql
 select name, count(*) as n from staff s left join dept d on s.dept = d.id where s.age > 30 and d.name is not null group by name
@@ -386,9 +379,8 @@ worksheet, **Run** opens it and runs it there, and **Clear History**
 forgets every entry. The setting **Keep a history of what runs** turns
 it off.
 
-![The History dialog: the statements run, the newest first, each with when it ran, its connection, time, rows and SQLSTATE, and Open and Run](../images/history-light.png)
-
-![The History dialog: the statements run, the newest first, each with when it ran, its connection, time, rows and SQLSTATE, and Open and Run](../images/history-dark.png)
+![The History dialog: the statements run, the newest first, each with when it ran, its connection, time, rows and SQLSTATE, and Open and Run](../images/history-light.png#gh-light-mode-only)
+![The History dialog: the statements run, the newest first, each with when it ran, its connection, time, rows and SQLSTATE, and Open and Run](../images/history-dark.png#gh-dark-mode-only)
 
 ## Favourite queries
 
