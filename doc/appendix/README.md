@@ -3,7 +3,7 @@
 What to look up while using Turborel Studio: its keyboard shortcuts, its
 settings, its versions, and the files it keeps.
 
-[The documentation set](../README.md)
+[Turborel Studio Documentation](../README.md)
 
 ## Contents
 

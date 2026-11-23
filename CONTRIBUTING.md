@@ -33,7 +33,7 @@ rewrite.
 
 Turborel's manual is the source of truth for its SQL, its protocol and
 its Information Schema
-([The Turborel Documentation Set](https://github.com/turborel/turborel/blob/main/doc/README.md)),
+([Turborel Documentation](https://github.com/turborel/turborel/blob/main/doc/README.md)),
 and turborel-client is how Studio reaches a server. Read the section
 before writing code, and cite it by its heading, as in
 `[DOC sql/07-information-schema.md TABLES]` (RULES.md D6). Never cite

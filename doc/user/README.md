@@ -3,7 +3,7 @@
 How to install Turborel Studio and work with a Turborel database through
 it, from connecting to administering the server.
 
-[The documentation set](../README.md)
+[Turborel Studio Documentation](../README.md)
 
 ## Contents
 

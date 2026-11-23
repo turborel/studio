@@ -121,7 +121,7 @@ npm exec -- tauri build
 published at https://turborel.com/docs/studio/. Each chapter is written
 as the milestone that fills it lands. The SQL Studio runs, and the
 server, are described in Turborel's own manual,
-[The Turborel Documentation Set](https://github.com/turborel/turborel/blob/main/doc/README.md).
+[Turborel Documentation](https://github.com/turborel/turborel/blob/main/doc/README.md).
 
 ## Contributing
 

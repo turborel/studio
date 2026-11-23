@@ -15,7 +15,7 @@ fn a_chapter_needs_its_title_and_contents_line() {
 #[test]
 fn a_volume_lists_each_of_its_pages() {
     let paths = vec!["doc/user/README.md".to_owned(), "doc/user/01-a.md".to_owned(), "doc/user/02-b.md".to_owned()];
-    let text = "# Volume I\n\n[The documentation set](../README.md)\n\n- [A](01-a.md)\n";
+    let text = "# Volume I\n\n[Turborel Studio Documentation](../README.md)\n\n- [A](01-a.md)\n";
     assert_eq!(page_problems("doc/user/README.md", text, &paths), ["doc/user/README.md: does not list 02-b.md (R-DOC-7)"]);
 }
 
