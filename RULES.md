@@ -1464,6 +1464,13 @@ The review checklist:
   commit of Studio and of turborel-client and how each installer is
   signed; a build never replaces one of a later commit. A started build
   finishes; of those waiting, the newest alone is kept.
+- **Publishing:** never by deleting the release: the new files are
+  uploaded over the old, then the tag `nightly` and the notes are moved
+  to the build's commit, then the files no longer made are removed, so a
+  step that fails leaves the release and its files whole, and the
+  README's links never fail. The release is made only where there is
+  none. A call of GitHub's that fails tells its HTTP exchange, its
+  status and body, the token aside.
 - **macOS signing:** with the secrets of a Developer ID Application
   certificate, imported into a keychain of the build's own and deleted
   after, `APPLE_SIGNING_IDENTITY` takes the place of the ad hoc `-` of

@@ -203,7 +203,7 @@ jobs:
         with:
           path: builds
           merge-multiple: true
-      - name: Replace the nightly pre-release
+      - name: Publish the nightly pre-release, the old one kept until the new is up
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
@@ -211,21 +211,40 @@ jobs:
           MAC_SIGNED: ${{ secrets.APPLE_CERTIFICATE != '' }}
           WINDOWS_SIGNED: ${{ secrets.AZURE_ARTIFACT_SIGNING_ENDPOINT != '' }}
         run: |
+          set -euo pipefail
+          # Each call of GitHub's, its HTTP exchange told if it fails, so a
+          # refusal, as a 403, says what was asked and what came back.
+          call() {
+            if ! GH_DEBUG=api gh "$@" 2> "$RUNNER_TEMP/gh.log"; then
+              echo "::error::gh $1 $2 failed; its HTTP exchange:"
+              grep -v -i '^> authorization' "$RUNNER_TEMP/gh.log" | tail -n 60
+              return 1
+            fi
+          }
           # What the notes say of signing, as the build's secrets made it.
           SIGNED="macOS: $([ "$MAC_SIGNED" = true ] && echo "signed by a Developer ID" || echo "signed ad hoc, not by a developer's certificate"). Windows: $([ "$WINDOWS_SIGNED" = true ] && echo "signed" || echo "unsigned")."
+          client=$(sed -n 's/^turborel-client = .*rev = "\([0-9a-f]*\)".*/\1/p' Cargo.toml)
+          NOTES="The latest alpha of Turborel Studio, built from $SHA once it passed every check, on turborel-client $client. $SIGNED doc/user/01-installing.md says how to open it on each system, and how to check the files against SHA256SUMS. Anything may change from one build to the next (VERSIONING.md)."
+          (cd builds && sha256sum turborel-studio-nightly-* > SHA256SUMS)
+          old=$(gh release view nightly --json targetCommitish -q .targetCommitish 2>/dev/null || true)
+          if [ -z "$old" ]; then
+            call release create nightly builds/* --prerelease --target "$SHA" --title "Nightly (alpha)" --notes "$NOTES"
+            exit 0
+          fi
           # Checks of older commits can finish after newer ones, so a build
           # never replaces a nightly built from a later commit of main.
-          old=$(gh release view nightly --json targetCommitish -q .targetCommitish 2>/dev/null || true)
-          if [ -n "$old" ]; then
-            order=$(gh api "repos/$GH_REPO/compare/$old...$SHA" -q .status)
-            if [ "$order" = "behind" ] || [ "$order" = "identical" ]; then
-              echo "The nightly already holds $old, which is not older than $SHA."
-              exit 0
-            fi
+          order=$(gh api "repos/$GH_REPO/compare/$old...$SHA" -q .status)
+          if [ "$order" = "behind" ] || [ "$order" = "identical" ]; then
+            echo "The nightly already holds $old, which is not older than $SHA."
+            exit 0
           fi
-          (cd builds && sha256sum turborel-studio-nightly-* > SHA256SUMS)
-          client=$(sed -n 's/^turborel-client = .*rev = "\([0-9a-f]*\)".*/\1/p' Cargo.toml)
-          gh release delete nightly --yes --cleanup-tag || true
-          gh release create nightly builds/* --prerelease --target "$SHA" \
-            --title "Nightly (alpha)" \
-            --notes "The latest alpha of Turborel Studio, built from $SHA once it passed every check, on turborel-client $client. $SIGNED doc/user/01-installing.md says how to open it on each system, and how to check the files against SHA256SUMS. Anything may change from one build to the next (VERSIONING.md)."
+          # The new files over the old, the release never without its files;
+          # then its tag and notes moved to this build; then the files no
+          # longer made, alone, removed. A step that fails leaves the release
+          # as the steps before it made it, never gone.
+          call release upload nightly builds/* --clobber
+          call api -X PATCH "repos/$GH_REPO/git/refs/tags/nightly" -f sha="$SHA" -F force=true
+          call release edit nightly --target "$SHA" --prerelease --title "Nightly (alpha)" --notes "$NOTES"
+          for asset in $(gh release view nightly --json assets -q '.assets[].name'); do
+            [ -e "builds/$asset" ] || call release delete-asset nightly "$asset" --yes
+          done
