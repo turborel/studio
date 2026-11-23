@@ -1466,7 +1466,10 @@ The review checklist:
   alone is kept.
 - **Unsigned:** until the maintainers' signing certificates exist;
   `doc/user/01-installing.md` says how to open an unsigned build and how
-  to check its sums.
+  to check its sums. The macOS application is signed ad hoc
+  (`signingIdentity` `-`), so its bundle verifies and macOS offers
+  **Open Anyway**; a bundle left unsigned, as the first nightly's was,
+  is called damaged.
 - **When:** after each change of main once verify passed
   (`workflow_run`), and by hand (`workflow_dispatch`). It was run by
   hand alone until the installers were seen to build on each platform,

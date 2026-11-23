@@ -79,9 +79,12 @@ The installers are not signed until the maintainers' certificates are, so
 each system asks before it opens one:
 
 - **macOS:** open the `.dmg` and drag Turborel Studio to Applications.
-  The first time, Control-click the application, choose **Open**, then
-  **Open** again; or, after macOS refuses it, open **System Settings >
-  Privacy & Security** and choose **Open Anyway**.
+  The application is signed ad hoc, with no developer's certificate, so
+  the first time macOS says it cannot check it: open **System Settings >
+  Privacy & Security** and choose **Open Anyway**. A build from before
+  2026-11-23 was not signed at all, and macOS calls it damaged; download
+  the nightly again, or clear its quarantine with
+  `xattr -dr com.apple.quarantine "/Applications/Turborel Studio.app"`.
 - **Windows:** when SmartScreen says it protected the PC, choose **More
   info**, then **Run anyway**.
 - **Linux:** make the AppImage executable,

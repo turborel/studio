@@ -49,6 +49,9 @@
     "shortDescription": "Turborel's desktop database IDE",
     "license": "BSD-2-Clause-Patent",
     "licenseFile": "../LICENSE",
+    "macOS": {
+      "signingIdentity": "-"
+    },
     "copyright": "Turborel Inc.",
     "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.ico"]
   },
