@@ -148,6 +148,62 @@ A change to the assistant says what it sends, and shows that the user
 sees it before it goes, and that no tool acts without the user
 (R-SEC-12).
 
+## Signing the installers
+
+The nightly (RULES.md D58) signs each platform's installer once the
+repository holds that platform's secrets, under **Settings > Secrets and
+variables > Actions**; a platform without them builds as before. A
+maintainer adds them:
+
+**macOS, signing:** a Developer ID Application certificate, of an Apple
+Developer Program membership.
+
+1. On a Mac, in **Xcode > Settings > Accounts**, choose the team and
+   **Manage Certificates**, then **+ > Developer ID Application**; or
+   make it at developer.apple.com, under **Certificates**.
+2. In **Keychain Access**, find **Developer ID Application: <the team>
+   (<team ID>)**, its private key with it, and **File > Export Items**
+   as a `.p12`, with a password.
+3. `base64 -i certificate.p12 | pbcopy`, and paste it as
+   `APPLE_CERTIFICATE`; the password as `APPLE_CERTIFICATE_PASSWORD`.
+4. `security find-identity -v -p codesigning` names the identity, as
+   `Developer ID Application: <the team> (<team ID>)`: set it as
+   `APPLE_SIGNING_IDENTITY`.
+
+**macOS, notarization:** an App Store Connect API key, preferred.
+
+1. At appstoreconnect.apple.com, **Users and Access > Integrations >
+   App Store Connect API**, **Team Keys**, **+**, of the role
+   **Developer**.
+2. Download its `AuthKey_<key ID>.p8`, once, and set its text, the whole
+   file, as `APPLE_API_KEY_P8`.
+3. Set its **Key ID** as `APPLE_API_KEY`, and the **Issuer ID** above
+   the list as `APPLE_API_ISSUER`.
+
+Else an Apple ID: its address as `APPLE_ID`; an app-specific password,
+made at account.apple.com under **Sign-In and Security**, as
+`APPLE_PASSWORD`; and the team's ID as `APPLE_TEAM_ID`.
+
+**Windows:** an Azure Artifact Signing account, Microsoft's service once
+called Trusted Signing.
+
+1. In the Azure portal, make an **Artifact Signing account**, note its
+   name and its region's endpoint, as `https://eus.codesigning.azure.net`.
+2. Under it, complete **Identity validation**, then make a
+   **Certificate profile** of the kind **Public Trust**.
+3. In **Microsoft Entra ID > App registrations**, register an
+   application, and under **Certificates & secrets** make a client
+   secret.
+4. On the Artifact Signing account, **Access control (IAM)**, give the
+   application the role **Artifact Signing Certificate Profile Signer**.
+5. Set `AZURE_TENANT_ID` and `AZURE_CLIENT_ID`, of the application's
+   overview; `AZURE_CLIENT_SECRET`, the secret's value;
+   `AZURE_ARTIFACT_SIGNING_ENDPOINT`, `AZURE_ARTIFACT_SIGNING_ACCOUNT`
+   and `AZURE_ARTIFACT_SIGNING_CERTIFICATE_PROFILE`.
+
+The next nightly signs with them, and checks each signature: a check
+that fails fails the build. Its notes say how each installer is signed.
+
 ## The manual's pictures
 
 `cargo xtask screenshots` makes the manual's pictures (RULES.md D60);

@@ -102,10 +102,11 @@ passed every check, as the pre-release
 | Linux on x64, any distribution | [turborel-studio-nightly-linux-x64.AppImage](https://github.com/turborel/studio/releases/download/nightly/turborel-studio-nightly-linux-x64.AppImage) |
 | Debian and Ubuntu on x64 | [turborel-studio-nightly-linux-x64.deb](https://github.com/turborel/studio/releases/download/nightly/turborel-studio-nightly-linux-x64.deb) |
 
-The installers are not yet signed, so macOS and Windows ask before
-opening them the first time.
-[Installing](doc/user/01-installing.md#the-nightly) says how to open
-each, and how to check it against the release's `SHA256SUMS`.
+The nightly signs the macOS and Windows installers once the project's
+signing certificates are set, and its notes say how each is signed; an
+unsigned one makes macOS and Windows ask before opening it the first
+time. [Installing](doc/user/01-installing.md#the-nightly) says how to
+open each, and how to check it against the release's `SHA256SUMS`.
 
 ## Requirements
 

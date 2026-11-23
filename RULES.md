@@ -97,7 +97,7 @@ Each is told in full in [§7](#7-the-decisions).
 | D55 | The assistant: off until turned on, called by the backend, its guard rails in code and the database |
 | D56 | Live Sessions: a workspace's state shared, filtered, end to end over QUIC, each viewer admitted |
 | D57 | Administration: the server read of its own views, each act written by the backend and run through the guards |
-| D58 | The nightly: unsigned installers of each platform, one pre-release, after each change of main that passed verify |
+| D58 | The nightly: installers of each platform, signed as their secrets exist, one pre-release, after each change of main that passed verify |
 | D59 | Embedded databases: a second backend behind the connection manager, opened apart from made, never against a lock |
 | D60 | The manual's images: made by the checks tool of the real window and a demo database, never by hand |
 | D61 | Explain Analyze of a data change: said to change data, rolled back to a savepoint unless kept |
@@ -1454,29 +1454,49 @@ The review checklist:
   with nothing typed that could be mistyped into another statement, and
   each act asks first where any statement would.
 
-#### D58. The nightly: unsigned installers of each platform, one pre-release, after each change of main that passed verify
+#### D58. The nightly: installers of each platform, signed as their secrets exist, one pre-release, after each change of main that passed verify
 
 - **What:** `.github/workflows/nightly.yml`, modelled on main's: the
   installers of macOS on Apple silicon (`.dmg`), Windows on x64 (`.msi`)
   and Linux on x64 (`.AppImage`, `.deb`), built by `tauri build`, at
   fixed names `turborel-studio-nightly-<platform>.<kind>`, with their
   `SHA256SUMS`, as the one pre-release `nightly`, its notes naming the
-  commit of Studio and of turborel-client; a build never replaces one of
-  a later commit. A started build finishes; of those waiting, the newest
-  alone is kept.
-- **Unsigned:** until the maintainers' signing certificates exist;
-  `doc/user/01-installing.md` says how to open an unsigned build and how
-  to check its sums. The macOS application is signed ad hoc
-  (`signingIdentity` `-`), so its bundle verifies and macOS offers
-  **Open Anyway**; a bundle left unsigned, as the first nightly's was,
-  is called damaged.
+  commit of Studio and of turborel-client and how each installer is
+  signed; a build never replaces one of a later commit. A started build
+  finishes; of those waiting, the newest alone is kept.
+- **macOS signing:** with the secrets of a Developer ID Application
+  certificate, imported into a keychain of the build's own and deleted
+  after, `APPLE_SIGNING_IDENTITY` takes the place of the ad hoc `-` of
+  `tauri.conf.json`, and Tauri signs the application with the hardened
+  runtime; with an App Store Connect API key, or else an Apple ID's
+  app-specific password, Tauri notarizes and staples it, and the build
+  signs, notarizes and staples the disk image too. Each is checked:
+  `codesign --verify --deep --strict` always; `spctl` and
+  `xcrun stapler validate` of the application and the disk image once
+  notarized; a check that fails fails the build. Without the secrets
+  the application is signed ad hoc, so its bundle verifies and macOS
+  offers **Open Anyway**.
+- **Windows signing:** with the secrets of an Azure Artifact Signing
+  account (its tenant, an application's client and secret, its endpoint,
+  account and certificate profile), Tauri's `signCommand` signs the
+  application and the installer by `artifact-signing-cli` 0.12.0, MIT,
+  and `signtool verify /pa` checks both. Without them the installer is
+  unsigned.
+- **The disk image's licence:** none, so it mounts with no prompt; the
+  licence is in the application, `Resources/LICENSE`, and the repository
+  (`src-tauri/tauri.macos.conf.json`).
+- **Linux:** the sums alone.
+- **The secrets:** each named in CONTRIBUTING.md, with how to make it;
+  each platform's signing switches on as its own exist, so none breaks
+  the build before then.
 - **When:** after each change of main once verify passed
   (`workflow_run`), and by hand (`workflow_dispatch`). It was run by
   hand alone until the installers were seen to build on each platform,
   as they first did on 2026-11-23. macOS on Intel waits for a runner of
   its own.
 - *Why:* anyone can download and use the latest Studio while it is
-  being worked on, a build of each platform to try, as main has.
+  being worked on, a build of each platform to try, as main has; signed,
+  it opens with no warning and no step of the user's own.
 
 #### D59. Embedded databases: a second backend behind the connection manager, opened apart from made, never against a lock
 

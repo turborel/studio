@@ -59,8 +59,11 @@ Code never cites this file (R-DOC-5).
 
 - The keychain checked by hand on Windows and Linux, as on macOS, by the
   test STUDIO_TEST_KEYCHAIN runs.
-- Signing and notarization of the installers, once the maintainers'
-  signing certificates exist; until then they are unsigned.
+- The signing certificates the nightly signs by, once they exist
+  (CONTRIBUTING.md names each secret): an Apple Developer Program
+  membership's Developer ID Application certificate and an App Store
+  Connect API key, for macOS; an Azure Artifact Signing account and its
+  certificate profile, for Windows.
 - The nightly for macOS on Intel, once a runner of its own is there.
 - The full manual, every feature checked again against turborel-client
   and Turborel's manual at the pinned commit.

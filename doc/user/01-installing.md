@@ -73,18 +73,22 @@ Check a file against `SHA256SUMS`, in the folder of both:
   in PowerShell, and compare its hash with the file's line in
   `SHA256SUMS`.
 
-### Opening an unsigned build
+### Opening a build
 
-The installers are not signed until the maintainers' certificates are, so
-each system asks before it opens one:
+The nightly's notes say how each installer is signed. A signed one opens
+as any application does:
 
-- **macOS:** open the `.dmg` and drag Turborel Studio to Applications.
-  The application is signed ad hoc, with no developer's certificate, so
-  the first time macOS says it cannot check it: open **System Settings >
-  Privacy & Security** and choose **Open Anyway**. A build from before
-  2026-11-23 was not signed at all, and macOS calls it damaged; download
-  the nightly again, or clear its quarantine with
-  `xattr -dr com.apple.quarantine "/Applications/Turborel Studio.app"`.
+- **macOS:** signed by the project's Developer ID and notarized by
+  Apple, the `.dmg` opens with no question; drag Turborel Studio to
+  Applications, and open it.
+- **Windows:** signed, the `.msi` installs as any signed installer does.
+
+A build made without the project's certificates, as a build of one's
+own, or a nightly the notes call unsigned, asks first:
+
+- **macOS:** the application is signed ad hoc, with no developer's
+  certificate, so the first time macOS says it cannot check it: open
+  **System Settings > Privacy & Security** and choose **Open Anyway**.
 - **Windows:** when SmartScreen says it protected the PC, choose **More
   info**, then **Run anyway**.
 - **Linux:** make the AppImage executable,

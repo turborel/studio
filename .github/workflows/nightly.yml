@@ -1,8 +1,14 @@
 # The latest alpha of Studio, built for each platform, as main's nightly
-# builds Turborel's: unsigned installers published as one pre-release
-# tagged `nightly`, made again at each build, its files at fixed names
-# with their SHA-256 sums (doc/user/01-installing.md). The toolchain comes
-# from rust-toolchain.toml.
+# builds Turborel's: installers published as one pre-release tagged
+# `nightly`, made again at each build, its files at fixed names with their
+# SHA-256 sums (doc/user/01-installing.md). The toolchain comes from
+# rust-toolchain.toml.
+#
+# Signing (RULES.md D58) switches on by platform as its secrets exist,
+# CONTRIBUTING.md naming each: macOS's application and disk image signed
+# by a Developer ID and notarized; Windows's installer and application
+# signed by Azure Artifact Signing. Without them, macOS's application is
+# signed ad hoc and Windows's left unsigned, as before.
 #
 # It runs after each change of main once verify passed, and by hand.
 name: nightly
@@ -40,7 +46,8 @@ jobs:
             bundles: appimage,deb
           - os: macos-latest
             name: macos-arm64
-            bundles: dmg
+            # The application kept beside its disk image, so its signature is checked.
+            bundles: app,dmg
           - os: windows-latest
             name: windows-x64
             bundles: msi
@@ -61,8 +68,111 @@ jobs:
         run: rustup toolchain install
       - name: The front end's packages
         run: npm ci --no-fund --no-audit
+      - name: macOS's Developer ID, in a keychain of the build's own
+        if: runner.os == 'macOS'
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          APPLE_API_KEY_P8: ${{ secrets.APPLE_API_KEY_P8 }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          # No certificate: the application stays signed ad hoc, as tauri.conf.json says.
+          [ -n "$APPLE_CERTIFICATE" ] || { echo "No Developer ID: signed ad hoc."; exit 0; }
+          keychain="$RUNNER_TEMP/studio-signing.keychain-db"
+          secret=$(openssl rand -base64 24)
+          echo "::add-mask::$secret"
+          echo "$APPLE_CERTIFICATE" | base64 --decode > "$RUNNER_TEMP/certificate.p12"
+          security create-keychain -p "$secret" "$keychain"
+          security set-keychain-settings -lut 21600 "$keychain"
+          security unlock-keychain -p "$secret" "$keychain"
+          security import "$RUNNER_TEMP/certificate.p12" -P "$APPLE_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$keychain"
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$secret" "$keychain"
+          security list-keychains -d user -s "$keychain" $(security list-keychains -d user | tr -d '"')
+          rm "$RUNNER_TEMP/certificate.p12"
+          {
+            echo "STUDIO_KEYCHAIN=$keychain"
+            echo "APPLE_SIGNING_IDENTITY=$APPLE_SIGNING_IDENTITY"
+          } >> "$GITHUB_ENV"
+          # Notarization: by an App Store Connect API key, else by an Apple ID.
+          if [ -n "$APPLE_API_KEY_P8" ] && [ -n "$APPLE_API_KEY" ] && [ -n "$APPLE_API_ISSUER" ]; then
+            key="$RUNNER_TEMP/AuthKey_$APPLE_API_KEY.p8"
+            printf '%s' "$APPLE_API_KEY_P8" > "$key"
+            { echo "APPLE_API_KEY=$APPLE_API_KEY"; echo "APPLE_API_ISSUER=$APPLE_API_ISSUER"; echo "APPLE_API_KEY_PATH=$key"; echo "STUDIO_NOTARIZED=1"; } >> "$GITHUB_ENV"
+          elif [ -n "$APPLE_ID" ] && [ -n "$APPLE_PASSWORD" ] && [ -n "$APPLE_TEAM_ID" ]; then
+            { echo "APPLE_ID=$APPLE_ID"; echo "APPLE_PASSWORD=$APPLE_PASSWORD"; echo "APPLE_TEAM_ID=$APPLE_TEAM_ID"; echo "STUDIO_NOTARIZED=1"; } >> "$GITHUB_ENV"
+          else
+            echo "Signed by the Developer ID, not notarized: no notarization's credentials."
+          fi
+      - name: Windows's Artifact Signing, its client
+        if: runner.os == 'Windows'
+        shell: bash
+        env:
+          AZURE_ARTIFACT_SIGNING_ENDPOINT: ${{ secrets.AZURE_ARTIFACT_SIGNING_ENDPOINT }}
+        run: |
+          # No account: the installer stays unsigned.
+          [ -n "$AZURE_ARTIFACT_SIGNING_ENDPOINT" ] || { echo "No Artifact Signing: unsigned."; exit 0; }
+          cargo install artifact-signing-cli --version 0.12.0 --locked
+          # Tauri signs the application and the installer by this command, %1 each file.
+          printf '{"bundle":{"windows":{"signCommand":{"cmd":"artifact-signing-cli","args":["-e","%s","-d","Turborel Studio","%%1"]}}}}' \
+            "$AZURE_ARTIFACT_SIGNING_ENDPOINT" > "$RUNNER_TEMP/signing.json"
+          echo "STUDIO_SIGN_CONFIG=$RUNNER_TEMP/signing.json" >> "$GITHUB_ENV"
       - name: The installers
-        run: npm exec -- tauri build --bundles ${{ matrix.bundles }}
+        shell: bash
+        env:
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          AZURE_ARTIFACT_SIGNING_ACCOUNT: ${{ secrets.AZURE_ARTIFACT_SIGNING_ACCOUNT }}
+          AZURE_ARTIFACT_SIGNING_CERTIFICATE_PROFILE: ${{ secrets.AZURE_ARTIFACT_SIGNING_CERTIFICATE_PROFILE }}
+        run: |
+          if [ -n "${STUDIO_SIGN_CONFIG:-}" ]; then
+            npm exec -- tauri build --bundles ${{ matrix.bundles }} --config "$STUDIO_SIGN_CONFIG"
+          else
+            npm exec -- tauri build --bundles ${{ matrix.bundles }}
+          fi
+      - name: macOS's disk image signed, notarized and stapled
+        if: runner.os == 'macOS' && env.STUDIO_NOTARIZED == '1'
+        run: |
+          dmg=$(ls target/release/bundle/dmg/*.dmg)
+          codesign --force --timestamp --sign "$APPLE_SIGNING_IDENTITY" "$dmg"
+          if [ -n "${APPLE_API_KEY_PATH:-}" ]; then
+            xcrun notarytool submit "$dmg" --key "$APPLE_API_KEY_PATH" --key-id "$APPLE_API_KEY" --issuer "$APPLE_API_ISSUER" --wait
+          else
+            xcrun notarytool submit "$dmg" --apple-id "$APPLE_ID" --password "$APPLE_PASSWORD" --team-id "$APPLE_TEAM_ID" --wait
+          fi
+          xcrun stapler staple "$dmg"
+      - name: macOS's signatures checked
+        if: runner.os == 'macOS'
+        run: |
+          app=$(ls -d target/release/bundle/macos/*.app)
+          dmg=$(ls target/release/bundle/dmg/*.dmg)
+          codesign --verify --deep --strict --verbose=2 "$app"
+          if [ "${STUDIO_NOTARIZED:-}" = "1" ]; then
+            codesign --verify --strict --verbose=2 "$dmg"
+            spctl -a -vvv -t exec "$app"
+            spctl -a -vvv -t open --context context:primary-signature "$dmg"
+            xcrun stapler validate "$app"
+            xcrun stapler validate "$dmg"
+          fi
+      - name: Windows's signatures checked
+        if: runner.os == 'Windows' && env.STUDIO_SIGN_CONFIG != ''
+        shell: pwsh
+        run: |
+          $signtool = Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin\*\x64\signtool.exe" | Sort-Object FullName | Select-Object -Last 1
+          foreach ($file in @(Get-ChildItem target/release/bundle/msi/*.msi) + @(Get-Item target/release/turborel-studio.exe)) {
+            & $signtool.FullName verify /pa /v $file.FullName
+            if ($LASTEXITCODE -ne 0) { throw "$($file.Name) is not signed as it should be" }
+          }
+      - name: macOS's keychain removed
+        if: always() && runner.os == 'macOS'
+        run: |
+          [ -n "${STUDIO_KEYCHAIN:-}" ] && security delete-keychain "$STUDIO_KEYCHAIN" || true
+          [ -n "${APPLE_API_KEY_PATH:-}" ] && rm -f "$APPLE_API_KEY_PATH" || true
       - name: At fixed names
         shell: bash
         run: |
@@ -98,7 +208,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+          MAC_SIGNED: ${{ secrets.APPLE_CERTIFICATE != '' }}
+          WINDOWS_SIGNED: ${{ secrets.AZURE_ARTIFACT_SIGNING_ENDPOINT != '' }}
         run: |
+          # What the notes say of signing, as the build's secrets made it.
+          SIGNED="macOS: $([ "$MAC_SIGNED" = true ] && echo "signed by a Developer ID" || echo "signed ad hoc, not by a developer's certificate"). Windows: $([ "$WINDOWS_SIGNED" = true ] && echo "signed" || echo "unsigned")."
           # Checks of older commits can finish after newer ones, so a build
           # never replaces a nightly built from a later commit of main.
           old=$(gh release view nightly --json targetCommitish -q .targetCommitish 2>/dev/null || true)
@@ -114,4 +228,4 @@ jobs:
           gh release delete nightly --yes --cleanup-tag || true
           gh release create nightly builds/* --prerelease --target "$SHA" \
             --title "Nightly (alpha)" \
-            --notes "The latest alpha of Turborel Studio, built from $SHA once it passed every check, on turborel-client $client. Unsigned: doc/user/01-installing.md says how to open it on each system, and how to check the files against SHA256SUMS. Anything may change from one build to the next (VERSIONING.md)."
+            --notes "The latest alpha of Turborel Studio, built from $SHA once it passed every check, on turborel-client $client. $SIGNED doc/user/01-installing.md says how to open it on each system, and how to check the files against SHA256SUMS. Anything may change from one build to the next (VERSIONING.md)."
