@@ -45,9 +45,9 @@ To run Studio from the source as it is changed, run
 
 ## The nightly
 
-Studio's latest alpha may also be built as the pre-release
-[nightly](https://github.com/turborel/studio/releases/tag/nightly), from
-a commit of main that passed every check. It holds an installer of each
+Studio's latest alpha is built as the pre-release
+[nightly](https://github.com/turborel/studio/releases/tag/nightly) after
+each change of main that passed every check. It holds an installer of each
 platform, at a fixed name, and their SHA-256 sums:
 
 | File | For |

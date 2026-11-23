@@ -89,6 +89,24 @@ Studio is built in milestones, M0 to M12. [CONFORMANCE.md](CONFORMANCE.md)
 says what it supports of Turborel, row by row, and [TODO.md](TODO.md)
 what is open.
 
+## Download
+
+The latest alpha of Studio is built after each change of main that
+passed every check, as the pre-release
+[nightly](https://github.com/turborel/studio/releases/tag/nightly):
+
+| System | Installer |
+|---|---|
+| macOS on Apple silicon | [turborel-studio-nightly-macos-arm64.dmg](https://github.com/turborel/studio/releases/download/nightly/turborel-studio-nightly-macos-arm64.dmg) |
+| Windows on x64 | [turborel-studio-nightly-windows-x64.msi](https://github.com/turborel/studio/releases/download/nightly/turborel-studio-nightly-windows-x64.msi) |
+| Linux on x64, any distribution | [turborel-studio-nightly-linux-x64.AppImage](https://github.com/turborel/studio/releases/download/nightly/turborel-studio-nightly-linux-x64.AppImage) |
+| Debian and Ubuntu on x64 | [turborel-studio-nightly-linux-x64.deb](https://github.com/turborel/studio/releases/download/nightly/turborel-studio-nightly-linux-x64.deb) |
+
+The installers are not yet signed, so macOS and Windows ask before
+opening them the first time.
+[Installing](doc/user/01-installing.md#the-nightly) says how to open
+each, and how to check it against the release's `SHA256SUMS`.
+
 ## Requirements
 
 - Linux, macOS or Windows, with the platform's webview: WebKitGTK 4.1 on

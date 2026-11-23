@@ -97,7 +97,7 @@ Each is told in full in [§7](#7-the-decisions).
 | D55 | The assistant: off until turned on, called by the backend, its guard rails in code and the database |
 | D56 | Live Sessions: a workspace's state shared, filtered, end to end over QUIC, each viewer admitted |
 | D57 | Administration: the server read of its own views, each act written by the backend and run through the guards |
-| D58 | The nightly: unsigned installers of each platform, one pre-release, by hand until its trigger is turned on |
+| D58 | The nightly: unsigned installers of each platform, one pre-release, after each change of main that passed verify |
 | D59 | Embedded databases: a second backend behind the connection manager, opened apart from made, never against a lock |
 | D60 | The manual's images: made by the checks tool of the real window and a demo database, never by hand |
 | D61 | Explain Analyze of a data change: said to change data, rolled back to a savepoint unless kept |
@@ -1454,7 +1454,7 @@ The review checklist:
   with nothing typed that could be mistyped into another statement, and
   each act asks first where any statement would.
 
-#### D58. The nightly: unsigned installers of each platform, one pre-release, by hand until its trigger is turned on
+#### D58. The nightly: unsigned installers of each platform, one pre-release, after each change of main that passed verify
 
 - **What:** `.github/workflows/nightly.yml`, modelled on main's: the
   installers of macOS on Apple silicon (`.dmg`), Windows on x64 (`.msi`)
@@ -1467,11 +1467,13 @@ The review checklist:
 - **Unsigned:** until the maintainers' signing certificates exist;
   `doc/user/01-installing.md` says how to open an unsigned build and how
   to check its sums.
-- **By hand:** its trigger after verify on main is written and left off,
-  to be turned on once the installers are seen to build on each
-  platform; until then, `workflow_dispatch` alone. macOS on Intel waits
-  for a runner of its own.
-- *Why:* a build of each platform's to try every night, as main has.
+- **When:** after each change of main once verify passed
+  (`workflow_run`), and by hand (`workflow_dispatch`). It was run by
+  hand alone until the installers were seen to build on each platform,
+  as they first did on 2026-11-23. macOS on Intel waits for a runner of
+  its own.
+- *Why:* anyone can download and use the latest Studio while it is
+  being worked on, a build of each platform to try, as main has.
 
 #### D59. Embedded databases: a second backend behind the connection manager, opened apart from made, never against a lock
 

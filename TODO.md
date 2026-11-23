@@ -61,8 +61,6 @@ Code never cites this file (R-DOC-5).
   test STUDIO_TEST_KEYCHAIN runs.
 - Signing and notarization of the installers, once the maintainers'
   signing certificates exist; until then they are unsigned.
-- The nightly's trigger after verify on main, written and left off,
-  turned on once its installers are seen to build on each platform; and
-  macOS on Intel, once a runner of its own is there.
+- The nightly for macOS on Intel, once a runner of its own is there.
 - The full manual, every feature checked again against turborel-client
   and Turborel's manual at the pinned commit.

@@ -4,16 +4,15 @@
 # with their SHA-256 sums (doc/user/01-installing.md). The toolchain comes
 # from rust-toolchain.toml.
 #
-# It runs by hand alone until a maintainer turns on its trigger below, once
-# the installers are seen to build on every platform (TODO.md, M12).
+# It runs after each change of main once verify passed, and by hand.
 name: nightly
 
 on:
-  # The trigger, to be turned on: each change of main once verify passed.
-  # workflow_run:
-  #   workflows: [verify]
-  #   branches: [main]
-  #   types: [completed]
+  # Each change of main once verify passed.
+  workflow_run:
+    workflows: [verify]
+    branches: [main]
+    types: [completed]
   workflow_dispatch:
 
 # Builds run one at a time. A build that has started always finishes, so
