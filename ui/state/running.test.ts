@@ -52,7 +52,7 @@ const DONE: { kind: "ran"; answer: Ran } = {
 function failing(position: number | null): StudioError {
   return {
     sqlcode: -103,
-    sqlstate: "2A000",
+    sqlstate: "42000",
     message: "no such table",
     rule: null,
     position,
@@ -125,8 +125,8 @@ describe("a run", () => {
     await runStatements(store, id, [{ sql: "SELECT * FROM NOPE", from: 10, to: 28 }, whole("VALUES (2)")]);
     const w = worksheetOf(store.current(), id);
     expect(w?.runs).toHaveLength(1);
-    expect(w?.runs[0]?.error?.sqlstate).toBe("2A000");
-    expect(w?.messages.at(-1)).toMatchObject({ kind: "error", position: 17, text: "2A000 (-103): no such table" });
+    expect(w?.runs[0]?.error?.sqlstate).toBe("42000");
+    expect(w?.messages.at(-1)).toMatchObject({ kind: "error", position: 17, text: "42000 (-103): no such table" });
     expect(w?.pane).toBe("messages");
     expect(asked.filter((a) => a.command === "record_history")).toEqual([]);
   });
@@ -466,7 +466,7 @@ describe("a run", () => {
         },
       }),
     ).toBe(
-      "2A000 (-103): no such table; rule: ISO/IEC 9075:1992 §11.8 GR7; detail: a row of B; hint: add the key; of ANN.T.A; constraint T_FK",
+      "42000 (-103): no such table; rule: ISO/IEC 9075:1992 §11.8 GR7; detail: a row of B; hint: add the key; of ANN.T.A; constraint T_FK",
     );
   });
 });

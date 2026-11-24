@@ -132,36 +132,6 @@ pub fn whole(kind: LobKind, bytes: &[u8]) -> Value {
     })
 }
 
-/// `field`, as CSV writes it [RFC 4180]: quoted where it must be.
-fn csv_field(field: &str) -> String {
-    let quoted = field.is_empty()
-        || field.contains([',', '"', '\n', '\r'])
-        || field.starts_with(char::is_whitespace)
-        || field.ends_with(char::is_whitespace);
-    if quoted { format!("\"{}\"", field.replace('"', "\"\"")) } else { field.to_owned() }
-}
-
-/// A CSV record of `fields`, ended by CR LF.
-pub fn csv_record(fields: impl Iterator<Item = String>) -> String {
-    let mut line = fields.collect::<Vec<_>>().join(",");
-    line.push_str("\r\n");
-    line
-}
-
-/// `v` as a CSV field: a null empty and unquoted, a large object whole.
-///
-/// # Errors
-///
-/// SQLCODE -910 for a large object not held whole.
-fn csv_value(v: &Value) -> Result<String> {
-    match v {
-        Value::Null => Ok(String::new()),
-        Value::Char(s) => Ok(csv_field(s)),
-        Value::Lob(lob) if lob.inline().is_none() => Err(StudioError::misuse("[DESIGN] a large object is written only once read whole")),
-        other => Ok(csv_field(&other.to_string())),
-    }
-}
-
 /// The INSERT of `row`, of `prefix`, ended by `;` and a line break.
 ///
 /// # Errors
@@ -174,19 +144,6 @@ pub fn insert(prefix: &str, row: &[Value]) -> Result<String> {
 
 /// The most octets of a large object read whole to be scripted.
 pub const MAX_WHOLE_OCTETS: u64 = 256 * 1024 * 1024;
-
-/// The file `path` rows are written to: the script, opened to have more
-/// written at its end, if `append`; else a file of its own, made anew.
-///
-/// # Errors
-///
-/// SQLCODE -910 if it cannot be opened or made.
-pub fn rows_file(path: &std::path::Path, append: bool) -> Result<std::fs::File> {
-    if append {
-        return appended(path);
-    }
-    std::fs::File::create(path).map_err(|e| StudioError::misuse(format!("[DESIGN] {}: {e}", path.display())))
-}
 
 /// Refuses a large object of `octets` past `MAX_WHOLE_OCTETS`.
 ///
@@ -211,20 +168,11 @@ pub fn appended(path: &std::path::Path) -> Result<std::fs::File> {
     std::fs::OpenOptions::new().append(true).open(path).map_err(|e| StudioError::misuse(format!("[DESIGN] {}: {e}", path.display())))
 }
 
-/// How a table's rows are written: as INSERTs, each begun as the prefix
-/// says, or as CSV records.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum RowsAs {
-    /// An INSERT a row, of this prefix.
-    Inserts(String),
-    /// A CSV record a row, after a header of these columns.
-    Csv(Vec<String>),
-}
-
-/// Where a query's rows go: a file, as INSERTs or CSV, the first failure kept.
+/// Where a query's rows go: a script, an INSERT a row, the first failure kept.
 pub struct RowWriter<'a> {
     out: &'a mut dyn Write,
-    how: &'a RowsAs,
+    /// What each INSERT begins with.
+    prefix: &'a str,
     /// The rows written.
     pub count: u64,
     /// The first failure, of a value or the file; the rest not written.
@@ -232,14 +180,9 @@ pub struct RowWriter<'a> {
 }
 
 impl<'a> RowWriter<'a> {
-    /// A writer of rows to `out` as `how` says: a CSV file's header first.
-    pub fn new(out: &'a mut dyn Write, how: &'a RowsAs) -> RowWriter<'a> {
-        let mut writer = RowWriter { out, how, count: 0, failed: None };
-        if let RowsAs::Csv(columns) = how {
-            let header = csv_record(columns.iter().map(|c| csv_field(c)));
-            writer.write(Ok(header));
-        }
-        writer
+    /// A writer of rows to `out`, each an INSERT begun with `prefix`.
+    pub fn new(out: &'a mut dyn Write, prefix: &'a str) -> RowWriter<'a> {
+        RowWriter { out, prefix, count: 0, failed: None }
     }
 
     /// Writes `text`, unless a failure came first.
@@ -257,10 +200,7 @@ impl<'a> RowWriter<'a> {
 
     /// Writes `row`, unless a failure came first.
     pub fn row(&mut self, row: &[Value]) {
-        let text = match self.how {
-            RowsAs::Inserts(prefix) => insert(prefix, row),
-            RowsAs::Csv(_) => row.iter().map(csv_value).collect::<Result<Vec<_>>>().map(|fields| csv_record(fields.into_iter())),
-        };
+        let text = insert(self.prefix, row);
         let before = self.failed.is_none();
         self.write(text);
         if before && self.failed.is_none() {

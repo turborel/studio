@@ -300,7 +300,12 @@ one (its setting PLANNER.PREDICATE_TRANSFER) writes above a chain of
 hash joins and LEFT joins, is drawn as the plan's root, of the filter's
 icon: its details say that it reads the chain's tables first, each read
 filtered by Bloom filters of the join keys of the tables read before
-it. An aggregate's details say how it groups: **Streamed**, a group made at a
+it. An unnesting, `Unnest of 1 collections` or `LeftOuterUnnest of 2
+collections`, which a LATERAL derived table, UNNEST or XMLTABLE is run
+as, has the join's icon: its details say that each row of its input is
+joined to the rows its collections give of that row, numbered if `with
+ordinality`, and, outer, that a row they give none is kept, its new
+columns null. An aggregate's details say how it groups: **Streamed**, a group made at a
 time over its input in the order of its keys, as `Aggregate streamed
 group by [...]` is, or of its input in any order; and the keys it groups
 by and what it computes

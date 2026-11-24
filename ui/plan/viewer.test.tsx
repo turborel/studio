@@ -406,6 +406,33 @@ describe("the plan viewer", () => {
     expect(details).toContain("Bloom filters of the join keys");
   });
 
+  it("tells an unnesting, a LATERAL derived table's, what it joins each row to [DESIGN] D54", async () => {
+    catalogBackend({ catalog_table: () => refused() });
+    const store = await opened();
+    const id = openWorksheet(store, "SELECT 1");
+    const plan = parsePlan([
+      "-- physical:",
+      "Project PA.ID, T.C",
+      "  LeftOuterUnnest of 2 collections with ordinality",
+      "    Unnest of 1 collections",
+      "      SeqScan ANN.PA  (rows=5, cost=5.0)",
+    ]);
+    within(store, <PlanViewer id={id} plans={[plan]} />);
+    await settle();
+    fireEvent.click(screen.getByRole("radio", { name: "Tree-Table" }));
+    const details = (row: number) => {
+      fireEvent.click(screen.getAllByRole("row")[row] ?? document.body);
+      return screen.getByRole("complementary", { name: "Operator" }).textContent;
+    };
+    expect(details(2)).toContain(
+      "UnnestingJoins each row of its input to the rows its 2 collections give of that row, as a LATERAL derived table, UNNEST or XMLTABLE is read, each numbered; a row they give none is kept, its new columns null",
+    );
+    expect(details(3)).toContain(
+      "the rows its collection gives of that row, as a LATERAL derived table, UNNEST or XMLTABLE is read",
+    );
+    expect(details(3)).not.toContain("each numbered");
+  });
+
   it("tells a mark join, what it marks and how [DOC sql/06-queries.md Correlated subqueries]", async () => {
     catalogBackend({ catalog_table: () => refused() });
     const store = await opened();

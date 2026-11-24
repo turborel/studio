@@ -322,7 +322,7 @@ impl Keyring for NoKeys {
 fn register(db: &Database, spec: &EmbeddedSpec) -> Result<()> {
     let (keys, checksum_key) = (spec.keys.as_deref(), spec.checksum_key.as_deref());
     if let Some(dirs) = &spec.plugin_directories {
-        db.set_setting("PLUGINS.DIRECTORIES", &turborel::value::Value::Char(dirs.clone()))?;
+        db.set_setting("PLUGINS.DIRECTORIES", &turborel::value::Value::Char(dirs.clone().into()))?;
     }
     db.register_kernels(Box::new(turborel_simd::Simd::detect()))?;
     db.register_encoding(Box::new(turborel_lz4::Lz4))?;

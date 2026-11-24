@@ -124,6 +124,7 @@ const TESTS: &[(&str, Test)] = &[
     ("parameters_and_large_objects", requests::parameters_and_large_objects),
     ("the_transaction_is_followed", requests::the_transaction_is_followed),
     ("rows_are_exported_and_imported", requests::rows_are_exported_and_imported),
+    ("large_objects_are_exported_as_their_values", requests::large_objects_are_exported_as_their_values),
     ("the_catalog_and_plans_are_read", requests::the_catalog_and_plans_are_read),
     ("settings_change_as_on_a_server", requests::settings_change_as_on_a_server),
     ("each_database_has_a_named_worker", requests::each_database_has_a_named_worker),

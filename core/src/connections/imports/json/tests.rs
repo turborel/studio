@@ -12,7 +12,7 @@ fn read(text: &str, layout: Layout) -> (Vec<String>, Vec<Vec<Option<String>>>) {
     let headings = records.headings().unwrap().unwrap().into_iter().map(|h| h.name).collect();
     let mut all = Vec::new();
     while let Some(record) = records.record().unwrap() {
-        all.push(record.values.into_iter().map(|v| if let Value::Char(s) = v { Some(s) } else { None }).collect());
+        all.push(record.values.into_iter().map(|v| if let Value::Char(s) = v { Some(s.to_string()) } else { None }).collect());
     }
     (headings, all)
 }

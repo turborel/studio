@@ -264,7 +264,7 @@ describe("the rest of the window", () => {
       ...now,
       error: {
         sqlcode: -103,
-        sqlstate: "2A000",
+        sqlstate: "42000",
         message: "<b>not markup</b>",
         rule: null,
         position: null,
@@ -283,7 +283,7 @@ describe("the rest of the window", () => {
     const store = new Store();
     within(store, <AboutDialog />);
     await settle();
-    expect(screen.getByText("a4e9cf93ffa55c17eed814bb0d257d327ab05fc7")).toBeTruthy();
+    expect(screen.getByText("314a0042744497efc904befd19b954a89d6a4da6")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Close" }));
     within(store, <ShortcutsDialog />);
     expect(screen.getByText("View: Command Palette…")).toBeTruthy();

@@ -10,43 +10,41 @@ use std::io::Write;
 use turborel::db::{Prepared, Session};
 use turborel::storage::Row;
 use turborel::value::Value;
-use turborel_client::export::ExportFormat;
+use turborel::value::lob::Lob;
+use turborel_client::export::{Delimited, ExportFormat, Layout, Lobs, Native};
 use turborel_client::import::{Position, Record, Source};
-use turborel_protocol::{Column, Completed, Reply};
+use turborel_protocol::Column;
 
 use crate::connections::imports::{CANCELLED as IMPORT_CANCELLED, ImportReport, ImportSpec, MAX_TOLD, Watch, with_mapped};
 use crate::error::{Result, StudioError};
 
-/// `field`, as CSV writes it: quoted where it must be.
-fn csv_field(field: &str) -> String {
-    let quoted = field.is_empty()
-        || field.contains([',', '"', '\n', '\r'])
-        || field.starts_with(char::is_whitespace)
-        || field.ends_with(char::is_whitespace);
-    if quoted { format!("\"{}\"", field.replace('"', "\"\"")) } else { field.to_owned() }
-}
+/// The octets of a large object read at a time for an export.
+const EXPORT_CHUNK: u64 = 64 * 1024;
 
-/// `v` as a CSV field: a null empty and unquoted.
-fn csv_value(v: &Value) -> String {
-    match v {
-        Value::Null => String::new(),
-        Value::Char(s) => csv_field(s),
-        other => csv_field(&other.to_string()),
+/// What reads an export's large objects of an embedded session: each a
+/// chunk at a time of where it is kept, as turborel-client reads a
+/// server's by its locator.
+struct Kept;
+
+impl Lobs for Kept {
+    fn chunks(&mut self, lob: &Lob, each: &mut dyn FnMut(&[u8]) -> std::io::Result<()>) -> std::io::Result<()> {
+        if let Some(bytes) = lob.inline() {
+            return each(bytes);
+        }
+        let mut reader = lob.reader();
+        let (mut from, mut failed) = (0_u64, None);
+        while from < lob.octets() && failed.is_none() {
+            let count = EXPORT_CHUNK.min(lob.octets().saturating_sub(from));
+            reader
+                .each(from, count, &mut |piece| {
+                    failed = each(piece).err();
+                    Ok(failed.is_none())
+                })
+                .map_err(|e| std::io::Error::other(e.to_string()))?;
+            from = from.saturating_add(count);
+        }
+        failed.map_or(Ok(()), Err)
     }
-}
-
-/// A CSV record of `fields`, ended by CR LF [RFC 4180 §2].
-fn csv_record(fields: impl Iterator<Item = String>) -> Vec<u8> {
-    let mut line = fields.collect::<Vec<_>>().join(",");
-    line.push_str("\r\n");
-    line.into_bytes()
-}
-
-/// `reply` as a frame.
-fn frame(reply: &Reply) -> Vec<u8> {
-    let mut bytes = Vec::new();
-    reply.encode(&mut bytes);
-    bytes
 }
 
 /// A failure to write the export.
@@ -55,32 +53,30 @@ fn unwritten(e: &std::io::Error) -> StudioError {
 }
 
 /// Runs the query `sql` on `session` and writes its rows to `out` as
-/// `format` says, as they come: how many.
+/// `format` says, as they come, by turborel-client's own layouts, so an
+/// embedded database's export is a server's: a large object as its value,
+/// a character one as its text and a binary one as upper-case hexits, in
+/// CSV; its frames in native rows: how many.
 ///
 /// # Errors
 ///
-/// The query's; a statement that is no query; a write that failed.
+/// The query's; a statement that is no query; a large object's read; a
+/// write that failed.
 pub fn export(session: &Session, sql: &str, out: &mut dyn Write, format: ExportFormat) -> Result<u64> {
     let mut cursor = session.open_cursor(sql)?;
     let columns: Vec<Column> = cursor.columns.iter().map(|c| Column::from(c).with_declared()).collect();
-    let head = match format {
-        ExportFormat::Csv => csv_record(columns.iter().map(|c| csv_field(c.name.as_deref().unwrap_or_default()))),
-        ExportFormat::Native => frame(&Reply::Description(columns)),
+    let (mut csv, mut native) = (Delimited::csv(), Native);
+    let layout: &mut dyn Layout = match format {
+        ExportFormat::Csv => &mut csv,
+        ExportFormat::Native => &mut native,
     };
-    out.write_all(&head).map_err(|e| unwritten(&e))?;
+    layout.columns(out, &columns).map_err(|e| unwritten(&e))?;
     let mut count = 0u64;
     while let Some(row) = cursor.fetch()? {
-        let bytes = match format {
-            ExportFormat::Csv => csv_record(row.iter().map(csv_value)),
-            ExportFormat::Native => frame(&Reply::Rows(vec![row])),
-        };
-        out.write_all(&bytes).map_err(|e| unwritten(&e))?;
+        layout.rows(out, &[row], &mut Kept).map_err(|e| unwritten(&e))?;
         count = count.saturating_add(1);
     }
-    if format == ExportFormat::Native {
-        out.write_all(&frame(&Reply::Complete(Completed::of(0, "00000")))).map_err(|e| unwritten(&e))?;
-    }
-    out.flush().map_err(|e| unwritten(&e))?;
+    layout.end(out).and_then(|()| out.flush()).map_err(|e| unwritten(&e))?;
     Ok(count)
 }
 
@@ -214,22 +210,17 @@ pub fn import(session: &Session, spec: &ImportSpec, watch: Option<&Watch<'_>>) -
     })
 }
 
-/// Writes the rows of the query `sql` on `session` to `path` as `how`
-/// says (RULES.md D65), each large object read whole, as they come: how
-/// many.
+/// Writes the rows of the query `sql` on `session` at the end of the
+/// script `path` (RULES.md D65), each an INSERT begun with `prefix`, each
+/// large object read whole, as they come: how many.
 ///
 /// # Errors
 ///
 /// The query's; a value not scripted; the file's.
-pub fn script_rows(
-    session: &Session,
-    sql: &str,
-    how: &crate::connections::scripted::RowsAs,
-    (path, append): (&std::path::Path, bool),
-) -> Result<u64> {
-    use crate::connections::scripted::{RowWriter, readable, rows_file, whole};
-    let mut file = rows_file(path, append)?;
-    let mut writer = RowWriter::new(&mut file, how);
+pub fn script_rows(session: &Session, sql: &str, prefix: &str, path: &std::path::Path) -> Result<u64> {
+    use crate::connections::scripted::{RowWriter, appended, readable, whole};
+    let mut file = appended(path)?;
+    let mut writer = RowWriter::new(&mut file, prefix);
     let mut cursor = session.open_cursor(sql)?;
     while let Some(row) = cursor.fetch()? {
         let row = row

@@ -212,7 +212,7 @@ describe("a result's grid", () => {
         if (asks === 2) {
           return refused({
             sqlcode: -103,
-            sqlstate: "2A000",
+            sqlstate: "42000",
             message: "no such column",
             rule: null,
             position: null,

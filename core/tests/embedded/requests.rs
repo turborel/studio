@@ -57,7 +57,7 @@ pub fn a_query_is_paged_through_its_cursor(scratch: &Scratch) {
     manager.close_result(id, result).unwrap();
     assert_eq!(manager.rows(id, result, (0, 1)).unwrap_err().sqlstate, "TB910");
     let error = run(&manager, id, "SELECT * FROM NOPE").unwrap_err();
-    assert_eq!((error.sqlcode, error.sqlstate.as_str()), (-103, "2A000"));
+    assert_eq!((error.sqlcode, error.sqlstate.as_str()), (-103, "42000"));
     run(&manager, id, "CREATE TABLE STAFF (ID INTEGER GENERATED ALWAYS AS IDENTITY, NAME VARCHAR(20))").unwrap();
     let ran = run(&manager, id, "INSERT INTO STAFF (NAME) VALUES ('Edsger'), ('Barbara')").unwrap();
     let Outcome::Done { sqlcode, rows_affected, generated, .. } = ran.outcome else { panic!("rows") };
@@ -137,6 +137,44 @@ fn import_spec(file: &std::path::Path, fields: &[Option<&str>], (batch, skip): (
         limit: None,
         binary: Vec::new(),
     }
+}
+
+/// [DESIGN] D59 [CLIENT Copying and exporting] A large object is exported
+/// as its value, as turborel-client exports a server's: a character one of
+/// more than 64 KiB as its text, a binary one as upper-case hexits, each
+/// whole in native rows; the CSV is imported back, the hexits read again.
+pub fn large_objects_are_exported_as_their_values(scratch: &Scratch) {
+    let (manager, _) = scratch.manager();
+    let id = connected(scratch, &manager);
+    for sql in [
+        "CREATE TABLE LOBS (ID INTEGER PRIMARY KEY, DOC CLOB, PIC BLOB)",
+        "CREATE TABLE IMPORTED (ID INTEGER PRIMARY KEY, DOC CLOB, PIC BLOB)",
+        "INSERT INTO LOBS VALUES (1, LPAD(CAST('' AS CLOB), 90000, 'ab'), CAST(X'00FF10ab' AS BLOB))",
+        "COMMIT",
+    ] {
+        run(&manager, id, sql).unwrap();
+    }
+    let dir = scratch.path("lobs");
+    std::fs::create_dir_all(&dir).unwrap();
+    let csv = dir.join("lobs.csv");
+    assert_eq!(manager.export(id, "SELECT ID, DOC, PIC FROM LOBS", (&csv, ExportFormat::Csv)).unwrap(), 1);
+    let written = std::fs::read_to_string(&csv).unwrap();
+    assert_eq!(written.lines().nth(1), Some(&*format!("1,\"{}\",00FF10AB", "ab".repeat(45_000))));
+    let native = dir.join("lobs.native");
+    assert_eq!(manager.export(id, "SELECT DOC FROM LOBS", (&native, ExportFormat::Native)).unwrap(), 1);
+    let (_, rows) = turborel_client::export::read_native(&mut std::fs::File::open(&native).unwrap()).unwrap();
+    let doc = rows.first().and_then(|r| r.first()).map(ToString::to_string).unwrap_or_default();
+    assert_eq!(doc, "ab".repeat(45_000));
+    run(&manager, id, "COMMIT").unwrap();
+    let ImportAnswer::Imported(done) =
+        manager.import(id, import_spec(&csv, &[Some("ID"), Some("DOC"), Some("PIC")], (1000, false)), false).unwrap()
+    else {
+        panic!("asked")
+    };
+    assert_eq!(done.rows, 1);
+    let back = column(&manager, id, "SELECT CAST(CHAR_LENGTH(DOC) AS VARCHAR(9)) || CAST(PIC = X'00FF10AB' AS VARCHAR(5)) FROM IMPORTED");
+    assert_eq!(back, [Some("90000TRUE".to_owned())]);
+    manager.close(id).unwrap();
 }
 
 /// [DESIGN] D59 [DOC client/03-embedding.md Reading rows] A query's rows

@@ -427,10 +427,10 @@ describe("a worksheet's panel", () => {
     act(() => {
       changeWorksheet(store, id, (w) => ({
         ...w,
-        messages: [{ at: 0, kind: "error", text: "2A000 (-103): no", position: 3 }],
+        messages: [{ at: 0, kind: "error", text: "42000 (-103): no", position: 3 }],
       }));
     });
-    fireEvent.click(screen.getByRole("button", { name: "2A000 (-103): no" }));
+    fireEvent.click(screen.getByRole("button", { name: "42000 (-103): no" }));
     expect(viewOf(id)?.state.selection.main.head).toBe(3);
     act(() => {
       changeWorksheet(store, id, (w) => ({ ...w, messages: [] }));

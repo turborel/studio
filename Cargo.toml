@@ -20,15 +20,15 @@ png = "0.18.1"
 gif = "0.14.2"
 # Turborel's own client library, at a pinned commit of Turborel's main
 # (RULES.md D10). The crates.io 0.0.0 crates are frozen and never used.
-turborel-client = { git = "https://github.com/turborel/turborel", rev = "a4e9cf93ffa55c17eed814bb0d257d327ab05fc7", features = ["tls", "scram", "system-roots"] }
-turborel = { git = "https://github.com/turborel/turborel", rev = "a4e9cf93ffa55c17eed814bb0d257d327ab05fc7" }
-turborel-protocol = { git = "https://github.com/turborel/turborel", rev = "a4e9cf93ffa55c17eed814bb0d257d327ab05fc7" }
+turborel-client = { git = "https://github.com/turborel/turborel", rev = "314a0042744497efc904befd19b954a89d6a4da6", features = ["tls", "scram", "system-roots"] }
+turborel = { git = "https://github.com/turborel/turborel", rev = "314a0042744497efc904befd19b954a89d6a4da6" }
+turborel-protocol = { git = "https://github.com/turborel/turborel", rev = "314a0042744497efc904befd19b954a89d6a4da6" }
 # Embedded databases (RULES.md D59): the plug-ins turboreld registers with a
 # database, so Studio opens the databases a server opens: LZ4, the ciphers,
 # hashes and keyring of its keys directory, and the SIMD kernels.
-turborel-aes = { git = "https://github.com/turborel/turborel", rev = "a4e9cf93ffa55c17eed814bb0d257d327ab05fc7" }
-turborel-lz4 = { git = "https://github.com/turborel/turborel", rev = "a4e9cf93ffa55c17eed814bb0d257d327ab05fc7" }
-turborel-simd = { git = "https://github.com/turborel/turborel", rev = "a4e9cf93ffa55c17eed814bb0d257d327ab05fc7" }
+turborel-aes = { git = "https://github.com/turborel/turborel", rev = "314a0042744497efc904befd19b954a89d6a4da6" }
+turborel-lz4 = { git = "https://github.com/turborel/turborel", rev = "314a0042744497efc904befd19b954a89d6a4da6" }
+turborel-simd = { git = "https://github.com/turborel/turborel", rev = "314a0042744497efc904befd19b954a89d6a4da6" }
 # The IPC's and the files' encoding (RULES.md D17).
 serde = { version = "=1.0.229", features = ["derive"] }
 serde_json = { version = "=1.0.154", features = ["raw_value"] }

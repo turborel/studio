@@ -1,5 +1,5 @@
 import { misestimated, operators, parsePlan } from "./plan";
-import { groupingOf, kindOf, markOf, rangeOf, semiOf, transferOf } from "./kinds";
+import { groupingOf, kindOf, markOf, rangeOf, semiOf, transferOf, unnestOf } from "./kinds";
 import { ownTime } from "./summary";
 
 /** The lines of a plan as EXPLAIN gives them, one row each, the result's left margin taken off. */
@@ -385,5 +385,24 @@ describe("mark joins", () => {
     expect(root?.children[0]?.operator).toBe("Project");
     expect(operators(plan.stages[0]?.roots ?? [])).toHaveLength(8);
     expect(plan.ran).toBe(5000);
+  });
+
+  it("reads an unnesting as a LATERAL derived table's EXPLAIN writes it, and an outer one numbered [DESIGN] D54", () => {
+    const plan = parsePlan([
+      "-- physical:",
+      "Project PA.ID, PA.N, T.C  (actual rows=5, time=0.770 ms)",
+      "  Unnest of 1 collections  (actual rows=5, time=0.768 ms, leaf pages=2)",
+      "    SeqScan ANN.PA  (rows=5, cost=5.0)  (actual rows=5, time=0.197 ms, leaf pages=1)",
+      "-- ran: 5 rows in 0.770 ms",
+    ]);
+    const unnest = plan.stages[0]?.roots[0]?.children[0];
+    expect([unnest?.operator, unnest?.detail, unnest?.actual]).toEqual(["Unnest", "of 1 collections", 5]);
+    expect(unnest === undefined ? null : kindOf(unnest)).toBe("unnest");
+    expect(unnest === undefined ? null : unnestOf(unnest)).toEqual({ collections: 1, outer: false, ordinality: false });
+    const [outer] =
+      parsePlan(["-- physical:", "LeftOuterUnnest of 2 collections with ordinality", ""]).stages[0]?.roots ?? [];
+    expect(outer === undefined ? null : unnestOf(outer)).toEqual({ collections: 2, outer: true, ordinality: true });
+    const [scan] = parsePlan(["-- physical:", "SeqScan ANN.PA  (rows=5, cost=5.0)", ""]).stages[0]?.roots ?? [];
+    expect(scan === undefined ? null : unnestOf(scan)).toBeNull();
   });
 });

@@ -6,7 +6,7 @@
  * and its reads of an index.
  */
 import { Fragment } from "react";
-import { groupingOf, markOf, rangeOf, semiOf, transferOf } from "./kinds";
+import { groupingOf, markOf, rangeOf, semiOf, transferOf, unnestOf } from "./kinds";
 import type { PlanNode } from "./plan";
 
 /** What a range join searches by, of `node` if it is one. */
@@ -175,11 +175,35 @@ function TransferDetails({ node }: { readonly node: PlanNode }) {
   );
 }
 
+/** What unnesting `node` joins each row of its input to: the rows its collections give of that row. */
+function UnnestDetails({ node }: { readonly node: PlanNode }) {
+  const unnest = unnestOf(node);
+  if (unnest === null) {
+    return null;
+  }
+  const collections =
+    unnest.collections === 1
+      ? "its collection gives"
+      : `${unnest.collections === null ? "its collections" : `its ${String(unnest.collections)} collections`} give`;
+  return (
+    <>
+      <dt>Unnesting</dt>
+      <dd>
+        Joins each row of its input to the rows {collections} of that row, as a LATERAL derived table, UNNEST or
+        XMLTABLE is read
+        {unnest.ordinality ? ", each numbered" : ""}
+        {unnest.outer ? "; a row they give none is kept, its new columns null" : ""}
+      </dd>
+    </>
+  );
+}
+
 /** Every detail of operator `node` of its kind, and of what it did. */
 export function KindDetails({ node }: { readonly node: PlanNode }) {
   return (
     <>
       <TransferDetails node={node} />
+      <UnnestDetails node={node} />
       <RangeDetails node={node} />
       <GroupingDetails node={node} />
       <SemiDetails node={node} />

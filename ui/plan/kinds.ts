@@ -1,7 +1,7 @@
 /**
  * An operator's kind (RULES.md D54), of its name as EXPLAIN writes it:
  * a data change, a scan, a scan by an index, a join, a semi join, an antijoin, a mark join, a range
- * join, a phase of predicate transfer, a sort, an aggregate,
+ * join, an unnesting, a phase of predicate transfer, a sort, an aggregate,
  * a limit, a part run in parallel, a filter, a projection or another; and
  * its icon. A range join's search is read of its note: the value its right
  * operand is sorted on, the equalities that group those rows, and the one
@@ -23,6 +23,7 @@ export type OperatorKind =
   | "antiJoin"
   | "markJoin"
   | "rangeJoin"
+  | "unnest"
   | "transfer"
   | "sort"
   | "aggregate"
@@ -42,6 +43,7 @@ export const KIND_ICONS: Readonly<Record<OperatorKind, IconName>> = {
   antiJoin: "antiJoin",
   markJoin: "markJoin",
   rangeJoin: "rangeJoin",
+  unnest: "join",
   transfer: "filter",
   sort: "sort",
   aggregate: "aggregate",
@@ -58,6 +60,7 @@ const KNOWN: readonly (readonly [OperatorKind, RegExp])[] = [
   ["change", /^(Insert|Update|Delete|Merge)$/u],
   ["indexScan", /^Index(Scan|Only)/u],
   ["rangeJoin", /^(Left)?RangeJoin$/u],
+  ["unnest", /^(LeftOuter)?Unnest$/u],
   ["semiJoin", /SemiJoin$|^Semi(?=[A-Z]|$)/u],
   ["antiJoin", /AntiJoin$|^Anti(?=[A-Z]|$)/u],
   ["markJoin", /MarkJoin$|^Mark$/u],
@@ -203,4 +206,24 @@ export function transferOf(node: PlanNode): Transfer | null {
     return found === undefined ? null : Number(found);
   };
   return { leaves: count("leaves?"), steps: count("steps?") };
+}
+
+/** What an unnesting joins each row of its input to: the collections it gives, kept with none if outer, numbered if with ordinality. */
+export interface Unnesting {
+  readonly collections: number | null;
+  readonly outer: boolean;
+  readonly ordinality: boolean;
+}
+
+/** What unnesting `node` joins, of `Unnest of N collections [with ordinality]`, as a LATERAL derived table, UNNEST or XMLTABLE is run. */
+export function unnestOf(node: PlanNode): Unnesting | null {
+  if (kindOf(node) !== "unnest") {
+    return null;
+  }
+  const found = /^of (\d+) collections?/u.exec(node.detail)?.[1];
+  return {
+    collections: found === undefined ? null : Number(found),
+    outer: node.operator.startsWith("LeftOuter"),
+    ordinality: /\bwith ordinality\b/u.test(node.detail),
+  };
 }

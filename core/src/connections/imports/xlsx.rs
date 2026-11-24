@@ -63,22 +63,25 @@ pub fn cells<'a>(book: &'a mut Workbook, sheet: Option<&str>) -> Result<XlsxCell
 pub fn value_of(value: &DataRef<'_>) -> Value {
     match value {
         DataRef::Empty => Value::Null,
-        DataRef::Int(i) => Value::Char(i.to_string()),
-        DataRef::Float(f) => Value::Char(f.to_string()),
-        DataRef::String(s) | DataRef::DateTimeIso(s) | DataRef::DurationIso(s) => Value::Char(s.clone()),
-        DataRef::SharedString(s) => Value::Char((*s).to_owned()),
-        DataRef::Bool(b) => Value::Char(if *b { "TRUE" } else { "FALSE" }.to_owned()),
+        DataRef::Int(i) => Value::Char(i.to_string().into()),
+        DataRef::Float(f) => Value::Char(f.to_string().into()),
+        DataRef::String(s) | DataRef::DateTimeIso(s) | DataRef::DurationIso(s) => Value::Char(s.into()),
+        DataRef::SharedString(s) => Value::Char((*s).into()),
+        DataRef::Bool(b) => Value::Char(if *b { "TRUE" } else { "FALSE" }.into()),
         DataRef::DateTime(d) if d.is_datetime() => {
             let (year, month, day, hour, minute, second, milli) = d.to_ymd_hms_milli();
             let date = format!("{year:04}-{month:02}-{day:02}");
-            Value::Char(match (hour, minute, second, milli) {
-                (0, 0, 0, 0) => date,
-                (_, _, _, 0) => format!("{date} {hour:02}:{minute:02}:{second:02}"),
-                _ => format!("{date} {hour:02}:{minute:02}:{second:02}.{milli:03}"),
-            })
+            Value::Char(
+                match (hour, minute, second, milli) {
+                    (0, 0, 0, 0) => date,
+                    (_, _, _, 0) => format!("{date} {hour:02}:{minute:02}:{second:02}"),
+                    _ => format!("{date} {hour:02}:{minute:02}:{second:02}.{milli:03}"),
+                }
+                .into(),
+            )
         }
-        DataRef::DateTime(d) => Value::Char(d.as_f64().to_string()),
-        DataRef::Error(e) => Value::Char(e.to_string()),
+        DataRef::DateTime(d) => Value::Char(d.as_f64().to_string().into()),
+        DataRef::Error(e) => Value::Char(e.to_string().into()),
     }
 }
 

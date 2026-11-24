@@ -59,11 +59,11 @@ impl<'de> Deserialize<'de> for Ordered {
 pub fn value_of(raw: &RawValue) -> Value {
     let text = raw.get().trim();
     match text.as_bytes().first() {
-        Some(b'"') => serde_json::from_str::<String>(text).map_or_else(|_| Value::Char(text.to_owned()), Value::Char),
+        Some(b'"') => serde_json::from_str::<String>(text).map_or_else(|_| Value::Char(text.into()), |s| Value::Char(s.into())),
         Some(b'n') => Value::Null,
-        Some(b't') => Value::Char("TRUE".to_owned()),
-        Some(b'f') => Value::Char("FALSE".to_owned()),
-        _ => Value::Char(text.to_owned()),
+        Some(b't') => Value::Char("TRUE".into()),
+        Some(b'f') => Value::Char("FALSE".into()),
+        _ => Value::Char(text.into()),
     }
 }
 

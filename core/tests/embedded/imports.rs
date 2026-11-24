@@ -98,7 +98,7 @@ fn write_workbook(path: &Path, sheets: &[(&str, &[&str])]) {
 
 /// The values of `values` as text, a null as none.
 fn texts(values: Vec<Value>) -> Vec<Option<String>> {
-    values.into_iter().map(|v| if let Value::Char(s) = v { Some(s) } else { None }).collect()
+    values.into_iter().map(|v| if let Value::Char(s) = v { Some(s.to_string()) } else { None }).collect()
 }
 
 /// `s` as a value, of a test.

@@ -24,9 +24,10 @@ use crate::connections::values::{CHUNK_BYTES, ValueRead, parameter_value};
 use crate::error::{DiagnosticsView, Result, StudioError};
 use crate::events::{ConnectionId, Event, EventSink};
 
-/// The SQLSTATE of a statement that cannot be prepared, which is run
-/// directly instead (`[CLIENT Prepared statements]`).
-const NOT_PREPARABLE: &str = "37000";
+/// The SQLSTATE of a statement that cannot be prepared, a rule broken or
+/// no `<preparable statement>`, which is run directly instead, its own
+/// failure then the one told (`[CLIENT Prepared statements]`).
+const NOT_PREPARABLE: &str = "42000";
 /// What makes the next transaction of a read-only connection READ ONLY.
 const SET_READ_ONLY: &str = "SET TRANSACTION READ ONLY";
 /// The SQLSTATE of a cursor not open, as one a transaction's end closed.
@@ -61,7 +62,7 @@ pub(crate) enum Request {
     Export { sql: String, path: PathBuf, format: ExportFormat },
     /// A query's rows, each large object read whole, written as `how`
     /// says: appended to a script, or to a file of their own.
-    ScriptRows { sql: String, how: crate::connections::scripted::RowsAs, path: PathBuf, append: bool },
+    ScriptRows { sql: String, prefix: String, path: PathBuf },
     /// A file's rows imported into a table, cancelled when `stop` is set,
     /// its progress told to `tell`.
     Import { spec: Box<ImportSpec>, stop: Arc<std::sync::atomic::AtomicBool>, tell: Teller },
@@ -206,7 +207,7 @@ impl Worker {
             Request::Describe(sql) => self.describe(&sql).map(Reply::Columns),
             Request::Value { result, row, column } => self.value(result, row, column).map(Reply::Value),
             Request::Export { sql, path, format } => self.export(&sql, &path, format).map(Reply::Exported),
-            Request::ScriptRows { sql, how, path, append } => self.script_rows(&sql, &how, (&path, append)).map(Reply::Exported),
+            Request::ScriptRows { sql, prefix, path } => self.script_rows(&sql, &prefix, &path).map(Reply::Exported),
             Request::Import { spec, stop, tell } => {
                 let watch = Watch { stop: &stop, tell: &*tell.0 };
                 run_import(self.connection()?, &spec, Some(&watch)).map(Reply::Imported)
@@ -365,7 +366,7 @@ impl Worker {
     fn catalog(&mut self, sql: &str, params: &[String], cap: u32) -> Result<Vec<Vec<crate::connections::cells::Cell>>> {
         let connection = self.connection()?;
         let statement = connection.prepare(sql)?;
-        let values: Vec<Value> = params.iter().map(|p| Value::Char(p.clone())).collect();
+        let values: Vec<Value> = params.iter().map(|p| Value::Char(p.clone().into())).collect();
         let read = connection.open_cursor(&statement, &values, cap);
         if read.as_ref().is_ok_and(|batch| batch.more) {
             // Rows past the cap are not wanted: the cursor is closed.
@@ -404,17 +405,12 @@ impl Worker {
         connection.export(sql, &mut file, format).map_err(StudioError::from)
     }
 
-    /// Writes the rows of the query `sql` to `path` as `how` says, a page
-    /// at a time through its cursor, each large object read whole by its
-    /// locator: how many.
-    fn script_rows(
-        &mut self,
-        sql: &str,
-        how: &crate::connections::scripted::RowsAs,
-        (path, append): (&std::path::Path, bool),
-    ) -> Result<u64> {
-        let mut file = crate::connections::scripted::rows_file(path, append)?;
-        let mut writer = crate::connections::scripted::RowWriter::new(&mut file, how);
+    /// Writes the rows of the query `sql` at the end of the script `path`,
+    /// each an INSERT begun with `prefix`, a page at a time through its
+    /// cursor, each large object read whole by its locator: how many.
+    fn script_rows(&mut self, sql: &str, prefix: &str, path: &std::path::Path) -> Result<u64> {
+        let mut file = crate::connections::scripted::appended(path)?;
+        let mut writer = crate::connections::scripted::RowWriter::new(&mut file, prefix);
         let connection = self.connection()?;
         let statement = connection.prepare(sql)?;
         let read = written_whole(connection, &statement, &mut writer);

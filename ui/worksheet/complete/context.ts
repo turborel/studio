@@ -21,7 +21,7 @@ export type Place =
   | { readonly kind: "none" }
   | { readonly kind: "start" }
   | { readonly kind: "qualified"; readonly qualifier: readonly string[] }
-  | { readonly kind: "object"; readonly sequences: boolean }
+  | { readonly kind: "object"; readonly sequences: boolean; readonly derived: boolean }
   | { readonly kind: "afterObject" }
   | { readonly kind: "joinOn"; readonly joined: string }
   | { readonly kind: "insertColumns"; readonly table: readonly string[] }
@@ -153,14 +153,17 @@ function clauseOf(list: readonly Token[], at: number): { clause: string; index: 
 /** A rule of the cursor's place: the place, if the words before token `at` make it. */
 type Rule = (list: readonly Token[], at: number) => Place | null;
 
-/** After NEXT VALUE FOR, a sequence; after FROM, JOIN, INTO, UPDATE or TABLE, but CREATE TABLE, a table. */
+/** After NEXT VALUE FOR, a sequence; after FROM, JOIN, INTO, UPDATE or TABLE, but CREATE TABLE, a table, after FROM or JOIN a derived table too. */
 const objectRule: Rule = (list, at) => {
   const previous = upper(list[at - 1]);
   if (previous === "FOR" && upper(list[at - 2]) === "VALUE" && upper(list[at - 3]) === "NEXT") {
-    return { kind: "object", sequences: true };
+    return { kind: "object", sequences: true, derived: false };
   }
   const creating = previous === "TABLE" && list.slice(0, at - 1).some((t) => upper(t) === "CREATE");
-  return OBJECT_WORDS.has(previous) && !creating ? { kind: "object", sequences: false } : null;
+  if (!OBJECT_WORDS.has(previous) || creating) {
+    return null;
+  }
+  return { kind: "object", sequences: false, derived: previous === "FROM" || previous === "JOIN" };
 };
 
 /** After AS within CAST's parentheses, a type. */
@@ -219,7 +222,7 @@ function placeOf(list: readonly Token[], at: number): Place {
   }
   const { clause } = clauseOf(list, at);
   if (clause === "FROM" || clause === "JOIN") {
-    return upper(list[at - 1]) === "," ? { kind: "object", sequences: false } : { kind: "afterObject" };
+    return upper(list[at - 1]) === "," ? { kind: "object", sequences: false, derived: true } : { kind: "afterObject" };
   }
   return { kind: "expression", clause };
 }

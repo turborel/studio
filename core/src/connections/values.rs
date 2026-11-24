@@ -100,11 +100,11 @@ pub fn parameter_value(data_type: &DataType, text: &str, write: &mut dyn FnMut(L
                 return Ok(Value::Lob(write(*kind, &octets)?));
             }
             match kind {
-                LobKind::Character => Value::Char(text.to_owned()),
+                LobKind::Character => Value::Char(text.into()),
                 LobKind::Binary => Value::Binary(Binary::new(octets)),
             }
         }
-        _ => Value::Char(text.to_owned()),
+        _ => Value::Char(text.into()),
     };
     turborel::value::cast(value, data_type).map_err(StudioError::from)
 }

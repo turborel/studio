@@ -31,8 +31,10 @@ use crate::embedded::lobs::placed_row;
 use crate::embedded::transfer::{export, import, script_rows};
 use crate::error::{Result, StudioError};
 
-/// The SQLSTATE of a statement that cannot be prepared, run directly instead.
-const NOT_PREPARABLE: &str = "37000";
+/// The SQLSTATE of a statement that cannot be prepared, a rule broken or
+/// no `<preparable statement>`, run directly instead, its own failure then
+/// the one told.
+const NOT_PREPARABLE: &str = "42000";
 /// What makes the next transaction of a read-only connection READ ONLY.
 const SET_READ_ONLY: &str = "SET TRANSACTION READ ONLY";
 /// The setting of the catalog's name.
@@ -175,9 +177,9 @@ impl EmbeddedWorker {
                 let session = self.session()?;
                 export(session, &sql, &mut file, format).map(Reply::Exported).map_err(|e| failed(session, e))
             }
-            Request::ScriptRows { sql, how, path, append } => {
+            Request::ScriptRows { sql, prefix, path } => {
                 let session = self.session()?;
-                script_rows(session, &sql, &how, (&path, append)).map(Reply::Exported).map_err(|e| failed(session, e))
+                script_rows(session, &sql, &prefix, &path).map(Reply::Exported).map_err(|e| failed(session, e))
             }
             Request::Import { spec, stop, tell } => {
                 let session = self.session()?;
@@ -361,7 +363,7 @@ impl EmbeddedWorker {
         let began = session.transaction_mode().is_none();
         let read_rows = || -> Result<Vec<Vec<Cell>>> {
             let prepared = session.prepare(sql)?;
-            let values: Vec<Value> = params.iter().map(|p| Value::Char(p.clone())).collect();
+            let values: Vec<Value> = params.iter().map(|p| Value::Char(p.clone().into())).collect();
             let mut cursor = session.open_prepared(&prepared, &values)?;
             let mut rows = Vec::new();
             while u32::try_from(rows.len()).unwrap_or(u32::MAX) < cap {

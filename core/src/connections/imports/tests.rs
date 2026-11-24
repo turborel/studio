@@ -109,7 +109,7 @@ fn fields_go_into_the_columns_chosen() {
 /// were skipped than its limit allows.
 #[test]
 fn a_watched_source_tells_and_hears() {
-    let records = || (1..=3).map(|n| vec![Value::Char(n.to_string())]).collect();
+    let records = || (1..=3).map(|n| vec![Value::Char(n.to_string().into())]).collect();
     let told = std::sync::Mutex::new(Vec::new());
     let tell = |p: ImportProgress| told.lock().unwrap().push(p);
     let stop = std::sync::atomic::AtomicBool::new(false);

@@ -513,7 +513,7 @@ The review checklist:
   an embedded database is given (D59), `turborel-aes`, `turborel-lz4`
   and `turborel-simd`, from
   github.com/turborel/turborel at commit
-  `a4e9cf93ffa55c17eed814bb0d257d327ab05fc7` of `main`; BSD-2-Clause
+  `314a0042744497efc904befd19b954a89d6a4da6` of `main`; BSD-2-Clause
   Plus Patent.
 - **Not crates.io:** the 0.0.0 crates published there are frozen and
   never used.
@@ -705,8 +705,9 @@ The review checklist:
 
 - **Cursor:** a statement that has columns is prepared, its cursor opened,
   and read a page of 500 rows at a time as the grid asks; another is
-  executed; one the server cannot prepare (SQLSTATE 37000) is run
-  directly.
+  executed; one the server cannot prepare (SQLSTATE 42000, a rule
+  broken or no `<preparable statement>`) is run directly, its own
+  failure the one told.
 - **Pages:** each page, as the server's text of each value, is appended
   to a spool file as it comes; the latest 8 stay in memory, the rest are
   read back from the file.
@@ -970,7 +971,9 @@ The review checklist:
   JSON, Markdown and INSERT, each value a literal of its type.
 - **Export:** turborel-client's `export`, run by the worker, to the file
   the platform's dialog chooses, opened by the backend (R-SEC-5); a query
-  alone, as the guards classify it.
+  alone, as the guards classify it. A large object is exported as its
+  value, read a chunk at a time: a character one its text, a binary one
+  upper-case hexits in CSV, whole in native rows.
 - **Pins and comparisons:** a pinned result kept open as the worksheet
   runs again; two results compared by their rows read, as multisets.
 - **Timings:** each run's time and rows kept in the window, compared with
@@ -1517,7 +1520,9 @@ The review checklist:
   assistant and Live Sessions work on it unchanged, under the same
   guards. A query is read through its cursor a page at a time; a large
   object longer than a row holds is placed by a locator, as a server
-  places one; export and import write and read as turborel-client's.
+  places one; export and import write and read as turborel-client's,
+  the export by its own layouts (`Delimited`, `Native`), each large
+  object read a chunk at a time of where the database keeps it.
   Autocommit commits a statement's transaction as it completes, a
   query's once its cursor is read through or closed.
 - **One worker each:** each embedded connection's session on a thread of
@@ -1752,15 +1757,17 @@ The review checklist:
   by copy.
   Turborel has no SQL statement of a copy, so a script cannot load its
   own data files; they are loaded as imports.
-- **Large objects:** the rows read through the cursor a page at a time
-  (not `query_into`), each large object read whole by its locator
-  (`read_lob` on a server, the session's reader embedded), at most 256
-  MiB; written as a string, past 16,000 characters or octets as strings
-  joined by `||`, the first cast to CLOB or BLOB; past 8 MiB, the
-  INSERTs refuse it, saying to script CSV. The CSV files are written the
-  same way, by Studio, not turborel-client's export, which writes a
-  locator's description; a binary value in hexadecimal, which the
-  import reads back into a binary column (D63).
+- **Large objects:** the INSERTs' rows read through the cursor a page
+  at a time (not `query_into`), each large object read whole by its
+  locator (`read_lob` on a server, the session's reader embedded), at
+  most 256 MiB; written as a string, past 16,000 characters or octets as
+  strings joined by `||`, the first cast to CLOB or BLOB; past 8 MiB,
+  the INSERTs refuse it, saying to script CSV. The CSV files are the
+  connection's export (D39): turborel-client's of a server, written by
+  its own layouts embedded (D59), each large object as its value, a
+  character one its text and a binary one upper-case hexits, read and
+  written a chunk at a time, so of any length; a binary value in
+  hexadecimal, which the import reads back into a binary column (D63).
 - **Identity columns:** after the rows, `ALTER TABLE ... ALTER COLUMN
   ... RESTART WITH n` of each, n the greatest value plus the column's
   increment (`INFORMATION_SCHEMA.COLUMNS.IDENTITY_INCREMENT`), or the

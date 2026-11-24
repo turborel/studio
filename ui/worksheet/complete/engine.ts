@@ -511,7 +511,14 @@ export async function complete(
     case "qualified":
       return { from, items: await qualified(catalog, sources, place.qualifier) };
     case "object":
-      return { from, items: objects(catalog, sources, place.sequences) };
+      return {
+        from,
+        // A derived table may be LATERAL, reading the tables before it (T491).
+        items: [
+          ...objects(catalog, sources, place.sequences),
+          ...(place.derived ? keywords(catalog, ["LATERAL"]) : []),
+        ],
+      };
     case "afterObject":
       return { from, items: keywords(catalog, AFTER_OBJECT) };
     case "joinOn":

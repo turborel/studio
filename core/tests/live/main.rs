@@ -144,6 +144,7 @@ const TESTS: &[(&str, Test)] = &[
     ("a_plan_is_explained_and_analyzed", statements::a_plan_is_explained_and_analyzed),
     ("a_large_object_is_read_whole", statements::a_large_object_is_read_whole),
     ("a_result_is_exported", statements::a_result_is_exported),
+    ("large_objects_are_exported_as_their_values", statements::large_objects_are_exported_as_their_values),
     ("a_cursor_ends_its_transaction_under_autocommit", statements::a_cursor_ends_its_transaction_under_autocommit),
     ("every_type_is_shown_as_its_text", statements::every_type_is_shown_as_its_text),
     ("a_38_digit_number_round_trips", statements::a_38_digit_number_round_trips),

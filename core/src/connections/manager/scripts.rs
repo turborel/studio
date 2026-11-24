@@ -8,6 +8,7 @@
 use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
+use turborel_client::export::ExportFormat;
 
 use super::{ConnectionManager, unexpected};
 use crate::catalog::Catalog;
@@ -15,7 +16,7 @@ use crate::catalog::ddl::ordered;
 use std::io::Write as _;
 
 use crate::catalog::model::TableDetail;
-use crate::connections::scripted::{RowsAs, Scripted, appended, restart_with, scripted};
+use crate::connections::scripted::{Scripted, appended, restart_with, scripted};
 use crate::connections::worker::{Reply, Request};
 use crate::error::{Result, StudioError};
 use crate::events::ConnectionId;
@@ -60,20 +61,21 @@ const INCREMENT: &str = "SELECT IDENTITY_INCREMENT FROM INFORMATION_SCHEMA.COLUM
      WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND COLUMN_NAME = ?";
 
 impl ConnectionManager {
-    /// Writes the rows `rows` of a table on `id`, as `how` says: appended
-    /// to `script`, or to the CSV file `file`.
+    /// Writes the rows `rows` of a table on `id`, as `how` says: INSERTs
+    /// appended to `script`; or the CSV file `file`, by the connection's
+    /// export, each large object as its value.
     fn script_rows(&self, id: ConnectionId, rows: &Scripted, how: DataScript, (script, file): (&Path, &Path)) -> Result<u64> {
-        let (how, path, append) = match how {
+        let request = match how {
             DataScript::Inserts => {
                 let heading = format!("\n-- The rows of {}.\n", rows.table);
                 appended(script)?
                     .write_all(heading.as_bytes())
                     .map_err(|e| StudioError::misuse(format!("[DESIGN] cannot write the script: {e}")))?;
-                (RowsAs::Inserts(rows.prefix.clone()), script, true)
+                Request::ScriptRows { sql: rows.query.clone(), prefix: rows.prefix.clone(), path: script.to_owned() }
             }
-            DataScript::Csv => (RowsAs::Csv(rows.columns.clone()), file, false),
+            DataScript::Csv => Request::Export { sql: rows.query.clone(), path: file.to_owned(), format: ExportFormat::Csv },
         };
-        match self.ask(id, Request::ScriptRows { sql: rows.query.clone(), how, path: path.to_owned(), append })? {
+        match self.ask(id, request)? {
             Reply::Exported(count) => Ok(count),
             _ => Err(unexpected()),
         }

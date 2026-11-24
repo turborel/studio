@@ -113,7 +113,7 @@ describe("an act of administration", () => {
           };
         }
         if ((args["act"] as { kind: string }).kind === "createRole") {
-          return refused({ sqlcode: -103, sqlstate: "2A000", message: "the role exists" });
+          return refused({ sqlcode: -103, sqlstate: "42000", message: "the role exists" });
         }
         return RAN;
       },
@@ -374,7 +374,7 @@ describe("the monitor", () => {
         VIEWS[args["view"] as ViewName] ?? refused({ sqlcode: -1, sqlstate: "42000", message: "no view" }),
       admin_act: (args) =>
         (args["act"] as { kind: string }).kind === "setDatabase"
-          ? refused({ sqlcode: -104, sqlstate: "2A000", message: "not the owner" })
+          ? refused({ sqlcode: -104, sqlstate: "42000", message: "not the owner" })
           : RAN,
     });
     const store = await opened();

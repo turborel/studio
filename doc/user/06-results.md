@@ -247,7 +247,10 @@ its menu **⋯**, run the result's
 query again, sorted and filtered as it is, and write its rows to the
 file the platform's dialog chooses, as they come, none of them held in
 the window. A CSV file has a header of the columns' names, then a record
-of each row. A native rows file, of the extension `.rows`, holds
+of each row; a large object is written as its value, of any length, read
+a chunk at a time: a character one as its text, in quotes if long, a
+binary one, as any binary value, as two upper-case hexits an octet,
+which **Import…** reads back into a binary column. A native rows file, of the extension `.rows`, holds
 Turborel's own frames, every value as it was, as turborel-client reads
 them back. Only a query is exported, and not one of parameters: its
 values are written in it instead.

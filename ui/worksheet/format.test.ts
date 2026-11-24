@@ -30,6 +30,26 @@ const WORDS = new Set([
 const OPTIONS: FormatOptions = { keyWords: "upper", indent: 4, lineWidth: 60, words: WORDS };
 
 describe("the formatter", () => {
+  it("writes LATERAL in the key words' case, its derived table's query indented [DESIGN] D36", () => {
+    const words = formatWords(["SELECT", "FROM", "WHERE", "AS", "COUNT"]);
+    expect(
+      formatSql(
+        "select s.name, t.n from staff s, lateral (select count(*) as n from dept d where d.id = s.dept) as t",
+        { ...OPTIONS, words },
+      ),
+    ).toBe(
+      [
+        "SELECT s.name, t.n",
+        "FROM staff s, LATERAL (",
+        "    SELECT COUNT(*) AS n",
+        "    FROM dept d",
+        "    WHERE d.id = s.dept",
+        ") AS t",
+        "",
+      ].join("\n"),
+    );
+  });
+
   it("begins each clause on a line, a condition's AND and OR indented [DESIGN] D36", () => {
     expect(
       formatSql(

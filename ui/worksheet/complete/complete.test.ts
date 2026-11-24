@@ -257,6 +257,11 @@ describe("completion's places", () => {
     );
   });
 
+  it("offers LATERAL where a derived table may follow, as in a FROM list or after JOIN [DESIGN] D40", async () => {
+    expect((await offered("SELECT * FROM STAFF s, LAT|")).labels).toContain("LATERAL");
+    expect((await offered("SELECT * FROM STAFF s JOIN LAT|")).labels).toContain("LATERAL");
+  });
+
   it("writes key words in the formatter's case, and ranks what was chosen before first [DESIGN] D40", async () => {
     expect((await offered("|", fixed("lower"))).labels).toContain("select");
     expect(inCase("Select", "keep")).toBe("SELECT");

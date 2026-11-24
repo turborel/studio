@@ -77,7 +77,7 @@ pub fn a_failure_is_kept_whole(live: &Live) {
     let (manager, _) = live.manager();
     let id = live.owner(&manager);
     let error = crate::run(&manager, id, "SELECT * FROM NOPE").unwrap_err();
-    assert_eq!((error.sqlcode, error.sqlstate.as_str()), (-103, "2A000"));
+    assert_eq!((error.sqlcode, error.sqlstate.as_str()), (-103, "42000"));
     assert!(error.message.contains("NOPE"), "{error}");
     assert!(!manager.session(id).unwrap().lost);
     manager.close(id).unwrap();
@@ -248,7 +248,51 @@ pub fn a_result_is_exported(live: &Live) {
     assert_eq!((columns.len(), rows.len()), (2, 2));
     assert_eq!(manager.export(id, "DELETE FROM NOPE WHERE 1 = 1", (&csv, ExportFormat::Csv)).unwrap_err().sqlstate, "TB910");
     assert_eq!(manager.export(id, query, (&dir.join("none").join("rows.csv"), ExportFormat::Csv)).unwrap_err().sqlstate, "TB910");
-    assert_eq!(manager.export(id, "SELECT * FROM NOPE", (&csv, ExportFormat::Csv)).unwrap_err().sqlstate, "2A000");
+    assert_eq!(manager.export(id, "SELECT * FROM NOPE", (&csv, ExportFormat::Csv)).unwrap_err().sqlstate, "42000");
+    manager.close(id).unwrap();
+}
+
+/// [CLIENT Copying and exporting] [DESIGN] D39 D43: a large object is
+/// exported as its value, never its locator: a character one of more than
+/// 64 KiB as its text, a binary one as upper-case hexits; and the file is
+/// imported back, the hexits read again into the binary column.
+pub fn large_objects_are_exported_as_their_values(live: &Live) {
+    use turborel_studio_core::connections::imports::{Format, ImportSpec, Reading};
+    use turborel_studio_core::connections::manager::ImportAnswer;
+    let (manager, _) = live.manager();
+    let id = live.owner(&manager);
+    manager.set_autocommit(id, true).unwrap();
+    crate::run(&manager, id, "CREATE TABLE LOBS (ID INTEGER PRIMARY KEY, DOC CLOB, PIC BLOB)").unwrap();
+    crate::run(&manager, id, "CREATE TABLE LOBS_BACK (ID INTEGER PRIMARY KEY, DOC CLOB, PIC BLOB)").unwrap();
+    crate::run(&manager, id, "INSERT INTO LOBS VALUES (1, LPAD(CAST('' AS CLOB), 90000, 'ab'), CAST(X'00FF10ab' AS BLOB))").unwrap();
+    let dir = live.server.dir.join("exports");
+    std::fs::create_dir_all(&dir).unwrap();
+    let csv = dir.join("lobs.csv");
+    assert_eq!(manager.export(id, "SELECT ID, DOC, PIC FROM LOBS", (&csv, ExportFormat::Csv)).unwrap(), 1);
+    let written = std::fs::read_to_string(&csv).unwrap();
+    let row = written.lines().nth(1).unwrap();
+    assert!(!written.contains("LARGE OBJECT"), "a locator was written: {}", row.get(..80).unwrap_or(row));
+    // A long value, written in chunks as it is read, is quoted whatever it holds.
+    assert_eq!(row, format!("1,\"{}\",00FF10AB", "ab".repeat(45_000)));
+    let spec = ImportSpec {
+        path: csv,
+        reading: Reading { format: Format::Csv, header: true, delimiter: None, null: None, sheet: None },
+        table: "\"ANN\".\"LOBS_BACK\"".to_owned(),
+        fields: ["ID", "DOC", "PIC"].iter().map(|f| Some((*f).to_owned())).collect(),
+        batch: 1000,
+        skip: false,
+        limit: None,
+        binary: Vec::new(),
+    };
+    let ImportAnswer::Imported(done) = manager.import(id, spec, false).unwrap() else { panic!("asked") };
+    assert_eq!(done.rows, 1);
+    let Outcome::Rows { page, .. } = crate::run(&manager, id, "SELECT CHAR_LENGTH(DOC), PIC = X'00FF10AB' FROM LOBS_BACK").unwrap().outcome
+    else {
+        panic!("no rows")
+    };
+    assert_eq!(page.rows, [[Some("90000".to_owned()), Some("TRUE".to_owned())]]);
+    crate::run(&manager, id, "DROP TABLE LOBS CASCADE").unwrap();
+    crate::run(&manager, id, "DROP TABLE LOBS_BACK CASCADE").unwrap();
     manager.close(id).unwrap();
 }
 
