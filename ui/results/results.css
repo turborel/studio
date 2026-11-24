@@ -137,8 +137,22 @@
 }
 
 .graph-view {
+  position: relative;
   height: 360px;
   border: 1px solid var(--border);
+}
+
+/* The toggle of the labels with no clear place, over the drawing's corner (D74). */
+.graph-labels {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  z-index: 5;
+  padding: 2px 6px;
+  font-size: 12px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 4px;
 }
 
 .graph-node {

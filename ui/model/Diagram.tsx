@@ -21,8 +21,31 @@ import { BOX_WIDTH, boxHeight } from "./layout";
 import { columnMarks } from "./svg";
 import { type ModelDoc } from "./models";
 import { tableKey } from "./model";
-import { edgesOf, nodesOf, type TableData } from "./flowParts";
+import { edgesOf, handleId, nodesOf, rowMiddle, type TableData } from "./flowParts";
+import { EDGE_TYPES } from "../flow/LabelledEdge";
+import "../flow/flow.css";
 import { menuKey } from "../shell/ContextMenu";
+
+/** The ends an edge is drawn to of a column, or of the table for none, `top` down its box: each side's, of each way. */
+function Handles({ column, top }: { readonly column: string | null; readonly top: number }) {
+  const ends = [
+    ["l", Position.Left],
+    ["r", Position.Right],
+  ] as const;
+  return ends.flatMap(([side, position]) =>
+    (["s", "t"] as const).map((kind) => (
+      <Handle
+        key={`${side}${kind}`}
+        id={handleId(column, side, kind)}
+        type={kind === "s" ? "source" : "target"}
+        position={position}
+        isConnectable={false}
+        className="flow-handle"
+        style={{ top }}
+      />
+    )),
+  );
+}
 
 /** A table's node: its name, then each column, its type and marks. */
 export function TableNode({ data }: NodeProps) {
@@ -32,8 +55,10 @@ export function TableNode({ data }: NodeProps) {
       className={selected ? "model-table model-selected" : "model-table"}
       style={{ width: BOX_WIDTH, height: boxHeight(table) }}
     >
-      <Handle type="target" position={Position.Left} isConnectable={false} className="flow-handle" />
-      <Handle type="source" position={Position.Right} isConnectable={false} className="flow-handle" />
+      <Handles column={null} top={rowMiddle(table, null)} />
+      {table.columns.map((c) => (
+        <Handles key={c.name} column={c.name} top={rowMiddle(table, c.name)} />
+      ))}
       <div className="model-table-name">{tableKey(table)}</div>
       <ul>
         {table.columns.map((c) => (
@@ -134,6 +159,7 @@ export function Diagram(props: {
           nodes={nodes}
           edges={edges}
           nodeTypes={NODE_TYPES}
+          edgeTypes={EDGE_TYPES}
           fitView={true}
           nodesConnectable={false}
           proOptions={{ hideAttribution: true }}

@@ -113,7 +113,7 @@ Each is told in full in [§7](#7-the-decisions).
 | D71 | A CALL's parameter modes and defaults: values asked for IN and INOUT parameters alone, OUT ones told, DEFAULT written for a default |
 | D72 | The planner's statistics: read of COLUMN_STATISTICS, TABLE_STATISTICS and INDEX_STATISTICS, shown in the explorer and the analyzer, judged missing or stale |
 | D73 | The routine debugger: a second connection attached to the session, breakpoints by line, the stack and values, steps; on a server and embedded |
-| D74 | Each theme's editor, popups and fields of tokens of its own |
+| D74 | Each theme's editor, popups and fields of tokens of its own; drawings' edges seen and their labels clear of boxes and each other |
 
 ---
 
@@ -148,6 +148,7 @@ Each is told in full in [§7](#7-the-decisions).
 | `ui/` | the front end, in TypeScript and React (D2) |
 | `ui/ipc/` | the typed commands, the front end's one way to the backend (R-TS-3) |
 | `ui/theme/` | the themes' palettes (D20, D74) |
+| `ui/flow/` | the drawings' edges, curved and spread, and their labels placed (D74) |
 | `ui/icons/` | the icons, by what each stands for (D35) |
 | `ui/shell/` | the dock, toolbar, status bar, dialogs and the explorer's connections |
 | `ui/explorer/` | the catalog's tree, the details panel and the definition view (D33) |
@@ -2015,7 +2016,7 @@ The review checklist:
   view; a second connection keeps the session the user works in as it
   is, and its end lets the session go on as if never debugged.
 
-#### D74. Each theme's editor, popups and fields of tokens of its own
+#### D74. Each theme's editor, popups and fields of tokens of its own; drawings' edges seen and their labels clear of boxes and each other
 
 - **Editor:** its tokens, key words, functions, strings, numbers,
   comments, operators, names, types, atoms, script variables and what
@@ -2031,10 +2032,21 @@ The review checklist:
   resting edge of 3:1 against the grounds (WCAG 1.4.11), a 2-pixel ring
   of the accent 1 pixel out as the one edge of a field focused, and the
   placeholder, disabled and invalid states; check boxes in the accent.
+- **Drawings:** a result's graph and a model's diagram draw each edge as
+  a curve in the theme's muted text colour, parallel edges spread apart
+  (`ui/flow/labels.ts`); each label on a plate where, from the edge's
+  middle out, it overlaps no box and no label placed before it, or, with
+  no such place, shown on hover of its edge, a graph's toggle **Show
+  every label** drawing them all. A foreign key runs from its first
+  column's side to its referenced column's, the sides facing each other.
+  Ranks stand apart enough for a label between them: 140 pixels of a
+  graph, 200 of a diagram, 60 between a diagram's tables in a rank.
 - *Why:* the dark theme drew CodeMirror's light colours, its key words
-  barely seen; and a field's ring was heavy and its edge faint.
+  barely seen; a field's ring was heavy and its edge faint; and labels
+  sat on each other and on the boxes, the lines between tables unseen.
 - **Checked:** tests hold every pair above to its minimum in both
-  themes.
+  themes, and lay out a graph and a diagram to find no label on a box
+  or on another label.
 ---
 
 ## 8. References

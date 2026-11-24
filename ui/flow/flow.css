@@ -1,0 +1,28 @@
+/* The edges of drawings (D74): lines in the theme's colour, a wide unseen line to hover, and labels on plates. */
+.flow-edge {
+  stroke: var(--text-muted);
+  stroke-width: 1.5;
+}
+
+.flow-edge-dashed {
+  stroke-dasharray: 6 4;
+}
+
+.flow-edge-hover {
+  stroke: transparent;
+  stroke-width: 12;
+  pointer-events: stroke;
+}
+
+.flow-label {
+  position: absolute;
+  padding: 0 5px;
+  font-size: 11px;
+  line-height: 16px;
+  white-space: nowrap;
+  color: var(--text);
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  pointer-events: none;
+}

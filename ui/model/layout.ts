@@ -19,7 +19,8 @@ export function boxHeight(t: ModelTable): number {
 /** Where each table of `model` is drawn: where it was placed, else where dagre lays it, of all or only those not placed. */
 export function laidOut(model: Model, again = false): Model {
   const g = new dagre.graphlib.Graph();
-  g.setGraph({ rankdir: "LR", nodesep: 40, ranksep: 80 });
+  // Ranks far enough apart for a foreign key's line and its label between them (D74).
+  g.setGraph({ rankdir: "LR", nodesep: 60, ranksep: 200 });
   g.setDefaultEdgeLabel(() => ({}));
   for (const t of model.tables) {
     g.setNode(tableKey(t), { width: BOX_WIDTH, height: boxHeight(t) });
