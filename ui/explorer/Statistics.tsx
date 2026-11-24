@@ -2,7 +2,8 @@
  * A table's planner statistics in the details panel (RULES.md D72): its
  * rows now and at the last pass that gathered them, and when; each
  * column's share NULL, distinct values, width, least and greatest values,
- * most common values with their shares, and histogram; and each index's
+ * most common values with their shares, and histogram, a long one cut to
+ * a line; and each index's
  * entries, distinct keys and selectivity beside its definition. Read of
  * COLUMN_STATISTICS, TABLE_STATISTICS and INDEX_STATISTICS as the tab is
  * shown; reading them asks for them, so ones not gathered are soon after.
@@ -16,6 +17,15 @@ import { Table } from "./Details";
 /** A figure as shown: its text, or a dash while it is not known. */
 function shown(figure: string | null): string {
   return figure ?? "–";
+}
+
+/** The most characters of a value or a list of values shown in a cell, so a row of a long histogram stays a line. */
+export const BRIEF_CHARS = 40;
+
+/** A value or a list of them as a cell shows it: cut at `BRIEF_CHARS`, a `…` after; a dash while it is not known. */
+export function brief(figure: string | null): string {
+  const chars = Array.from(figure ?? "–");
+  return chars.length > BRIEF_CHARS ? `${chars.slice(0, BRIEF_CHARS).join("")}…` : chars.join("");
 }
 
 /** What the statistics say of the table as a whole: its rows, and when they were last gathered. */
@@ -74,11 +84,11 @@ function Columns({ statistics }: { readonly statistics: TableStatistics }) {
         shown(c.nullFraction),
         shown(c.distinctValues),
         shown(c.averageWidth),
-        shown(c.minValue),
-        shown(c.maxValue),
-        shown(c.mostCommon),
-        shown(c.frequencies),
-        shown(c.histogram),
+        brief(c.minValue),
+        brief(c.maxValue),
+        brief(c.mostCommon),
+        brief(c.frequencies),
+        brief(c.histogram),
       ])}
     />
   );

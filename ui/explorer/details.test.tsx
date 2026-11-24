@@ -6,7 +6,7 @@ import { SAVED, STAFF, catalogBackend, opened, settle, within } from "../test/ca
 import { EMPTY_CATALOG } from "./catalogState";
 import { CatalogTree } from "./CatalogTree";
 import { Details } from "./Details";
-import { Statistics } from "./Statistics";
+import { brief, Statistics } from "./Statistics";
 import { savedOf, toggleFavourite } from "./Favourites";
 import { nodeId, treeRows } from "./tree";
 
@@ -316,6 +316,9 @@ describe("a table's statistics", () => {
     await settle();
     expect(screen.getByText(/^Gathered of 960 rows at 2026-11-24 09:00/u)).toBeTruthy();
     expect(screen.getByRole("table", { name: "Column statistics" }).textContent).toContain("NAME0.010024040AdaZoe");
+    expect(brief("x".repeat(41))).toBe(`${"x".repeat(40)}…`);
+    expect(brief("ARRAY['Ann']")).toBe("ARRAY['Ann']");
+    expect(brief(null)).toBe("–");
     const key = screen
       .getByText("ANN.STAFF.UNIQUE1", { selector: "table[aria-label='Index statistics'] td" })
       .closest("tr");
