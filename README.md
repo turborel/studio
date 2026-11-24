@@ -43,8 +43,8 @@ person who works with the database one window for it:
 - [schema diagrams and models](doc/user/08-modeling.md), designed
   offline or imported of a DDL script, and compared with a live schema,
   and schema compare;
-- an [analyzer](doc/user/09-analyzer.md) of indexes, plans and
-  statements, and reports;
+- an [analyzer](doc/user/09-analyzer.md) of indexes, plans,
+  statements and the planner's statistics, and reports;
 - an [assistant](doc/user/10-assistant.md), off until the user turns it
   on;
 - [live sessions](doc/user/11-live-sessions.md), a workspace shared with

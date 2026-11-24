@@ -19,11 +19,6 @@ Code never cites this file (R-DOC-5).
   brings the Arrow crates and a codec of each compression with it; a
   plug-in of the import formats (D68) once that weight is taken.
 
-## M8 Analyzer
-
-- Waiting on the server, shown as unavailable, with a line saying why,
-  until Turborel exposes it: the planner's column statistics.
-
 ## M9 Assistant
 
 - A check against the real API, for a maintainer to run with a key, as no

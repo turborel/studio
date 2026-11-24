@@ -78,6 +78,7 @@
     "allow-catalog-objects",
     "allow-catalog-table",
     "allow-catalog-routine",
+    "allow-catalog-statistics",
     "allow-catalog-type",
     "allow-catalog-graphs",
     "allow-catalog-analysis",

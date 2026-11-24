@@ -176,6 +176,40 @@ export interface Parameter {
   readonly default: string | null;
 }
 
+/** What the planner's statistics hold of a column, each figure null until they are gathered (RULES.md D72). */
+export interface ColumnStatistics {
+  readonly name: string;
+  readonly nullFraction: string | null;
+  readonly distinctValues: string | null;
+  readonly averageWidth: string | null;
+  readonly minValue: string | null;
+  readonly maxValue: string | null;
+  readonly mostCommon: string | null;
+  readonly frequencies: string | null;
+  readonly histogram: string | null;
+}
+
+/** What an index counts: its entries, and the distinct keys the planner estimates an equality on all its columns by. */
+export interface IndexStatistics {
+  readonly name: string;
+  readonly method: string;
+  readonly entries: string | null;
+  readonly distinctKeys: string | null;
+}
+
+/** What the planner's statistics hold of a table: its rows now and at the last pass, its columns and its indexes. */
+export interface TableStatistics {
+  readonly schema: string;
+  readonly table: string;
+  readonly engine: string | null;
+  readonly rows: string | null;
+  readonly lastChanged: string | null;
+  readonly gatheredRows: string | null;
+  readonly gathered: string | null;
+  readonly columns: readonly ColumnStatistics[];
+  readonly indexes: readonly IndexStatistics[];
+}
+
 /** A routine, whole. */
 export interface RoutineDetail {
   readonly schema: string;
@@ -247,6 +281,11 @@ export function catalogTable(connection: number, schema: string, name: string): 
 /** A routine, whole. */
 export function catalogRoutine(connection: number, schema: string, specific: string): Promise<RoutineDetail> {
   return invoke<RoutineDetail>("catalog_routine", { connection, schema, specific });
+}
+
+/** What the planner's statistics hold of a table; reading them asks for them, as a plan does. */
+export function catalogStatistics(connection: number, schema: string, table: string): Promise<TableStatistics> {
+  return invoke<TableStatistics>("catalog_statistics", { connection, schema, table });
 }
 
 /** A user-defined type, whole. */

@@ -49,6 +49,12 @@ fn index(name: &str, method: &str, columns: &[&str], implied: bool) -> Index {
 }
 
 /// A base table of ANN.
+/// A base table of ANN of no column, constraint or index, for the tests
+/// of other modules of the analyzer to build on.
+pub(crate) fn bare_table() -> TableDetail {
+    table("T", Vec::new(), Vec::new(), Vec::new())
+}
+
 fn table(name: &str, columns: Vec<Column>, constraints: Vec<Constraint>, indexes: Vec<Index>) -> TableDetail {
     TableDetail {
         schema: "ANN".to_owned(),
@@ -98,7 +104,7 @@ fn a_foreign_key_no_index_leads_is_found() {
             index("STAFF_DEPT_INDEX", "rtree", &["DEPT"], false),
         ],
     );
-    let found = analyze(&[staff], &[]).findings;
+    let found = analyze(&[staff], &[], &[]).findings;
     assert_eq!(found.len(), 1);
     let f = &found[0];
     assert_eq!((f.rule, f.object.as_str()), (FOREIGN_KEY_UNINDEXED, "ANN.STAFF STAFF_DEPT"));
@@ -110,7 +116,7 @@ fn a_foreign_key_no_index_leads_is_found() {
         vec![constraint("T_PK", "PRIMARY KEY", &["A"]), constraint("T_A", "FOREIGN KEY", &["A"])],
         vec![index("T_A_HASH", "HASH", &["A"], false)],
     );
-    assert!(analyze(&[hashed], &[]).findings.iter().all(|f| f.rule != FOREIGN_KEY_UNINDEXED));
+    assert!(analyze(&[hashed], &[], &[]).findings.iter().all(|f| f.rule != FOREIGN_KEY_UNINDEXED));
 }
 
 /// [DESIGN] D50: an index of another's method, columns and options is a
@@ -134,7 +140,7 @@ fn duplicate_and_leading_indexes_are_found() {
             Index { options: vec![("FILL".to_owned(), "50".to_owned())], ..index("T_B2", "btree", &["B"], false) },
         ],
     );
-    let found = analyze(&[t], &[]).findings;
+    let found = analyze(&[t], &[], &[]).findings;
     let rules: Vec<(&str, &str)> = found.iter().map(|f| (f.rule, f.object.as_str())).collect();
     assert_eq!(rules, [(INDEX_DUPLICATE, "T_A"), (INDEX_DUPLICATE, "T_BC2"), (INDEX_LEADS_ANOTHER, "T_B"), (INDEX_LEADS_ANOTHER, "T_B2"),]);
     assert_eq!(found[0].fix, "DROP INDEX T_A;");
@@ -159,7 +165,7 @@ fn a_table_of_no_primary_key_is_found() {
         kind: "SYSTEM VERSIONED".to_owned(),
         ..table("S", vec![column("A", true)], vec![constraint("S_PK", "PRIMARY KEY", &["A"])], Vec::new())
     };
-    let found = analyze(&[keyed, bare, view, versioned], &[]).findings;
+    let found = analyze(&[keyed, bare, view, versioned], &[], &[]).findings;
     let fixes: Vec<&str> = found.iter().map(|f| f.fix.as_str()).collect();
     assert_eq!(
         fixes,
@@ -184,7 +190,7 @@ fn a_setting_the_manual_warns_of_is_found() {
         setting("SERVER.TLS", "ON", "DATABASE", "OFF", "START"),
         setting("LOCKS.WAIT", "ON", "DEFAULT", "ON", "TRANSACTION"),
     ];
-    let analysis = analyze(&[], &settings);
+    let analysis = analyze(&[], &settings, &[]);
     let fixes: Vec<&str> = analysis.findings.iter().map(|f| f.fix.as_str()).collect();
     assert_eq!(
         fixes,
@@ -198,7 +204,7 @@ fn a_setting_the_manual_warns_of_is_found() {
     assert!(analysis.findings.iter().all(|f| f.rule == SETTING_ADVISED));
     assert!(analysis.findings[2].says.ends_with("from the next connection."), "{}", analysis.findings[2].says);
     assert!(analysis.findings[3].says.ends_with("at the next start."), "{}", analysis.findings[3].says);
-    let advised = analyze(&[], &[setting("LOCKS.WAIT", "OFF", "DATABASE", "ON", "TRANSACTION")]);
+    let advised = analyze(&[], &[setting("LOCKS.WAIT", "OFF", "DATABASE", "ON", "TRANSACTION")], &[]);
     assert_eq!(advised.findings, []);
     assert_eq!(analysis.settings.len(), 5);
 }
@@ -217,7 +223,7 @@ fn each_index_is_listed_with_the_constraint_it_serves() {
             index("T_AB", "btree", &["A", "B"], false),
         ],
     );
-    let listed: Vec<(String, Option<String>)> = analyze(&[t], &[]).indexes.into_iter().map(|r| (r.index.name, r.serves)).collect();
+    let listed: Vec<(String, Option<String>)> = analyze(&[t], &[], &[]).indexes.into_iter().map(|r| (r.index.name, r.serves)).collect();
     assert_eq!(
         listed,
         [

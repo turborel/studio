@@ -8,7 +8,7 @@ import { changeWorksheet, openWorksheet, worksheetOf } from "../state/worksheets
 import { SESSION } from "../test/backend";
 import { catalogBackend, must, opened, refused, settle, STAFF, within } from "../test/catalog";
 import { parsePlan } from "../plan/plan";
-import { AnalyzerDialog, ofTable, WAITING } from "./AnalyzerDialog";
+import { AnalyzerDialog, ofTable } from "./AnalyzerDialog";
 import { WhatIfDialog } from "./PlanFindings";
 import { PlanViewer } from "../plan/PlanViewer";
 import { comparedColumn, conjuncts, scanFindings, scannedTables } from "./planRules";
@@ -225,7 +225,12 @@ describe("a what-if index", () => {
 /** An analysis of one finding of each kind of fix. */
 const ANALYSIS: Analysis = {
   indexes: [
-    { table: "STAFF", index: { ...must(PARTS.indexes[0]), options: [["FILL", "50"]] }, serves: "STAFF_PRIMARY1" },
+    {
+      table: "STAFF",
+      index: { ...must(PARTS.indexes[0]), options: [["FILL", "50"]] },
+      serves: "STAFF_PRIMARY1",
+      counted: { name: "STAFF_PRIMARY1", method: "btree", entries: "960", distinctKeys: "240" },
+    },
   ],
   findings: [
     {
@@ -285,10 +290,9 @@ describe("the analyzer of a schema", () => {
     fireEvent.click(screen.getByRole("tab", { name: "Indexes" }));
     expect(screen.getByText("STAFF_PRIMARY1")).toBeTruthy();
     expect(screen.getByText("FILL = 50")).toBeTruthy();
+    expect(screen.getByText("1 in 240 (0.42%), about 4 entries a key")).toBeTruthy();
     fireEvent.click(screen.getByRole("tab", { name: "Settings" }));
     expect(screen.getByText("SERVER.TRUST_LOCAL")).toBeTruthy();
-    fireEvent.click(screen.getByRole("tab", { name: "Waiting on the Server" }));
-    expect(screen.getAllByText(/: unavailable$/u)).toHaveLength(WAITING.length);
     fireEvent.click(screen.getByRole("button", { name: "Close" }));
     expect(store.current().dialog).toBeNull();
   });

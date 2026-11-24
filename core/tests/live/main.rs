@@ -159,6 +159,7 @@ const TESTS: &[(&str, Test)] = &[
     ("a_schemas_analysis_finds_what_its_rules_say", analyzer::a_schemas_analysis_finds_what_its_rules_say),
     ("a_what_if_index_changes_the_plan", analyzer::a_what_if_index_changes_the_plan),
     ("a_data_change_is_explained_running_nothing", analyzer::a_data_change_is_explained_running_nothing),
+    ("a_tables_statistics_are_read", analyzer::a_tables_statistics_are_read),
     ("the_built_in_reports_run", analyzer::the_built_in_reports_run),
     ("the_assistants_tools_run_read_only", assistant::the_assistants_tools_run_read_only),
     ("a_turn_of_the_mock_model_calls_the_server", assistant::a_turn_of_the_mock_model_calls_the_server),

@@ -118,6 +118,7 @@ Of a table or view, its tabs are:
 | **Partitions** | of a partitioned table, its strategy, its key and each partition with its bound; of a partition, the table it is a partition of and its bound |
 | **Storage** | of a base table, the engine that keeps its rows, and each option of the engine given a value of its own ([Appendix G](https://github.com/turborel/turborel/blob/main/doc/appendix/g-table-options.md)) |
 | **Privileges** | each privilege granted on it, or on one of its columns: to whom, which, on which column, by whom, and whether with grant option |
+| **Statistics** | of a base table, what the planner's statistics hold of it: the rows the last pass found and when, its rows now and when it last changed; each column's share NULL, distinct values, width, least and greatest values, most common values with their shares, and histogram; and each index's entries, distinct keys and selectivity beside its definition ([The Analyzer](09-analyzer.md#statistics)). Of statistics not yet gathered it says so; reading them asks for them, so they are gathered soon after. A column is shown to a user who holds a privilege on it, and every column to the owner and a holder of MONITOR |
 | **Dependencies** | what it uses, as the tables a view reads, and what uses it: views, routines and triggers that read it, and other tables' foreign keys that reference it |
 | **Definition** | its definition as SQL |
 

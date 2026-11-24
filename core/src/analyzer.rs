@@ -10,9 +10,13 @@ use serde::Serialize;
 
 use crate::catalog::model::{Constraint, Index, TableDetail};
 use crate::catalog::names::{ident, qualified};
+use crate::catalog::statistics::{IndexStatistics, TableStatistics};
 
+mod statistics;
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;
+
+pub use statistics::{STATISTICS_MISSING, STATISTICS_STALE};
 
 /// A foreign key whose columns no index leads.
 pub const FOREIGN_KEY_UNINDEXED: &str = "FK-NO-INDEX";
@@ -72,6 +76,9 @@ pub struct IndexRow {
     pub index: Index,
     /// The PRIMARY KEY or UNIQUE constraint it was made for, if any.
     pub serves: Option<String>,
+    /// What it counts, of INDEX_STATISTICS, if the user may see it there:
+    /// its entries and distinct keys, its selectivity.
+    pub counted: Option<IndexStatistics>,
 }
 
 /// What the analyzer found of a schema.
@@ -109,21 +116,31 @@ pub fn is_base(kind: &str) -> bool {
     kind == "BASE TABLE" || kind == "SYSTEM VERSIONED"
 }
 
-/// Analyzes `tables`, the base tables of a schema read whole, and
-/// `settings`, the database's.
-pub fn analyze(tables: &[TableDetail], settings: &[Setting]) -> Analysis {
+/// Analyzes `tables`, the base tables of a schema read whole,
+/// `settings`, the database's, and `statistics`, what the planner's
+/// statistics hold of those tables.
+pub fn analyze(tables: &[TableDetail], settings: &[Setting], statistics: &[TableStatistics]) -> Analysis {
     let tables: Vec<&TableDetail> = tables.iter().filter(|t| is_base(&t.kind) && t.partition_of.is_none()).collect();
+    let of = |t: &TableDetail| statistics.iter().find(|s| s.schema == t.schema && s.table == t.name);
     let mut findings = Vec::new();
     for t in &tables {
         findings.extend(unindexed_foreign_keys(t));
         findings.extend(duplicates(t));
         findings.extend(no_primary_key(t));
+        findings.extend(of(t).and_then(|s| statistics::statistics_findings(t, s, settings)));
     }
     findings.extend(advised(settings));
     findings.sort_by(|a, b| (a.rule, &a.object).cmp(&(b.rule, &b.object)));
     let indexes = tables
         .iter()
-        .flat_map(|t| t.indexes.iter().map(|i| IndexRow { table: t.name.clone(), index: i.clone(), serves: served(t, i) }))
+        .flat_map(|t| {
+            t.indexes.iter().map(move |i| IndexRow {
+                table: t.name.clone(),
+                index: i.clone(),
+                serves: served(t, i),
+                counted: of(t).and_then(|s| s.indexes.iter().find(|c| c.name == i.name)).cloned(),
+            })
+        })
         .collect();
     let settings = settings.iter().filter(|s| s.value != s.default).cloned().collect();
     Analysis { indexes, findings, settings }

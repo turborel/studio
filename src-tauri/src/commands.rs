@@ -102,6 +102,7 @@ pub(crate) fn handler<R: Runtime>() -> impl Fn(Invoke<R>) -> bool + Send + Sync 
         catalog::catalog_objects,
         catalog::catalog_table,
         catalog::catalog_routine,
+        catalog::catalog_statistics,
         catalog::catalog_type,
         catalog::catalog_graphs,
         catalog::catalog_analysis,

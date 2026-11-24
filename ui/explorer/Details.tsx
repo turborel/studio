@@ -22,6 +22,7 @@ import { useStore, useStudio } from "../state/store";
 import { Icon, type IconName } from "../icons/Icon";
 import { type Selected, tableKey } from "./catalogState";
 import { Definition } from "./Definition";
+import { Statistics } from "./Statistics";
 import { SchemaActions, TableActions } from "./TableActions";
 import { sameObject, savedOf, toggleFavourite } from "./Favourites";
 
@@ -264,6 +265,12 @@ function TableDetails({ connection, detail }: { connection: number; detail: Tabl
           rows={[["Engine", storage.engine], ...storage.options.map(([option, value]) => [option, value])]}
         />
       ),
+    ]);
+  }
+  if (detail.view === null && detail.kind !== "VIEW") {
+    parts.push([
+      "Statistics",
+      () => <Statistics connection={connection} schema={detail.schema} table={detail.name} indexes={detail.indexes} />,
     ]);
   }
   parts.push([

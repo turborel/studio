@@ -94,6 +94,20 @@ pub(crate) async fn catalog_routine(
     blocking(&studio, move |m| Catalog::of(m, connection).routine(&schema, &specific)).await
 }
 
+/// What the planner's statistics hold of a table, its columns and its
+/// indexes.
+#[tauri::command]
+pub(crate) async fn catalog_statistics(
+    studio: State<'_, Studio>,
+    connection: ConnectionId,
+    schema: String,
+    table: String,
+) -> Result<turborel_studio_core::catalog::statistics::TableStatistics> {
+    bounded("a schema", &schema, MAX_NAME_CHARS)?;
+    bounded("a table", &table, MAX_NAME_CHARS)?;
+    blocking(&studio, move |m| Catalog::of(m, connection).statistics(&schema, &table)).await
+}
+
 /// A user-defined type, whole.
 #[tauri::command]
 pub(crate) async fn catalog_type(studio: State<'_, Studio>, connection: ConnectionId, schema: String, name: String) -> Result<UserType> {

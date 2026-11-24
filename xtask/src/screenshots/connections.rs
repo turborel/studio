@@ -2,8 +2,9 @@
 //! (RULES.md D60): the About dialog; connecting and the catalog filling;
 //! the connection dialog and its TLS; the dialogs of an embedded
 //! database; a database in memory, unsaved; the status bar of each kind
-//! of connection; the tree, its filter, the details, the definition and
-//! the dependencies; and a table scripted as a SELECT to a worksheet.
+//! of connection; the tree, its filter, the details, the definition, the
+//! dependencies and the planner's statistics; and a table scripted as a
+//! SELECT to a worksheet.
 
 use crate::error::{Result, fail};
 use crate::screenshots::scene::{SAVED_ROWS, SETTLE, Scene, quoted};
@@ -167,8 +168,30 @@ pub fn details_scene(scene: &Scene<'_>) -> Result<()> {
         ))?;
         scene.save_part(name, details)?;
     }
+    statistics(scene, details)?;
     scene.click_text(&format!("{details} [role=\"tab\"]"), "Columns")?;
     scene.reset_layout()
+}
+
+/// The times the statistics tab is read again, a second apart, for the
+/// maintenance to gather ones its first read asked for.
+const STATISTICS_READS: u32 = 30;
+
+/// The details' Statistics of the table shown, once gathered: the tab
+/// read again, by another tab and back, until they are.
+fn statistics(scene: &Scene<'_>, details: &str) -> Result<()> {
+    let tab = format!("{details} [role=\"tab\"]");
+    let gathered = format!("return document.querySelector({}).textContent.includes('Gathered of');", quoted(details));
+    for _ in 0..STATISTICS_READS {
+        scene.click_text(&tab, "Statistics")?;
+        wait_read(scene, details)?;
+        if scene.session.script(&gathered)?.as_bool().unwrap_or(false) {
+            return scene.save_part("explorer-statistics", details);
+        }
+        scene.click_text(&tab, "Columns")?;
+        std::thread::sleep(std::time::Duration::from_secs(1));
+    }
+    fail("the table's statistics were not gathered".to_owned())
 }
 
 /// Waits until `selector` reads no more.

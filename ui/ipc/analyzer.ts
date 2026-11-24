@@ -4,7 +4,7 @@
  * own, kept and forgotten.
  */
 import { invoke } from "@tauri-apps/api/core";
-import type { Index } from "./catalog";
+import type { Index, IndexStatistics } from "./catalog";
 
 /** A setting as INFORMATION_SCHEMA.SETTINGS gives it. */
 export interface Setting {
@@ -29,6 +29,8 @@ export interface IndexRow {
   readonly table: string;
   readonly index: Index;
   readonly serves: string | null;
+  /** What it counts, of INDEX_STATISTICS, if the user may see it there. */
+  readonly counted: IndexStatistics | null;
 }
 
 /** What the analyzer found of a schema. */

@@ -12,7 +12,7 @@ citing it pass (RULES.md R-TRACE-4); else it is **not yet**, and
 Turborel's manual where Turborel defines the behaviour, by page and
 heading as RULES.md D6 writes them. Turborel's manual is read at the
 commit turborel-client is pinned to (RULES.md D10),
-`32e1334d37c7b4ca489491eed7b216a2d778bff1`.
+`1107664016d3e34199e8ae906133efbb66eaa436`.
 
 [Statements](#statements) · [Types](#types) ·
 [The Information Schema](#the-information-schema) ·
@@ -106,8 +106,9 @@ each as the session's user may see it.
 | S-VIEW-22 | PARTITIONED_TABLES, PARTITIONS, PARTITION_INDEXES | partitions and their indexes | done |
 | S-VIEW-23 | USER_DEFINED_TYPES, ATTRIBUTES, DIRECT_SUPERTYPES, METHOD_SPECIFICATIONS, METHOD_SPECIFICATION_PARAMETERS | user-defined types, with their supertypes, references and methods | done |
 | S-VIEW-24 | STATEMENT_STATISTICS | the monitor's statements and the analyzer's top statements by total time, each query's plan opened ([DOC operator/11-monitoring.md Statement statistics]) | done |
-| S-VIEW-25 | TABLE_STATISTICS, INDEX_STATISTICS | the monitor's tables and indexes, the analyzer's unused indexes and sizes, and the reports of sizes ([DOC operator/11-monitoring.md Table and index statistics]) | done |
+| S-VIEW-25 | TABLE_STATISTICS, INDEX_STATISTICS | the monitor's tables and indexes, the analyzer's unused indexes and sizes, each index's distinct keys and selectivity in the analyzer and the explorer, a table's rows now for the statistics' rules, and the reports of sizes ([DOC operator/11-monitoring.md Table and index statistics]) | done |
 | S-VIEW-26 | TABLE_OPTIONS | a base table's engine and its options of a value of their own, shown and written in its definition by USING and WITH ([DOC appendix/g-table-options.md Appendix G: Table Options *(extension)*]) | done |
+| S-VIEW-27 | COLUMN_STATISTICS | the explorer's statistics of a table's columns, and the analyzer's STATS-MISSING and STATS-STALE ([DOC sql/07-information-schema.md Column statistics]) | done |
 
 ## turborel-client
 

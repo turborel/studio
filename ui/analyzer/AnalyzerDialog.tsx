@@ -1,9 +1,9 @@
 /**
  * The analyzer of a schema (RULES.md D50): the findings of its rules, each
  * explained, its fix opened in a worksheet to be read and run; the
- * schema's indexes, each with the constraint it serves; the settings that
- * differ from their defaults; and what waits on the server, each saying
- * why it cannot be shown yet.
+ * schema's indexes, each with the constraint it serves and its distinct
+ * keys and selectivity, as INDEX_STATISTICS counts them (D72); and the
+ * settings that differ from their defaults.
  */
 import { TopStatements, Usage } from "./Usage";
 import { useEffect, useState } from "react";
@@ -15,14 +15,10 @@ import { useStore, useStudio } from "../state/store";
 import { namer } from "../data/ddl";
 import { Modal } from "../shell/Modal";
 import { thrownText } from "../model/ModelDialogs";
-
-/** What waits on the server: each, and why it cannot be shown yet. */
-export const WAITING: readonly (readonly [string, string])[] = [
-  ["Column statistics", "Turborel shows not the planner's statistics of a column: its distinct values and nulls."],
-];
+import { selectivity } from "../explorer/selectivity";
 
 /** The tabs of the analyzer. */
-export type Tab = "findings" | "indexes" | "statements" | "usage" | "settings" | "waiting";
+export type Tab = "findings" | "indexes" | "statements" | "usage" | "settings";
 
 /** The tabs, each with its name. */
 const TABS: readonly (readonly [Tab, string])[] = [
@@ -31,7 +27,6 @@ const TABS: readonly (readonly [Tab, string])[] = [
   ["statements", "Top Statements"],
   ["usage", "Usage and Sizes"],
   ["settings", "Settings"],
-  ["waiting", "Waiting on the Server"],
 ];
 
 /** The analysis of `schema` on `connection`, read as it is shown: null until read, or the failure's text. */
@@ -117,7 +112,7 @@ function Findings({
   );
 }
 
-/** The schema's indexes, each with its table, method, columns, options and the constraint it serves. */
+/** The schema's indexes, each with its table, method, columns, options, the constraint it serves, and what it counts. */
 function Indexes({ analysis }: { readonly analysis: Analysis }) {
   if (analysis.indexes.length === 0) {
     return <p className="hint">No table of the schema has an index.</p>;
@@ -133,6 +128,8 @@ function Indexes({ analysis }: { readonly analysis: Analysis }) {
           <th>Columns</th>
           <th>Options</th>
           <th>Serves</th>
+          <th>Distinct keys</th>
+          <th>Selectivity</th>
         </tr>
       </thead>
       <tbody>
@@ -145,6 +142,8 @@ function Indexes({ analysis }: { readonly analysis: Analysis }) {
             <td>{r.index.columns.join(", ")}</td>
             <td>{r.index.options.map(([k, v]) => `${k} = ${v}`).join(", ")}</td>
             <td>{r.serves ?? ""}</td>
+            <td>{r.counted?.distinctKeys ?? ""}</td>
+            <td>{selectivity(r.counted)}</td>
           </tr>
         ))}
       </tbody>
@@ -183,20 +182,6 @@ function Settings({ analysis }: { readonly analysis: Analysis }) {
   );
 }
 
-/** What waits on the server, each with why. */
-function Waiting() {
-  return (
-    <dl className="waiting" aria-label="Waiting on the server">
-      {WAITING.map(([what, why]) => (
-        <div key={what}>
-          <dt>{what}: unavailable</dt>
-          <dd>{why}</dd>
-        </div>
-      ))}
-    </dl>
-  );
-}
-
 /** `analysis` of table `table` alone, where one is given: its findings, those of its indexes, and its indexes. */
 export function ofTable(analysis: Analysis, table: string | undefined, name: (n: string) => string): Analysis {
   if (table === undefined) {
@@ -219,8 +204,6 @@ function AnalyzerBody(props: {
 }) {
   const { found, tab } = props;
   switch (tab) {
-    case "waiting":
-      return <Waiting />;
     case "statements":
       return <TopStatements connection={props.of.connection} />;
     case "usage":

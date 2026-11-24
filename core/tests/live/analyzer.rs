@@ -1,7 +1,9 @@
 //! The live tests of the analyzer, its what-if index and the reports
 //! (RULES.md D50, D51, D52).
 
-use turborel_studio_core::analyzer::{FOREIGN_KEY_UNINDEXED, INDEX_DUPLICATE, INDEX_LEADS_ANOTHER, TABLE_NO_PRIMARY_KEY};
+use turborel_studio_core::analyzer::{
+    FOREIGN_KEY_UNINDEXED, INDEX_DUPLICATE, INDEX_LEADS_ANOTHER, STATISTICS_MISSING, TABLE_NO_PRIMARY_KEY,
+};
 use turborel_studio_core::catalog::Catalog;
 use turborel_studio_core::connections::outcome::Outcome;
 use turborel_studio_core::reports::built_in_reports;
@@ -159,5 +161,34 @@ pub fn a_data_change_is_explained_running_nothing(live: &Live) {
     for table in ["EX_GONE", "EX_ORDERS", "EX_PARTS"] {
         run(&manager, id, &format!("DROP TABLE {table} CASCADE")).unwrap();
     }
+    manager.close(id).unwrap();
+}
+
+/// [DOC sql/07-information-schema.md Column statistics] [DESIGN] D72: a
+/// table's statistics are read of a server's views, its rows, columns and
+/// indexes; with the maintenance paused they are not gathered, and the
+/// analyzer finds them missing, its fix setting JOBS.POLICY AUTOMATIC.
+pub fn a_tables_statistics_are_read(live: &Live) {
+    let (manager, _) = live.manager();
+    let id = live.owner(&manager);
+    manager.set_autocommit(id, true).unwrap();
+    for sql in [
+        "SET DATABASE JOBS.POLICY = 'PAUSED'",
+        "CREATE TABLE ST_COUNTED (ID INTEGER PRIMARY KEY, KIND VARCHAR(10))",
+        "CREATE INDEX ST_COUNTED_KIND ON ST_COUNTED (KIND)",
+        "INSERT INTO ST_COUNTED VALUES (1, 'a'), (2, 'a'), (3, 'b')",
+    ] {
+        run(&manager, id, sql).unwrap();
+    }
+    let catalog = Catalog::of(&manager, id);
+    let read = catalog.statistics("ANN", "ST_COUNTED").unwrap();
+    assert_eq!((read.rows.as_deref(), read.gathered_rows.as_deref()), (Some("3"), None));
+    assert_eq!(read.columns.iter().map(|c| c.name.as_str()).collect::<Vec<_>>(), ["ID", "KIND"]);
+    assert!(read.indexes.iter().any(|i| i.name == "ST_COUNTED_KIND"), "{:?}", read.indexes);
+    let analysis = catalog.analysis("ANN").unwrap();
+    let missing = analysis.findings.iter().find(|f| f.rule == STATISTICS_MISSING && f.object == "ANN.ST_COUNTED");
+    assert_eq!(missing.map(|f| f.fix.as_str()), Some("SET DATABASE JOBS.POLICY = 'AUTOMATIC';"));
+    run(&manager, id, "SET DATABASE JOBS.POLICY = 'AUTOMATIC'").unwrap();
+    run(&manager, id, "DROP TABLE ST_COUNTED CASCADE").unwrap();
     manager.close(id).unwrap();
 }

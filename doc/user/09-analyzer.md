@@ -15,17 +15,16 @@ the user's own queries, as tables or charts.
 
 **Connection > Analyze Schema…** analyzes the session's schema; a
 schema's details, in the explorer, offer **Analyze Schema…** of it. The
-analyzer reads each base table of the schema whole, and the database's
-settings, and shows six tabs:
+analyzer reads each base table of the schema whole, what the planner's
+statistics hold of it, and the database's settings, and shows five tabs:
 
 | Tab | What it shows |
 |---|---|
 | **Findings** | each finding: its rule, what it is of, what it says, and its fix |
-| **Indexes** | each index of the schema: its table, name, method, whether it is unique, its columns, its options, and the PRIMARY KEY or UNIQUE constraint it was made for |
+| **Indexes** | each index of the schema: its table, name, method, whether it is unique, its columns, its options, the PRIMARY KEY or UNIQUE constraint it was made for, the distinct keys it counts, and its selectivity ([Statistics](#statistics)) |
 | **Settings** | each setting whose value is not its default: its value, its default, where the value comes from, and when a change takes effect |
 | **Top Statements** | the 25 statements run since the database opened that took the most time in all ([Top statements](#top-statements)) |
 | **Usage and Sizes** | of the schema, the indexes no search used, and each table's and index's size ([Usage and sizes](#usage-and-sizes)) |
-| **Waiting on the Server** | what the analyzer cannot show yet, and why: the planner's statistics of a column |
 
 ![The analyzer's findings of DEMO: a foreign key of ORDER_LINES whose columns no index leads, and the CREATE INDEX that fixes it](../images/analyzer-findings-light.png#gh-light-mode-only)
 ![The analyzer's findings of DEMO: a foreign key of ORDER_LINES whose columns no index leads, and the CREATE INDEX that fixes it](../images/analyzer-findings-dark.png#gh-dark-mode-only)
@@ -78,6 +77,8 @@ gathered, which reading the view asks for.
 | `INDEX-PREFIX` | an index whose columns lead, in order, those of another `btree` index; each write keeps both, and the longer may serve its lookups, which their plans tell | `DROP INDEX` of it |
 | `TABLE-NO-KEY` | a base table of no primary key | of its first UNIQUE constraint whose columns are each NOT NULL, that constraint dropped and made again of its name as the primary key, as a table takes no two keys of the same columns; else a comment saying to name the key's columns |
 | `SETTING-ADVISED` | a setting of a value the manual warns of ([Settings](https://github.com/turborel/turborel/blob/main/doc/appendix/c-settings.md)) | the setting given its default, by SET of a session's value, or SET DATABASE of the database's |
+| `STATS-MISSING` | a table of rows whose statistics have not been gathered, so the planner estimates it by its defaults ([Statistics](#statistics)) | its statistics read in COLUMN_STATISTICS, as a plan reads them, so the maintenance gathers them; or, while JOBS.POLICY is not AUTOMATIC, `SET DATABASE JOBS.POLICY = 'AUTOMATIC'` |
+| `STATS-STALE` | a table whose rows now differ from those its statistics were gathered of by more than its STATISTICS.REFRESH_FRACTION of them and STATISTICS.REFRESH_ROWS more, 0.1 and 50 unless set, so the planner's estimates of it are off | as `STATS-MISSING` |
 | `SCAN-NO-INDEX` | a table the plan reads whole to compare a column with a constant, where no index leads the column ([The plan's findings](#the-plans-findings)) | `CREATE INDEX` of the column |
 
 The plan's own warnings, `PLAN-FULL-SCAN`, `PLAN-SERIAL`,
@@ -89,7 +90,9 @@ join, and `PLAN-ANTIJOIN`, NOT EXISTS or NOT IN made an antijoin, NOT
 IN keeping its meaning with nulls.
 
 A constraint's index is never dropped by a fix. A partition is judged
-with its partitioned table, not apart. `SETTING-ADVISED` finds:
+with its partitioned table, not apart. The statistics' rules judge a
+table of the built-in engines, `rowstore` and `columnstore`, not a
+partitioned one, and only of the columns the user may see. `SETTING-ADVISED` finds:
 
 | Setting | Of | What the manual says it does |
 |---|---|---|
@@ -118,18 +121,26 @@ ALTER TABLE ANN.STAFF DROP CONSTRAINT STAFF_ID RESTRICT;
 ALTER TABLE ANN.STAFF ADD CONSTRAINT STAFF_ID PRIMARY KEY (ID);
 ```
 
-## Waiting on the server
+## Statistics
 
-Turborel does not yet show some of what an analyzer would read, so the
-analyzer shows each as unavailable, saying why:
+The planner estimates the rows of a query by its statistics: of each
+column, the rows the last pass over the table found, its share NULL,
+distinct values, least and greatest values, most common values and
+histogram; of each index, the distinct keys it counts, by which it
+estimates an equality on all its columns
+([Column statistics](https://github.com/turborel/turborel/blob/main/doc/sql/07-information-schema.md#column-statistics)).
+The database's maintenance gathers them once a plan reads them, and
+again as the table changes past its STATISTICS.REFRESH_FRACTION of its
+rows and STATISTICS.REFRESH_ROWS more. No statement gathers them: the
+analyzer reads them as a plan does, so ones not gathered are gathered
+soon after.
 
-- **Statement statistics:** the statements run, their calls, rows and
-  times.
-- **Table and index statistics:** a table's rows, sizes and scans; an
-  index's size and use.
-- **Column statistics:** the planner's statistics of a column, its
-  distinct values and nulls.
-- **Sizes of objects:** a table's or index's size on disk.
+An index's **selectivity** is the share of its entries an equality on
+all its columns keeps, one of its distinct keys, as `1 in 240 (0.42%),
+about 4 entries a key`: the smaller the share, the fewer rows the index
+leaves to read. It is empty while the index has counted no keys. The
+explorer shows each table's statistics too
+([The Explorer](04-explorer.md#the-details-panel)).
 
 ## The plan's findings
 

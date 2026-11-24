@@ -111,6 +111,7 @@ Each is told in full in [§7](#7-the-decisions).
 | D69 | Keyboard schemes: Studio's own keys, or the function keys', a key bound apart on top |
 | D70 | Explain of a data change: plain EXPLAIN, which runs nothing, and what the change would do, shown apart |
 | D71 | A CALL's parameter modes and defaults: values asked for IN and INOUT parameters alone, OUT ones told, DEFAULT written for a default |
+| D72 | The planner's statistics: read of COLUMN_STATISTICS, TABLE_STATISTICS and INDEX_STATISTICS, shown in the explorer and the analyzer, judged missing or stale |
 
 ---
 
@@ -515,7 +516,7 @@ The review checklist:
   an embedded database is given (D59), `turborel-aes`, `turborel-lz4`
   and `turborel-simd`, from
   github.com/turborel/turborel at commit
-  `32e1334d37c7b4ca489491eed7b216a2d778bff1` of `main`; BSD-2-Clause
+  `1107664016d3e34199e8ae906133efbb66eaa436` of `main`; BSD-2-Clause
   Plus Patent.
 - **Not crates.io:** the 0.0.0 crates published there are frozen and
   never used.
@@ -1939,6 +1940,35 @@ The review checklist:
   holds `/*` or `*/`, and it is never read as SQL (R-SAFE-2).
 - *Why:* an OUT parameter takes no value, and asking for one misleads;
   its position tells which of the procedure's parameters each `?` is.
+
+#### D72. The planner's statistics: read of COLUMN_STATISTICS, TABLE_STATISTICS and INDEX_STATISTICS, shown in the explorer and the analyzer, judged missing or stale
+
+- **Read:** of a base table, the rows the last pass found and when, of
+  COLUMN_STATISTICS, and its rows now, engine and last change, of
+  TABLE_STATISTICS; each column's share NULL, distinct values, width,
+  least and greatest values, most common values with their shares, and
+  histogram; each index's entries and distinct keys, of
+  INDEX_STATISTICS (Turborel's D990, D992). Each figure the server's
+  text (R-NUM-1) (`core/src/catalog/statistics.rs`). Reading them asks
+  for them as a plan does, so ones not gathered are gathered soon after.
+- **Shown:** the explorer's **Statistics** tab of a base table
+  (`ui/explorer/Statistics.tsx`), each index's selectivity beside its
+  definition; the analyzer's Indexes, each with its distinct keys and
+  selectivity, the share of its entries an equality on all its columns
+  keeps, one key's (`ui/explorer/selectivity.ts`). The analyzer's tab of
+  what waited on the server is gone, its one item, column statistics,
+  now read.
+- **Rules:** `STATS-MISSING`, a table of rows whose statistics have not
+  been gathered; `STATS-STALE`, one whose rows now differ from those
+  gathered by more than its STATISTICS.REFRESH_FRACTION of them and
+  STATISTICS.REFRESH_ROWS more, its own options or 0.1 and 50, as its
+  engine judges them due, read exactly (`core/src/analyzer/statistics.rs`).
+  Of a table of the built-in engines, not partitioned, of a column shown.
+  No statement gathers statistics, so the fix reads them in
+  COLUMN_STATISTICS, as a plan does, or, while JOBS.POLICY is not
+  AUTOMATIC, sets it so.
+- *Why:* a plan's estimates are only as good as its statistics, and a
+  person tuning queries needs to see them and be told when they lag.
 ---
 
 ## 8. References

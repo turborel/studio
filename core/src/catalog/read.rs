@@ -283,8 +283,8 @@ impl Catalog<'_> {
             .collect())
     }
 
-    /// What the analyzer finds of `schema`'s base tables, read whole, and
-    /// the database's settings.
+    /// What the analyzer finds of `schema`'s base tables, read whole, what
+    /// the planner's statistics hold of them, and the database's settings.
     ///
     /// # Errors
     ///
@@ -292,10 +292,12 @@ impl Catalog<'_> {
     pub fn analysis(&self, schema: &str) -> Result<crate::analyzer::Analysis> {
         let objects = self.objects(schema)?;
         let mut tables = Vec::with_capacity(objects.tables.len());
+        let mut statistics = Vec::with_capacity(objects.tables.len());
         for table in objects.tables.iter().filter(|t| crate::analyzer::is_base(&t.kind)) {
             tables.push(self.table(schema, &table.name)?);
+            statistics.push(self.statistics(schema, &table.name)?);
         }
-        Ok(crate::analyzer::analyze(&tables, &self.settings()?))
+        Ok(crate::analyzer::analyze(&tables, &self.settings()?, &statistics))
     }
 
     /// The parts of `schema`'s script: its domains, sequences, tables in

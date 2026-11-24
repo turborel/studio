@@ -66,6 +66,37 @@ pub fn a_query_is_paged_through_its_cursor(scratch: &Scratch) {
     manager.close(id).unwrap();
 }
 
+/// [DOC sql/07-information-schema.md Column statistics] [DESIGN] D72: a
+/// table's statistics are read of the views, its rows, columns and
+/// indexes; with the maintenance paused they are not gathered, and the
+/// analyzer finds them missing, its fix setting JOBS.POLICY AUTOMATIC.
+pub fn a_tables_statistics_are_read(scratch: &Scratch) {
+    let (manager, _) = scratch.manager();
+    let id = connected(scratch, &manager);
+    for sql in [
+        "SET DATABASE JOBS.POLICY = 'PAUSED'",
+        "CREATE TABLE COUNTED (ID INTEGER PRIMARY KEY, KIND VARCHAR(10))",
+        "CREATE INDEX COUNTED_KIND ON COUNTED (KIND)",
+        "INSERT INTO COUNTED VALUES (1, 'a'), (2, 'a'), (3, 'b')",
+        "COMMIT",
+    ] {
+        run(&manager, id, sql).unwrap();
+    }
+    let schema = column(&manager, id, "SELECT TABLE_SCHEMA FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'COUNTED'");
+    let schema = schema[0].clone().unwrap();
+    let catalog = turborel_studio_core::catalog::Catalog::of(&manager, id);
+    let read = catalog.statistics(&schema, "COUNTED").unwrap();
+    assert_eq!((read.engine.as_deref(), read.rows.as_deref(), read.gathered_rows.as_deref()), (Some("rowstore"), Some("3"), None));
+    assert_eq!(read.columns.iter().map(|c| c.name.as_str()).collect::<Vec<_>>(), ["ID", "KIND"]);
+    assert!(read.indexes.iter().any(|i| i.name == "COUNTED_KIND"), "{:?}", read.indexes);
+    let analysis = catalog.analysis(&schema).unwrap();
+    let missing = analysis.findings.iter().find(|f| f.rule == turborel_studio_core::analyzer::STATISTICS_MISSING).unwrap();
+    assert_eq!(missing.fix, "SET DATABASE JOBS.POLICY = 'AUTOMATIC';");
+    assert!(analysis.indexes.iter().any(|r| r.counted.as_ref().is_some_and(|c| c.name == "COUNTED_KIND")));
+    run(&manager, id, "SET DATABASE JOBS.POLICY = 'AUTOMATIC'").unwrap();
+    manager.close(id).unwrap();
+}
+
 /// [DOC sql/statements/explain.md EXPLAIN of a data change] [DESIGN] D70:
 /// plain EXPLAIN of an UPDATE on an embedded database shows its plan and
 /// what it would do, as a server's does, running nothing.

@@ -82,7 +82,7 @@ export type Dialog =
       readonly schema: string;
       /** The table it is of, if one: the findings and indexes of that table alone. */
       readonly table?: string;
-      readonly tab?: "findings" | "indexes" | "settings" | "waiting";
+      readonly tab?: "findings" | "indexes" | "settings";
     }
   | { readonly kind: "whatIf"; readonly whatIf: WhatIf }
   | { readonly kind: "report"; readonly sql: string; readonly chart: Chart | null }

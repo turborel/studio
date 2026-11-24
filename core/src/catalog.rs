@@ -11,6 +11,7 @@ pub mod names;
 mod partitions;
 pub mod queries;
 mod read;
+pub mod statistics;
 mod types;
 
 use crate::connections::cells::Cell;

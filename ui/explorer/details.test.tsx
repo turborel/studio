@@ -1,4 +1,4 @@
-import { act, fireEvent, screen, within as inside } from "@testing-library/react";
+import { act, cleanup, fireEvent, screen, within as inside } from "@testing-library/react";
 import type { TableDetail } from "../ipc/catalog";
 import type { SavedConnection } from "../ipc/saved";
 import { loadSchemas, select, toggle } from "../state/catalog";
@@ -6,6 +6,7 @@ import { SAVED, STAFF, catalogBackend, opened, settle, within } from "../test/ca
 import { EMPTY_CATALOG } from "./catalogState";
 import { CatalogTree } from "./CatalogTree";
 import { Details } from "./Details";
+import { Statistics } from "./Statistics";
 import { savedOf, toggleFavourite } from "./Favourites";
 import { nodeId, treeRows } from "./tree";
 
@@ -271,6 +272,70 @@ describe("partitions and types", () => {
     within(store, <Details />);
     await settle();
     expect(screen.getByText(/^Cannot read it: /u)).toBeTruthy();
+  });
+});
+
+describe("a table's statistics", () => {
+  it("show its rows, each column's figures, and each index's selectivity beside its definition; or that none are gathered [DESIGN] D72", async () => {
+    const gathered = {
+      schema: "ANN",
+      table: "STAFF",
+      engine: "rowstore",
+      rows: "1000",
+      lastChanged: "2026-11-24 10:00:00.000000+00:00",
+      gatheredRows: "960",
+      gathered: "2026-11-24 09:00:00.000000+00:00",
+      columns: [
+        {
+          name: "NAME",
+          nullFraction: "0.0100",
+          distinctValues: "240",
+          averageWidth: "40",
+          minValue: "Ada",
+          maxValue: "Zoe",
+          mostCommon: "ARRAY['Ann']",
+          frequencies: "ARRAY[0.0500]",
+          histogram: null,
+        },
+      ],
+      indexes: [
+        { name: "ANN.STAFF.UNIQUE1", method: "btree", entries: "960", distinctKeys: "960" },
+        { name: "STAFF_NAME", method: "hash", entries: null, distinctKeys: null },
+      ],
+    };
+    let statistics: unknown = gathered;
+    const asked = catalogBackend({ catalog_statistics: () => statistics });
+    const store = await opened();
+    within(store, <Details />);
+    await act(() => select(store, 1, { kind: "table", schema: "ANN", name: "STAFF" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Statistics" }));
+    await settle();
+    expect(screen.getByText(/^Gathered of 960 rows at 2026-11-24 09:00/u)).toBeTruthy();
+    expect(screen.getByRole("table", { name: "Column statistics" }).textContent).toContain("NAME0.010024040AdaZoe");
+    const key = screen
+      .getByText("ANN.STAFF.UNIQUE1", { selector: "table[aria-label='Index statistics'] td" })
+      .closest("tr");
+    expect(key?.textContent).toContain("UNIQUE BTREE (ID)9609601 in 960 (0.1%), about 1 entry a key");
+    expect(screen.getByText("STAFF_NAME").closest("tr")?.textContent).toBe("STAFF_NAMEBTREE (NAME)–––");
+    expect(asked.find((a) => a.command === "catalog_statistics")?.args).toMatchObject({
+      schema: "ANN",
+      table: "STAFF",
+    });
+    cleanup();
+    statistics = { ...gathered, gatheredRows: null, gathered: null };
+    within(store, <Statistics connection={1} schema="ANN" table="STAFF" indexes={[]} />);
+    await settle();
+    expect(screen.getByText(/^Not yet gathered: the planner estimates by its defaults/u)).toBeTruthy();
+    cleanup();
+    statistics = { ...gathered, columns: [] };
+    within(store, <Statistics connection={1} schema="ANN" table="STAFF" indexes={[]} />);
+    await settle();
+    expect(screen.getByText(/None of the table's columns is shown to you/u)).toBeTruthy();
+    cleanup();
+    statistics = Promise.reject(new Error("gone"));
+    within(store, <Statistics connection={1} schema="ANN" table="STAFF" indexes={[]} />);
+    await settle();
+    expect(screen.getByText(/gone/u)).toBeTruthy();
   });
 });
 
