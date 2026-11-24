@@ -113,6 +113,7 @@ Each is told in full in [§7](#7-the-decisions).
 | D71 | A CALL's parameter modes and defaults: values asked for IN and INOUT parameters alone, OUT ones told, DEFAULT written for a default |
 | D72 | The planner's statistics: read of COLUMN_STATISTICS, TABLE_STATISTICS and INDEX_STATISTICS, shown in the explorer and the analyzer, judged missing or stale |
 | D73 | The routine debugger: a second connection attached to the session, breakpoints by line, the stack and values, steps; on a server and embedded |
+| D74 | Each theme's editor, popups and fields of tokens of its own |
 
 ---
 
@@ -146,7 +147,7 @@ Each is told in full in [§7](#7-the-decisions).
 | `package.json`, `package-lock.json` | the front end's packages, pinned (D18, R-DEP-3) |
 | `ui/` | the front end, in TypeScript and React (D2) |
 | `ui/ipc/` | the typed commands, the front end's one way to the backend (R-TS-3) |
-| `ui/theme/` | the themes' palettes (D20) |
+| `ui/theme/` | the themes' palettes (D20, D74) |
 | `ui/icons/` | the icons, by what each stands for (D35) |
 | `ui/shell/` | the dock, toolbar, status bar, dialogs and the explorer's connections |
 | `ui/explorer/` | the catalog's tree, the details panel and the definition view (D33) |
@@ -640,7 +641,8 @@ The review checklist:
   the ribbon's deeper step, #A74C2E, a fill of the same file, which also
   draws accent text and focus rings on the light background; on the dark
   background, a lighter step, #DE9776, also of the file, draws them.
-- **Contrast:** tests hold every pair to WCAG 2.2 AA (R-UI-2).
+- **Contrast:** tests hold every pair to WCAG 2.2 AA (R-UI-2), the
+  editor's, popups' and fields' of D74 among them.
 - *Why:* the copper is Studio's mark; its steps keep the accent legible
   as a fill under text and as text or a ring on either background.
 
@@ -2012,6 +2014,27 @@ The review checklist:
 - *Why:* a routine's fault is found where it runs, with its values in
   view; a second connection keeps the session the user works in as it
   is, and its end lets the session go on as if never debugged.
+
+#### D74. Each theme's editor, popups and fields of tokens of its own
+
+- **Editor:** its tokens, key words, functions, strings, numbers,
+  comments, operators, names, types, atoms, script variables and what
+  is invalid, its gutter, its active line, its cursor, and its popups,
+  completion with its details and info, hints and lints, are drawn of
+  palette keys of each theme (`ui/theme/tokens.ts`) by one style of CSS
+  variables (`ui/worksheet/editor/theme.ts`), in place of CodeMirror's
+  light colours. The dark theme's key words are the icon's copper,
+  lightened; its tokens lightened, its gutter dark. Each token is at
+  least 4.5:1 against the editor's ground and its active line, each
+  popup's text against its ground and its chosen row (R-UI-2).
+- **Fields:** inputs, selects and text areas of one set of keys: a
+  resting edge of 3:1 against the grounds (WCAG 1.4.11), a 2-pixel ring
+  of the accent 1 pixel out as the one edge of a field focused, and the
+  placeholder, disabled and invalid states; check boxes in the accent.
+- *Why:* the dark theme drew CodeMirror's light colours, its key words
+  barely seen; and a field's ring was heavy and its edge faint.
+- **Checked:** tests hold every pair above to its minimum in both
+  themes.
 ---
 
 ## 8. References

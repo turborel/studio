@@ -7,6 +7,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "dockview-react/dist/styles/dockview.css";
 import "./styles.css";
+import "./theme/fields.css";
 import "./worksheet/worksheet.css";
 import "./results/results.css";
 import "./model/model.css";

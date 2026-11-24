@@ -140,16 +140,6 @@ button:disabled {
   cursor: default;
 }
 
-input,
-select {
-  font: inherit;
-  color: var(--text);
-  background: var(--background);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 2px 6px;
-}
-
 .status-bar span + span::before {
   content: "·";
   padding-right: 16px;

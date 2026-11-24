@@ -8,14 +8,7 @@
 import { autocompletion, closeBrackets, closeBracketsKeymap, completionKeymap } from "@codemirror/autocomplete";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { sql } from "@codemirror/lang-sql";
-import {
-  bracketMatching,
-  defaultHighlightStyle,
-  foldGutter,
-  foldKeymap,
-  indentOnInput,
-  syntaxHighlighting,
-} from "@codemirror/language";
+import { bracketMatching, foldGutter, foldKeymap, indentOnInput } from "@codemirror/language";
 import { highlightSelectionMatches, searchKeymap } from "@codemirror/search";
 import { Compartment, EditorState, type Extension } from "@codemirror/state";
 import {
@@ -46,6 +39,7 @@ import type { ItemKind } from "../complete/engine";
 import { type Bridge, defaultSchema, tableDetail, tableNamed } from "./catalog";
 import { worksheetFields } from "./fields";
 import { parameterHints } from "./hints";
+import { editorTheme } from "./theme";
 
 /** The data a table dragged from the explorer carries. */
 export const TABLE_DRAG = "application/x-turborel-table";
@@ -199,7 +193,7 @@ export function editorExtensions(bridge: Bridge, changed: (text: string) => void
     dropCursor(),
     EditorState.allowMultipleSelections.of(true),
     indentOnInput(),
-    syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+    editorTheme(),
     bracketMatching(),
     closeBrackets(),
     autocompletion({

@@ -5,7 +5,10 @@
  * its main tone #C26B47. White on that is too faint for text, so the
  * chrome is filled, under white text, by the ribbon's deeper step, which
  * also draws accent text and focus rings on the light background; on the
- * dark background a lighter step of the ribbon draws them.
+ * dark background a lighter step of the ribbon draws them. The editor's
+ * tokens, gutter and popups, and the fields, have colours of each theme's
+ * own, each readable on what it is drawn on (RULES.md D74); the dark
+ * theme's key words in the ribbon's copper, lightened.
  */
 
 /** A theme's name. */
@@ -74,6 +77,44 @@ export interface Palette {
   readonly series6: string;
   readonly series7: string;
   readonly series8: string;
+  /** The editor's active line, and its number's place in the gutter. */
+  readonly editorActiveLine: string;
+  /** The editor's gutter of line numbers: its ground, its numbers, the active line's number, and its edge. */
+  readonly gutterBackground: string;
+  readonly gutterText: string;
+  readonly gutterActiveText: string;
+  readonly gutterBorder: string;
+  /**
+   * The editor's tokens, each at least 4.5:1 against the editor's ground
+   * and its active line: key words, functions, strings, numbers,
+   * comments, operators and punctuation, names, types, atoms such as
+   * NULL and TRUE, script variables, and what is invalid.
+   */
+  readonly synKeyword: string;
+  readonly synFunction: string;
+  readonly synString: string;
+  readonly synNumber: string;
+  readonly synComment: string;
+  readonly synOperator: string;
+  readonly synIdentifier: string;
+  readonly synType: string;
+  readonly synAtom: string;
+  readonly synVariable: string;
+  readonly synInvalid: string;
+  /** The editor's popups, completion, hints and lints: their ground, text, lesser text, the chosen row and its text, and edge. */
+  readonly popupBackground: string;
+  readonly popupText: string;
+  readonly popupMuted: string;
+  readonly popupSelected: string;
+  readonly onPopupSelected: string;
+  readonly popupBorder: string;
+  /** A field's ground, its resting edge, at least 3:1 against the ground (WCAG 1.4.11), and its placeholder. */
+  readonly inputBackground: string;
+  readonly inputBorder: string;
+  readonly placeholder: string;
+  /** A disabled field's ground and text. */
+  readonly disabledBackground: string;
+  readonly disabledText: string;
 }
 
 /** The main tone of Studio's icon's copper ribbon, sampled from `artwork/studio-icon.svg`. */
@@ -117,6 +158,33 @@ export const PALETTES: Readonly<Record<ThemeName, Palette>> = {
     series6: "#008300",
     series7: "#6250D6",
     series8: "#E34948",
+    editorActiveLine: "#EDF6FB",
+    gutterBackground: "#F6F4F4",
+    gutterText: "#6A6062",
+    gutterActiveText: "#1B1415",
+    gutterBorder: "#E3DEDE",
+    synKeyword: "#770088",
+    synFunction: "#1A1AA6",
+    synString: "#AA1111",
+    synNumber: "#116644",
+    synComment: "#8A4400",
+    synOperator: "#4A4244",
+    synIdentifier: "#1B1415",
+    synType: "#007750",
+    synAtom: "#221199",
+    synVariable: "#5D3C9E",
+    synInvalid: "#C4221B",
+    popupBackground: "#FFFFFF",
+    popupText: "#1B1415",
+    popupMuted: "#5C5254",
+    popupSelected: "#F6DDD2",
+    onPopupSelected: "#1B1415",
+    popupBorder: "#D3CCCC",
+    inputBackground: "#FFFFFF",
+    inputBorder: "#8A8082",
+    placeholder: "#6E6466",
+    disabledBackground: "#ECE8E8",
+    disabledText: "#5C5254",
   },
   dark: {
     background: "#1A1617",
@@ -150,6 +218,33 @@ export const PALETTES: Readonly<Record<ThemeName, Palette>> = {
     series6: "#008300",
     series7: "#9085E9",
     series8: "#E66767",
+    editorActiveLine: "#2C2526",
+    gutterBackground: "#1F1A1B",
+    gutterText: "#9D9294",
+    gutterActiveText: "#EEE8E8",
+    gutterBorder: "#332C2D",
+    synKeyword: "#E8A07C",
+    synFunction: "#8AB4F8",
+    synString: "#A6D89A",
+    synNumber: "#F0C060",
+    synComment: "#A79C9D",
+    synOperator: "#D3CACB",
+    synIdentifier: "#EEE8E8",
+    synType: "#D0A6F0",
+    synAtom: "#7FD3C8",
+    synVariable: "#C9B6F2",
+    synInvalid: "#FF8A80",
+    popupBackground: "#2B2526",
+    popupText: "#EEE8E8",
+    popupMuted: "#B4AAAB",
+    popupSelected: "#5E3324",
+    onPopupSelected: "#FFFFFF",
+    popupBorder: "#4A4041",
+    inputBackground: "#141011",
+    inputBorder: "#7A6E70",
+    placeholder: "#9D9294",
+    disabledBackground: "#211C1D",
+    disabledText: "#B4AAAB",
   },
 };
 

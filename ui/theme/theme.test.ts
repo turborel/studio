@@ -76,4 +76,48 @@ describe("themes", () => {
     expect(contrast(p.focus, p.background)).toBeGreaterThanOrEqual(COMPONENT);
     expect(contrast(p.focus, p.surface)).toBeGreaterThanOrEqual(COMPONENT);
   });
+
+  it.each(THEMES)("keeps the %s theme's editor tokens readable, its active line's too [RULE] R-UI-2", (theme) => {
+    const p = PALETTES[theme];
+    const tokens = [
+      p.synKeyword,
+      p.synFunction,
+      p.synString,
+      p.synNumber,
+      p.synComment,
+      p.synOperator,
+      p.synIdentifier,
+      p.synType,
+      p.synAtom,
+      p.synVariable,
+      p.synInvalid,
+    ];
+    for (const colour of tokens) {
+      expect(contrast(colour, p.background)).toBeGreaterThanOrEqual(TEXT);
+      expect(contrast(colour, p.editorActiveLine)).toBeGreaterThanOrEqual(TEXT);
+    }
+    expect(contrast(p.gutterText, p.gutterBackground)).toBeGreaterThanOrEqual(TEXT);
+    expect(contrast(p.gutterActiveText, p.editorActiveLine)).toBeGreaterThanOrEqual(TEXT);
+    expect(contrast(p.gutterBorder, p.gutterBackground)).toBeGreaterThan(1);
+  });
+
+  it.each(THEMES)("keeps the %s theme's completion, hints and lints readable [RULE] R-UI-2", (theme) => {
+    const p = PALETTES[theme];
+    expect(contrast(p.popupText, p.popupBackground)).toBeGreaterThanOrEqual(TEXT);
+    expect(contrast(p.popupMuted, p.popupBackground)).toBeGreaterThanOrEqual(TEXT);
+    expect(contrast(p.onPopupSelected, p.popupSelected)).toBeGreaterThanOrEqual(TEXT);
+    expect(contrast(p.popupBorder, p.popupBackground)).toBeGreaterThan(1);
+  });
+
+  it.each(THEMES)("keeps the %s theme's fields readable, their edges and ring visible [RULE] R-UI-2", (theme) => {
+    const p = PALETTES[theme];
+    expect(contrast(p.text, p.inputBackground)).toBeGreaterThanOrEqual(TEXT);
+    expect(contrast(p.placeholder, p.inputBackground)).toBeGreaterThanOrEqual(TEXT);
+    expect(contrast(p.disabledText, p.disabledBackground)).toBeGreaterThanOrEqual(TEXT);
+    for (const ground of [p.background, p.surface, p.surfaceRaised]) {
+      expect(contrast(p.inputBorder, ground)).toBeGreaterThanOrEqual(COMPONENT);
+      expect(contrast(p.focus, ground)).toBeGreaterThanOrEqual(COMPONENT);
+    }
+    expect(contrast(p.focus, p.inputBackground)).toBeGreaterThanOrEqual(COMPONENT);
+  });
 });
