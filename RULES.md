@@ -250,7 +250,7 @@ The tools named by "the formatter", "the linters", "the type checker" and
 |---|---|---|
 | R-DEP-1 | No dependency, Rust or npm, of the product or of its tools, **shall** be added without a decision here, saying its use, version, license and readiness. | review |
 | R-DEP-2 | A dependency **shall** be production-grade by its makers' own claims, read in its current documentation: a stable release they support. Licenses are MIT or Apache-2.0, or as `deny.toml` allows with its reason. | review; cargo deny |
-| R-DEP-3 | Versions **shall** be pinned exactly, with Cargo.lock and package-lock.json under version control; a change of a version is a commit of its own. A version taken **shall** have been published two weeks before; a patch release of a crate's own maintainers that fixes a published advisory may be taken before, each so taken named here: RUSTSEC-2026-0592, url 2.5.8 → 2.5.9, with the form_urlencoded 1.2.2 → 1.2.3 it requires, of the same rust-url project, on 2026-11-22. | review |
+| R-DEP-3 | Versions **shall** be pinned exactly, with Cargo.lock and package-lock.json under version control; a change of a version is a commit of its own. A version taken **shall** have been published two weeks before; a patch release of a crate's own maintainers that fixes a published advisory may be taken before, each so taken named here: RUSTSEC-2026-0592, url 2.5.8 → 2.5.9, with the form_urlencoded 1.2.2 → 1.2.3 it requires, of the same rust-url project, on 2026-11-22; RUSTSEC-2026-0594, cookie 0.18.2 → 0.18.3, which Tauri takes, of the same cookie-rs project, on 2026-11-23. | review |
 
 ### R-SAFE: what a server sends, and what lasts
 
