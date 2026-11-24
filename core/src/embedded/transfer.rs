@@ -119,12 +119,12 @@ impl Run<'_> {
 
     /// `values` cast to the types of the INSERT's parameters.
     fn typed(&self, values: Row) -> Result<Vec<Value>> {
-        let wanted = self.insert.parameters().len();
+        let wanted = self.insert.inputs().len();
         if values.len() != wanted {
             return Err(StudioError::misuse(format!("[DESIGN] {} fields, for {wanted} columns", values.len())));
         }
         self.insert
-            .parameters()
+            .inputs()
             .iter()
             .zip(values)
             .map(

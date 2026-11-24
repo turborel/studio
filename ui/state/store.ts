@@ -59,12 +59,14 @@ export type Dialog =
       /** Explain Analyze of a data change, which runs it for real: analyzed then rolled back, kept, or not run (RULES.md D61). */
       readonly kind: "analyzeChange";
       readonly sql: string;
-      readonly answer: (choice: "rollBack" | "keep" | null) => void;
+      readonly answer: (choice: "rollBack" | "keep" | "explain" | null) => void;
     }
   | {
       readonly kind: "values";
       readonly names: readonly string[];
       readonly types: readonly string[];
+      /** Of a CALL, the OUT parameters, whose values come back in its row, each told as it is named. */
+      readonly outputs: readonly string[];
       readonly remembered: Readonly<Record<string, string | null>>;
       readonly variables: readonly string[];
       readonly answer: (given: Given | null) => void;

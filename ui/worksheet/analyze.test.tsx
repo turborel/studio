@@ -49,7 +49,7 @@ describe("Explain Analyze of a data change", () => {
     ]);
   });
 
-  it("says it changes data, its first choice the setting's [DESIGN] D61", () => {
+  it("says it changes data, its first choice the setting's, and offers plain EXPLAIN instead [DESIGN] D61 D70", () => {
     const store = new Store();
     const chosen: (string | null)[] = [];
     const shown = (keeps: boolean) => {
@@ -66,9 +66,11 @@ describe("Explain Analyze of a data change", () => {
     fireEvent.click(screen.getByRole("button", { name: "Analyze, Then Roll Back" }));
     fireEvent.click(screen.getByRole("button", { name: "Analyze and Keep Changes" }));
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(screen.getByText(/Explain Without Running shows its plan and what it would do/u)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Explain Without Running" }));
     unmount();
     shown(true);
     expect(document.activeElement?.textContent).toBe("Analyze and Keep Changes");
-    expect(chosen).toEqual(["rollBack", "keep", null]);
+    expect(chosen).toEqual(["rollBack", "keep", null, "explain"]);
   });
 });

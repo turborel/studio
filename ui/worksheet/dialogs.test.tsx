@@ -50,12 +50,16 @@ describe("the values' dialog", () => {
       <ValuesDialog
         names={["a", "?2", "a"]}
         types={["NUMERIC(10,0)", "DATE", "NUMERIC(10,0)"]}
+        outputs={["Parameter 4 INTEGER, OUT parameter 4"]}
         remembered={{ a: "7", s: "ANN" }}
         variables={["s"]}
         answer={answer}
       />,
     );
     expect(screen.getByLabelText<HTMLInputElement>(/^:a/u).value).toBe("7");
+    expect(document.body.textContent).toContain(
+      "Given back in the CALL's row, not asked for: Parameter 4 INTEGER, OUT parameter 4",
+    );
     fireEvent.change(screen.getByLabelText(/^Parameter 2/u), { target: { value: "2026-01-01" } });
     fireEvent.click(must(screen.getAllByRole("checkbox", { name: "NULL" })[0]));
     fireEvent.change(screen.getByLabelText("${s}"), { target: { value: "BOB" } });

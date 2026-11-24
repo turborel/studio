@@ -15,7 +15,7 @@ use turborel_client::agent::Connected;
 use turborel_client::export::ExportFormat;
 use turborel_client::statements::Statement;
 
-use crate::connections::cells::ColumnInfo;
+use crate::connections::cells::{ColumnInfo, ParameterInfo};
 use crate::connections::imports::{ImportReport, ImportSpec, Teller, Watch, run_import};
 use crate::connections::outcome::{Outcome, Ran, ResultId, ServerTime};
 use crate::connections::pages::{PAGE_ROWS, Page, Pages};
@@ -78,7 +78,7 @@ pub(crate) enum Reply {
     Ran(Box<Ran>),
     Rows(Vec<Vec<crate::connections::cells::Cell>>),
     Columns(Vec<ColumnInfo>),
-    Types(Vec<String>),
+    Parameters(Vec<ParameterInfo>),
     Value(ValueRead),
     Exported(u64),
     Imported(ImportReport),
@@ -112,14 +112,16 @@ pub(crate) struct Worker {
 }
 
 /// `values`, as text or null, each cast to the type of `statement`'s
-/// parameter in its place ([DOC sql/statements/prepare.md DESCRIPTION]).
+/// input parameter in its place, those an execution gives values for: of
+/// a CALL, the IN and INOUT ones, not the OUT ones, whose values its row
+/// gives back ([DOC sql/statements/prepare.md DESCRIPTION]).
 ///
 /// # Errors
 ///
-/// SQLCODE -910 if they are not as many as its parameters; the cast's
-/// failure, as SQLSTATE 22018 of a value no number.
+/// SQLCODE -910 if they are not as many as its input parameters; the
+/// cast's failure, as SQLSTATE 22018 of a value no number.
 fn bound(connection: &mut Connected, statement: &Statement, values: &[Option<String>]) -> Result<Vec<Value>> {
-    let types = statement.parameters();
+    let types = statement.inputs().to_vec();
     if types.len() != values.len() {
         return Err(StudioError::misuse(format!(
             "[DESIGN] the statement has {} parameters, and {} values were given",
@@ -194,7 +196,7 @@ impl Worker {
                 }
                 self.run(&sql, &values).map(|ran| Reply::Ran(Box::new(ran)))
             }
-            Request::Parameters(sql) => self.parameters(&sql).map(Reply::Types),
+            Request::Parameters(sql) => self.parameters(&sql).map(Reply::Parameters),
             Request::Rows { result, from, count } => self.rows(result, from, count).map(Reply::Page),
             Request::CloseResult(result) => self.close_result(result).map(|()| Reply::Done),
             Request::Session => self.session().map(Reply::Session),
@@ -419,14 +421,15 @@ impl Worker {
         writer.finish()
     }
 
-    /// The types of `sql`'s dynamic parameters, in order, as SQL writes
-    /// them, prepared and let go, never run.
-    fn parameters(&mut self, sql: &str) -> Result<Vec<String>> {
+    /// `sql`'s dynamic parameters, in order, each its type, mode and
+    /// position, as the server describes them, granted `parameter-modes`:
+    /// prepared and let go, never run.
+    fn parameters(&mut self, sql: &str) -> Result<Vec<ParameterInfo>> {
         let connection = self.connection()?;
         let statement = connection.prepare(sql)?;
-        let types = statement.parameters().iter().map(|p| p.clone().data_type().to_string()).collect();
-        let _ = connection.deallocate(statement); // Let go; the types are what is told.
-        Ok(types)
+        let described = statement.parameters().iter().map(ParameterInfo::from).collect();
+        let _ = connection.deallocate(statement); // Let go; the parameters are what is told.
+        Ok(described)
     }
 
     /// The columns `sql` would give, as the server declares them, prepared

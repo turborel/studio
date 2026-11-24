@@ -3,11 +3,13 @@
  * ANALYZE, never its raw text first unless the settings say. Its summary
  * says the rows and time, the operators that cost most, the join order
  * and its algorithm, the rewrite rules, and the warnings, each of an
- * analyzer's rule with its fix. Below, a tab of each stage, drawn as a
+ * analyzer's rule with its fix; of plain EXPLAIN of a data change, what it
+ * would do beside its rows. Below, a tab of each stage, drawn as a
  * flow or a tree-table, with the rewrites listed; the raw text last, to be
  * copied. A node chosen shows every detail in a side panel. Two plans are
  * compared side by side, the operators changed marked.
  */
+import { ChangeEffectsView } from "./ChangeEffects";
 import { KindDetails } from "./OperatorDetails";
 import { useContext, useMemo, useState } from "react";
 import { openDdl } from "../data/ddlActions";
@@ -435,6 +437,7 @@ export function PlanViewer({ id, plans }: { readonly id: string; readonly plans:
     <div className="plan-viewer">
       <Tools v={{ ...v, raw: v.tab === "raw", compare: before === undefined ? null : v.compare }} />
       <Summary plan={latest} summary={summary} id={id} />
+      {latest.effects !== null && <ChangeEffectsView effects={latest.effects} />}
       <Tabs plan={latest} tab={v.tab} onTab={v.setTab} />
       <Body plan={latest} before={before} whatIf={whatIf} v={v} />
     </div>

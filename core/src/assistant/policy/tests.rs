@@ -67,6 +67,21 @@ fn levels_allow_what_they_say() {
     assert_eq!(floored.confirm.as_deref(), Some("STAFF"));
 }
 
+/// [DESIGN] D55 D70: plain EXPLAIN of a data change runs nothing, so the
+/// assistant explains one from Explain Only up, never on Off, nor of a
+/// table hidden from it; it never runs one.
+#[test]
+fn a_data_change_is_explained_never_run() {
+    let write = "UPDATE ANN.STAFF SET PAY = 1 WHERE ID = 2";
+    let allowed = |level, use_| judge(&at(level), Environment::Development, (use_, None), write).allowed;
+    assert!(allowed(Level::ExplainOnly, Use::Explain));
+    assert!(!allowed(Level::Off, Use::Explain));
+    assert!(!allowed(Level::ProposeChanges, Use::Run));
+    let hidden = ConnectionPolicy { hidden: vec!["ANN.STAFF".to_owned()], ..at(Level::Read) };
+    let v = judge(&hidden, Environment::Development, (Use::Explain, None), write);
+    assert_eq!(v.rule.as_deref(), Some("HIDDEN"));
+}
+
 /// [DESIGN] D55 [DESIGN] D29: EXPLAIN ANALYZE of a data change runs it for
 /// real, so the assistant judges it a write, never a read, and one that
 /// destroys is held to the floor.

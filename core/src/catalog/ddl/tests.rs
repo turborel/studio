@@ -165,8 +165,10 @@ fn a_view_is_written_or_says_why_not() {
     assert_eq!(script(&view(None, "NONE"), ScriptAs::Drop), "DROP VIEW ANN.C RESTRICT;\n");
 }
 
-/// [DOC sql/statements/create-function.md SYNOPSIS] [DESIGN] D33: a routine,
-/// a sequence and a domain are written as they are defined.
+/// [DOC sql/statements/create-function.md SYNOPSIS] [DOC
+/// sql/statements/create-procedure.md SYNOPSIS] [DESIGN] D33: a routine,
+/// a parameter's default with it, a sequence and a domain are written as
+/// they are defined.
 #[test]
 fn routines_sequences_and_domains_are_written() {
     let routine = RoutineDetail {
@@ -175,7 +177,7 @@ fn routines_sequences_and_domains_are_written() {
         name: "DOUBLED".into(),
         kind: "FUNCTION".into(),
         returns: Some("INTEGER".into()),
-        parameters: vec![Parameter { mode: "IN".into(), name: Some("N".into()), type_written: "INTEGER".into() }],
+        parameters: vec![Parameter { mode: "IN".into(), name: Some("N".into()), type_written: "INTEGER".into(), default: None }],
         body: Some("RETURN N * 2".into()),
         deterministic: true,
         data_access: "CONTAINS SQL".into(),
@@ -185,6 +187,19 @@ fn routines_sequences_and_domains_are_written() {
         create_routine(&routine),
         "CREATE FUNCTION ANN.DOUBLED (IN N INTEGER) RETURNS INTEGER DETERMINISTIC CONTAINS SQL\nRETURN N * 2;\n"
     );
+    let defaulted = RoutineDetail {
+        kind: "PROCEDURE".into(),
+        returns: None,
+        parameters: vec![Parameter {
+            mode: "IN".into(),
+            name: Some("N".into()),
+            type_written: "INTEGER".into(),
+            default: Some("5".into()),
+        }],
+        body: Some("SET N = N".into()),
+        ..routine.clone()
+    };
+    assert!(create_routine(&defaulted).starts_with("CREATE PROCEDURE ANN.DOUBLED (IN N INTEGER DEFAULT 5) DETERMINISTIC"));
     assert!(create_routine(&RoutineDetail { body: None, ..routine }).starts_with("-- The routine ANN.DOUBLED's body"));
     let sequence = Sequence {
         name: "S".into(),

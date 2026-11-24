@@ -63,6 +63,11 @@ fn catalog_tools(tools: &SessionTools<'_>, yes: &Window) {
     assert!(call("describe_table", &[("schema", "ANN"), ("table", "AS_STAFF")]).content.contains("CHARACTER VARYING"));
     assert_eq!(call("describe_table", &[("schema", "ANN"), ("table", "AS_SECRETS")]).outcome, "blocked: HIDDEN");
     assert!(call("explain", &[("sql", "SELECT NAME FROM ANN.AS_STAFF")]).content.contains("-- physical:"));
+    // Plain EXPLAIN of a data change runs nothing (D70): its plan and what it would do, the row kept.
+    let change = call("explain", &[("sql", "DELETE FROM ANN.AS_STAFF WHERE ID = 1")]);
+    assert!(change.content.contains("Delete from ANN.AS_STAFF") && change.content.contains("-- maintains:"), "{}", change.content);
+    assert!(call("run_query", &[("sql", "SELECT ID FROM ANN.AS_STAFF WHERE ID = 1"), ("purpose", "see")]).content.contains("\n1"));
+    assert_eq!(call("explain", &[("sql", "DELETE FROM ANN.AS_SECRETS")]).outcome, "blocked: HIDDEN");
     // EXPLAIN ANALYZE runs its statement: the tool runs plain EXPLAIN alone.
     let analyzed = call("explain", &[("sql", "ANALYZE DELETE FROM ANN.AS_STAFF WHERE ID = 1")]);
     assert_eq!(analyzed.outcome, "blocked: EXPLAIN-ONLY");
@@ -72,7 +77,7 @@ fn catalog_tools(tools: &SessionTools<'_>, yes: &Window) {
 
 /// The queries and drafts of `tools`: an approved query's rows bounded, an
 /// unapproved one, a write and a hidden table's refused; a draft of a
-/// DROP blocked and of no estimate, of a query estimated.
+/// DROP blocked and of no estimate, of a query and a data change estimated.
 fn query_tools(tools: &SessionTools<'_>, yes: &Window) {
     let call = |name: &str, pairs: &[(&str, &str)], host: &dyn Host| tools.call(name, &input(pairs), host);
     let rows = call("run_query", &[("sql", "SELECT ID, NAME FROM ANN.AS_STAFF ORDER BY ID"), ("purpose", "see")], yes);
@@ -91,6 +96,14 @@ fn query_tools(tools: &SessionTools<'_>, yes: &Window) {
         _ => None,
     });
     assert!(estimate.as_deref().is_some_and(|top| top.contains("Project")), "{estimate:?}");
+    // A data change's draft is estimated by plain EXPLAIN, which runs nothing (D70).
+    call("propose_sql", &[("sql", "UPDATE ANN.AS_STAFF SET NAME = 'x' WHERE ID = 1"), ("title", "t"), ("why", "w")], yes);
+    let changed = yes.told.borrow().iter().rev().find_map(|e| match e {
+        TurnEvent::Draft { estimate, .. } => Some(estimate.clone()),
+        _ => None,
+    });
+    let changed = changed.flatten().unwrap_or_default();
+    assert!(changed.starts_with("Update ANN.AS_STAFF: ") && changed.contains("est. rows"), "{changed}");
 }
 
 /// [DESIGN] D55: the assistant's tools read the catalog, explain, run an

@@ -8,6 +8,7 @@ import type { Confirm, StatementClass } from "../ipc/connections";
 import { clearHistory, type HistoryEntry, searchHistory } from "../ipc/worksheet";
 import { show } from "../state/actions";
 import { runStatements } from "../state/running";
+import { parameterName } from "../state/values";
 import { type Given, useStore } from "../state/store";
 import { openWorksheet } from "../state/worksheets";
 import { Modal } from "../shell/Modal";
@@ -120,6 +121,8 @@ export function GuardDialog({
 export interface ValuesProps {
   readonly names: readonly string[];
   readonly types: readonly string[];
+  /** Of a CALL, its OUT parameters, told and not asked for, as their values come back in its row. */
+  readonly outputs: readonly string[];
   readonly remembered: Readonly<Record<string, string | null>>;
   readonly variables: readonly string[];
   readonly answer: (given: Given | null) => void;
@@ -141,7 +144,7 @@ function ValueField({
     <div className="value-row">
       <label className="check">
         <span>
-          {name.startsWith("?") ? `Parameter ${name.slice(1)}` : `:${name}`} <span className="hint">{type}</span>
+          {parameterName(name)} <span className="hint">{type}</span>
         </span>
         <input
           value={value ?? ""}
@@ -193,7 +196,7 @@ function VariableFields({
 }
 
 /** The values of a statement's parameters, each text or NULL, and of the script's variables; those given last offered first. */
-export function ValuesDialog({ names, types, remembered, variables, answer }: ValuesProps) {
+export function ValuesDialog({ names, types, outputs, remembered, variables, answer }: ValuesProps) {
   const unique = [...new Set(names)];
   const [binds, setBinds] = useState<Record<string, string | null>>(() =>
     Object.fromEntries(unique.map((n) => [n, remembered[n] ?? ""])),
@@ -217,6 +220,9 @@ export function ValuesDialog({ names, types, remembered, variables, answer }: Va
           }}
         />
       ))}
+      {outputs.length > 0 && (
+        <p className="hint">Given back in the CALL&apos;s row, not asked for: {outputs.join("; ")}</p>
+      )}
       <VariableFields
         names={variables}
         values={values}

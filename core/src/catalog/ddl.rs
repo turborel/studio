@@ -224,7 +224,8 @@ pub fn create_routine(r: &RoutineDetail) -> String {
     };
     let parameters = list(r.parameters.iter().map(|p| {
         let named = p.name.as_ref().map(|n| format!("{} ", ident(n))).unwrap_or_default();
-        format!("{} {named}{}", p.mode, p.type_written)
+        let default = p.default.as_ref().map(|d| format!(" DEFAULT {d}")).unwrap_or_default();
+        format!("{} {named}{}{default}", p.mode, p.type_written)
     }));
     let returns = r.returns.as_ref().map(|t| format!(" RETURNS {t}")).unwrap_or_default();
     let deterministic = if r.deterministic { " DETERMINISTIC" } else { " NOT DETERMINISTIC" };

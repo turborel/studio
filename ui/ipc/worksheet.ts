@@ -97,9 +97,16 @@ export function judgeScript(connection: number, sql: string): Promise<Confirm | 
   return invoke<Confirm | null>("judge_script", { connection, sql });
 }
 
-/** The types of a statement's dynamic parameters, in order. */
-export function statementParameters(connection: number, sql: string): Promise<string[]> {
-  return invoke<string[]>("statement_parameters", { connection, sql });
+/** A statement's dynamic parameter: its type, and, of a CALL, its mode and its procedure parameter's position. */
+export interface ParameterInfo {
+  readonly typeWritten: string;
+  readonly mode: "IN" | "OUT" | "INOUT";
+  readonly ordinal: number | null;
+}
+
+/** A statement's dynamic parameters, in order, each described as the server describes it. */
+export function statementParameters(connection: number, sql: string): Promise<ParameterInfo[]> {
+  return invoke<ParameterInfo[]>("statement_parameters", { connection, sql });
 }
 
 /** The history's entries holding `text`, the latest first. */

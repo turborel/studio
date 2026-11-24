@@ -27,7 +27,9 @@ function VerdictLine({ verdict, estimate }: { readonly verdict: Verdict; readonl
         ` · blocked for the assistant${floor === null ? ", as it is not known what it does" : `: ${floor}`}`}
       {verdict.rule !== null && ` · stopped by ${verdict.rule}: ${verdict.why ?? ""}`}
       <br />
-      {estimate === null ? "No estimate: EXPLAIN plans a query alone." : `EXPLAIN estimates: ${estimate}`}
+      {estimate === null
+        ? "No estimate: EXPLAIN plans a query or a data change alone."
+        : `EXPLAIN estimates: ${estimate}`}
     </p>
   );
 }

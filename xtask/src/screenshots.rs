@@ -149,6 +149,7 @@ const CONNECTIONS: Group = &[
     ("details", connections::details_scene),
     ("script as", connections::script_as_scene),
     ("snippet and format", worksheets::snippet_format_scene),
+    ("explain a change", worksheets::explain_change_scene),
     ("analyze a change", worksheets::analyze_change_scene),
     ("keys", worksheets::keys_scene),
     ("history", worksheets::history_scene),

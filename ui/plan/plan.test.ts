@@ -405,4 +405,38 @@ describe("mark joins", () => {
     const [scan] = parsePlan(["-- physical:", "SeqScan ANN.PA  (rows=5, cost=5.0)", ""]).stages[0]?.roots ?? [];
     expect(scan === undefined ? null : unnestOf(scan)).toBeNull();
   });
+
+  it("reads what plain EXPLAIN of a data change says it would do, its plan's operators apart [DESIGN] D70", () => {
+    const plan = parsePlan([
+      "-- physical:",
+      "Delete from ANN.PARTS",
+      "  IndexScan ANN.PARTS using ANN.PARTS.UNIQUE1 [btree]: PARTS.ID = 7  (est. rows=1, cost=20.6)",
+      "-- maintains: ANN.PARTS.UNIQUE1 [btree], PARTS_NAME [btree]",
+      "-- cascades: ON DELETE CASCADE to ANN.ORDERS by ANN.ORDERS_FOREIGN1",
+      "-- cascades: ON DELETE SET NULL to ANN.NOTES by ANN.NOTES_FOREIGN1",
+      "-- trigger: ANN.ORDER_GONE, AFTER DELETE FOR EACH ROW on ANN.ORDERS",
+      "-- point path: one read of ANN.PARTS.UNIQUE1 when prepared or in a procedure",
+    ]);
+    expect(plan.stages.map((s) => s.name)).toEqual(["physical"]);
+    const root = plan.stages[0]?.roots[0];
+    expect([root?.operator, root?.detail, root === undefined ? null : kindOf(root)]).toEqual([
+      "Delete",
+      "from ANN.PARTS",
+      "change",
+    ]);
+    expect(root?.children[0]?.operator).toBe("IndexScan");
+    expect(plan.effects).toEqual({
+      maintains: ["ANN.PARTS.UNIQUE1 [btree]", "PARTS_NAME [btree]"],
+      cascades: [
+        "ON DELETE CASCADE to ANN.ORDERS by ANN.ORDERS_FOREIGN1",
+        "ON DELETE SET NULL to ANN.NOTES by ANN.NOTES_FOREIGN1",
+      ],
+      triggers: ["ANN.ORDER_GONE, AFTER DELETE FOR EACH ROW on ANN.ORDERS"],
+      pointPath: "one read of ANN.PARTS.UNIQUE1 when prepared or in a procedure",
+    });
+    const values = parsePlan(["-- physical:", "Insert into ANN.SALES", "-- maintains: none", "-- point path: none"]);
+    expect(values.effects).toEqual({ maintains: [], cascades: [], triggers: [], pointPath: null });
+    expect(values.stages[0]?.roots.map((r) => r.operator)).toEqual(["Insert"]);
+    expect(parsePlan(["-- physical:", "SeqScan ANN.T  (rows=4, cost=3.7)"]).effects).toBeNull();
+  });
 });

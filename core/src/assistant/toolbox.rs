@@ -182,10 +182,11 @@ impl SessionTools<'_> {
         Ok(told(described.to_string(), "ran"))
     }
 
-    /// EXPLAIN of `sql`, as its plan's text.
+    /// EXPLAIN of `sql`, a query or a data change, as its plan's text; of
+    /// a data change, what it would do beside (D70).
     fn explain(&self, sql: &str) -> Result<ToolOutcome> {
         // EXPLAIN ANALYZE runs its statement, a data change's for real: the
-        // tool writes plain EXPLAIN alone, of a query.
+        // tool writes plain EXPLAIN alone, which runs nothing.
         if sql.split_whitespace().next().is_some_and(|w| w.eq_ignore_ascii_case(ANALYZE)) {
             return Ok(refused(
                 "The explain tool runs EXPLAIN alone, never EXPLAIN ANALYZE, which runs its statement.".to_owned(),
@@ -234,17 +235,25 @@ impl SessionTools<'_> {
         Ok(told(content, "approved"))
     }
 
-    /// EXPLAIN's estimate of query `sql`, judged `verdict`: the top line of
-    /// its physical plan. None of more than one statement, of a statement
-    /// not a query, as EXPLAIN plans queries alone, or of one EXPLAIN refuses.
+    /// EXPLAIN's estimate of `sql`, judged `verdict`: the top line of its
+    /// physical plan; of a data change, which plain EXPLAIN runs nothing of
+    /// (D70), its line and the first line below it that estimates rows, the
+    /// rows it would read. None of more than one statement, of a statement
+    /// neither a query nor a data change, or of one EXPLAIN refuses.
     fn estimate(&self, sql: &str, verdict: &Verdict) -> Option<String> {
-        if verdict.class != Class::Read || verdict.statements.len() != 1 {
+        let change = verdict.class == Class::WriteRows;
+        if !(verdict.class == Class::Read || change) || verdict.statements.len() != 1 {
             return None;
         }
         let (_, rows, _) = self.rows(&format!("EXPLAIN {sql}"), 10_000).ok()?;
         let lines: Vec<String> = rows.into_iter().filter_map(|r| r.into_iter().next().flatten()).collect();
         let physical = lines.iter().position(|l| l.trim() == "-- physical:")?;
-        lines.get(physical.checked_add(1)?).map(|l| l.trim().to_owned())
+        let mut plan = lines.iter().skip(physical.checked_add(1)?).map(|l| l.trim()).take_while(|l| !l.starts_with("-- "));
+        let top = plan.next()?.to_owned();
+        if !change {
+            return Some(top);
+        }
+        Some(plan.find(|l| l.contains("(est. rows")).map_or_else(|| top.clone(), |read| format!("{top}: {read}")))
     }
 
     /// Drafts `sql` for the user.

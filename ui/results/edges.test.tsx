@@ -85,6 +85,7 @@ describe("the results' actions at their edges", () => {
             ranChanged: false,
             ranMillis: null,
             joinOrder: null,
+            effects: null,
             lines: [],
           },
         }),

@@ -109,6 +109,8 @@ Each is told in full in [§7](#7-the-decisions).
 | D67 | Session records: what was shared, kept by the presenter alone, sealed if asked, replayed and summed up for a ticket |
 | D68 | Import formats as plug-ins: detect, choices, records and types behind one interface |
 | D69 | Keyboard schemes: Studio's own keys, or the function keys', a key bound apart on top |
+| D70 | Explain of a data change: plain EXPLAIN, which runs nothing, and what the change would do, shown apart |
+| D71 | A CALL's parameter modes and defaults: values asked for IN and INOUT parameters alone, OUT ones told, DEFAULT written for a default |
 
 ---
 
@@ -513,7 +515,7 @@ The review checklist:
   an embedded database is given (D59), `turborel-aes`, `turborel-lz4`
   and `turborel-simd`, from
   github.com/turborel/turborel at commit
-  `314a0042744497efc904befd19b954a89d6a4da6` of `main`; BSD-2-Clause
+  `32e1334d37c7b4ca489491eed7b216a2d778bff1` of `main`; BSD-2-Clause
   Plus Patent.
 - **Not crates.io:** the 0.0.0 crates published there are frozen and
   never used.
@@ -1612,7 +1614,9 @@ The review checklist:
   autocommit as it was. By statements a server and an embedded database
   both run, so the same on each.
 - **The setting:** `analyzeKeepsChanges`, off at first, makes Analyze
-  and Keep Changes the first choice; settled as it is.
+  and Keep Changes the first choice; settled as it is. It is of ANALYZE
+  alone: plain Explain of a change runs nothing and asks nothing (D70),
+  and the dialog offers Explain Without Running besides.
 - *Why:* EXPLAIN ANALYZE of a change is the change; a person asking for
   its plan seldom means to keep it, and must not be surprised by it.
 
@@ -1885,6 +1889,56 @@ The review checklist:
 - *Why:* those who know the function keys of a database IDE's classic
   layout work in Studio without learning another, and those who do not
   keep Studio's own.
+
+#### D70. Explain of a data change: plain EXPLAIN, which runs nothing, and what the change would do, shown apart
+
+- **What:** Turborel's EXPLAIN without ANALYZE takes an INSERT, UPDATE,
+  DELETE or MERGE and runs nothing: no row read or locked, nothing
+  written, no trigger fired (Turborel's `sql/statements/explain.md`).
+  **Explain** of a data change sends it alone, as of a query: no
+  transaction, savepoint or rollback.
+- **Shown:** the plan of the rows the change would read below its line,
+  as `Delete from DEMO.ORDERS`, and, above the plan, a section of what it
+  would do beside, of the lines after the plan: indexes maintained
+  (`-- maintains:`), cascades (`-- cascades:`, a line each), triggers
+  (`-- trigger:`, a line each) and the point path (`-- point path:`),
+  `none` shown as none (`ui/plan/plan.ts`, `ui/plan/ChangeEffects.tsx`).
+- **Guards:** judged a read (`core/src/guard/classify.rs`), so run at
+  once on production and on a read-only connection; EXPLAIN ANALYZE of
+  a change stays judged as the change (D61). The assistant's explain
+  tool takes a data change as well as a query; it never writes ANALYZE.
+- **Analyze:** Explain Analyze of a data change still asks first (D61),
+  and offers **Explain Without Running** besides; `analyzeKeepsChanges`
+  chooses between rolling back and keeping, for ANALYZE alone.
+- *Why:* the plan of a change, and what it would write and fire, are
+  what a person asking for its plan wants, and a statement that runs
+  nothing needs no question, transaction or rollback.
+
+#### D71. A CALL's parameter modes and defaults: values asked for IN and INOUT parameters alone, OUT ones told, DEFAULT written for a default
+
+- **What:** each `?` of a prepared CALL is described with its procedure
+  parameter's mode, IN, OUT or INOUT, and ordinal position: by
+  turborel-client granted `parameter-modes` on a server, by the
+  `turborel` crate's `Prepared::parameters` embedded
+  (`core/src/connections/cells.rs`, `ParameterInfo`).
+- **Asked:** the values dialog asks for the IN and INOUT parameters
+  alone, each labelled with its type, mode and position; the OUT ones
+  are told as given back in the CALL's row, and a CALL of OUT ones alone
+  is run without the dialog. Values are bound to the statement's inputs
+  (`inputs`), so a CALL with OUT parameters runs.
+- **Shown:** the OUT and INOUT values come back as the CALL's one row,
+  shown as a result. The routine runner of the explorer and the
+  worksheet ask alike; the assistant runs queries alone, never a CALL.
+- **Defaults:** a procedure's IN or INOUT parameter may have a default,
+  read as PARAMETER_DEFAULT and shown with its parameter in the details
+  panel, the hint and Script As CREATE. The routine runner writes
+  `DEFAULT /* default */` for an IN parameter of one, so it is taken
+  unless a value is written in its place; an INOUT one keeps its `?`, as
+  DEFAULT would give its value back nowhere (Turborel's D979). The
+  default is the server's text, so the comment is left out of one that
+  holds `/*` or `*/`, and it is never read as SQL (R-SAFE-2).
+- *Why:* an OUT parameter takes no value, and asking for one misleads;
+  its position tells which of the procedure's parameters each `?` is.
 ---
 
 ## 8. References

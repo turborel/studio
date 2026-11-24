@@ -123,3 +123,41 @@ pub fn the_built_in_reports_run(live: &Live) {
     }
     manager.close(id).unwrap();
 }
+
+/// [DOC sql/statements/explain.md EXPLAIN of a data change] [DESIGN] D70:
+/// plain EXPLAIN of a DELETE shows its plan and what it would do, the
+/// indexes it would write, the action that would cascade and the trigger
+/// that would fire, running nothing; the guards judge it a read.
+pub fn a_data_change_is_explained_running_nothing(live: &Live) {
+    let (manager, _) = live.manager();
+    let id = live.owner(&manager);
+    manager.set_autocommit(id, true).unwrap();
+    for sql in [
+        "CREATE TABLE EX_PARTS (ID INTEGER PRIMARY KEY, NAME VARCHAR(20))",
+        "CREATE TABLE EX_ORDERS (ID INTEGER PRIMARY KEY, PART INTEGER REFERENCES EX_PARTS ON DELETE CASCADE)",
+        "CREATE TABLE EX_GONE (ID INTEGER)",
+        "CREATE TRIGGER EX_ORDER_GONE AFTER DELETE ON EX_ORDERS REFERENCING OLD ROW AS O FOR EACH ROW INSERT INTO EX_GONE VALUES (O.ID)",
+        "INSERT INTO EX_PARTS VALUES (7, 'bolt')",
+        "INSERT INTO EX_ORDERS VALUES (1, 7)",
+    ] {
+        run(&manager, id, sql).unwrap();
+    }
+    let explained = "EXPLAIN DELETE FROM EX_PARTS WHERE ID = 7";
+    assert!(manager.judge(id, explained).unwrap().is_none());
+    let Outcome::Rows { page, .. } = run(&manager, id, explained).unwrap().outcome else { panic!("no plan") };
+    let lines: Vec<String> = page.rows.iter().filter_map(|r| r.first().cloned().flatten()).collect();
+    let text = lines.join("\n");
+    assert!(text.contains("Delete from ANN.EX_PARTS"), "{text}");
+    assert!(lines.iter().any(|l| l.starts_with("-- maintains: ")), "{text}");
+    assert!(lines.iter().any(|l| l.starts_with("-- cascades: ON DELETE CASCADE to ANN.EX_ORDERS")), "{text}");
+    assert!(lines.iter().any(|l| l.starts_with("-- trigger: ANN.EX_ORDER_GONE, AFTER DELETE FOR EACH ROW")), "{text}");
+    assert!(lines.iter().any(|l| l.starts_with("-- point path: ")), "{text}");
+    let Outcome::Rows { page, .. } = run(&manager, id, "SELECT (SELECT COUNT(*) FROM EX_PARTS) + (SELECT COUNT(*) FROM EX_ORDERS) + (SELECT COUNT(*) FROM EX_GONE) FROM (VALUES (1)) AS O(X)").unwrap().outcome else {
+        panic!("no rows")
+    };
+    assert_eq!(page.rows, [[Some("2".to_owned())]]);
+    for table in ["EX_GONE", "EX_ORDERS", "EX_PARTS"] {
+        run(&manager, id, &format!("DROP TABLE {table} CASCADE")).unwrap();
+    }
+    manager.close(id).unwrap();
+}

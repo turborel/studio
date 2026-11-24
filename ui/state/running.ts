@@ -17,15 +17,16 @@ import {
   type StatementClass,
   type StudioError,
 } from "../ipc/connections";
-import { judgeScript, notifyFinished, recordHistory, statementParameters } from "../ipc/worksheet";
+import { judgeScript, notifyFinished, recordHistory } from "../ipc/worksheet";
 import { showFailure } from "../worksheet/editor/actions";
 import { viewOf } from "../worksheet/editor/views";
 import { parsePlan } from "../plan/plan";
 import { prompted } from "../shell/PromptDialog";
 import { bound, substituted, variableNames } from "../worksheet/variables";
 import { isStudioError, session } from "./actions";
+import { asked, NONE_ASKED, valuesFor } from "./values";
 import { loadSchemas } from "./catalog";
-import type { Given, Store } from "./store";
+import type { Store } from "./store";
 import {
   changeWorksheet,
   MAX_RUNS,
@@ -108,41 +109,6 @@ export function confirmed(store: Store, confirm: Confirm): Promise<boolean> {
         answer: (run) => {
           store.update((then) => ({ ...then, dialog: null }));
           answer(run);
-        },
-      },
-    }));
-  });
-}
-
-/** Asks the user for values of `names`, of `types`, and of the script variables `variables`. */
-function asked(
-  store: Store,
-  id: string,
-  names: readonly string[],
-  types: readonly string[],
-  variables: readonly string[],
-): Promise<Given | null> {
-  const w = worksheetOf(store.current(), id);
-  const remembered = { ...w?.binds, ...Object.fromEntries(Object.entries(w?.variables ?? {})) };
-  return new Promise((answer) => {
-    store.update((now) => ({
-      ...now,
-      dialog: {
-        kind: "values",
-        names,
-        types,
-        remembered,
-        variables,
-        answer: (given) => {
-          store.update((then) => ({ ...then, dialog: null }));
-          if (given !== null) {
-            changeWorksheet(store, id, (x) => ({
-              ...x,
-              binds: { ...x.binds, ...given.binds },
-              variables: { ...x.variables, ...given.variables },
-            }));
-          }
-          answer(given);
         },
       },
     }));
@@ -248,21 +214,6 @@ async function remember(store: Store, run: RunResult): Promise<void> {
     rows,
     sqlstate,
   }).catch(() => false);
-}
-
-/** The values of `sent`'s parameters `names`, asked of the user: none if there are none, null if the user gave none. */
-async function valuesFor(
-  store: Store,
-  id: string,
-  connection: number,
-  { sent, names }: { sent: string; names: readonly string[] },
-): Promise<(string | null)[] | null> {
-  if (names.length === 0) {
-    return [];
-  }
-  const types = await statementParameters(connection, sent);
-  const given = await asked(store, id, names, types, []);
-  return given === null ? null : names.map((n) => given.binds[n] ?? null);
 }
 
 /** A run of `statement`, as sent with `values`, before it has run. */
@@ -387,7 +338,7 @@ async function ready(store: Store, id: string, statements: readonly ToRun[]): Pr
     return null;
   }
   const missing = unvalued(store, id, statements);
-  if (missing.length > 0 && (await asked(store, id, [], [], missing)) === null) {
+  if (missing.length > 0 && (await asked(store, id, NONE_ASKED, missing)) === null) {
     tell(store, id, message("notice", "Not run: no values were given."));
     return null;
   }
@@ -497,7 +448,7 @@ export async function runOnConnections(
     return;
   }
   const missing = unvalued(store, id, statements);
-  if (missing.length > 0 && (await asked(store, id, [], [], missing)) === null) {
+  if (missing.length > 0 && (await asked(store, id, NONE_ASKED, missing)) === null) {
     tell(store, id, message("notice", "Not run: no values were given."));
     return;
   }
@@ -552,14 +503,21 @@ export async function fetchMore(store: Store, id: string, runId: number): Promis
   }
 }
 
-/** Runs EXPLAIN of `statement`, or EXPLAIN ANALYZE, which runs it, and shows its plan in worksheet `id`'s plan viewer. */
+/**
+ * Runs EXPLAIN of `statement`, which runs nothing, a data change's no more than a query's, or EXPLAIN ANALYZE, which
+ * runs it, and shows its plan in worksheet `id`'s plan viewer.
+ */
 export async function explain(store: Store, id: string, statement: ToRun, analyze: boolean): Promise<void> {
   await runStatements(store, id, [{ ...statement, sql: `EXPLAIN ${analyze ? "ANALYZE " : ""}${statement.sql}` }]);
 }
 
-/** EXPLAIN, or EXPLAIN ANALYZE, before a query, or EXPLAIN ANALYZE before a data change, as Turborel reads it, comments and spaces before it: what it explains. */
+/**
+ * EXPLAIN, or EXPLAIN ANALYZE, before a query or a data change, as Turborel reads it, comments and spaces before it:
+ * what it explains. A data change is INSERT, UPDATE or DELETE, or MERGE before INTO or WITH (Turborel's
+ * `sql/statements/explain.md`, its D980).
+ */
 const EXPLAINED =
-  /^(?:\s+|--[^\n]*\n|\/\*[\s\S]*?\*\/)*EXPLAIN\s+(?:ANALYZE\s+((?:INSERT|UPDATE|DELETE|MERGE)\b[\s\S]*)|(?:ANALYZE\s+)?((?:SELECT|VALUES|TABLE|WITH|\()[\s\S]*))$/iu;
+  /^(?:\s+|--[^\n]*\n|\/\*[\s\S]*?\*\/)*EXPLAIN\s+(?:ANALYZE\s+)?(?:((?:INSERT|UPDATE|DELETE)\b[\s\S]*|MERGE\s+(?:INTO|WITH)\b[\s\S]*)|((?:SELECT|VALUES|TABLE|WITH|\()[\s\S]*))$/iu;
 
 /** The statement `sql` explains, if it is EXPLAIN or EXPLAIN ANALYZE of one. */
 export function explainedOf(sql: string): string | null {

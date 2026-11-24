@@ -110,7 +110,10 @@ schema first in the new worksheet, where the session's is another; the
 session is the connection's, so every worksheet on it then runs in that
 schema. A routine's Execute… opens a worksheet that calls it, `CALL` of
 a procedure and `VALUES` of a function, each argument a `?` whose value
-the worksheet asks for as it runs. Close Others and Close to the Right
+the worksheet asks for as it runs; but `DEFAULT` of a procedure's IN
+parameter that has a default, its default after it in a comment, as
+`DEFAULT /* 5 */`, which takes the default unless a value is written in
+its place. An INOUT parameter keeps its `?`, so its value comes back. Close Others and Close to the Right
 leave pinned tabs open. Elsewhere the webview's own menu is offered in a
 field of text alone, where it cuts and pastes.
 

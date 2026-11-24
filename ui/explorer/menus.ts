@@ -8,7 +8,7 @@
 import { namer } from "../data/ddl";
 import { openDdl } from "../data/ddlActions";
 import type { DataTask } from "../data/tasks";
-import { catalogDefinition, catalogRoutine, type DefinitionOf, type ScriptAs } from "../ipc/catalog";
+import { catalogDefinition, catalogRoutine, type DefinitionOf, type Parameter, type ScriptAs } from "../ipc/catalog";
 import type { ConnectionSpec } from "../ipc/connections";
 import { attempt, show } from "../state/actions";
 import { loadSchemas, loadTable, select } from "../state/catalog";
@@ -305,11 +305,26 @@ export function partMenu(store: Store, connection: number, part: PartOf): MenuIt
   ];
 }
 
-/** Opens a worksheet that runs routine `specific` of `schema`, its parameters each a `?` the worksheet asks for. */
+/**
+ * An argument of a CALL the routine runner writes, of `p`: a `?` the worksheet asks for; but DEFAULT, its default
+ * written after it in a comment, of an IN parameter that has one, which the user may write a value for instead, or
+ * leave so (Turborel's D979; RULES.md D71). An INOUT parameter keeps its `?`, as DEFAULT would give its value back
+ * nowhere.
+ */
+export function argumentOf(p: Parameter): string {
+  if (p.mode !== "IN" || p.default === null) {
+    return "?";
+  }
+  // The default is the server's text: written in a comment only where it can neither end the comment nor open one
+  // within it, so it is never read as SQL (R-SAFE-2).
+  return /\/\*|\*\//u.test(p.default) ? "DEFAULT" : `DEFAULT /* ${p.default} */`;
+}
+
+/** Opens a worksheet that runs routine `specific` of `schema`, each parameter an argument as `argumentOf` writes it. */
 async function execute(store: Store, connection: number, schema: string, specific: string): Promise<void> {
   await attempt(store, async () => {
     const r = await catalogRoutine(connection, schema, specific);
-    const args = r.parameters.map(() => "?").join(", ");
+    const args = r.parameters.map(argumentOf).join(", ");
     const called = `${qualifiedName(store, schema, r.name)}(${args})`;
     const sql = r.kind === "PROCEDURE" ? `CALL ${called}` : `VALUES (${called})`;
     await runInWorksheet(store, connection, sql, r.name);

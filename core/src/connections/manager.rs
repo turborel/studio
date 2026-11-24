@@ -266,7 +266,7 @@ impl ConnectionManager {
             Reply::Ran(ran) => Ok(RunAnswer::Ran(ran)),
             Reply::Rows(_)
             | Reply::Columns(_)
-            | Reply::Types(_)
+            | Reply::Parameters(_)
             | Reply::Value(_)
             | Reply::Exported(_)
             | Reply::Imported(_)
@@ -288,7 +288,7 @@ impl ConnectionManager {
             Reply::Ran(_)
             | Reply::Rows(_)
             | Reply::Columns(_)
-            | Reply::Types(_)
+            | Reply::Parameters(_)
             | Reply::Value(_)
             | Reply::Exported(_)
             | Reply::Imported(_)
@@ -342,7 +342,7 @@ impl ConnectionManager {
             Reply::Rows(rows) => Ok(rows),
             Reply::Ran(_)
             | Reply::Columns(_)
-            | Reply::Types(_)
+            | Reply::Parameters(_)
             | Reply::Value(_)
             | Reply::Exported(_)
             | Reply::Imported(_)
@@ -363,7 +363,7 @@ impl ConnectionManager {
             Reply::Columns(columns) => Ok(columns),
             Reply::Ran(_)
             | Reply::Rows(_)
-            | Reply::Types(_)
+            | Reply::Parameters(_)
             | Reply::Value(_)
             | Reply::Exported(_)
             | Reply::Imported(_)
@@ -373,19 +373,20 @@ impl ConnectionManager {
         }
     }
 
-    /// The types of `sql`'s dynamic parameters on connection `id`, in
-    /// order, as SQL writes them: prepared and let go, never run.
+    /// `sql`'s dynamic parameters on connection `id`, in order, each its
+    /// type as SQL writes it, and, of a CALL, its mode and its procedure
+    /// parameter's position: prepared and let go, never run.
     ///
     /// # Errors
     ///
     /// SQLCODE -910 for SQL longer than `MAX_SQL_BYTES` or an unknown
     /// connection; the server's, as of a statement that cannot be prepared.
-    pub fn parameters(&self, id: ConnectionId, sql: &str) -> Result<Vec<String>> {
+    pub fn parameters(&self, id: ConnectionId, sql: &str) -> Result<Vec<crate::connections::cells::ParameterInfo>> {
         if sql.len() > MAX_SQL_BYTES {
             return Err(StudioError::misuse(format!("[DESIGN] a statement is at most {MAX_SQL_BYTES} bytes")));
         }
         match self.ask(id, Request::Parameters(sql.to_owned()))? {
-            Reply::Types(types) => Ok(types),
+            Reply::Parameters(described) => Ok(described),
             Reply::Ran(_)
             | Reply::Rows(_)
             | Reply::Columns(_)
@@ -413,7 +414,7 @@ impl ConnectionManager {
             Reply::Ran(_)
             | Reply::Rows(_)
             | Reply::Columns(_)
-            | Reply::Types(_)
+            | Reply::Parameters(_)
             | Reply::Exported(_)
             | Reply::Imported(_)
             | Reply::Page(_)
@@ -445,7 +446,7 @@ impl ConnectionManager {
             Reply::Ran(_)
             | Reply::Rows(_)
             | Reply::Columns(_)
-            | Reply::Types(_)
+            | Reply::Parameters(_)
             | Reply::Value(_)
             | Reply::Imported(_)
             | Reply::Page(_)
@@ -496,7 +497,7 @@ impl ConnectionManager {
             Reply::Ran(_)
             | Reply::Rows(_)
             | Reply::Columns(_)
-            | Reply::Types(_)
+            | Reply::Parameters(_)
             | Reply::Value(_)
             | Reply::Exported(_)
             | Reply::Page(_)
@@ -556,7 +557,7 @@ fn session(reply: Reply) -> Result<SessionState> {
         Reply::Ran(_)
         | Reply::Rows(_)
         | Reply::Columns(_)
-        | Reply::Types(_)
+        | Reply::Parameters(_)
         | Reply::Value(_)
         | Reply::Exported(_)
         | Reply::Imported(_)

@@ -66,6 +66,72 @@ pub fn a_query_is_paged_through_its_cursor(scratch: &Scratch) {
     manager.close(id).unwrap();
 }
 
+/// [DOC sql/statements/explain.md EXPLAIN of a data change] [DESIGN] D70:
+/// plain EXPLAIN of an UPDATE on an embedded database shows its plan and
+/// what it would do, as a server's does, running nothing.
+pub fn a_data_change_is_explained_running_nothing(scratch: &Scratch) {
+    let (manager, _) = scratch.manager();
+    let id = connected(scratch, &manager);
+    for sql in [
+        "CREATE TABLE EX_PARTS (ID INTEGER PRIMARY KEY, NAME VARCHAR(20))",
+        "CREATE INDEX EX_PARTS_NAME ON EX_PARTS (NAME)",
+        "INSERT INTO EX_PARTS VALUES (7, 'bolt')",
+        "COMMIT",
+    ] {
+        run(&manager, id, sql).unwrap();
+    }
+    let lines = column(&manager, id, "EXPLAIN UPDATE EX_PARTS SET NAME = 'nut' WHERE ID = 7");
+    let text = lines.iter().flatten().cloned().collect::<Vec<_>>().join("\n");
+    assert!(text.contains("Update ") && text.contains("EX_PARTS"), "{text}");
+    assert!(text.contains("-- maintains: EX_PARTS_NAME [btree]"), "{text}");
+    assert!(text.contains("-- point path: "), "{text}");
+    assert_eq!(column(&manager, id, "SELECT NAME FROM EX_PARTS"), [Some("bolt".to_owned())]);
+    manager.close(id).unwrap();
+}
+
+/// [CLIENT Prepared statements] [DESIGN] D71: each `?` of a CALL is
+/// described with its procedure parameter's mode and position, as a
+/// server's are; the IN and INOUT ones alone are given values, and the OUT
+/// and INOUT ones' values come back as the CALL's row; a parameter's
+/// default is read of the catalog, and taken by DEFAULT.
+pub fn a_calls_parameters_have_their_modes(scratch: &Scratch) {
+    let (manager, _) = scratch.manager();
+    let id = connected(scratch, &manager);
+    for sql in [
+        "CREATE TABLE MODED (N INTEGER)",
+        "INSERT INTO MODED VALUES (2), (3)",
+        "CREATE PROCEDURE MIXED (OUT TOTAL INTEGER, IN TIMES INTEGER, INOUT TAG VARCHAR(10)) READS SQL DATA \
+         SELECT SUM(N) * TIMES, TAG || 'X' INTO TOTAL, TAG FROM MODED",
+        "COMMIT",
+    ] {
+        run(&manager, id, sql).unwrap();
+    }
+    let call = "CALL MIXED(?, ?, ?)";
+    let modes: Vec<_> = manager.parameters(id, call).unwrap().into_iter().map(|p| (p.mode, p.ordinal)).collect();
+    assert_eq!(modes, [("OUT", Some(1)), ("IN", Some(2)), ("INOUT", Some(3))]);
+    let values = [Some("2".to_owned()), Some("A".to_owned())];
+    let RunAnswer::Ran(ran) = manager.run_with(id, (call, &values), true).unwrap() else { panic!("asked") };
+    let Outcome::Rows { page, .. } = ran.outcome else { panic!("no row of its outputs: {:?}", ran.outcome) };
+    assert_eq!(page.rows, [[Some("10".to_owned()), Some("AX".to_owned())]]);
+    // An IN parameter of a default is left to it by DEFAULT, as the routine runner writes it (Turborel's D979).
+    run(
+        &manager,
+        id,
+        "CREATE PROCEDURE TIMED (OUT TOTAL INTEGER, IN TIMES INTEGER DEFAULT 5) READS SQL DATA SELECT SUM(N) * TIMES INTO TOTAL FROM MODED",
+    )
+    .unwrap();
+    let schema = column(&manager, id, "SELECT SPECIFIC_SCHEMA FROM INFORMATION_SCHEMA.ROUTINES WHERE ROUTINE_NAME = 'TIMED'");
+    let specific = column(&manager, id, "SELECT SPECIFIC_NAME FROM INFORMATION_SCHEMA.ROUTINES WHERE ROUTINE_NAME = 'TIMED'");
+    let (schema, specific) = (schema[0].clone().unwrap(), specific[0].clone().unwrap());
+    let detail = turborel_studio_core::catalog::Catalog::of(&manager, id).routine(&schema, &specific).unwrap();
+    let defaults: Vec<_> = detail.parameters.iter().map(|p| p.default.clone()).collect();
+    assert_eq!(defaults, [None, Some("5".to_owned())]);
+    let RunAnswer::Ran(ran) = manager.run_with(id, ("CALL TIMED(?, DEFAULT /* 5 */)", &[]), true).unwrap() else { panic!("asked") };
+    let Outcome::Rows { page, .. } = ran.outcome else { panic!("no row of its outputs: {:?}", ran.outcome) };
+    assert_eq!(page.rows, [[Some("25".to_owned())]]);
+    manager.close(id).unwrap();
+}
+
 /// [DESIGN] D59 [DOC client/03-embedding.md Parameters] [DOC
 /// client/03-embedding.md Large objects] Parameters are given values as
 /// text, cast to their types; a large object longer than a row holds is
@@ -280,9 +346,10 @@ pub fn each_database_has_a_named_worker(scratch: &Scratch) {
 }
 
 /// [DESIGN] D59 [DOC client/03-embedding.md Prepared statements] A
-/// read-only connection's transactions begin READ ONLY; a procedure's
-/// output parameters come as a row; a statement's columns and parameters
-/// are described, never run.
+/// read-only connection's transactions begin READ ONLY, and it explains a
+/// data change, which runs nothing (D70); a procedure's output
+/// parameters come as a row; a statement's columns and parameters are
+/// described, never run.
 pub fn read_only_runs_and_a_procedures_outputs(scratch: &Scratch) {
     let (manager, _) = scratch.manager();
     let dir = scratch.path("outputs");
@@ -299,6 +366,9 @@ pub fn read_only_runs_and_a_procedures_outputs(scratch: &Scratch) {
     let reader = manager.open_embedded(&spec(&dir, false), guards).unwrap().connection;
     let ran = run(&manager, reader, "SELECT COUNT(*) FROM ORDERS").unwrap();
     assert!(ran.session.transaction.read_only, "{:?}", ran.session.transaction);
+    // Plain EXPLAIN of a change runs nothing, so a read-only connection runs it (D70).
+    let plan = column(&manager, reader, "EXPLAIN DELETE FROM ORDERS WHERE ID = 1");
+    assert!(plan.iter().flatten().any(|l| l.starts_with("Delete from")), "{plan:?}");
     manager.ping(reader).unwrap();
     manager.close(reader).unwrap();
 }

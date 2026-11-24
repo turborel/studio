@@ -181,7 +181,8 @@ without WHERE; so does one Studio cannot classify, as dynamic SQL or a
 CALL, which may hide one. Studio classifies each statement by Turborel's
 own parser, and a script by its strictest statement. EXPLAIN of a query,
 and EXPLAIN ANALYZE, which runs its query, are classified as the query
-is. EXPLAIN ANALYZE of an INSERT, UPDATE, DELETE or MERGE runs the
+is. EXPLAIN without ANALYZE of an INSERT, UPDATE, DELETE or MERGE runs
+nothing, so it is classified as a read. EXPLAIN ANALYZE of one runs the
 change for real, so it is classified as that change: a write, asked
 about on production, refused on a read-only connection, and asked about
 first if it is a DELETE or UPDATE without WHERE. A statement of dynamic parameters, `?`, is classified as

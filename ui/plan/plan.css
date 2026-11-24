@@ -177,3 +177,32 @@
 .flow-bar-actual {
   background: var(--series3);
 }
+
+/* What a data change would do beside its rows (D70): its indexes, cascades, triggers and point path. */
+.plan-effects {
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.plan-effects p {
+  margin: 2px 0;
+}
+
+.plan-effects dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 2px 12px;
+  margin: 2px 0;
+}
+
+.plan-effects dt {
+  color: var(--text-muted);
+}
+
+.plan-effects dd,
+.plan-effects ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-wrap: anywhere;
+}

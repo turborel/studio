@@ -7,7 +7,8 @@ SQL and its plan, of a model of the user's choice: Claude, or a model of
 the user's own. It is off until the user turns it on. Every request is
 made by Studio's backend, never by the window, and holds only what the
 user chose to send, shown whole first. Its tools read the catalog,
-explain queries and run a query only once the user approves it; a
+explain queries and data changes, running neither, and run a query only
+once the user approves it; a
 statement that changes anything it drafts into a worksheet, where only
 the user runs it. Its guard rails are kept by Studio and the database,
 never by what the model is told, so no answer of a model, nor text it
@@ -114,7 +115,7 @@ before it runs:
 | `list_schemas` | names the schemas | Explain only |
 | `list_tables` | names a schema's tables and views | Explain only |
 | `describe_table` | describes a table: its columns, constraints and indexes | Explain only |
-| `explain` | runs EXPLAIN of a query, and is told its plan; never EXPLAIN ANALYZE, which runs its statement, refused as `EXPLAIN-ONLY` | Explain only |
+| `explain` | runs EXPLAIN of a query or a data change, and is told its plan, and of a change what it would do, its indexes written, actions cascaded and triggers fired, which EXPLAIN tells running nothing; never EXPLAIN ANALYZE, which runs its statement, refused as `EXPLAIN-ONLY` | Explain only |
 | `analyzer_findings` | is told a schema's findings ([The Analyzer](09-analyzer.md)) | Explain only |
 | `run_query` | runs a query, once the user approves it, and is told its rows | Read |
 | `propose_sql` | drafts SQL into a worksheet for the user, never running it | Explain only, of a query; Propose changes, of any other statement |
@@ -135,8 +136,10 @@ first says so. No tool changes anything without the user.
 ### Drafts
 
 A draft is shown with its title, why the model drafted it, its class,
-the objects it names, and EXPLAIN's estimate where it is a query, as
-EXPLAIN plans a query alone. A statement that destroys, or that the
+the objects it names, and EXPLAIN's estimate where it is a query or a
+data change, as EXPLAIN plans those alone: a query's top line, or a data
+change's line and the rows it would read, which EXPLAIN tells without
+running it. A statement that destroys, or that the
 assistant may never run, is shown in red with the reason and the rule.
 **Open in Worksheet** opens it in a worksheet of the active connection,
 where the user reads it and runs it, through the guards every statement

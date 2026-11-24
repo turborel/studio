@@ -288,8 +288,8 @@ function RoutineDetails({ connection, schema, specific }: { connection: number; 
           () => (
             <Table
               label="Parameters"
-              headings={["Mode", "Name", "Type"]}
-              rows={detail.parameters.map((p) => [p.mode, p.name ?? "", p.typeWritten])}
+              headings={["Mode", "Name", "Type", "Default"]}
+              rows={detail.parameters.map((p) => [p.mode, p.name ?? "", p.typeWritten, p.default ?? ""])}
             />
           ),
         ],

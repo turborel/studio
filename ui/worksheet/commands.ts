@@ -84,7 +84,10 @@ export async function runScript(store: Store): Promise<void> {
   }
 }
 
-/** Shows the plan of the statement at the cursor; EXPLAIN ANALYZE runs it. */
+/**
+ * Shows the plan of the statement at the cursor: plain EXPLAIN runs nothing, a data change's no more than a query's,
+ * and shows what the change would do (RULES.md D70); EXPLAIN ANALYZE runs it, a data change's only once asked (D61).
+ */
 export async function explainCurrent(store: Store, analyze: boolean): Promise<void> {
   const at = active(store);
   if (at?.view === undefined) {
@@ -97,11 +100,13 @@ export async function explainCurrent(store: Store, analyze: boolean): Promise<vo
     return;
   }
   if (analyze && changesData(statement)) {
-    const choice = await new Promise<"rollBack" | "keep" | null>((answer) => {
+    const choice = await new Promise<"rollBack" | "keep" | "explain" | null>((answer) => {
       show(store, { kind: "analyzeChange", sql: statement.sql, answer });
     });
     show(store, null);
-    if (choice !== null) {
+    if (choice === "explain") {
+      await explain(store, at.id, statement, false);
+    } else if (choice !== null) {
       await analyzeChange(store, at.id, statement, choice === "keep");
     }
     return;

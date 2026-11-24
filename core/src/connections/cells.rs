@@ -2,9 +2,11 @@
 //! the text turborel's own `Display` writes of it, so an exact number or a
 //! DECFLOAT is shown as the server gave it, never through a float
 //! (R-NUM-1); null as no text. A columns' types as the server declared
-//! them (`[CLIENT Prepared statements]`).
+//! them, and a statement's dynamic parameters, each with its mode and its
+//! procedure parameter's position (`[CLIENT Prepared statements]`).
 
 use serde::Serialize;
+use turborel::params::DynamicParameter;
 use turborel::storage::Row;
 use turborel::value::Value;
 use turborel_client::Column;
@@ -36,6 +38,29 @@ impl From<&Column> for ColumnInfo {
             type_name: c.declared.as_ref().map(|d| d.name.clone()),
             not_null: c.not_null,
         }
+    }
+}
+
+/// A dynamic parameter, `?`, of a statement, as the worksheet asks its
+/// value: of a CALL, the mode and ordinal position of the procedure's
+/// parameter whose argument holds it ([CLIENT Prepared statements]); an
+/// IN or INOUT one is given a value, and an OUT or INOUT one's comes back
+/// in the CALL's row.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ParameterInfo {
+    /// Its type as SQL writes it.
+    pub type_written: String,
+    /// IN, OUT or INOUT; IN of any statement but a CALL.
+    pub mode: &'static str,
+    /// The ordinal position, from 1, of the procedure's parameter, of a
+    /// CALL of an SQL-invoked procedure; none of another statement's.
+    pub ordinal: Option<u32>,
+}
+
+impl From<&DynamicParameter> for ParameterInfo {
+    fn from(p: &DynamicParameter) -> ParameterInfo {
+        ParameterInfo { type_written: p.data_type.clone().data_type().to_string(), mode: p.mode.name(), ordinal: p.ordinal }
     }
 }
 

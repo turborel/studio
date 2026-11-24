@@ -1,4 +1,4 @@
-# The headings of Turborel's manual at 314a0042744497efc904befd19b954a89d6a4da6, copied by `cargo xtask headings` (RULES.md D6).
+# The headings of Turborel's manual at 32e1334d37c7b4ca489491eed7b216a2d778bff1, copied by `cargo xtask headings` (RULES.md D6).
 appendix/g-table-options.md	Appendix G: Table Options *(extension)*
 client/02-library-connections.md	Connecting by settings
 client/02-library-connections.md	Where settings come from
@@ -63,6 +63,7 @@ sql/statements/declare-local-temporary-table.md	DESCRIPTION
 sql/statements/drop-index.md	SYNOPSIS
 sql/statements/end-connection.md	DESCRIPTION
 sql/statements/explain.md	DESCRIPTION
+sql/statements/explain.md	EXPLAIN of a data change
 sql/statements/explain.md	EXPLAIN ANALYZE
 sql/statements/explain.md	EXPLAIN ANALYZE of a data change
 sql/statements/explain.md	EXAMPLES

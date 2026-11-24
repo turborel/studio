@@ -268,6 +268,10 @@ pub struct Parameter {
     pub name: Option<String>,
     /// Its type as SQL writes it.
     pub type_written: String,
+    /// The text of its default, of an IN or INOUT parameter of a
+    /// procedure that has one, as PARAMETER_DEFAULT shows it: a CALL that
+    /// writes DEFAULT for it, or leaves it out, gives it this value.
+    pub default: Option<String>,
 }
 
 /// A routine, whole.

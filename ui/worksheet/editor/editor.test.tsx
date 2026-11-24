@@ -290,15 +290,15 @@ describe("a routine's hint", () => {
         kind: "FUNCTION",
         returns: "INTEGER",
         parameters: [
-          { mode: "IN", name: "N", typeWritten: "INTEGER" },
-          { mode: "IN", name: null, typeWritten: "DATE" },
+          { mode: "IN", name: "N", typeWritten: "INTEGER", default: null },
+          { mode: "IN", name: null, typeWritten: "DATE", default: "CURRENT_DATE" },
         ],
         body: null,
         deterministic: true,
         dataAccess: "CONTAINS SQL",
         privileges: [],
       }),
-    ).toBe("DOUBLED(IN N INTEGER, IN DATE) RETURNS INTEGER");
+    ).toBe("DOUBLED(IN N INTEGER, IN DATE DEFAULT CURRENT_DATE) RETURNS INTEGER");
   });
 
   it("shows the routine's parameters as its arguments are written, and goes as the cursor leaves [DESIGN] D36", async () => {

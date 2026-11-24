@@ -135,7 +135,7 @@ it with another, and **Open Model** opens a model of its tables
 index a partitioned table's index made on a partition is named by the
 template, the partition's schema and its name, shown apart by `/`.
 
-A routine shows its parameters, with their modes and types; its body,
+A routine shows its parameters, with their modes, types and defaults; its body,
 which only the owner of its schema sees; the privileges granted on it;
 and its definition. Its **Debug** tab is unavailable: Turborel does not
 yet give a debugger of SQL routines, with breakpoints and stepping. A type

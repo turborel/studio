@@ -1,7 +1,7 @@
 import { act, cleanup, fireEvent, screen } from "@testing-library/react";
 import type { CommandContext } from "../commands/commands";
 import { rowMenu } from "../explorer/CatalogTree";
-import { newWorksheetOn, uriOf } from "../explorer/menus";
+import { argumentOf, newWorksheetOn, uriOf } from "../explorer/menus";
 import { nodeId, type TreeRow } from "../explorer/tree";
 import { catalogBackend, must, opened, settle, within } from "../test/catalog";
 import { SESSION } from "../test/backend";
@@ -86,6 +86,17 @@ function answer(store: Store, value: string | null): void {
 }
 
 describe("the explorer's menus", () => {
+  it("run a procedure's IN parameter of a default as DEFAULT, its default told in a comment that cannot end early [DESIGN] D71", () => {
+    const of = (mode: string, def: string | null) =>
+      argumentOf({ mode, name: "N", typeWritten: "INTEGER", default: def });
+    expect(of("IN", null)).toBe("?");
+    expect(of("IN", "5")).toBe("DEFAULT /* 5 */");
+    expect(of("INOUT", "5")).toBe("?");
+    expect(of("OUT", null)).toBe("?");
+    expect(of("IN", "'*/ DROP TABLE T; /*'")).toBe("DEFAULT");
+    expect(of("IN", "'/* a'")).toBe("DEFAULT");
+  });
+
   it("of a table: open its data, script it, copy its names, rename and drop it through the guards [DESIGN] D53", async () => {
     const { asked, store, copied } = await setUp();
     const items = rowMenu(

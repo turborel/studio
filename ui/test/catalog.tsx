@@ -193,7 +193,7 @@ export function catalogBackend(
       name: "DOUBLED",
       kind: "FUNCTION",
       returns: "INTEGER",
-      parameters: [{ mode: "IN", name: "N", typeWritten: "INTEGER" }],
+      parameters: [{ mode: "IN", name: "N", typeWritten: "INTEGER", default: null }],
       body: null,
       deterministic: true,
       dataAccess: "CONTAINS SQL",

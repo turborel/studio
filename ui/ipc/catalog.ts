@@ -172,6 +172,8 @@ export interface Parameter {
   readonly mode: string;
   readonly name: string | null;
   readonly typeWritten: string;
+  /** Of a procedure's IN or INOUT parameter, the text of its default, which DEFAULT or an argument left out gives. */
+  readonly default: string | null;
 }
 
 /** A routine, whole. */

@@ -38,8 +38,11 @@ pub fn tools() -> Vec<ToolDef> {
         },
         ToolDef {
             name: "explain",
-            description: "Runs EXPLAIN of one query and returns its plan's text. It never runs the query.",
-            schema: strings(&[("sql", "One query: a SELECT, VALUES, TABLE or WITH.")]),
+            description: "Runs EXPLAIN of one query or data change and returns its plan's text; of a data change, also the indexes it would write, the referential actions that would cascade, the triggers that would fire and its point path. It never runs the statement.",
+            schema: strings(&[(
+                "sql",
+                "One query, a SELECT, VALUES, TABLE or WITH; or one data change, an INSERT, UPDATE, DELETE or MERGE.",
+            )]),
         },
         ToolDef {
             name: "analyzer_findings",

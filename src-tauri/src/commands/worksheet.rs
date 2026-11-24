@@ -66,9 +66,14 @@ pub(crate) async fn judge_script(studio: State<'_, Studio>, connection: Connecti
     blocking(&studio, move |m| m.judge(connection, &sql)).await
 }
 
-/// The types of a statement's dynamic parameters, in order.
+/// A statement's dynamic parameters, in order: each its type, and, of a
+/// CALL, its mode and its procedure parameter's position.
 #[tauri::command]
-pub(crate) async fn statement_parameters(studio: State<'_, Studio>, connection: ConnectionId, sql: String) -> Result<Vec<String>> {
+pub(crate) async fn statement_parameters(
+    studio: State<'_, Studio>,
+    connection: ConnectionId,
+    sql: String,
+) -> Result<Vec<turborel_studio_core::connections::cells::ParameterInfo>> {
     blocking(&studio, move |m| m.parameters(connection, &sql)).await
 }
 

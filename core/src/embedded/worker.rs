@@ -20,7 +20,7 @@ use turborel::value::Value;
 use turborel::value::lob::{Lob, LobKind};
 use turborel_protocol::{Column, Completed};
 
-use crate::connections::cells::{Cell, ColumnInfo, cells};
+use crate::connections::cells::{Cell, ColumnInfo, ParameterInfo, cells};
 use crate::connections::outcome::{Outcome, Ran, ResultId};
 use crate::connections::pages::{PAGE_ROWS, Page, Pages};
 use crate::connections::session::{SessionState, Transaction, Transport};
@@ -159,7 +159,7 @@ impl EmbeddedWorker {
                 }
                 self.run(&sql, &values).map(|ran| Reply::Ran(Box::new(ran)))
             }
-            Request::Parameters(sql) => self.parameters(&sql).map(Reply::Types),
+            Request::Parameters(sql) => self.parameters(&sql).map(Reply::Parameters),
             Request::Rows { result, from, count } => self.rows(result, from, count).map(Reply::Page),
             Request::CloseResult(result) => self.close_result(result).map(|()| Reply::Done),
             Request::Session => self.state().map(Reply::Session),
@@ -214,10 +214,11 @@ impl EmbeddedWorker {
     }
 
     /// `values`, as text or null, each cast to the type of `prepared`'s
-    /// parameter in its place.
+    /// input parameter in its place: of a CALL, the IN and INOUT ones, not
+    /// the OUT ones, whose values its row gives back.
     fn bound(&self, prepared: &Prepared, values: &[Option<String>]) -> Result<Vec<Value>> {
         let session = self.session()?;
-        let types = prepared.parameters();
+        let types = prepared.inputs();
         if types.len() != values.len() {
             return Err(StudioError::misuse(format!(
                 "[DESIGN] the statement has {} parameters, and {} values were given",
@@ -400,11 +401,12 @@ impl EmbeddedWorker {
         Ok(crate::connections::values::read(lob, &bytes))
     }
 
-    /// The types of `sql`'s dynamic parameters, prepared, never run.
-    fn parameters(&self, sql: &str) -> Result<Vec<String>> {
+    /// `sql`'s dynamic parameters, in order, each its type, mode and
+    /// position, prepared, never run.
+    fn parameters(&self, sql: &str) -> Result<Vec<ParameterInfo>> {
         let session = self.session()?;
         let prepared = session.prepare(sql).map_err(|e| failed(session, e))?;
-        Ok(prepared.parameters().iter().map(|p| p.clone().data_type().to_string()).collect())
+        Ok(prepared.parameters().iter().map(ParameterInfo::from).collect())
     }
 
     /// The columns `sql` would give, prepared, never run.

@@ -28,7 +28,8 @@ person who works with the database one window for it:
 - a [Connections and Object Explorer](doc/user/04-explorer.md) tree of
   the catalog;
 - tabbed [SQL worksheets](doc/user/05-worksheets.md), each with its
-  results and messages, completion, and a plan viewer;
+  results and messages, completion, and a plan viewer that shows what a
+  data change would do without running it;
 - [Run SQL File](doc/user/07-editing-data.md#running-a-sql-file), which
   runs a `.sql` file of any size without the editor, summed up and
   judged by the guards first, with progress, cancel and an error log;

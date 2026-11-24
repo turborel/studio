@@ -12,7 +12,7 @@ citing it pass (RULES.md R-TRACE-4); else it is **not yet**, and
 Turborel's manual where Turborel defines the behaviour, by page and
 heading as RULES.md D6 writes them. Turborel's manual is read at the
 commit turborel-client is pinned to (RULES.md D10),
-`314a0042744497efc904befd19b954a89d6a4da6`.
+`32e1334d37c7b4ca489491eed7b216a2d778bff1`.
 
 [Statements](#statements) · [Types](#types) ·
 [The Information Schema](#the-information-schema) ·
@@ -38,8 +38,8 @@ shows what it gives. These rows say how each kind is shown.
 | S-STMT-6 | SET SCHEMA, SET CATALOG, SET TIME ZONE, SET ROLE, SET SESSION AUTHORIZATION, and SET of a setting | the session's status as the server tells it, at once | done |
 | S-STMT-7 | GRANT, REVOKE, and CREATE, ALTER and DROP of a user or role | run as typed, or written by the dialogs of users, roles and privileges; the explorer's users, roles and privileges read again | done |
 | S-STMT-13 | END CONNECTION, CANCEL CONNECTION, SET DATABASE | written by the monitor of a session's or a setting's row, through the guards | done |
-| S-STMT-8 | EXPLAIN | its text, and the plan view of its stages | done |
-| S-STMT-9 | CALL | a procedure's output parameters, as one row | done |
+| S-STMT-8 | EXPLAIN | its text, and the plan view of its stages; of a data change, run without ANALYZE, what it would do beside, running nothing | done |
+| S-STMT-9 | CALL | a procedure's output parameters, as one row; values asked for its IN and INOUT parameters alone; DEFAULT of an IN parameter's default, which the routine runner writes | done |
 | S-STMT-10 | PREPARE, EXECUTE, EXECUTE IMMEDIATE, DEALLOCATE PREPARE, DESCRIBE, descriptors, and cursors declared in SQL | sent to the server as typed, their outcomes shown | done |
 | S-STMT-11 | CONNECT, SET CONNECTION, DISCONNECT | refused in a worksheet, which is bound to its connection (S-IMPL-3) | done |
 | S-STMT-12 | A script of several statements | split as the server splits a request of several, each run in turn, each result its own | done |
@@ -189,6 +189,7 @@ never sent.
 | S-CAP-17 | `fetch-ends` | a cursor's transaction under autocommit, ended as its last row is read or it is closed; the session read again then | done |
 | S-CAP-18 | `conditions` | a statement's warnings | done |
 | S-CAP-19 | `declared-types` | columns' declared types | done |
+| S-CAP-20 | `parameter-modes` | a CALL's parameters, each with its mode and position: values asked for the IN and INOUT ones alone, the OUT ones told | done |
 
 ## Files
 

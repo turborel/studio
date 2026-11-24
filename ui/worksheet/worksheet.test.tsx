@@ -116,7 +116,7 @@ describe("a worksheet's commands", () => {
     await act(() => stopCurrent(store));
   });
 
-  it("explain and analyze a data change only as asked, rolled back after unless kept [DESIGN] D61", async () => {
+  it("explain a data change running nothing, and analyze it only as asked, rolled back after unless kept [DESIGN] D61 D70", async () => {
     const change = "UPDATE T SET A = 1 WHERE A = 2";
     const { asked, store, view } = await shown(change, {
       set_autocommit: (args) => ({
@@ -137,7 +137,7 @@ describe("a worksheet's commands", () => {
         .filter((a) => a.command === "run_statement" || a.command === "set_autocommit")
         .map((a) => a.args["sql"] ?? `autocommit ${String(a.args["on"])}`);
     act(() => view?.dispatch({ selection: EditorSelection.cursor(1) }));
-    const choose = async (choice: "rollBack" | "keep" | null) => {
+    const choose = async (choice: "rollBack" | "keep" | "explain" | null) => {
       const running = explainCurrent(store, true);
       await settle();
       const dialog = store.current().dialog;
@@ -160,6 +160,12 @@ describe("a worksheet's commands", () => {
     ]);
     await choose("keep");
     expect(sent().at(-1)).toBe(`EXPLAIN ANALYZE ${change}`);
+    expect(store.current().dialog).toBeNull();
+    // Plain EXPLAIN runs nothing: asked for, or chosen instead, it is sent alone, with no savepoint or rollback (D70).
+    const before = sent().length;
+    await choose("explain");
+    await act(() => explainCurrent(store, false));
+    expect(sent().slice(before)).toEqual([`EXPLAIN ${change}`, `EXPLAIN ${change}`]);
     expect(store.current().dialog).toBeNull();
   });
 

@@ -121,6 +121,8 @@ const TESTS: &[(&str, Test)] = &[
     ("plug_ins_are_listed", opening::plug_ins_are_listed),
     ("the_assistant_opens_a_session_beside_the_users", opening::the_assistant_opens_a_session_beside_the_users),
     ("a_query_is_paged_through_its_cursor", requests::a_query_is_paged_through_its_cursor),
+    ("a_data_change_is_explained_running_nothing", requests::a_data_change_is_explained_running_nothing),
+    ("a_calls_parameters_have_their_modes", requests::a_calls_parameters_have_their_modes),
     ("parameters_and_large_objects", requests::parameters_and_large_objects),
     ("the_transaction_is_followed", requests::the_transaction_is_followed),
     ("rows_are_exported_and_imported", requests::rows_are_exported_and_imported),

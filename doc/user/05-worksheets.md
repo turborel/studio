@@ -34,7 +34,8 @@ delimited identifiers and comments, each in a colour of its own.
   Describe**, shows its columns and their types.
 - **A routine's parameters** are shown as its arguments are written,
   within the parentheses of a call of a routine of the session's schema
-  that the explorer has read.
+  that the explorer has read, each with its mode, type and default, as
+  `IN TIMES INTEGER DEFAULT 5`.
 - **Go to Definition** shows, in the details panel, the table, view or
   routine named at the cursor.
 - **Bookmarks**: **Toggle Bookmark** marks the cursor's line in the
@@ -185,6 +186,12 @@ SELECT NAME FROM ${schema}.STAFF WHERE DEPT = :dept AND ID > ?
 Before such a statement runs, a dialog asks each parameter's value, as
 text or NULL, naming the type the server describes it as; and, before a
 script runs, the value of each of its script variables that has none.
+Of a CALL, each parameter is also named by the procedure parameter it
+is an argument of, its mode and position, as `INTEGER, INOUT parameter
+3`. The dialog asks for the IN and INOUT ones alone: an OUT parameter
+takes no value, and is told as given back in the CALL's row, which shows
+the OUT and INOUT parameters' values as its result. A CALL of OUT
+parameters alone runs without the dialog.
 The values given last are offered again. A script's variables, and their
 values, are also shown under the worksheet's toolbar, where a value is
 changed in place. A parameter's value is cast to its parameter's type:
@@ -319,6 +326,32 @@ has and the other lacks marked, as after an index is made; a what-if
 shows them so at once. The setting **Open plans as** opens a plan on its
 raw text instead ([Appendix B](../appendix/b-settings.md)).
 
+### Explain of a data change
+
+**Explain** of an INSERT, an UPDATE, a DELETE or a MERGE runs nothing:
+EXPLAIN without ANALYZE reads no row, locks no row or table, writes
+nothing and fires no trigger, so it needs no transaction and nothing is
+rolled back. The plan viewer shows the plan of the rows the change would
+read, below a line naming the change and its table, as `Delete from
+DEMO.ORDERS`, and, above the plan, a section of what it would do beside:
+
+- **Indexes maintained:** the indexes whose entries it would write, each
+  with its method: every index of the table of an INSERT or a DELETE; of
+  an UPDATE, those whose keys read a column it sets.
+- **Cascades:** each referential action that would write the rows
+  referencing the table, ON DELETE or ON UPDATE CASCADE, SET NULL or SET
+  DEFAULT, with the table it writes and its constraint.
+- **Triggers:** each trigger the change, or an action it cascades to,
+  would fire, with its time, event, level and table.
+- **Point path:** whether a path past the plan's operators would run it
+  when it is prepared or a procedure's, as one read of a whole unique
+  key, or its rows written straight; **none** if no path would.
+
+It is the same on a server's connection and an embedded database, and
+the guards judge it a read, so a production or read-only connection
+runs it as it runs a query
+([EXPLAIN of a data change](https://github.com/turborel/turborel/blob/main/doc/sql/statements/explain.md#explain-of-a-data-change)).
+
 ### Explain Analyze of a data change
 
 EXPLAIN ANALYZE runs an INSERT, a searched UPDATE or DELETE, or a MERGE
@@ -329,6 +362,7 @@ so before it runs, and asks:
 |---|---|
 | **Analyze, Then Roll Back** | sets the savepoint STUDIO_ANALYZE, runs EXPLAIN ANALYZE, shows the plan, then rolls back to the savepoint: inside the transaction open, which goes on, or, with none open, in a transaction of its own, rolled back; autocommit held off meanwhile, so nothing is committed |
 | **Analyze and Keep Changes** | runs EXPLAIN ANALYZE, its changes kept in the transaction, for Commit or Rollback, or committed by autocommit |
+| **Explain Without Running** | runs EXPLAIN alone, which shows the plan and what the change would do and runs nothing, as **Explain** does |
 | **Cancel** | runs nothing |
 
 ![Explain Analyze of an UPDATE of the demo shop's orders: asked first, Analyze, Then Roll Back chosen, and the plan of the update shown](../images/analyze-change-light.gif#gh-light-mode-only)
@@ -340,8 +374,7 @@ Analyze of a data change keeps its changes** is on
 connection and an embedded database. EXPLAIN ANALYZE of a data change is
 judged as the change itself by the guards
 ([Connections](03-connections.md#environments-and-guards)), so a
-production connection asks first, and a read-only one refuses it. EXPLAIN
-without ANALYZE takes a query alone.
+production connection asks first, and a read-only one refuses it.
 
 ## Formatting
 

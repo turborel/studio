@@ -433,6 +433,39 @@ describe("the plan viewer", () => {
     expect(details(3)).not.toContain("each numbered");
   });
 
+  it("shows what plain EXPLAIN of a data change would do as a section of its own, and none of a query [DESIGN] D70", async () => {
+    catalogBackend({ catalog_table: () => refused() });
+    const store = await opened();
+    const id = openWorksheet(store, "SELECT 1");
+    const change = parsePlan([
+      "-- physical:",
+      "Update ANN.PARTS",
+      "  IndexScan ANN.PARTS using ANN.PARTS.UNIQUE1 [btree]: PARTS.ID = 7  (est. rows=1, cost=20.6)",
+      "-- maintains: PARTS_NAME [btree]",
+      "-- trigger: ANN.PART_NAMED, AFTER UPDATE OF NAME FOR EACH ROW on ANN.PARTS",
+      "-- point path: one read of ANN.PARTS.UNIQUE1 when prepared or in a procedure",
+    ]);
+    const { unmount } = within(store, <PlanViewer id={id} plans={[change]} />);
+    await settle();
+    const section = screen.getByRole("region", { name: "What the change would do" }).textContent;
+    expect(section).toContain("Not run: what the change would do beside the rows its plan reads.");
+    expect(section).toContain("Indexes maintainedPARTS_NAME [btree]");
+    expect(section).toContain("Cascadesnone");
+    expect(section).toContain("TriggersANN.PART_NAMED, AFTER UPDATE OF NAME FOR EACH ROW on ANN.PARTS");
+    expect(section).toContain("Point pathone read of ANN.PARTS.UNIQUE1 when prepared or in a procedure");
+    unmount();
+    const none = parsePlan(["-- physical:", "Insert into ANN.SALES", "-- maintains: none", "-- point path: none"]);
+    const second = within(store, <PlanViewer id={id} plans={[none]} />);
+    await settle();
+    expect(screen.getByRole("region", { name: "What the change would do" }).textContent).toContain(
+      "Indexes maintainednoneCascadesnoneTriggersnonePoint pathnone",
+    );
+    second.unmount();
+    within(store, <PlanViewer id={id} plans={[parsePlan(["-- physical:", "SeqScan ANN.T  (rows=4, cost=3.7)"])]} />);
+    await settle();
+    expect(screen.queryByRole("region", { name: "What the change would do" })).toBeNull();
+  });
+
   it("tells a mark join, what it marks and how [DOC sql/06-queries.md Correlated subqueries]", async () => {
     catalogBackend({ catalog_table: () => refused() });
     const store = await opened();

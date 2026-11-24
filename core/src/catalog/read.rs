@@ -208,7 +208,7 @@ impl Catalog<'_> {
         let parameters = self
             .rows(queries::PARAMETERS, &[schema, specific])?
             .iter()
-            .map(|r| Parameter { mode: need(r, 0), name: text(r, 1), type_written: type_at(r, 2) })
+            .map(|r| Parameter { mode: need(r, 0), name: text(r, 1), type_written: type_at(r, 2), default: text(r, 6) })
             .collect();
         Ok(RoutineDetail {
             schema: schema.to_owned(),

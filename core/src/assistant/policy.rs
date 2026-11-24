@@ -237,7 +237,8 @@ impl Policies {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum Use {
-    /// EXPLAIN it, which reads nothing of its rows.
+    /// EXPLAIN it, without ANALYZE, which reads nothing of its rows and
+    /// runs nothing, a data change's no more than a query's.
     Explain,
     /// Run it, the user approving, in a READ ONLY transaction.
     Run,
@@ -354,8 +355,14 @@ fn stopped(
         if let Some(what) = floor {
             return Some(("HARD-FLOOR", format!("the assistant can never run {what}")));
         }
-        if class != Class::Read {
-            return Some(("READ-ONLY", format!("the assistant runs and explains queries alone, and this is {class:?}")));
+        // Plain EXPLAIN of a data change runs nothing (D70), so the
+        // assistant may explain one; it runs queries alone.
+        let explains_change = use_ == Use::Explain && class == Class::WriteRows;
+        if class != Class::Read && !explains_change {
+            return Some((
+                "READ-ONLY",
+                format!("the assistant runs queries alone, and explains queries and data changes alone, and this is {class:?}"),
+            ));
         }
     }
     let needed = match use_ {

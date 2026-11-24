@@ -123,6 +123,51 @@ pub fn a_cursor_fails_or_closes_early(live: &Live) {
     manager.close(id).unwrap();
 }
 
+/// [CLIENT Prepared statements] [DESIGN] D71: each `?` of a CALL is
+/// described with its procedure parameter's mode and position; the IN and
+/// INOUT ones alone are given values, and the OUT and INOUT ones' values
+/// come back as the CALL's row; a parameter's default is read of the
+/// catalog, and taken by DEFAULT.
+pub fn a_calls_parameters_have_their_modes(live: &Live) {
+    let (manager, _) = live.manager();
+    let id = live.owner(&manager);
+    manager.set_autocommit(id, true).unwrap();
+    crate::run(&manager, id, "CREATE TABLE MODED (N INTEGER)").unwrap();
+    crate::run(&manager, id, "INSERT INTO MODED VALUES (2), (3)").unwrap();
+    crate::run(
+        &manager,
+        id,
+        "CREATE PROCEDURE MIXED (OUT TOTAL INTEGER, IN TIMES INTEGER, INOUT TAG VARCHAR(10)) READS SQL DATA \
+         SELECT SUM(N) * TIMES, TAG || 'X' INTO TOTAL, TAG FROM MODED",
+    )
+    .unwrap();
+    let call = "CALL MIXED(?, ?, ?)";
+    let modes: Vec<_> = manager.parameters(id, call).unwrap().into_iter().map(|p| (p.mode, p.ordinal)).collect();
+    assert_eq!(modes, [("OUT", Some(1)), ("IN", Some(2)), ("INOUT", Some(3))]);
+    let values = [Some("2".to_owned()), Some("A".to_owned())];
+    let RunAnswer::Ran(ran) = manager.run_with(id, (call, &values), true).unwrap() else { panic!("asked") };
+    let Outcome::Rows { page, .. } = ran.outcome else { panic!("no row of its outputs: {:?}", ran.outcome) };
+    assert_eq!(page.rows, [[Some("10".to_owned()), Some("AX".to_owned())]]);
+    // An IN parameter of a default is left to it by DEFAULT, as the routine runner writes it (Turborel's D979).
+    crate::run(
+        &manager,
+        id,
+        "CREATE PROCEDURE TIMED (OUT TOTAL INTEGER, IN TIMES INTEGER DEFAULT 5) SPECIFIC TIMED READS SQL DATA \
+         SELECT SUM(N) * TIMES INTO TOTAL FROM MODED",
+    )
+    .unwrap();
+    let detail = turborel_studio_core::catalog::Catalog::of(&manager, id).routine("ANN", "TIMED").unwrap();
+    let defaults: Vec<_> = detail.parameters.iter().map(|p| p.default.clone()).collect();
+    assert_eq!(defaults, [None, Some("5".to_owned())]);
+    let RunAnswer::Ran(ran) = manager.run_with(id, ("CALL TIMED(?, DEFAULT /* 5 */)", &[]), true).unwrap() else { panic!("asked") };
+    let Outcome::Rows { page, .. } = ran.outcome else { panic!("no row of its outputs: {:?}", ran.outcome) };
+    assert_eq!(page.rows, [[Some("25".to_owned())]]);
+    crate::run(&manager, id, "DROP PROCEDURE TIMED CASCADE").unwrap();
+    crate::run(&manager, id, "DROP PROCEDURE MIXED CASCADE").unwrap();
+    crate::run(&manager, id, "DROP TABLE MODED CASCADE").unwrap();
+    manager.close(id).unwrap();
+}
+
 /// [DOC sql/statements/prepare.md DESCRIPTION] [DESIGN] D36: a statement's
 /// dynamic parameters are told by their types, and given values as text,
 /// each cast to its parameter's type, a binary one's in hexadecimal
@@ -136,7 +181,8 @@ pub fn parameters_are_given_values_as_text(live: &Live) {
     let insert = "INSERT INTO BOUND (I, S) VALUES (?, ?)";
     // An INTEGER column's parameter is of its tag's type, an exact numeric
     // type of precision 10 and scale 0 ([CLIENT Prepared statements]).
-    assert_eq!(manager.parameters(id, insert).unwrap(), ["NUMERIC(10,0)", "CHARACTER VARYING(10)"]);
+    let described: Vec<_> = manager.parameters(id, insert).unwrap().into_iter().map(|p| (p.type_written, p.mode, p.ordinal)).collect();
+    assert_eq!(described, [("NUMERIC(10,0)".to_owned(), "IN", None), ("CHARACTER VARYING(10)".to_owned(), "IN", None)]);
     let values = [Some("42".to_owned()), None];
     let RunAnswer::Ran(ran) = manager.run_with(id, (insert, &values), false).unwrap() else { panic!("asked") };
     assert!(matches!(ran.outcome, Outcome::Done { rows_affected: Some(1), .. }), "{:?}", ran.outcome);

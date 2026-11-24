@@ -1,7 +1,8 @@
 //! The scenes of the window and its worksheets (RULES.md D60): the
 //! window of a query and its rows; a context menu; completion; the guard
 //! rails before a DROP; the plan viewer; the history; a snippet and the
-//! formatter; Explain Analyze of a data change; and the keys' scheme.
+//! formatter; Explain of a data change, and Explain Analyze of one; and
+//! the keys' scheme.
 
 use crate::error::Result;
 use crate::images::write_png;
@@ -108,6 +109,19 @@ pub fn snippet_format_scene(scene: &Scene<'_>) -> Result<()> {
     scene.tool("Format")?;
     let after = editor_part(scene, 260)?;
     scene.save_stacked("format", &[before, after])
+}
+
+/// Explain of a data change, which runs nothing: a DELETE of an order,
+/// its plan and what it would do drawn, the indexes it would write and
+/// its point path.
+pub fn explain_change_scene(scene: &Scene<'_>) -> Result<()> {
+    scene.new_worksheet()?;
+    scene.write("DELETE FROM ORDERS WHERE ID = 7")?;
+    scene.tool("Explain")?;
+    if let Err(e) = scene.wait_text("section[aria-label=\"What the change would do\"]", "ORDERS_BY_CUSTOMER") {
+        return crate::error::fail(format!("{e}; {}", scene.messages()));
+    }
+    scene.save_part("explain-change", "section[aria-label=\"Summary of the plan\"], section[aria-label=\"What the change would do\"]")
 }
 
 /// Explain Analyze of a data change: asked first, then analyzed and

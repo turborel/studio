@@ -107,7 +107,7 @@ pub fn classify(text: &str) -> Classified {
     if let Some(analyzed) = analyzed_change(&text) {
         return Classified { text: unclassified.text, ..analyzed };
     }
-    if let Some(class) = explained(&text).or_else(|| query(&text)) {
+    if let Some(class) = explained(&text).or_else(|| unrun_change(&text)).or_else(|| query(&text)) {
         return Classified { class, ..unclassified };
     }
     let Some(statement) = PARSERS.iter().find_map(|parser| parser(&text).and_then(|mut p| p.sql_statement()).ok()) else {
@@ -178,6 +178,32 @@ fn analyzed_change(text: &str) -> Option<Classified> {
     }
     let change = classify(rest);
     (change.class == Class::WriteRows).then_some(change)
+}
+
+/// Read, if `text` is plain `EXPLAIN <data change statement>`
+/// ([DOC sql/statements/explain.md EXPLAIN of a data change]): EXPLAIN
+/// without ANALYZE of an INSERT, UPDATE, DELETE or MERGE runs nothing,
+/// reads no row and writes nothing, so it is judged a read (RULES.md D70).
+/// Read so only where the server reads it so: before INSERT, UPDATE or
+/// DELETE, or MERGE, a data change that parses as one.
+fn unrun_change(text: &str) -> Option<Class> {
+    const EXPLAIN: &str = "EXPLAIN";
+    const CHANGES: [&str; 4] = ["INSERT", "UPDATE", "DELETE", "MERGE"];
+    let tokens = lex(text).ok()?;
+    let [first, second, ..] = tokens.as_slice() else {
+        return None;
+    };
+    // MERGE is no reserved word, so it is read as a name.
+    let word = match &second.tok {
+        Tok::KeyWord(k) => *k,
+        Tok::Identifier(i) => i.as_str(),
+        _ => return None,
+    };
+    if first.tok != Tok::Identifier(EXPLAIN.to_owned()) || !CHANGES.contains(&word) {
+        return None;
+    }
+    let change = classify(text.get(second.start..)?);
+    (change.class == Class::WriteRows).then_some(Class::Read)
 }
 
 /// Whether the words of `text` include a statement that changes rows, as a

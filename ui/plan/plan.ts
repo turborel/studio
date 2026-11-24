@@ -7,7 +7,11 @@
  * index, and the rows a data change changed; its parallel degree, and the
  * line it came of; the join order
  * and the algorithm that found it; and the notes after, of rows counted
- * by storage and of rows run. A line it does not know is an operator of
+ * by storage and of rows run; of plain EXPLAIN of a data change, which
+ * runs nothing, what it would do beside its rows: the indexes it would
+ * write, the referential actions that would cascade, the triggers that
+ * would fire, and how a point path would run it (Turborel's D980, D983,
+ * D984). A line it does not know is an operator of
  * its first word, and lines before any stage's header are a stage of
  * their own, so no text fails to be read.
  */
@@ -62,6 +66,18 @@ export interface Stage {
   readonly roots: readonly PlanNode[];
 }
 
+/** What a data change would do beside its rows, of plain EXPLAIN's lines after its plan. */
+export interface ChangeEffects {
+  /** The indexes whose entries it would write, each `NAME [method]`, of `-- maintains:`; none if `none`. */
+  readonly maintains: readonly string[];
+  /** Each referential action that would cascade, of a `-- cascades:` line each. */
+  readonly cascades: readonly string[];
+  /** Each trigger that would fire, of a `-- trigger:` line each. */
+  readonly triggers: readonly string[];
+  /** How a point path would run it, of `-- point path:`; null if `none` or not told. */
+  readonly pointPath: string | null;
+}
+
 /** A plan. */
 export interface Plan {
   readonly stages: readonly Stage[];
@@ -77,6 +93,8 @@ export interface Plan {
   readonly ranMillis: number | null;
   /** The join order taken and the algorithm that found it, of the top join's note. */
   readonly joinOrder: { readonly algorithm: string; readonly order: string } | null;
+  /** Of plain EXPLAIN of a data change, what it would do beside its rows; null of any other. */
+  readonly effects: ChangeEffects | null;
   /** EXPLAIN's lines, as given. */
   readonly lines: readonly string[];
 }
@@ -156,11 +174,34 @@ interface Reading {
   ranChanged: boolean;
   ranMillis: number | null;
   joinOrder: Plan["joinOrder"];
+  effects: { maintains: string[]; cascades: string[]; triggers: string[]; pointPath: string | null } | null;
 }
 
-/** Keeps what header `name`, saying `said`, tells: a stage begun, or the rules, tables counted or rows run. */
+/** The headers of what a data change would do, after its plan. */
+const EFFECTS = ["maintains", "cascades", "trigger", "point path"];
+/** What a list or the point path of a data change says when it holds nothing. */
+const NONE = "none";
+
+/** Keeps what effect header `name`, saying `said`, tells of a data change. */
+function effect(reading: Reading, name: string, said: string): void {
+  reading.effects ??= { maintains: [], cascades: [], triggers: [], pointPath: null };
+  const effects = reading.effects;
+  if (name === "maintains") {
+    effects.maintains = said === NONE ? [] : said.split(/(?<=\]),\s*/u);
+  } else if (name === "cascades") {
+    effects.cascades.push(said);
+  } else if (name === "trigger") {
+    effects.triggers.push(said);
+  } else {
+    effects.pointPath = said === NONE ? null : said;
+  }
+}
+
+/** Keeps what header `name`, saying `said`, tells: a stage begun, or the rules, tables counted, rows run or a change's effects. */
 function header(reading: Reading, name: string, said: string): void {
-  if (name === "rules") {
+  if (EFFECTS.includes(name)) {
+    effect(reading, name, said);
+  } else if (name === "rules") {
     reading.rules = said === "none" ? [] : said.split(/,\s*/u);
   } else if (name === "counted by storage") {
     reading.counted.push(...said.split(/,\s*/u));
@@ -184,6 +225,7 @@ export function parsePlan(lines: readonly string[]): Plan {
     ranChanged: false,
     ranMillis: null,
     joinOrder: null,
+    effects: null,
   };
   let path: Building[] = [];
   for (const raw of lines) {
@@ -212,8 +254,8 @@ export function parsePlan(lines: readonly string[]): Plan {
     (parent === undefined ? stage?.roots : parent.children)?.push(node);
     path.push(node);
   }
-  const { stages, counted, rules, ran, ranChanged, ranMillis, joinOrder } = reading;
-  return { stages, counted, rules, ran, ranChanged, ranMillis, joinOrder, lines };
+  const { stages, counted, rules, ran, ranChanged, ranMillis, joinOrder, effects } = reading;
+  return { stages, counted, rules, ran, ranChanged, ranMillis, joinOrder, effects, lines };
 }
 
 /** Whether `node`'s estimate is off its actual rows by `MISESTIMATE_RATIO` or more, either way. */

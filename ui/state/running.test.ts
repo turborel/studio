@@ -155,9 +155,45 @@ describe("a run", () => {
     expect(asked.find((a) => a.command === "run_statement")?.args).toMatchObject({ confirmed: true, values: [] });
   });
 
+  it("asks a CALL's IN and INOUT values alone, tells its OUT ones, and asks nothing of a CALL of OUT ones alone [DESIGN] D71", async () => {
+    const asked = catalogBackend({
+      statement_parameters: (args) =>
+        String(args["sql"]).startsWith("CALL OUTS")
+          ? [{ typeWritten: "NUMERIC(10,0)", mode: "OUT", ordinal: 1 }]
+          : [
+              { typeWritten: "NUMERIC(10,0)", mode: "OUT", ordinal: 1 },
+              { typeWritten: "NUMERIC(10,0)", mode: "IN", ordinal: 2 },
+              { typeWritten: "CHARACTER VARYING(10)", mode: "INOUT", ordinal: 3 },
+            ],
+      run_statement: () => rowsRan([]),
+    });
+    const [store, id] = await sheet("");
+    const run = runStatements(store, id, [whole("CALL MIXED(?, ?, ?)")]);
+    await vi.waitFor(() => {
+      expect(store.current().dialog).toMatchObject({
+        kind: "values",
+        names: ["?2", "?3"],
+        types: ["NUMERIC(10,0), IN parameter 2", "CHARACTER VARYING(10), INOUT parameter 3"],
+        outputs: ["Parameter 1 NUMERIC(10,0), OUT parameter 1"],
+      });
+    });
+    answer(store, true, { binds: { "?2": "2", "?3": "A" }, variables: {} });
+    await run;
+    expect(asked.filter((a) => a.command === "run_statement").at(-1)?.args).toMatchObject({ values: ["2", "A"] });
+    await runStatements(store, id, [whole("CALL OUTS(?)")]);
+    expect(store.current().dialog).toBeNull();
+    expect(asked.filter((a) => a.command === "run_statement").at(-1)?.args).toMatchObject({
+      sql: "CALL OUTS(?)",
+      values: [],
+    });
+  });
+
   it("asks the values of parameters and script variables, remembered, or runs nothing [DESIGN] D36", async () => {
     const asked = catalogBackend({
-      statement_parameters: () => ["NUMERIC(10,0)", "CHARACTER VARYING(5)"],
+      statement_parameters: () => [
+        { typeWritten: "NUMERIC(10,0)", mode: "IN", ordinal: null },
+        { typeWritten: "CHARACTER VARYING(5)", mode: "IN", ordinal: null },
+      ],
       run_statement: () => rowsRan([]),
     });
     const [store, id] = await sheet("");
@@ -324,7 +360,11 @@ describe("a run", () => {
     expect(w?.explained?.sql).toBe("SELECT * FROM T");
     expect(w?.runs.at(-1)?.rows).toHaveLength(2);
     expect(explainedOf("explain (VALUES 1)")).toBe("(VALUES 1)");
-    expect(explainedOf("EXPLAIN DELETE FROM T")).toBeNull();
+    expect(explainedOf("EXPLAIN DELETE FROM T")).toBe("DELETE FROM T");
+    expect(explainedOf("EXPLAIN MERGE INTO T USING S ON T.A = S.A WHEN MATCHED THEN DELETE")).toBe(
+      "MERGE INTO T USING S ON T.A = S.A WHEN MATCHED THEN DELETE",
+    );
+    expect(explainedOf("EXPLAIN MERGE")).toBeNull();
     expect(explainedOf("EXPLAIN ANALYZE UPDATE T SET A = 1 WHERE A = 2")).toBe("UPDATE T SET A = 1 WHERE A = 2");
     expect(explainedOf("SELECT EXPLAIN FROM T")).toBeNull();
   });

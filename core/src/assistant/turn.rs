@@ -59,7 +59,8 @@ pub enum TurnEvent {
         why: String,
         /// Their verdict: their class, objects, and whether blocked.
         verdict: Verdict,
-        /// EXPLAIN's estimate of a query: its physical plan's top line.
+        /// EXPLAIN's estimate of a query or a data change: its physical
+        /// plan's top line, and a change's rows read.
         estimate: Option<String>,
     },
     /// The model declined.

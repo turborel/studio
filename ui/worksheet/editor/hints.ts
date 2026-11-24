@@ -32,10 +32,13 @@ export function callAt(text: string, at: number): { name: string; open: number }
   return null;
 }
 
-/** A routine's signature, as the hint writes it. */
+/** A routine's signature, as the hint writes it: each parameter's default with it, which it may be left out for. */
 export function signature(r: RoutineDetail): string {
   const parameters = r.parameters
-    .map((p) => `${p.mode} ${p.name === null ? "" : `${p.name} `}${p.typeWritten}`)
+    .map(
+      (p) =>
+        `${p.mode} ${p.name === null ? "" : `${p.name} `}${p.typeWritten}${p.default === null ? "" : ` DEFAULT ${p.default}`}`,
+    )
     .join(", ");
   return `${r.name}(${parameters})${r.returns === null ? "" : ` RETURNS ${r.returns}`}`;
 }
