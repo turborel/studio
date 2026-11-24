@@ -14,6 +14,7 @@ import {
   type Dependencies,
   type Index,
   type Privilege,
+  type RoutineDetail,
   type Security,
   type TableDetail,
 } from "../ipc/catalog";
@@ -23,6 +24,7 @@ import { Icon, type IconName } from "../icons/Icon";
 import { type Selected, tableKey } from "./catalogState";
 import { Definition } from "./Definition";
 import { Statistics } from "./Statistics";
+import { startDebug } from "../debugger/debugging";
 import { SchemaActions, TableActions } from "./TableActions";
 import { sameObject, savedOf, toggleFavourite } from "./Favourites";
 
@@ -281,6 +283,27 @@ function TableDetails({ connection, detail }: { connection: number; detail: Tabl
   return <Tabs parts={parts} />;
 }
 
+/** A routine's Debug tab: Debug…, which attaches a debugger to its connection's session (RULES.md D73). */
+function DebugRoutine(props: { readonly connection: number; readonly schema: string; readonly detail: RoutineDetail }) {
+  const store = useStore();
+  const { connection, schema, detail } = props;
+  const routine = {
+    kind: detail.kind === "FUNCTION" ? "function" : "procedure",
+    schema,
+    name: detail.specific,
+    shown: `${schema}.${detail.name}`,
+    table: null,
+  } as const;
+  return (
+    <>
+      <button type="button" onClick={() => void startDebug(store, connection, routine)}>
+        <Icon name="debug" /> Debug…
+      </button>
+      <p className="hint">{DEBUGGING}</p>
+    </>
+  );
+}
+
 /** A routine's details, read as shown. */
 function RoutineDetails({ connection, schema, specific }: { connection: number; schema: string; specific: string }) {
   const detail = useRead(() => catalogRoutine(connection, schema, specific), [connection, schema, specific]);
@@ -306,17 +329,7 @@ function RoutineDetails({ connection, schema, specific }: { connection: number; 
           () => <Table label="Privileges" headings={PRIVILEGE_HEADINGS} rows={privilegeRows(detail.privileges)} />,
         ],
         ["Definition", () => <Definition connection={connection} of={{ kind: "routine", schema, specific }} />],
-        [
-          "Debug",
-          () => (
-            <>
-              <button type="button" disabled>
-                Debug
-              </button>
-              <p className="hint">{NO_DEBUGGER}</p>
-            </>
-          ),
-        ],
+        ["Debug", () => <DebugRoutine connection={connection} schema={schema} detail={detail} />],
       ]}
     />
   );
@@ -352,9 +365,9 @@ function TypeDetails({ connection, schema, name }: { connection: number; schema:
   );
 }
 
-/** Why a routine cannot be debugged yet. */
-export const NO_DEBUGGER =
-  "Unavailable: Turborel does not yet give a debugger of SQL routines, with breakpoints and stepping.";
+/** What Debug… of a routine does (RULES.md D73). */
+export const DEBUGGING =
+  "Debug… attaches a debugger to this connection's session, and opens the Debugger, where breakpoints are set; then what runs the routine on this connection pauses at them.";
 
 /** The icon of each kind of object selected. */
 const KIND_ICONS: Readonly<Record<Selected["kind"], IconName>> = {

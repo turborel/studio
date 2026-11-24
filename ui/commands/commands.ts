@@ -5,6 +5,7 @@
  */
 import { type KeyScheme, ZOOM } from "../ipc/preferences";
 import { SCHEME_KEYS } from "./keys";
+import { DEBUG_COMMANDS } from "./debugCommands";
 import {
   attempt,
   cancel,
@@ -45,7 +46,7 @@ export interface CommandContext {
   readonly store: Store;
   readonly resetLayout: () => void;
   /** Shows a panel of the dock, added if the layout has it not. */
-  readonly showPanel?: (id: "assistant" | "details" | "live" | "monitor") => void;
+  readonly showPanel?: (id: "assistant" | "details" | "live" | "monitor" | "debugger") => void;
 }
 
 /** A command. */
@@ -412,6 +413,7 @@ export const COMMANDS: readonly Command[] = [
     run: onActive((store, id) => endTransaction(store, id, "ROLLBACK")),
   },
   ...WORKSHEET_COMMANDS,
+  ...DEBUG_COMMANDS,
   {
     id: "palette.open",
     icon: "palette",

@@ -206,7 +206,7 @@ fn create_index(index: &Index, table: &str) -> String {
 
 /// A trigger's CREATE TRIGGER, of its action as the Information Schema
 /// shows it to its schema's owner.
-fn create_trigger(t: &Trigger, table: &str) -> String {
+pub(crate) fn create_trigger(t: &Trigger, table: &str) -> String {
     let name = qualified(&t.schema, &t.name);
     let Some(action) = &t.action else {
         return format!("-- The trigger {name}'s action is shown to its schema's owner alone.\n");

@@ -19,3 +19,4 @@ it, from connecting to administering the server.
 10. [The Assistant](10-assistant.md)
 11. [Live Sessions](11-live-sessions.md)
 12. [Administration](12-administration.md)
+13. [Debugging Routines](13-debugging.md)

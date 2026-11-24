@@ -15,6 +15,7 @@ mod admin;
 mod analyzer;
 mod assistant;
 mod connections;
+mod debugger;
 mod desktop;
 mod editing;
 mod explorer;
@@ -48,16 +49,19 @@ const OTHER_USERS: [&str; 2] = ["ANN", "BEN"];
 /// The ports of each theme's tauri-driver and its WebDriver.
 const THEMES: [(&str, (u16, u16)); 2] = [("light", (4464, 4465)), ("dark", (4474, 4475))];
 
-/// The demo's statements, each on lines of its own ended by a semicolon.
+/// The demo's statements, each on lines of its own ended by a semicolon,
+/// but within a compound statement, from a line `BEGIN` to one `END;`.
 fn statements() -> Result<Vec<String>> {
     let seed = std::fs::read_to_string(root().join("xtask").join("screenshots").join("demo.sql"))
         .map_err(|e| Error(format!("xtask/screenshots/demo.sql: {e}")))?;
     let mut out = Vec::new();
     let mut statement = String::new();
+    let mut compound = false;
     for line in seed.lines().filter(|l| !l.trim_start().starts_with("--")) {
         statement.push_str(line);
         statement.push('\n');
-        if line.trim_end().ends_with(';') {
+        compound = (compound || line.trim() == "BEGIN") && line.trim() != "END;";
+        if line.trim_end().ends_with(';') && !compound {
             out.push(statement.trim().trim_end_matches(';').to_owned());
             statement.clear();
         }
@@ -204,6 +208,9 @@ const LIVE: Group = &[
     ("live join", live::join_scene),
 ];
 
+/// The routine debugger, its CALL rolled back.
+const DEBUGGING: Group = &[("debugger", debugger::debugger_scene)];
+
 /// Editing data, last, as it changes the demo database.
 const EDITING: Group = &[
     ("table dialogs", editing::table_dialogs_scene),
@@ -215,7 +222,7 @@ const EDITING: Group = &[
 ];
 
 /// Every group of scenes, in the order they are taken.
-const GROUPS: [Group; 7] = [CONNECTIONS, RESULTS, ANALYSIS, ASSISTANT, ADMINISTRATION, LIVE, EDITING];
+const GROUPS: [Group; 8] = [CONNECTIONS, RESULTS, ANALYSIS, ASSISTANT, ADMINISTRATION, LIVE, DEBUGGING, EDITING];
 
 /// Takes `act`, named `name`: its failure told at once, the window as the
 /// scene left it pictured in `homes`, and whatever it left open closed.

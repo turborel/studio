@@ -38,8 +38,8 @@ describe("keys", () => {
     const studio = bindings(defaultKeys("default"), {});
     expect(studio.get("Mod+Enter")).toBe("worksheet.run");
     expect(studio.get("F5")).toBeUndefined();
-    const keys = bindings(defaultKeys("functionKeys"), { "worksheet.run": "F8" });
-    expect([keys.get("F5"), keys.get("F6"), keys.get("F9"), keys.get("F8")]).toEqual([
+    const keys = bindings(defaultKeys("functionKeys"), { "worksheet.run": "F4" });
+    expect([keys.get("F5"), keys.get("F6"), keys.get("F9"), keys.get("F4")]).toEqual([
       "worksheet.runScript",
       "worksheet.explain",
       undefined,
@@ -47,5 +47,26 @@ describe("keys", () => {
     ]);
     expect(keys.get("Mod+Enter")).toBeUndefined();
     expect(keys.get("Mod+Shift+P")).toBe("palette.open");
+  });
+
+  it("give the debugger's commands the usual debuggers' keys, and the function keys' scheme its own [DESIGN] D73", () => {
+    const studio = bindings(defaultKeys("default"), {});
+    expect(["F8", "F11", "F10", "Shift+F11", "Shift+F8", "Shift+F5"].map((k) => studio.get(k))).toEqual([
+      "debug.continue",
+      "debug.stepInto",
+      "debug.stepOver",
+      "debug.stepOut",
+      "debug.interrupt",
+      "debug.stop",
+    ]);
+    const keys = bindings(defaultKeys("functionKeys"), {});
+    expect(["F7", "F8", "Shift+F7", "Shift+F8", "Mod+Shift+F8", "Mod+F2"].map((k) => keys.get(k))).toEqual([
+      "debug.stepInto",
+      "debug.stepOver",
+      "debug.stepOut",
+      "debug.continue",
+      "debug.interrupt",
+      "debug.stop",
+    ]);
   });
 });

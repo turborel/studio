@@ -1,4 +1,4 @@
-# The headings of Turborel's manual at 1107664016d3e34199e8ae906133efbb66eaa436, copied by `cargo xtask headings` (RULES.md D6).
+# The headings of Turborel's manual at 5863fe6521d3a2fc89fce6159295fabfca053c00, copied by `cargo xtask headings` (RULES.md D6).
 appendix/g-table-options.md	Appendix G: Table Options *(extension)*
 client/02-library-connections.md	Connecting by settings
 client/02-library-connections.md	Where settings come from
@@ -74,3 +74,6 @@ sql/statements/prepare.md	DESCRIPTION
 sql/statements/select.md	SYNOPSIS
 sql/statements/set-transaction.md	DESCRIPTION
 user/10-errors.md	SQLCODE and SQLSTATE
+user/11-debugging.md	Two sessions
+user/11-debugging.md	Stepping
+user/11-debugging.md	In a program

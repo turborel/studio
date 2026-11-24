@@ -1,6 +1,7 @@
 -- The demo database the manual's screenshots show (RULES.md D60): a shop
 -- of made-up customers, products and orders, owned by DEMO. Each
--- statement is on lines of its own, ended by a semicolon at a line's end.
+-- statement is on lines of its own, ended by a semicolon at a line's end;
+-- a compound statement from a line BEGIN to a line END;.
 CREATE SCHEMA AUTHORIZATION DEMO;
 CREATE TABLE CUSTOMERS (
   ID INTEGER PRIMARY KEY,
@@ -65,6 +66,14 @@ INSERT INTO STORE_AREAS
   WITH RECURSIVE N (I) AS (VALUES (CAST(1 AS INTEGER)) UNION ALL SELECT I + 1 FROM N WHERE I < 2000)
   SELECT I, ST_MAKEENVELOPE(MOD(I, 50) * 20, (I / 50) * 20, MOD(I, 50) * 20 + 15, (I / 50) * 20 + 15) FROM N;
 CREATE INDEX STORE_AREAS_AREA ON STORE_AREAS (AREA) USING RTREE;
+-- A procedure that raises the prices, which the debugger's pictures step
+-- through.
+CREATE PROCEDURE RAISE_PRICES(IN PCT INTEGER) MODIFIES SQL DATA
+BEGIN
+  DECLARE CHANGED INTEGER DEFAULT 0;
+  UPDATE PRODUCTS SET PRICE = PRICE * (100 + PCT) / 100;
+  SET CHANGED = (SELECT COUNT(*) FROM PRODUCTS);
+END;
 -- A role of readers, granted to a user the program makes beside DEMO.
 CREATE ROLE AUDITORS;
 GRANT SELECT ON ORDERS TO AUDITORS;

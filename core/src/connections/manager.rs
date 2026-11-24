@@ -267,6 +267,7 @@ impl ConnectionManager {
             Reply::Rows(_)
             | Reply::Columns(_)
             | Reply::Parameters(_)
+            | Reply::Debugged(_)
             | Reply::Value(_)
             | Reply::Exported(_)
             | Reply::Imported(_)
@@ -289,6 +290,7 @@ impl ConnectionManager {
             | Reply::Rows(_)
             | Reply::Columns(_)
             | Reply::Parameters(_)
+            | Reply::Debugged(_)
             | Reply::Value(_)
             | Reply::Exported(_)
             | Reply::Imported(_)
@@ -343,6 +345,7 @@ impl ConnectionManager {
             Reply::Ran(_)
             | Reply::Columns(_)
             | Reply::Parameters(_)
+            | Reply::Debugged(_)
             | Reply::Value(_)
             | Reply::Exported(_)
             | Reply::Imported(_)
@@ -364,6 +367,7 @@ impl ConnectionManager {
             Reply::Ran(_)
             | Reply::Rows(_)
             | Reply::Parameters(_)
+            | Reply::Debugged(_)
             | Reply::Value(_)
             | Reply::Exported(_)
             | Reply::Imported(_)
@@ -388,6 +392,7 @@ impl ConnectionManager {
         match self.ask(id, Request::Parameters(sql.to_owned()))? {
             Reply::Parameters(described) => Ok(described),
             Reply::Ran(_)
+            | Reply::Debugged(_)
             | Reply::Rows(_)
             | Reply::Columns(_)
             | Reply::Value(_)
@@ -415,6 +420,7 @@ impl ConnectionManager {
             | Reply::Rows(_)
             | Reply::Columns(_)
             | Reply::Parameters(_)
+            | Reply::Debugged(_)
             | Reply::Exported(_)
             | Reply::Imported(_)
             | Reply::Page(_)
@@ -447,6 +453,7 @@ impl ConnectionManager {
             | Reply::Rows(_)
             | Reply::Columns(_)
             | Reply::Parameters(_)
+            | Reply::Debugged(_)
             | Reply::Value(_)
             | Reply::Imported(_)
             | Reply::Page(_)
@@ -498,6 +505,7 @@ impl ConnectionManager {
             | Reply::Rows(_)
             | Reply::Columns(_)
             | Reply::Parameters(_)
+            | Reply::Debugged(_)
             | Reply::Value(_)
             | Reply::Exported(_)
             | Reply::Page(_)
@@ -558,6 +566,7 @@ fn session(reply: Reply) -> Result<SessionState> {
         | Reply::Rows(_)
         | Reply::Columns(_)
         | Reply::Parameters(_)
+        | Reply::Debugged(_)
         | Reply::Value(_)
         | Reply::Exported(_)
         | Reply::Imported(_)
@@ -577,6 +586,7 @@ fn unexpected() -> StudioError {
 }
 
 pub mod ddlmodel;
+mod debugging;
 mod embedded;
 mod ending;
 pub mod scripts;

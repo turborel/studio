@@ -112,6 +112,7 @@ Each is told in full in [§7](#7-the-decisions).
 | D70 | Explain of a data change: plain EXPLAIN, which runs nothing, and what the change would do, shown apart |
 | D71 | A CALL's parameter modes and defaults: values asked for IN and INOUT parameters alone, OUT ones told, DEFAULT written for a default |
 | D72 | The planner's statistics: read of COLUMN_STATISTICS, TABLE_STATISTICS and INDEX_STATISTICS, shown in the explorer and the analyzer, judged missing or stale |
+| D73 | The routine debugger: a second connection attached to the session, breakpoints by line, the stack and values, steps; on a server and embedded |
 
 ---
 
@@ -132,6 +133,7 @@ Each is told in full in [§7](#7-the-decisions).
 | `core/src/assistant/` | the assistant: its settings, policies and guard rails, wire formats, tools, turns and conversations (D55) |
 | `core/src/live/` | Live Sessions in the backend: their settings, the workspace filtered, the log and the sessions (D56) |
 | `core/src/admin.rs` | administration: the monitor's views and the acts' statements (D57) |
+| `core/src/debugging.rs`, `debugging/` | the routine debugger: its calls on a server and embedded, what it tells, and the routine's text and line numbering (D73) |
 | `live/` | `turborel-studio-live`: invitations, the transport over QUIC, the host, the guest, and the relay, `studio-relay` (D56) |
 | `xtask/smoke/earlier/` | an earlier build's app data, for the smoke test of the real window (D49) |
 | `core/tests/live/` | the live tests, their harness and server (D27) |
@@ -156,6 +158,7 @@ Each is told in full in [§7](#7-the-decisions).
 | `ui/assistant/` | the assistant's panel and settings (D55) |
 | `ui/admin/` | the monitor, and the dialogs and menus of users, roles and privileges (D57) |
 | `ui/live/` | Live Sessions' panel, dialogs, the workspace shown and the workspace kept shared (D56) |
+| `ui/debugger/` | the debugger's panel, state and the routine's lines (D73) |
 | `core/src/analyzer.rs` | the analyzer's rules of the catalog and the settings (D50) |
 | `core/src/reports.rs` | the built-in reports, and the user's kept (D52) |
 | `ui/plan/` | the plan's parser, summary, flow, tree-table and viewer (D54) |
@@ -516,7 +519,7 @@ The review checklist:
   an embedded database is given (D59), `turborel-aes`, `turborel-lz4`
   and `turborel-simd`, from
   github.com/turborel/turborel at commit
-  `1107664016d3e34199e8ae906133efbb66eaa436` of `main`; BSD-2-Clause
+  `5863fe6521d3a2fc89fce6159295fabfca053c00` of `main`; BSD-2-Clause
   Plus Patent.
 - **Not crates.io:** the 0.0.0 crates published there are frozen and
   never used.
@@ -1969,6 +1972,46 @@ The review checklist:
   AUTOMATIC, sets it so.
 - *Why:* a plan's estimates are only as good as its statistics, and a
   person tuning queries needs to see them and be told when they lag.
+
+#### D73. The routine debugger: a second connection attached to the session, breakpoints by line, the stack and values, steps; on a server and embedded
+
+- **What:** Turborel debugs a procedure, a function or a trigger written
+  in SQL from another connection attached to the session that runs it
+  (Turborel's `user/11-debugging.md`, its D1000 to D1036). **Debug…** of
+  a routine or trigger opens that connection beside the one it runs on
+  and attaches it: of a server, a connection of the same settings and
+  user, granted `debugger`, attached by the ID `debug_id` gives
+  (turborel-client's `debug_*`); of an embedded database, a second
+  session of the same database, attached to the first's `DebugTarget`
+  by `Session::attach` (`core/src/connections/manager/debugging.rs`,
+  `core/src/debugging/calls.rs`). Its guards are the connection's, and
+  read-only. One routine is debugged at a time.
+- **Heard:** the window waits for the session's next event a wait of at
+  most 500 ms at a time, the worker's at most 1,000 ms, so a request
+  behind it waits no longer; a pause, a timeout, a cancel and the end
+  are each told plainly, and the end stops the waiting.
+- **Breakpoints:** by line of the routine's text, set or cleared by a
+  click of the gutter, one of a condition by Shift and a click. The
+  text Turborel counts lines of, the routine's definition as written,
+  no view shows: ROUTINE_DEFINITION and ACTION_STATEMENT hold the body
+  alone. So the text is Studio's CREATE of the routine, its head on line
+  1, made in one place (`core/src/debugging/text.rs`, `routine_text`),
+  and each pause is checked against it: the paused line is marked only
+  where a statement may begin there; else the panel says so and marks
+  none (`ui/debugger/lines.ts`).
+- **Shown:** the call stack, the innermost frame first, a frame its user
+  may not debug by its name alone; the chosen frame's parameters,
+  variables and cursors, values as the grid writes them.
+- **Steps:** Continue, Step Into, Step Over, Step Out and Interrupt, the
+  panel's tools, the **Debug** menu's items and keys of both schemes:
+  F8, F11, F10, Shift+F11, Shift+F8 and Shift+F5 to stop by default; F7
+  into, F8 over, Shift+F7 out, Shift+F8 continue, Mod+Shift+F8
+  interrupt and Mod+F2 stop with the function keys (D69).
+- **Refused:** a breakpoint in a routine its user holds no DEBUG on is
+  refused, SQLSTATE 42000, and the panel says how its owner grants it.
+- *Why:* a routine's fault is found where it runs, with its values in
+  view; a second connection keeps the session the user works in as it
+  is, and its end lets the session go on as if never debugged.
 ---
 
 ## 8. References

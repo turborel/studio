@@ -8,6 +8,7 @@ pub mod analyzer;
 pub mod assistant;
 pub mod catalog;
 pub mod connections;
+pub mod debugging;
 pub mod embedded;
 pub mod error;
 pub mod events;

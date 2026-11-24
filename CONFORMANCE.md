@@ -12,7 +12,7 @@ citing it pass (RULES.md R-TRACE-4); else it is **not yet**, and
 Turborel's manual where Turborel defines the behaviour, by page and
 heading as RULES.md D6 writes them. Turborel's manual is read at the
 commit turborel-client is pinned to (RULES.md D10),
-`1107664016d3e34199e8ae906133efbb66eaa436`.
+`5863fe6521d3a2fc89fce6159295fabfca053c00`.
 
 [Statements](#statements) · [Types](#types) ·
 [The Information Schema](#the-information-schema) ·
@@ -161,6 +161,7 @@ database in its own process (RULES.md D59).
 | S-EMB-7 | Closing, with a checkpoint ([DOC operator/03-databases.md Checkpoints]) | on disconnect and on quit, once an open transaction is ended as the user answers | done |
 | S-EMB-8 | Recovery ([DOC operator/03-databases.md Recovery after a crash]) | as the engine recovers; Studio says so | done |
 | S-EMB-9 | Plug-ins ([DOC client/03-embedding.md Engines and other plug-ins]) | those `turboreld` registers; the monitor lists each, and why one is not loaded | done |
+| S-EMB-10 | The routine debugger ([DOC user/11-debugging.md In a program]) | a second session of the database, attached by `Session::attach`, as a server's debugger connection is | done |
 
 ## Capabilities
 
@@ -191,6 +192,7 @@ never sent.
 | S-CAP-18 | `conditions` | a statement's warnings | done |
 | S-CAP-19 | `declared-types` | columns' declared types | done |
 | S-CAP-20 | `parameter-modes` | a CALL's parameters, each with its mode and position: values asked for the IN and INOUT ones alone, the OUT ones told | done |
+| S-CAP-21 | `debugger` | the routine debugger's connection, attached to the session of the one a routine runs on ([DOC user/11-debugging.md Two sessions]) | done |
 
 ## Files
 

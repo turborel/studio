@@ -1,4 +1,4 @@
-# The built-in functions of Turborel's manual at 1107664016d3e34199e8ae906133efbb66eaa436, copied by `cargo xtask headings` (RULES.md D40).
+# The built-in functions of Turborel's manual at 5863fe6521d3a2fc89fce6159295fabfca053c00, copied by `cargo xtask headings` (RULES.md D40).
 sql/04-expressions.md	Numeric expressions	CHAR_LENGTH(s)	the characters of a character string
 sql/04-expressions.md	Numeric expressions	CHARACTER_LENGTH(s)	the characters of a character string
 sql/04-expressions.md	Numeric expressions	OCTET_LENGTH(s)	the octets of a string, as UTF-8, or of a binary string

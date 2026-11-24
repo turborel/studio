@@ -99,7 +99,7 @@ describe("the details panel", () => {
     expect(screen.getByRole("status").textContent).toBe("");
   });
 
-  it("shows a routine's parameters and body, and its definition [DESIGN] D33", async () => {
+  it("shows a routine's parameters and body, and its definition, and debugs it [DESIGN] D33 D73", async () => {
     const asked = catalogBackend();
     const store = await opened();
     await select(store, 1, { kind: "routine", schema: "ANN", specific: "DOUBLED_1", name: "DOUBLED" });
@@ -118,6 +118,10 @@ describe("the details panel", () => {
       schema: "ANN",
       specific: "DOUBLED_1",
     });
+    fireEvent.click(screen.getByRole("tab", { name: "Debug" }));
+    fireEvent.click(screen.getByRole("button", { name: "Debug…" }));
+    await settle();
+    expect(asked.find((a) => a.command === "debug_start")?.args).toEqual({ connection: 1 });
   });
 
   it("shows a schema's, a domain's and a role's parts [DESIGN] D33", async () => {

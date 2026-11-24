@@ -45,6 +45,9 @@ person who works with the database one window for it:
   and schema compare;
 - an [analyzer](doc/user/09-analyzer.md) of indexes, plans,
   statements and the planner's statistics, and reports;
+- a [routine debugger](doc/user/13-debugging.md) of procedures,
+  functions and triggers, with breakpoints, steps, the call stack and
+  its values, on a server and an embedded database;
 - an [assistant](doc/user/10-assistant.md), off until the user turns it
   on;
 - [live sessions](doc/user/11-live-sessions.md), a workspace shared with

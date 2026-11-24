@@ -283,7 +283,7 @@ describe("the rest of the window", () => {
     const store = new Store();
     within(store, <AboutDialog />);
     await settle();
-    expect(screen.getByText("1107664016d3e34199e8ae906133efbb66eaa436")).toBeTruthy();
+    expect(screen.getByText("5863fe6521d3a2fc89fce6159295fabfca053c00")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Close" }));
     within(store, <ShortcutsDialog />);
     expect(screen.getByText("View: Command Palette…")).toBeTruthy();

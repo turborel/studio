@@ -1,0 +1,77 @@
+/* The debugger's panel (D73): its tools, what it said, the routine's lines with their gutter, the call stack and the values. */
+.debugger {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  height: 100%;
+  min-height: 0;
+  overflow: auto;
+  padding: var(--space-2);
+}
+
+.debug-told {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.debug-lines {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--editor-font, ui-monospace, Menlo, Consolas, monospace);
+  font-size: var(--editor-size, 12px);
+  border: 1px solid var(--border);
+  overflow: auto;
+}
+
+.debug-lines li {
+  display: flex;
+  align-items: baseline;
+  white-space: pre;
+}
+
+.debug-lines li.current {
+  background: var(--selection);
+}
+
+.debug-lines .gutter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+  min-width: 4.5em;
+  padding: 0 var(--space-1);
+  border: none;
+  border-right: 1px solid var(--border);
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.debug-lines .gutter[aria-pressed="true"] {
+  color: var(--danger);
+}
+
+.debug-lines code {
+  padding-left: var(--space-2);
+}
+
+.debug-stack {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.debug-stack button {
+  width: 100%;
+  text-align: left;
+}
+
+.debug-stack button[aria-pressed="true"] {
+  font-weight: 600;
+}
+
+.debug-variables caption {
+  text-align: left;
+  font-weight: 600;
+}

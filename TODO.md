@@ -9,8 +9,12 @@ Code never cites this file (R-DOC-5).
 
 ## M4 SQL worksheet
 
-- Waiting on the server, shown as unavailable until Turborel has it: a
-  debugger of SQL routines, with breakpoints and stepping.
+- Waiting on Turborel: the text of a routine or trigger as it was
+  written, which a breakpoint's line and a frame's place count in, shown
+  to those who may debug it, as a column of ROUTINES and TRIGGERS or a
+  Debug request. Until then the debugger numbers the lines of Studio's
+  own CREATE, and marks no line where a pause does not fall where it
+  says; with it, `routine_text` gives it in place of the CREATE.
 
 ## M6 Data
 

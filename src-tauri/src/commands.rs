@@ -5,9 +5,10 @@
 
 mod admin;
 mod assistant;
-mod catalog;
+pub(crate) mod catalog;
 pub(crate) mod connections;
 pub(crate) mod data;
+mod debugging;
 pub(crate) mod embedded;
 mod files;
 mod live;
@@ -103,6 +104,10 @@ pub(crate) fn handler<R: Runtime>() -> impl Fn(Invoke<R>) -> bool + Send + Sync 
         catalog::catalog_table,
         catalog::catalog_routine,
         catalog::catalog_statistics,
+        debugging::debug_start,
+        debugging::debug_ask,
+        debugging::debug_stop,
+        debugging::debug_text,
         catalog::catalog_type,
         catalog::catalog_graphs,
         catalog::catalog_analysis,

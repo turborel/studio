@@ -11,6 +11,7 @@ import type { DataTask } from "../data/tasks";
 import { catalogDefinition, catalogRoutine, type DefinitionOf, type Parameter, type ScriptAs } from "../ipc/catalog";
 import type { ConnectionSpec } from "../ipc/connections";
 import { attempt, show } from "../state/actions";
+import { startDebug } from "../debugger/debugging";
 import { loadSchemas, loadTable, select } from "../state/catalog";
 import { runStatements } from "../state/running";
 import type { Store } from "../state/store";
@@ -262,6 +263,16 @@ export interface PartOf {
   readonly name: string;
 }
 
+/** The item that debugs trigger `part` on `connection` (RULES.md D73). */
+function debugTrigger(store: Store, connection: number, part: PartOf): MenuItem {
+  const routine = { kind: "trigger", schema: part.schema, name: part.name, table: part.table } as const;
+  return {
+    label: "Debug…",
+    icon: "debug",
+    run: () => startDebug(store, connection, { ...routine, shown: `${part.schema}.${part.name}` }),
+  };
+}
+
 /** The menu of a column, constraint, index or trigger of a table on `connection`. */
 export function partMenu(store: Store, connection: number, part: PartOf): MenuItem[] {
   const table = qualifiedName(store, part.schema, part.table);
@@ -290,6 +301,7 @@ export function partMenu(store: Store, connection: number, part: PartOf): MenuIt
     ],
     index: [dropItem(store, connection, "Drop Index", `DROP INDEX ${name}`)],
     trigger: [
+      debugTrigger(store, connection, part),
       dropItem(store, connection, "Drop Trigger", `DROP TRIGGER ${qualifiedName(store, part.schema, part.name)}`),
     ],
   };
@@ -331,6 +343,15 @@ async function execute(store: Store, connection: number, schema: string, specifi
   });
 }
 
+/** Debugs routine `specific` of `schema` on `connection`, a procedure or a function, as its catalog says (RULES.md D73). */
+async function debugRoutine(store: Store, connection: number, schema: string, specific: string): Promise<void> {
+  const r = await attempt(store, () => catalogRoutine(connection, schema, specific));
+  if (r !== undefined) {
+    const kind = r.kind === "FUNCTION" ? "function" : "procedure";
+    await startDebug(store, connection, { kind, schema, name: specific, shown: `${schema}.${r.name}`, table: null });
+  }
+}
+
 /** The name of the item that drops a routine, sequence, domain or type. */
 const DROPS = { routine: "Drop Routine", sequence: "Drop Sequence", domain: "Drop Domain", type: "Drop Type" } as const;
 
@@ -356,6 +377,7 @@ export function objectMenu(
     ...(kind === "routine"
       ? [
           { label: "Execute…", icon: "run", run: () => execute(store, connection, schema, specific) } as const,
+          { label: "Debug…", icon: "debug", run: () => debugRoutine(store, connection, schema, specific) } as const,
           "separator" as const,
         ]
       : []),

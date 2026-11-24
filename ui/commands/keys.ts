@@ -9,7 +9,17 @@ import type { KeyScheme } from "../ipc/preferences";
 /** The keys each scheme gives commands over their own defaults, by command (RULES.md D69). */
 export const SCHEME_KEYS: Readonly<Record<KeyScheme, Readonly<Record<string, string>>>> = {
   default: {},
-  functionKeys: { "worksheet.runScript": "F5", "worksheet.run": "F9", "worksheet.explain": "F6" },
+  functionKeys: {
+    "worksheet.runScript": "F5",
+    "worksheet.run": "F9",
+    "worksheet.explain": "F6",
+    "debug.stepInto": "F7",
+    "debug.stepOver": "F8",
+    "debug.stepOut": "Shift+F7",
+    "debug.continue": "Shift+F8",
+    "debug.interrupt": "Mod+Shift+F8",
+    "debug.stop": "Mod+F2",
+  },
 };
 
 /** The schemes, as the settings name them. */

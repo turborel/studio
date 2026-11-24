@@ -27,6 +27,7 @@
 )]
 
 mod child;
+mod debugging;
 mod files;
 mod imports;
 mod models;
@@ -120,6 +121,8 @@ const TESTS: &[(&str, Test)] = &[
     ("an_in_memory_database_is_not_saved", opening::an_in_memory_database_is_not_saved),
     ("plug_ins_are_listed", opening::plug_ins_are_listed),
     ("the_assistant_opens_a_session_beside_the_users", opening::the_assistant_opens_a_session_beside_the_users),
+    ("a_procedure_is_debugged", debugging::a_procedure_is_debugged),
+    ("an_unattached_session_refuses", debugging::an_unattached_session_refuses),
     ("a_query_is_paged_through_its_cursor", requests::a_query_is_paged_through_its_cursor),
     ("a_tables_statistics_are_read", requests::a_tables_statistics_are_read),
     ("a_data_change_is_explained_running_nothing", requests::a_data_change_is_explained_running_nothing),

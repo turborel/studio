@@ -58,6 +58,8 @@ pub(crate) struct EmbeddedWorker {
     results: BTreeMap<ResultId, OpenResult>,
     next_result: ResultId,
     spool: PathBuf,
+    /// The debugger this session drives, once attached (RULES.md D73).
+    debugger: Option<turborel::db::Debugger>,
 }
 
 /// The failure of `e`, the session's transaction told active or not.
@@ -101,7 +103,15 @@ impl EmbeddedWorker {
     /// The worker of a session of `database`, its results spooled in `spool`.
     pub(crate) fn new(database: Arc<Embedded>, spool: PathBuf) -> EmbeddedWorker {
         let session = database.db.session(&database.user);
-        EmbeddedWorker { database, session: Some(session), autocommit: false, results: BTreeMap::new(), next_result: 1, spool }
+        EmbeddedWorker {
+            database,
+            session: Some(session),
+            autocommit: false,
+            results: BTreeMap::new(),
+            next_result: 1,
+            spool,
+            debugger: None,
+        }
     }
 
     /// What cancels the session's statements.
@@ -168,6 +178,10 @@ impl EmbeddedWorker {
                 self.state().map(Reply::Session)
             }
             Request::Ping => self.session().map(|_| Reply::Done),
+            Request::Debug(call) => {
+                let session = self.session.as_ref().ok_or_else(|| StudioError::lost("[DESIGN] the session is ended"))?;
+                crate::debugging::embedded_call(session, &mut self.debugger, call).map(Reply::Debugged).map_err(|e| failed(session, e))
+            }
             Request::Catalog { sql, params, cap } => self.catalog(&sql, &params, cap).map(Reply::Rows),
             Request::Describe(sql) => self.describe(&sql).map(Reply::Columns),
             Request::Value { result, row, column } => self.value(result, row, column).map(Reply::Value),

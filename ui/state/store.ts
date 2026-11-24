@@ -4,6 +4,7 @@
  * and read in React through `useStudio`, so each component renders again
  * when what it reads changes.
  */
+import type { DebugState } from "../debugger/debugging";
 import type { LinkOpened } from "../ipc/live";
 import type { ModelDoc } from "../model/models";
 import type { DataTask } from "../data/tasks";
@@ -146,6 +147,8 @@ export interface StudioState {
   readonly explorerSearch: boolean;
   /** The user's home folder, which paths are shown beneath as `~`, once known. */
   readonly home: string | null;
+  /** The routine debugged, if one is (RULES.md D73). */
+  readonly debug: DebugState | null;
 }
 
 /** The state before anything is loaded. */
@@ -175,6 +178,7 @@ export const INITIAL: StudioState = {
   live: NO_LIVE,
   explorerSearch: false,
   home: null,
+  debug: null,
 };
 
 /** The store of a window: its state, and who reads it. */

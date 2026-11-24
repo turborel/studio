@@ -20,6 +20,7 @@ and at the top of the window on Linux and Windows. Its menus are:
 | **Edit** | Undo, Redo, Cut, Copy, Paste, Select All |
 | **Worksheet** | Run Statement, Run Script, Run Script on a Folder's Connections…, Explain, Explain Analyze, Run to CSV File…, Run to Native Rows File…, Query Builder…, Format, Toggle Comment, Upper Case, Lower Case, Find and Replace…, Toggle Bookmark, Next Bookmark, Previous Bookmark, Go to Definition, Describe, Split Editor, Outline, Add to Favourite Queries…, Autocommit, Pin Tab, Close Worksheet, Close Other Worksheets |
 | **Connection** | Disconnect, Reconnect, Cancel Statement, Refresh Catalog, Monitor, Analyze Schema…, Commit, Rollback |
+| **Debug** | Continue, Step Into, Step Over, Step Out, Interrupt, Stop Debugging, Debugger ([Debugging Routines](13-debugging.md)) |
 | **View** | Command Palette…, Theme: System, Theme: Light, Theme: Dark, Zoom In, Zoom Out, Actual Size, Assistant, Assistant Settings…, Reset Layout |
 | **Live** | Present, Join…, Share Worksheet in Live Session, End Session, Leave Session, Live Session, Session Records…, Live Sessions Settings… |
 | **Window** | Minimize, Full Screen |
@@ -96,8 +97,8 @@ through the connection's guards, as one typed would
 | a schema | New Worksheet, its schema set; Create Table…; Import into New Table…; Generate Script…; Open Model; Compare Schema…; Analyze Schema…; Copy Name; Properties; Refresh |
 | a table | New Worksheet; Open Data, its first 200 rows; Open Data Filtered…; Alter Table…; Indexes…; Analyze Table…; Import…; Export…; Compare Rows…; Script As CREATE, ALTER, DROP, SELECT, INSERT, UPDATE or DELETE, to a worksheet or the clipboard; Copy Name; Copy Qualified Name; Rename…; Drop Table; Dependencies; Properties; Refresh |
 | a view | New Worksheet; Open Data; Script As CREATE, SELECT or DROP; Copy Name; Copy Qualified Name; Drop View; Dependencies; Properties; Refresh |
-| a column, a constraint, an index or a trigger | Copy Name; Rename Column… and Drop Column, of a column; Drop Constraint, Drop Index or Drop Trigger; Properties |
-| a routine, a sequence, a domain or a type | Execute…, of a routine; Script As CREATE; Copy Name; Copy Qualified Name; its Drop; Properties |
+| a column, a constraint, an index or a trigger | Copy Name; Rename Column… and Drop Column, of a column; Debug…, of a trigger; Drop Constraint, Drop Index or Drop Trigger; Properties |
+| a routine, a sequence, a domain or a type | Execute… and Debug…, of a routine; Script As CREATE; Copy Name; Copy Qualified Name; its Drop; Properties |
 | a result's cell | Copy; Copy with Headers; Copy As each format; Filter to This Value; Filter Out This Value; Sort Ascending; Sort Descending; Hide Column; Show Hidden Columns; Freeze Up to This Column; Unfreeze Columns; View Value; Show in Record View; Edit Rows; Set to NULL; Export Selection… |
 | a result's header | Sort Ascending; Sort Descending; the column hidden, shown or frozen; Copy, of the column |
 | the editor | Run Statement; Run Script; Explain; Explain Analyze; Format; Toggle Comment; Upper Case; Lower Case; Go to Definition; Describe; Find and Replace…; Add to Favourite Queries… |

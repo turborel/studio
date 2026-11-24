@@ -17,6 +17,12 @@ import { TreeViewIcon } from "@phosphor-icons/react/dist/csr/TreeView";
 import { PulseIcon } from "@phosphor-icons/react/dist/csr/Pulse";
 import { UserPlusIcon } from "@phosphor-icons/react/dist/csr/UserPlus";
 import { MinusSquareIcon } from "@phosphor-icons/react/dist/csr/MinusSquare";
+import { BugIcon } from "@phosphor-icons/react/dist/csr/Bug";
+import { ArrowLineDownIcon } from "@phosphor-icons/react/dist/csr/ArrowLineDown";
+import { ArrowArcRightIcon } from "@phosphor-icons/react/dist/csr/ArrowArcRight";
+import { ArrowLineUpIcon } from "@phosphor-icons/react/dist/csr/ArrowLineUp";
+import { PauseIcon } from "@phosphor-icons/react/dist/csr/Pause";
+import { CircleIcon } from "@phosphor-icons/react/dist/csr/Circle";
 import { BroadcastIcon } from "@phosphor-icons/react/dist/csr/Broadcast";
 import { SignInIcon } from "@phosphor-icons/react/dist/csr/SignIn";
 import { ShareNetworkIcon } from "@phosphor-icons/react/dist/csr/ShareNetwork";
@@ -230,6 +236,12 @@ const ICONS = {
   monitor: [PulseIcon, "plain"],
   newUser: [UserPlusIcon, "plain"],
   collapseAll: [MinusSquareIcon, "plain"],
+  debug: [BugIcon, "plain"],
+  stepInto: [ArrowLineDownIcon, "plain"],
+  stepOver: [ArrowArcRightIcon, "plain"],
+  stepOut: [ArrowLineUpIcon, "plain"],
+  interrupt: [PauseIcon, "stop"],
+  breakpoint: [CircleIcon, "stop"],
 } as const satisfies Record<string, readonly [PhosphorIcon, Tone]>;
 
 /** An icon's name. */

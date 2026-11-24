@@ -24,13 +24,13 @@ use crate::state::Studio;
 
 /// The longest name the catalog is asked of, in characters: the
 /// Information Schema's names are at most 128.
-const MAX_NAME_CHARS: usize = 128;
+pub(crate) const MAX_NAME_CHARS: usize = 128;
 /// The longest text searched for, in characters.
 const MAX_SEARCH_CHARS: usize = 256;
 
 /// `value`, refused if empty, longer than `max` characters, or holding a
 /// control character (R-SEC-6).
-fn bounded(what: &str, value: &str, max: usize) -> Result<()> {
+pub(crate) fn bounded(what: &str, value: &str, max: usize) -> Result<()> {
     if value.is_empty() || value.chars().count() > max || value.chars().any(char::is_control) {
         return Err(StudioError::misuse(format!("[DESIGN] {what} is 1 to {max} characters, none a control")));
     }

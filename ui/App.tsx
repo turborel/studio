@@ -40,6 +40,7 @@ import { takeLink } from "./live/live";
 import { SecurityDialog } from "./admin/SecurityDialog";
 import { useLiveSync } from "./live/sync";
 import { showPanel } from "./shell/layout";
+import { useDebuggerShown } from "./debugger/debugging";
 import { CommandContextOf, ContextMenu } from "./shell/ContextMenu";
 import { applyTheme, DARK_QUERY, resolveTheme } from "./theme/theme";
 import type { ThemeName } from "./theme/tokens";
@@ -223,6 +224,7 @@ function Window({ store }: { readonly store: Store }) {
     [store],
   );
   useWiring(context);
+  useDebuggerShown(context);
   const settings = useStudio((s) => s.settings);
   const theme: ThemeName = resolveTheme(settings.theme, useSystemDark());
   useEffect(() => {

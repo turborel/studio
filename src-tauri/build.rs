@@ -10,7 +10,7 @@
 /// Every command the application defines, as `src/commands.rs` registers
 /// them and `capabilities/main.json` grants them; the checks tool holds the
 /// three lists equal.
-const COMMANDS: [&str; 122] = [
+const COMMANDS: [&str; 126] = [
     "app_info",
     "admin_view",
     "admin_act",
@@ -84,6 +84,10 @@ const COMMANDS: [&str; 122] = [
     "catalog_table",
     "catalog_routine",
     "catalog_statistics",
+    "debug_start",
+    "debug_ask",
+    "debug_stop",
+    "debug_text",
     "catalog_type",
     "catalog_graphs",
     "catalog_analysis",

@@ -138,8 +138,8 @@ template, the partition's schema and its name, shown apart by `/`.
 
 A routine shows its parameters, with their modes, types and defaults; its body,
 which only the owner of its schema sees; the privileges granted on it;
-and its definition. Its **Debug** tab is unavailable: Turborel does not
-yet give a debugger of SQL routines, with breakpoints and stepping. A type
+and its definition. Its **Debug** tab debugs it on the connection,
+as **Debug…** of its menu does ([Debugging Routines](13-debugging.md)). A type
 shows its category; a distinct type its source type, and a structured
 type its attributes, whether it is final and instantiable, its
 supertype, how its references are represented, and its methods; and its

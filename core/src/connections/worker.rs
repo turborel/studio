@@ -68,6 +68,8 @@ pub(crate) enum Request {
     Import { spec: Box<ImportSpec>, stop: Arc<std::sync::atomic::AtomicBool>, tell: Teller },
     /// Ask whether the server answers.
     Ping,
+    /// A call of the routine debugger (RULES.md D73).
+    Debug(crate::debugging::DebugCall),
     /// End the connection, and the worker.
     Terminate,
 }
@@ -79,6 +81,7 @@ pub(crate) enum Reply {
     Rows(Vec<Vec<crate::connections::cells::Cell>>),
     Columns(Vec<ColumnInfo>),
     Parameters(Vec<ParameterInfo>),
+    Debugged(crate::debugging::DebugAnswer),
     Value(ValueRead),
     Exported(u64),
     Imported(ImportReport),
@@ -205,6 +208,7 @@ impl Worker {
                 self.session().map(Reply::Session)
             }
             Request::Ping => self.connection()?.ping().map(|()| Reply::Done).map_err(StudioError::from),
+            Request::Debug(call) => crate::debugging::server_call(self.connection()?, call).map(Reply::Debugged),
             Request::Catalog { sql, params, cap } => self.catalog(&sql, &params, cap).map(Reply::Rows),
             Request::Describe(sql) => self.describe(&sql).map(Reply::Columns),
             Request::Value { result, row, column } => self.value(result, row, column).map(Reply::Value),

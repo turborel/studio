@@ -8,12 +8,18 @@ Keys** chooses another scheme, and binds a command to another key, or to
 none ([The Window](../user/02-window.md#keys)); the command palette and
 **Help > Keyboard Shortcuts** show the keys as they are bound.
 
-The scheme **Function keys** gives three commands keys of their own, the
+The scheme **Function keys** gives nine commands keys of their own, the
 others keeping those below, on every platform:
 
 - **Run Script**: F5;
 - **Run Statement**: F9;
-- **Explain**: F6.
+- **Explain**: F6;
+- **Step Into**: F7;
+- **Step Over**: F8;
+- **Step Out**: Shift+F7;
+- **Continue**: Shift+F8;
+- **Interrupt**: Cmd+Shift+F8 on macOS, Ctrl+Shift+F8 elsewhere;
+- **Stop Debugging**: Cmd+F2 on macOS, Ctrl+F2 elsewhere.
 
 ![Settings, Keys: the scheme Function keys chosen, each command beside its key, Run Statement on F9, Run Script on F5 and Explain on F6 among them](../images/settings-keys-light.png#gh-light-mode-only)
 ![Settings, Keys: the scheme Function keys chosen, each command beside its key, Run Statement on F9, Run Script on F5 and Explain on F6 among them](../images/settings-keys-dark.png#gh-dark-mode-only)
@@ -69,6 +75,13 @@ others keeping those below, on every platform:
 | Pin Tab | Worksheet | | |
 | Close Worksheet | Worksheet | Cmd+Alt+W | Ctrl+Alt+W |
 | Close Other Worksheets | Worksheet | | |
+| Continue | Debug | F8 | F8 |
+| Step Into | Debug | F11 | F11 |
+| Step Over | Debug | F10 | F10 |
+| Step Out | Debug | Shift+F11 | Shift+F11 |
+| Interrupt | Debug | Shift+F8 | Shift+F8 |
+| Stop Debugging | Debug | Shift+F5 | Shift+F5 |
+| Debugger | Debug | | |
 | Command Palette… | View | Cmd+Shift+P | Ctrl+Shift+P |
 | Settings… | File | Cmd+, | Ctrl+, |
 | Theme: System | View | | |

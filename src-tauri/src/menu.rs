@@ -13,7 +13,7 @@ pub const MENU_EVENT: &str = "studio:menu";
 pub type Item = Option<(&'static str, &'static str)>;
 
 /// The menus, each its title and its items.
-pub const MENUS: [(&str, &[Item]); 7] = [
+pub const MENUS: [(&str, &[Item]); 8] = [
     (
         "File",
         &[
@@ -82,6 +82,19 @@ pub const MENUS: [(&str, &[Item]); 7] = [
             Some(("analyzer.open", "Analyze Schema…")),
             Some(("transaction.commit", "Commit")),
             Some(("transaction.rollback", "Rollback")),
+        ],
+    ),
+    (
+        "Debug",
+        &[
+            Some(("debug.continue", "Continue")),
+            Some(("debug.stepInto", "Step Into")),
+            Some(("debug.stepOver", "Step Over")),
+            Some(("debug.stepOut", "Step Out")),
+            Some(("debug.interrupt", "Interrupt")),
+            None,
+            Some(("debug.stop", "Stop Debugging")),
+            Some(("debug.open", "Debugger")),
         ],
     ),
     (
