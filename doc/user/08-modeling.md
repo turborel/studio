@@ -80,9 +80,12 @@ not run, and no statement of the script reaches a database of yours.
 
 Each table is a box of its schema and name, then each column, its type,
 and its marks: `PK` of its primary key, `FK` of a foreign key, `NN` of
-NOT NULL. Each foreign key is a line from its table to the one it
-references, labelled by its columns, the columns they reference, and its
-delete rule, unless NO ACTION. Each edge table of a property graph is a
+NOT NULL. Each foreign key is a line from its first column's side of its
+table to the referenced column's side of the one it references, the
+sides that face each other, labelled by its columns, the columns they
+reference, and its delete rule, unless NO ACTION. A label sits on a plate
+beside its line, clear of the boxes and of the other labels; one with no
+clear place shows when the pointer rests on its line. Each edge table of a property graph is a
 dashed line to each of its vertex tables, labelled by the graph's name
 and its end, SOURCE or DESTINATION, where both tables are in the model.
 The property graphs are also listed beside the diagram, each with its

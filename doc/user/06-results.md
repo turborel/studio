@@ -196,6 +196,11 @@ from left to right, in one of two ways:
   node, labelled by its value of the column **Label** if one is chosen.
   A row of a null at either end draws no edge.
 
+Edges between the same two nodes are drawn apart, each curved. Each
+edge's label sits on a plate along it, clear of the nodes and of the
+other labels; one with no clear place shows when the pointer rests on
+its edge, and **Show every label** draws them all.
+
 ![The graph view of the paths from order 1, through each product of its lines, to the other orders of that product, of the property graph STAGING.SHOP](../images/graph-light.png#gh-light-mode-only)
 ![The graph view of the paths from order 1, through each product of its lines, to the other orders of that product, of the property graph STAGING.SHOP](../images/graph-dark.png#gh-dark-mode-only)
 
