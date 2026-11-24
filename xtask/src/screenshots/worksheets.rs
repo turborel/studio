@@ -117,6 +117,8 @@ pub fn snippet_format_scene(scene: &Scene<'_>) -> Result<()> {
 pub fn explain_change_scene(scene: &Scene<'_>) -> Result<()> {
     scene.new_worksheet()?;
     scene.write("DELETE FROM ORDERS WHERE ID = 7")?;
+    // The panes below the editor tall enough to show the section whole.
+    scene.editor_share(20)?;
     scene.tool("Explain")?;
     if let Err(e) = scene.wait_text("section[aria-label=\"What the change would do\"]", "ORDERS_BY_CUSTOMER") {
         return crate::error::fail(format!("{e}; {}", scene.messages()));
