@@ -1,6 +1,7 @@
 //! The scene of the routine debugger (RULES.md D60, D73): the demo's
 //! procedure RAISE_PRICES debugged, a breakpoint set at its UPDATE, its
-//! CALL run in a worksheet and paused there, its call stack and values
+//! CALL run in a worksheet, the guards' question of it answered, and
+//! paused there, its call stack and values
 //! drawn, stepped over and let go on; the CALL rolled back after, so the
 //! prices the other scenes show stay as they were.
 
@@ -29,8 +30,12 @@ pub fn debugger_scene(scene: &Scene<'_>) -> Result<()> {
     scene.click_shown("button[aria-label=\"Breakpoint at line 4\"]")?;
     scene.wait_text(TOLD, "Breakpoint")?;
     scene.new_worksheet()?;
+    // In a transaction, rolled back after.
+    scene.autocommit(false)?;
     scene.write("CALL RAISE_PRICES(10)")?;
     scene.tool("Run Statement")?;
+    // The guards ask first of a CALL, which may do anything.
+    scene.click_exact("[role=\"dialog\"] button", "Run")?;
     if let Err(e) = scene.wait_text(TOLD, "Paused at breakpoint") {
         return crate::error::fail(format!("{e}; {}", scene.messages()));
     }
