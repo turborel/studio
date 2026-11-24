@@ -26,8 +26,8 @@ statistics hold of it, and the database's settings, and shows five tabs:
 | **Top Statements** | the 25 statements run since the database opened that took the most time in all ([Top statements](#top-statements)) |
 | **Usage and Sizes** | of the schema, the indexes no search used, and each table's and index's size ([Usage and sizes](#usage-and-sizes)) |
 
-![The analyzer's findings of DEMO: a foreign key of ORDER_LINES whose columns no index leads, and the CREATE INDEX that fixes it](../images/analyzer-findings-light.png#gh-light-mode-only)
-![The analyzer's findings of DEMO: a foreign key of ORDER_LINES whose columns no index leads, and the CREATE INDEX that fixes it](../images/analyzer-findings-dark.png#gh-dark-mode-only)
+![The analyzer's findings of DEMO: a foreign key of ORDER_LINES whose columns no index leads, and the CREATE INDEX that fixes it; and tables whose statistics are not yet gathered, each fixed by reading them](../images/analyzer-findings-light.png#gh-light-mode-only)
+![The analyzer's findings of DEMO: a foreign key of ORDER_LINES whose columns no index leads, and the CREATE INDEX that fixes it; and tables whose statistics are not yet gathered, each fixed by reading them](../images/analyzer-findings-dark.png#gh-dark-mode-only)
 
 Each finding is chosen at first; **Open Fixes in Worksheet** opens the
 fixes of those chosen in a worksheet of the connection, a blank line

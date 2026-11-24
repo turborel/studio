@@ -347,6 +347,9 @@ DEMO.ORDERS`, and, above the plan, a section of what it would do beside:
   when it is prepared or a procedure's, as one read of a whole unique
   key, or its rows written straight; **none** if no path would.
 
+![Explain of a DELETE of an order of the demo shop, run without running it: its plan, an index scan of the order's key, and what it would do, the two indexes of ORDERS it would write, no cascades or triggers, and its point path](../images/explain-change-light.png#gh-light-mode-only)
+![Explain of a DELETE of an order of the demo shop, run without running it: its plan, an index scan of the order's key, and what it would do, the two indexes of ORDERS it would write, no cascades or triggers, and its point path](../images/explain-change-dark.png#gh-dark-mode-only)
+
 It is the same on a server's connection and an embedded database, and
 the guards judge it a read, so a production or read-only connection
 runs it as it runs a query

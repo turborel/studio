@@ -122,6 +122,9 @@ Of a table or view, its tabs are:
 | **Dependencies** | what it uses, as the tables a view reads, and what uses it: views, routines and triggers that read it, and other tables' foreign keys that reference it |
 | **Definition** | its definition as SQL |
 
+![The details' Statistics of DEMO.ORDERS: its statistics gathered of its 240 rows, each column's share NULL, distinct values, width, least and greatest values and most common values, and its indexes' distinct keys and selectivity](../images/explorer-statistics-light.png#gh-light-mode-only)
+![The details' Statistics of DEMO.ORDERS: its statistics gathered of its 240 rows, each column's share NULL, distinct values, width, least and greatest values and most common values, and its indexes' distinct keys and selectivity](../images/explorer-statistics-dark.png#gh-dark-mode-only)
+
 Above a base table's tabs, **Edit Rows…**, **Import…**, **Export…**,
 **Compare Rows…** and **Alter Table…** edit its rows, import a file's rows
 into it, export its rows, compare them with another table's, and alter

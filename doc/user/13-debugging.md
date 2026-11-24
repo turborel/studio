@@ -55,6 +55,9 @@ At a pause the panel says why, **Paused at breakpoint 1.** or
   each cursor, open or closed, with its query. A trigger's parameters are
   its transition variables.
 
+![The Debugger of DEMO.RAISE_PRICES paused at its breakpoint at line 4, its UPDATE marked, the call stack of its one frame, and its parameter PCT, 10, and variable CHANGED, 0](../images/debugger-paused-light.png#gh-light-mode-only)
+![The Debugger of DEMO.RAISE_PRICES paused at its breakpoint at line 4, its UPDATE marked, the call stack of its one frame, and its parameter PCT, 10, and variable CHANGED, 0](../images/debugger-paused-dark.png#gh-dark-mode-only)
+
 ## Stepping
 
 | Command | What it does | Default | Function keys |
@@ -65,6 +68,9 @@ At a pause the panel says why, **Paused at breakpoint 1.** or
 | **Step Out** | pauses at the next statement of the frame this one returns to | Shift+F11 | Shift+F7 |
 | **Interrupt** | pauses the running session at its next statement | Shift+F8 | Cmd+Shift+F8, Ctrl+Shift+F8 |
 | **Stop Debugging** | detaches; the session goes on as if never debugged | Shift+F5 | Cmd+F2, Ctrl+F2 |
+
+![The Debugger of DEMO.RAISE_PRICES after Step Over: paused at line 5, its SET, the UPDATE before it run](../images/debugger-stepped-light.png#gh-light-mode-only)
+![The Debugger of DEMO.RAISE_PRICES after Step Over: paused at line 5, its SET, the UPDATE before it run](../images/debugger-stepped-dark.png#gh-dark-mode-only)
 
 They are the panel's tools and the **Debug** menu's items, each enabled
 where the session allows it: the steps and Continue while it is paused,
