@@ -46,7 +46,7 @@ rcgen = { version = "=0.14.10", default-features = false, features = ["aws_lc_rs
 # platform's own store, as the keyring crate's makers advise an
 # application to link them.
 keyring-core = "=1.1.0"
-apple-native-keyring-store = { version = "=1.0.2", features = ["keychain"] }
+apple-native-keyring-store = { version = "=1.0.3", features = ["keychain"] }
 windows-native-keyring-store = "=1.1.0"
 zbus-secret-service-keyring-store = { version = "=1.0.1", features = ["crypto-rust"] }
 # The assistant's calls of its model (RULES.md D55): HTTP on rustls, its
