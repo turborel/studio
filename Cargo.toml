@@ -36,7 +36,7 @@ serde_json = { version = "=1.0.154", features = ["raw_value"] }
 # through its cell reader, a row at a time.
 calamine = { version = "=0.38.0", default-features = false }
 # The tests' workbooks, written as the zip calamine reads them is.
-zip = { version = "=9.8.1", default-features = false, features = ["deflate"] }
+zip = { version = "=9.8.2", default-features = false, features = ["deflate"] }
 # The encryption of a result's spooled pages (RULES.md D25), the
 # aws-lc-rs rustls already builds on.
 aws-lc-rs = "=1.18.2"
